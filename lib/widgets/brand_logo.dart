@@ -67,42 +67,31 @@ class _LogoPainter extends CustomPainter {
     );
 
     final ink = dark ? brandInk : Colors.white;
-    final rearFrame = Paint()
+    final housePaint = Paint()
+      ..color = ink
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3.4 * scale
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    final house = Path()
+      ..moveTo(10 * scale, 23 * scale)
+      ..lineTo(22 * scale, 12 * scale)
+      ..lineTo(34 * scale, 23 * scale)
+      ..lineTo(34 * scale, 34 * scale)
+      ..lineTo(10 * scale, 34 * scale)
+      ..close();
+    canvas.drawPath(house, housePaint);
+
+    final door = Paint()
       ..color = brandPurple
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3.4 * scale
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
-
-    final frontFrame = Paint()
-      ..color = ink
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3.4 * scale
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
-
-    final rear = Path()
-      ..moveTo(15 * scale, 28 * scale)
-      ..lineTo(15 * scale, 14 * scale)
-      ..lineTo(29 * scale, 14 * scale);
-    canvas.drawPath(rear, rearFrame);
-
-    final front = Path()
-      ..moveTo(20 * scale, 34 * scale)
-      ..lineTo(20 * scale, 20 * scale)
-      ..lineTo(34 * scale, 20 * scale)
-      ..lineTo(34 * scale, 34 * scale);
-    canvas.drawPath(front, frontFrame);
-
-    final threshold = Paint()
-      ..color = ink
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3.4 * scale
-      ..strokeCap = StrokeCap.round;
-    canvas.drawLine(
-      Offset(20 * scale, 34 * scale),
-      Offset(34 * scale, 34 * scale),
-      threshold,
+      ..style = PaintingStyle.fill;
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(18 * scale, 24 * scale, 8 * scale, 10 * scale),
+        Radius.circular(2 * scale),
+      ),
+      door,
     );
 
     final connection = Paint()
@@ -111,15 +100,15 @@ class _LogoPainter extends CustomPainter {
       ..strokeWidth = 2 * scale
       ..strokeCap = StrokeCap.round;
     canvas.drawLine(
-      Offset(29 * scale, 14 * scale),
-      Offset(34 * scale, 9 * scale),
+      Offset(28 * scale, 17.5 * scale),
+      Offset(34.5 * scale, 11 * scale),
       connection,
     );
 
     final node = Paint()
       ..color = brandLilac
       ..style = PaintingStyle.fill;
-    canvas.drawCircle(Offset(35.5 * scale, 7.5 * scale), 3.6 * scale, node);
+    canvas.drawCircle(Offset(36 * scale, 9.5 * scale), 3.6 * scale, node);
   }
 
   @override

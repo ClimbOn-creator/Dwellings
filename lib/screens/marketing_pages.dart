@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../widgets/brand_logo.dart';
 import 'home_screen.dart';
+import 'local_network_page.dart';
 
 const _ink = brandInk;
 const _navy = Color(0xFF09091B);
@@ -10,7 +11,7 @@ const _purple = brandPurple;
 const _lilac = brandLilac;
 const _muted = Color(0xFFA5A5B5);
 
-enum MarketingDestination { capabilities, process, about, team }
+enum MarketingDestination { network, capabilities, process, about, team }
 
 void openMarketingPage(
   BuildContext context,
@@ -18,6 +19,7 @@ void openMarketingPage(
   bool replace = false,
 }) {
   final Widget page = switch (destination) {
+    MarketingDestination.network => const LocalNetworkPage(),
     MarketingDestination.capabilities => const CapabilitiesPage(),
     MarketingDestination.process => const HowItWorksPage(),
     MarketingDestination.about => const AboutPage(),
@@ -79,7 +81,7 @@ class MarketingNavigation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final compact = MediaQuery.sizeOf(context).width < 930;
+    final compact = MediaQuery.sizeOf(context).width < 1080;
     return Container(
       height: 68,
       padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -97,6 +99,11 @@ class MarketingNavigation extends StatelessWidget {
           ),
           const Spacer(),
           if (!compact) ...[
+            _NavItem(
+              label: 'LOCAL NETWORK',
+              selected: active == MarketingDestination.network,
+              onTap: () => _go(context, MarketingDestination.network),
+            ),
             _NavItem(
               label: 'CAPABILITIES',
               selected: active == MarketingDestination.capabilities,
@@ -147,6 +154,7 @@ class MarketingNavigation extends StatelessWidget {
 }
 
 String _destinationLabel(MarketingDestination value) => switch (value) {
+  MarketingDestination.network => 'LOCAL NETWORK',
   MarketingDestination.capabilities => 'CAPABILITIES',
   MarketingDestination.process => 'HOW IT WORKS',
   MarketingDestination.about => 'ABOUT',

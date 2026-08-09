@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 
 import '../models/housing_model.dart';
 import '../services/backend_service.dart';
+import '../services/marketplace_service.dart';
+import 'local_network_page.dart';
 
 const _ink = Color(0xFF090909);
 const _green = Color(0xFF6D28D9);
@@ -134,6 +136,16 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
           .toStringAsFixed(1);
       _scanning = false;
     });
+  }
+
+  void _openLocalNetwork() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => LocalNetworkPage(
+          initialCity: MarketplaceService.inferCity(_profile.city),
+        ),
+      ),
+    );
   }
 
   void _analyze() {
@@ -501,6 +513,22 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
         ),
         const SizedBox(height: 10),
         _LocationStrip(profile: _profile),
+        const SizedBox(height: 10),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: _openLocalNetwork,
+            icon: const Icon(Icons.groups_outlined, size: 18),
+            label: Text(
+              'FIND A LOCAL TEAM IN ${_profile.city.toUpperCase()}',
+              style: const TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w900,
+                letterSpacing: .6,
+              ),
+            ),
+          ),
+        ),
         const SizedBox(height: 20),
         _InputSection(
           title: 'ACQUISITION & PHYSICAL',
