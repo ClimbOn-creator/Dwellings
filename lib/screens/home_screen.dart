@@ -5,7 +5,9 @@ import 'package:flutter/material.dart';
 import '../models/housing_model.dart';
 import '../services/backend_service.dart';
 import '../services/marketplace_service.dart';
+import '../widgets/site_footer.dart';
 import 'local_network_page.dart';
+import 'marketing_pages.dart';
 
 const _ink = Color(0xFF090909);
 const _green = Color(0xFF6D28D9);
@@ -265,6 +267,18 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
             const SliverToBoxAdapter(child: _AnalysisHeader()),
             SliverToBoxAdapter(child: _workspace()),
             const SliverToBoxAdapter(child: _Methodology()),
+            SliverToBoxAdapter(
+              child: SiteFooter(
+                onHome: () =>
+                    Navigator.of(context).popUntil((route) => route.isFirst),
+                onAbout: () =>
+                    openMarketingPage(context, MarketingDestination.about),
+                onTeam: () =>
+                    openMarketingPage(context, MarketingDestination.team),
+                onMember: () =>
+                    openMarketingPage(context, MarketingDestination.membership),
+              ),
+            ),
           ],
         ),
       ),

@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../services/marketplace_service.dart';
 import '../widgets/brand_logo.dart';
+import '../widgets/site_footer.dart';
 import 'home_screen.dart';
+import 'marketing_pages.dart';
 
 const _ink = brandInk;
 const _navy = Color(0xFF09091B);
@@ -65,6 +67,27 @@ class _LocalNetworkPageState extends State<LocalNetworkPage> {
           ),
         ),
         const SliverToBoxAdapter(child: _MarketplaceTrust()),
+        SliverToBoxAdapter(
+          child: SiteFooter(
+            onHome: () =>
+                Navigator.of(context).popUntil((route) => route.isFirst),
+            onAbout: () => openMarketingPage(
+              context,
+              MarketingDestination.about,
+              replace: true,
+            ),
+            onTeam: () => openMarketingPage(
+              context,
+              MarketingDestination.team,
+              replace: true,
+            ),
+            onMember: () => openMarketingPage(
+              context,
+              MarketingDestination.membership,
+              replace: true,
+            ),
+          ),
+        ),
       ],
     ),
   );
@@ -243,41 +266,125 @@ class _CitySelector extends StatelessWidget {
   final MarketplaceCity city;
   final ValueChanged<MarketplaceCity> onChanged;
   @override
-  Widget build(BuildContext context) => Container(
-    width: 390,
-    padding: const EdgeInsets.fromLTRB(18, 7, 10, 7),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(30),
-    ),
-    child: Row(
-      children: [
-        const Icon(Icons.location_on_outlined, color: _purple, size: 20),
-        const SizedBox(width: 10),
-        Expanded(
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<MarketplaceCity>(
-              value: city,
-              isExpanded: true,
-              icon: const Icon(Icons.keyboard_arrow_down, color: _ink),
-              style: const TextStyle(
-                color: _ink,
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-              ),
-              items: MarketplaceService.cities
-                  .map(
-                    (item) =>
-                        DropdownMenuItem(value: item, child: Text(item.label)),
-                  )
-                  .toList(),
-              onChanged: (value) => value == null ? null : onChanged(value),
+  Widget build(BuildContext context) => GestureDetector(
+    onTap: () => _showCanadianCityDialog(context, city, onChanged),
+    child: Container(
+      width: 390,
+      padding: const EdgeInsets.fromLTRB(18, 16, 16, 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(30),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.location_on_outlined, color: _purple, size: 20),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'SEARCH ANYWHERE IN CANADA',
+                  style: TextStyle(
+                    color: Color(0xFF7A7A87),
+                    fontSize: 7,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: .7,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  city.label,
+                  style: const TextStyle(
+                    color: _ink,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
             ),
           ),
-        ),
-      ],
+          const Icon(Icons.search, color: _ink, size: 19),
+        ],
+      ),
     ),
   );
+}
+
+Future<void> _showCanadianCityDialog(
+  BuildContext context,
+  MarketplaceCity current,
+  ValueChanged<MarketplaceCity> onChanged,
+) async {
+  final cityController = TextEditingController(text: current.city);
+  var provinceCode = current.countryCode == 'CA' ? current.region : 'BC';
+  final result = await showDialog<MarketplaceCity>(
+    context: context,
+    builder: (dialogContext) => StatefulBuilder(
+      builder: (context, setModalState) => AlertDialog(
+        title: const Text('Where in Canada are you looking?'),
+        content: SizedBox(
+          width: 460,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Enter any city, town, municipality or community.',
+                style: TextStyle(color: Color(0xFF666674), fontSize: 13),
+              ),
+              const SizedBox(height: 18),
+              TextField(
+                controller: cityController,
+                autofocus: true,
+                decoration: const InputDecoration(
+                  labelText: 'City or municipality',
+                  prefixIcon: Icon(Icons.location_city_outlined),
+                ),
+              ),
+              const SizedBox(height: 14),
+              DropdownButtonFormField<String>(
+                initialValue: provinceCode,
+                decoration: const InputDecoration(
+                  labelText: 'Province or territory',
+                ),
+                items: MarketplaceService.provinces
+                    .map(
+                      (province) => DropdownMenuItem(
+                        value: province.code,
+                        child: Text('${province.name} (${province.code})'),
+                      ),
+                    )
+                    .toList(),
+                onChanged: (value) => value == null
+                    ? null
+                    : setModalState(() => provinceCode = value),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              final city = cityController.text.trim();
+              if (city.isEmpty) return;
+              Navigator.pop(
+                dialogContext,
+                MarketplaceService.customCity(city, provinceCode),
+              );
+            },
+            child: const Text('Find professionals'),
+          ),
+        ],
+      ),
+    ),
+  );
+  cityController.dispose();
+  if (result != null) onChanged(result);
 }
 
 class _DirectorySection extends StatelessWidget {

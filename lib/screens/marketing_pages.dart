@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../widgets/brand_logo.dart';
+import '../widgets/site_footer.dart';
+import 'become_member_page.dart';
 import 'home_screen.dart';
 import 'local_network_page.dart';
 
@@ -11,7 +13,14 @@ const _purple = brandPurple;
 const _lilac = brandLilac;
 const _muted = Color(0xFFA5A5B5);
 
-enum MarketingDestination { network, capabilities, process, about, team }
+enum MarketingDestination {
+  network,
+  capabilities,
+  process,
+  about,
+  team,
+  membership,
+}
 
 void openMarketingPage(
   BuildContext context,
@@ -24,6 +33,13 @@ void openMarketingPage(
     MarketingDestination.process => const HowItWorksPage(),
     MarketingDestination.about => const AboutPage(),
     MarketingDestination.team => const TeamPage(),
+    MarketingDestination.membership => BecomeMemberPage(
+      onHome: () => Navigator.of(context).popUntil((route) => route.isFirst),
+      onAbout: () =>
+          openMarketingPage(context, MarketingDestination.about, replace: true),
+      onTeam: () =>
+          openMarketingPage(context, MarketingDestination.team, replace: true),
+    ),
   };
   final route = PageRouteBuilder<void>(
     pageBuilder: (_, animation, _) => page,
@@ -115,14 +131,9 @@ class MarketingNavigation extends StatelessWidget {
               onTap: () => _go(context, MarketingDestination.process),
             ),
             _NavItem(
-              label: 'ABOUT',
-              selected: active == MarketingDestination.about,
-              onTap: () => _go(context, MarketingDestination.about),
-            ),
-            _NavItem(
-              label: 'TEAM',
-              selected: active == MarketingDestination.team,
-              onTap: () => _go(context, MarketingDestination.team),
+              label: 'BECOME A MEMBER',
+              selected: active == MarketingDestination.membership,
+              onTap: () => _go(context, MarketingDestination.membership),
             ),
           ] else
             PopupMenuButton<MarketingDestination>(
@@ -130,20 +141,26 @@ class MarketingNavigation extends StatelessWidget {
               color: const Color(0xFF171728),
               icon: const Icon(Icons.menu_rounded, color: Colors.white),
               onSelected: (value) => _go(context, value),
-              itemBuilder: (_) => MarketingDestination.values
-                  .map(
-                    (value) => PopupMenuItem(
-                      value: value,
-                      child: Text(
-                        _destinationLabel(value),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
+              itemBuilder: (_) =>
+                  [
+                        MarketingDestination.network,
+                        MarketingDestination.capabilities,
+                        MarketingDestination.process,
+                        MarketingDestination.membership,
+                      ]
+                      .map(
+                        (value) => PopupMenuItem(
+                          value: value,
+                          child: Text(
+                            _destinationLabel(value),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                  )
-                  .toList(),
+                      )
+                      .toList(),
             ),
           const SizedBox(width: 8),
           _ModelButton(onTap: onModel ?? () => openUnderwriting(context)),
@@ -159,6 +176,7 @@ String _destinationLabel(MarketingDestination value) => switch (value) {
   MarketingDestination.process => 'HOW IT WORKS',
   MarketingDestination.about => 'ABOUT',
   MarketingDestination.team => 'TEAM',
+  MarketingDestination.membership => 'BECOME A MEMBER',
 };
 
 class _NavItem extends StatelessWidget {
@@ -1252,6 +1270,27 @@ class _MarketingPage extends StatelessWidget {
           ),
         ),
         SliverToBoxAdapter(child: child),
+        SliverToBoxAdapter(
+          child: SiteFooter(
+            onHome: () =>
+                Navigator.of(context).popUntil((route) => route.isFirst),
+            onAbout: () => openMarketingPage(
+              context,
+              MarketingDestination.about,
+              replace: true,
+            ),
+            onTeam: () => openMarketingPage(
+              context,
+              MarketingDestination.team,
+              replace: true,
+            ),
+            onMember: () => openMarketingPage(
+              context,
+              MarketingDestination.membership,
+              replace: true,
+            ),
+          ),
+        ),
       ],
     ),
   );

@@ -29,6 +29,12 @@ class MarketplaceCity {
   String get label => '$city, $region';
 }
 
+class MarketplaceProvince {
+  const MarketplaceProvince(this.code, this.name);
+  final String code;
+  final String name;
+}
+
 class MarketplaceProvider {
   const MarketplaceProvider({
     required this.id,
@@ -76,19 +82,68 @@ class MarketplaceDirectory {
 }
 
 class MarketplaceService {
+  static const provinces = [
+    MarketplaceProvince('AB', 'Alberta'),
+    MarketplaceProvince('BC', 'British Columbia'),
+    MarketplaceProvince('MB', 'Manitoba'),
+    MarketplaceProvince('NB', 'New Brunswick'),
+    MarketplaceProvince('NL', 'Newfoundland and Labrador'),
+    MarketplaceProvince('NS', 'Nova Scotia'),
+    MarketplaceProvince('NT', 'Northwest Territories'),
+    MarketplaceProvince('NU', 'Nunavut'),
+    MarketplaceProvince('ON', 'Ontario'),
+    MarketplaceProvince('PE', 'Prince Edward Island'),
+    MarketplaceProvince('QC', 'Quebec'),
+    MarketplaceProvince('SK', 'Saskatchewan'),
+    MarketplaceProvince('YT', 'Yukon'),
+  ];
+
   static const cities = [
     MarketplaceCity('Vancouver', 'BC', 'CA'),
     MarketplaceCity('Victoria', 'BC', 'CA'),
+    MarketplaceCity('Kelowna', 'BC', 'CA'),
+    MarketplaceCity('Surrey', 'BC', 'CA'),
     MarketplaceCity('Calgary', 'AB', 'CA'),
+    MarketplaceCity('Edmonton', 'AB', 'CA'),
     MarketplaceCity('Toronto', 'ON', 'CA'),
-    MarketplaceCity('Seattle', 'WA', 'US'),
+    MarketplaceCity('Ottawa', 'ON', 'CA'),
+    MarketplaceCity('Hamilton', 'ON', 'CA'),
+    MarketplaceCity('Montreal', 'QC', 'CA'),
+    MarketplaceCity('Quebec City', 'QC', 'CA'),
+    MarketplaceCity('Winnipeg', 'MB', 'CA'),
+    MarketplaceCity('Saskatoon', 'SK', 'CA'),
+    MarketplaceCity('Regina', 'SK', 'CA'),
+    MarketplaceCity('Halifax', 'NS', 'CA'),
+    MarketplaceCity('Moncton', 'NB', 'CA'),
+    MarketplaceCity('St. John’s', 'NL', 'CA'),
+    MarketplaceCity('Charlottetown', 'PE', 'CA'),
+    MarketplaceCity('Whitehorse', 'YT', 'CA'),
+    MarketplaceCity('Yellowknife', 'NT', 'CA'),
+    MarketplaceCity('Iqaluit', 'NU', 'CA'),
   ];
+
+  static MarketplaceCity customCity(String city, String provinceCode) =>
+      MarketplaceCity(city.trim(), provinceCode, 'CA');
 
   static MarketplaceCity inferCity(String value) {
     final normalized = value.toLowerCase();
     return cities.firstWhere(
       (city) => normalized.contains(city.city.toLowerCase()),
-      orElse: () => cities.first,
+      orElse: () {
+        final province = provinces.firstWhere(
+          (item) =>
+              normalized.contains(item.code.toLowerCase()) ||
+              normalized.contains(item.name.toLowerCase()),
+          orElse: () => provinces[1],
+        );
+        final parts = value.split(',');
+        final city = parts.first.trim();
+        return MarketplaceCity(
+          city.isEmpty ? 'Vancouver' : city,
+          province.code,
+          'CA',
+        );
+      },
     );
   }
 

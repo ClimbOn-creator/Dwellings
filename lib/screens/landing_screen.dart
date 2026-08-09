@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../widgets/site_footer.dart';
 import 'home_screen.dart';
 import 'marketing_pages.dart';
 
@@ -77,6 +78,20 @@ class _LandingScreenState extends State<LandingScreen> {
         SliverToBoxAdapter(child: _IntelligenceSection(onOpen: _openModel)),
         SliverToBoxAdapter(child: _ProcessSection(onOpen: _openModel)),
         SliverToBoxAdapter(child: _ClosingSection(onOpen: _openModel)),
+        SliverToBoxAdapter(
+          child: SiteFooter(
+            onHome: () => _scrollController.animateTo(
+              0,
+              duration: const Duration(milliseconds: 700),
+              curve: Curves.easeOutCubic,
+            ),
+            onAbout: () =>
+                openMarketingPage(context, MarketingDestination.about),
+            onTeam: () => openMarketingPage(context, MarketingDestination.team),
+            onMember: () =>
+                openMarketingPage(context, MarketingDestination.membership),
+          ),
+        ),
       ],
     ),
   );
