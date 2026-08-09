@@ -360,6 +360,8 @@ class _DirectorySection extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (result.isDemo) const _DemoBanner(),
+                    if (!result.isDemo && providers.isEmpty)
+                      _EmptyDirectory(city: city, category: category),
                     ...List.generate(
                       providers.length,
                       (index) => _ProviderRow(
@@ -376,6 +378,52 @@ class _DirectorySection extends StatelessWidget {
           ],
         ),
       ),
+    ),
+  );
+}
+
+class _EmptyDirectory extends StatelessWidget {
+  const _EmptyDirectory({required this.city, required this.category});
+  final MarketplaceCity city;
+  final ProviderCategory category;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: double.infinity,
+    padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 46),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(22),
+      border: Border.all(color: const Color(0xFFE1E1E8)),
+    ),
+    child: Column(
+      children: [
+        Container(
+          width: 58,
+          height: 58,
+          decoration: const BoxDecoration(
+            color: Color(0xFFF0EEF9),
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(Icons.person_search_outlined, color: _purple),
+        ),
+        const SizedBox(height: 18),
+        Text(
+          'No verified ${category.label.toLowerCase()} in ${city.city} yet.',
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            color: _ink,
+            fontSize: 21,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 9),
+        const Text(
+          'The live directory is connected. Providers will appear here after onboarding and credential verification.',
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Color(0xFF666674), fontSize: 13, height: 1.5),
+        ),
+      ],
     ),
   );
 }

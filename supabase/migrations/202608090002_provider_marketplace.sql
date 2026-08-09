@@ -8,6 +8,15 @@ create table if not exists public.service_regions (
   unique (normalized_city, region, country_code)
 );
 
+insert into public.service_regions (city, region, country_code)
+values
+  ('Vancouver', 'BC', 'CA'),
+  ('Victoria', 'BC', 'CA'),
+  ('Calgary', 'AB', 'CA'),
+  ('Toronto', 'ON', 'CA'),
+  ('Seattle', 'WA', 'US')
+on conflict (normalized_city, region, country_code) do nothing;
+
 create table if not exists public.provider_profiles (
   id uuid primary key default gen_random_uuid(),
   owner_user_id uuid references auth.users(id) on delete set null,
@@ -101,6 +110,14 @@ alter table public.provider_regions enable row level security;
 alter table public.lender_rates enable row level security;
 alter table public.sponsored_placements enable row level security;
 alter table public.lead_requests enable row level security;
+
+drop policy if exists "Public can read service regions" on public.service_regions;
+drop policy if exists "Public can read verified providers" on public.provider_profiles;
+drop policy if exists "Public can read verified provider regions" on public.provider_regions;
+drop policy if exists "Public can read current verified lender rates" on public.lender_rates;
+drop policy if exists "Public can read active sponsorship disclosures" on public.sponsored_placements;
+drop policy if exists "Users can create consented lead requests" on public.lead_requests;
+drop policy if exists "Users can read own lead requests" on public.lead_requests;
 
 create policy "Public can read service regions"
   on public.service_regions for select using (true);
