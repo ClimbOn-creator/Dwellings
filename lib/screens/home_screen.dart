@@ -244,6 +244,8 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
             SliverToBoxAdapter(child: _hero()),
+            const SliverToBoxAdapter(child: _SignalStrip()),
+            const SliverToBoxAdapter(child: _FuturistManifesto()),
             SliverToBoxAdapter(child: _workspace()),
             SliverToBoxAdapter(
               child: _EditorialSection(
@@ -330,20 +332,20 @@ class _HomeScreenState extends State<HomeScreen> {
                           const _Kicker('PROPERTY UNDERWRITING, REBUILT'),
                           const SizedBox(height: 22),
                           Text(
-                            'See the deal.\nNot the sales pitch.',
+                            'THE PROPERTY.\nTHE NUMBERS.\nTHE TRUTH.',
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: MediaQuery.sizeOf(context).width < 700
-                                  ? 50
-                                  : 82,
-                              height: .92,
+                                  ? 47
+                                  : 76,
+                              height: .88,
                               letterSpacing: -4,
                               fontWeight: FontWeight.w900,
                             ),
                           ),
                           const SizedBox(height: 28),
                           const Text(
-                            'One rigorous decision engine for homes, multifamily, retail, office, industrial, mixed-use, land, hospitality and self-storage.',
+                            'A complete decision engine for residential and commercial real estate—built to expose the assumptions behind every return.',
                             style: TextStyle(
                               color: Color(0xFFE4E4E4),
                               fontSize: 18,
@@ -382,59 +384,65 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
+            if (MediaQuery.sizeOf(context).width >= 920)
+              const Positioned(right: 34, top: 80, child: _HeroSystemCard()),
           ],
         ),
       );
     },
   );
 
-  Widget _workspace() => Center(
-    child: ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 1280),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 80, 20, 110),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const _Kicker('THE UNDERWRITING DESK', darkText: true),
-            const SizedBox(height: 12),
-            const Text(
-              'Put every assumption on the table.',
-              style: TextStyle(
-                fontSize: 42,
-                height: 1.05,
-                fontWeight: FontWeight.w900,
-                letterSpacing: -1.8,
+  Widget _workspace() => Container(
+    color: _ink,
+    child: Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 1280),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 80, 20, 110),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const _Kicker('THE ANALYSIS ENGINE'),
+              const SizedBox(height: 12),
+              const Text(
+                'Put every assumption on the table.',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 42,
+                  height: 1.05,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -1.8,
+                ),
               ),
-            ),
-            const SizedBox(height: 12),
-            const Text(
-              'Start with the essentials. Open the deeper sections when you have inspection, rent-roll, lease or financing data.',
-              style: TextStyle(color: _muted, fontSize: 15),
-            ),
-            const SizedBox(height: 34),
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final desktop = constraints.maxWidth >= 980;
-                return desktop
-                    ? Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(flex: 10, child: _inputPanel()),
-                          const SizedBox(width: 20),
-                          Expanded(flex: 11, child: _resultPanel()),
-                        ],
-                      )
-                    : Column(
-                        children: [
-                          _inputPanel(),
-                          const SizedBox(height: 20),
-                          _resultPanel(),
-                        ],
-                      );
-              },
-            ),
-          ],
+              const SizedBox(height: 12),
+              const Text(
+                'Start with the essentials. Open the deeper sections when you have inspection, rent-roll, lease or financing data.',
+                style: TextStyle(color: Color(0xFFAAAAAA), fontSize: 15),
+              ),
+              const SizedBox(height: 34),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final desktop = constraints.maxWidth >= 980;
+                  return desktop
+                      ? Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(flex: 10, child: _inputPanel()),
+                            const SizedBox(width: 20),
+                            Expanded(flex: 11, child: _resultPanel()),
+                          ],
+                        )
+                      : Column(
+                          children: [
+                            _inputPanel(),
+                            const SizedBox(height: 20),
+                            _resultPanel(),
+                          ],
+                        );
+                },
+              ),
+            ],
+          ),
         ),
       ),
     ),
@@ -650,9 +658,7 @@ class _HomeScreenState extends State<HomeScreen> {
             AspectRatio(
               aspectRatio: 1.45,
               child: ClipRRect(
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(18),
-                ),
+                borderRadius: BorderRadius.zero,
                 child: ColorFiltered(
                   colorFilter: _monochrome,
                   child: Image.asset(
@@ -705,7 +711,7 @@ class _HomeScreenState extends State<HomeScreen> {
             padding: const EdgeInsets.all(28),
             decoration: const BoxDecoration(
               color: _ink,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+              borderRadius: BorderRadius.zero,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -822,6 +828,335 @@ class _Spec {
   final String suffix;
 }
 
+class _HeroSystemCard extends StatelessWidget {
+  const _HeroSystemCard();
+  @override
+  Widget build(BuildContext context) => Container(
+    width: 250,
+    padding: const EdgeInsets.all(20),
+    decoration: BoxDecoration(
+      color: Colors.black.withValues(alpha: .62),
+      border: Border.all(color: Colors.white38),
+    ),
+    child: const Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            CircleAvatar(radius: 4, backgroundColor: _success),
+            SizedBox(width: 8),
+            Text(
+              'DWELLINGS IQ / LIVE',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 9,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.2,
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 24),
+        Text(
+          '40+',
+          style: TextStyle(
+            color: _lime,
+            fontSize: 38,
+            height: .9,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        SizedBox(height: 7),
+        Text(
+          'CONNECTED ASSUMPTIONS',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 9,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1,
+          ),
+        ),
+        SizedBox(height: 9),
+        Text(
+          'Residential + commercial\nThree-case stress engine',
+          style: TextStyle(
+            color: Color(0xFFBEBEBE),
+            fontSize: 10,
+            height: 1.45,
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+class _SignalStrip extends StatelessWidget {
+  const _SignalStrip();
+  @override
+  Widget build(BuildContext context) {
+    const cells = [
+      _SignalCell('01', 'ADDRESS', '→', 'MARKET', _ink, Colors.white),
+      _SignalCell('02', 'INCOME', '→', 'NOI', _green, Colors.white),
+      _SignalCell('03', 'DEBT', '→', 'DSCR', _lime, _ink),
+      _SignalCell('04', 'EXIT', '→', 'IRR', Colors.white, _ink),
+    ];
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth < 700) {
+          return SizedBox(
+            height: 82,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              children: cells
+                  .map((cell) => SizedBox(width: 245, child: cell))
+                  .toList(),
+            ),
+          );
+        }
+        return SizedBox(
+          height: 82,
+          child: Row(
+            children: cells.map((cell) => Expanded(child: cell)).toList(),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _SignalCell extends StatelessWidget {
+  const _SignalCell(
+    this.number,
+    this.from,
+    this.arrow,
+    this.to,
+    this.background,
+    this.foreground,
+  );
+  final String number;
+  final String from;
+  final String arrow;
+  final String to;
+  final Color background;
+  final Color foreground;
+  @override
+  Widget build(BuildContext context) => Container(
+    color: background,
+    padding: const EdgeInsets.symmetric(horizontal: 22),
+    child: Row(
+      children: [
+        Text(
+          number,
+          style: TextStyle(
+            color: foreground.withValues(alpha: .55),
+            fontSize: 9,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        const Spacer(),
+        Text(
+          from,
+          style: TextStyle(
+            color: foreground,
+            fontSize: 10,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.1,
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          child: Text(arrow, style: TextStyle(color: foreground, fontSize: 18)),
+        ),
+        Text(
+          to,
+          style: TextStyle(
+            color: foreground,
+            fontSize: 10,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.1,
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+class _FuturistManifesto extends StatelessWidget {
+  const _FuturistManifesto();
+  @override
+  Widget build(BuildContext context) => Container(
+    color: Colors.white,
+    padding: const EdgeInsets.symmetric(horizontal: 24),
+    child: Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 1280),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final narrow = constraints.maxWidth < 760;
+            if (narrow) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 72),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'ONE PROPERTY.',
+                      style: TextStyle(
+                        fontSize: 48,
+                        height: .9,
+                        letterSpacing: -2.4,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const Text(
+                      'EVERY ANGLE.',
+                      style: TextStyle(
+                        color: _green,
+                        fontSize: 48,
+                        height: .9,
+                        letterSpacing: -2.4,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 28),
+                    SizedBox(
+                      height: 210,
+                      width: double.infinity,
+                      child: ColorFiltered(
+                        colorFilter: _monochrome,
+                        child: Image.asset(
+                          'assets/images/commercial-atrium.jpg',
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 28),
+                    const Text(
+                      'DwellingsIQ connects the place, the income, the debt, the exit and the risk in one visible system.',
+                      style: TextStyle(
+                        color: _muted,
+                        fontSize: 15,
+                        height: 1.6,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
+            return SizedBox(
+              height: 650,
+              child: Stack(
+                children: [
+                  const Positioned(
+                    left: 0,
+                    top: 72,
+                    child: Text(
+                      'ONE PROPERTY.',
+                      style: TextStyle(
+                        fontSize: 92,
+                        height: .9,
+                        letterSpacing: -5,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                  const Positioned(
+                    right: 0,
+                    top: 205,
+                    child: Text(
+                      'EVERY ANGLE.',
+                      style: TextStyle(
+                        color: _green,
+                        fontSize: 92,
+                        height: .9,
+                        letterSpacing: -5,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                  const Positioned(
+                    left: 0,
+                    top: 338,
+                    child: Text(
+                      'ZERO BLIND SPOTS.',
+                      style: TextStyle(
+                        fontSize: 82,
+                        height: .9,
+                        letterSpacing: -4.5,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    right: 54,
+                    top: 45,
+                    child: Container(
+                      width: 250,
+                      height: 112,
+                      decoration: const BoxDecoration(
+                        border: Border.fromBorderSide(
+                          BorderSide(color: _ink, width: 5),
+                        ),
+                      ),
+                      child: ColorFiltered(
+                        colorFilter: _monochrome,
+                        child: Image.asset(
+                          'assets/images/commercial-atrium.jpg',
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    left: 190,
+                    top: 185,
+                    child: Container(
+                      width: 190,
+                      height: 88,
+                      decoration: const BoxDecoration(
+                        border: Border.fromBorderSide(
+                          BorderSide(color: _lime, width: 5),
+                        ),
+                      ),
+                      child: ColorFiltered(
+                        colorFilter: _monochrome,
+                        child: Image.asset(
+                          'assets/images/residential-courtyard.jpg',
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const Positioned(
+                    left: 4,
+                    bottom: 58,
+                    child: SizedBox(
+                      width: 520,
+                      child: Text(
+                        'A single system for the physical property, market, income, financing, exit and downside.',
+                        style: TextStyle(
+                          color: _muted,
+                          fontSize: 16,
+                          height: 1.55,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    right: 0,
+                    bottom: 56,
+                    child: Container(width: 180, height: 12, color: _lime),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    ),
+  );
+}
+
 class _Panel extends StatelessWidget {
   const _Panel({required this.child, this.padding = const EdgeInsets.all(26)});
   final Widget child;
@@ -831,14 +1166,10 @@ class _Panel extends StatelessWidget {
     padding: padding,
     decoration: BoxDecoration(
       color: _card,
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.zero,
       border: Border.all(color: _line),
       boxShadow: const [
-        BoxShadow(
-          color: Color(0x12102218),
-          blurRadius: 40,
-          offset: Offset(0, 18),
-        ),
+        BoxShadow(color: Color(0x12102218), blurRadius: 0, offset: Offset.zero),
       ],
     ),
     child: child,

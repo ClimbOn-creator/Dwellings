@@ -34,11 +34,11 @@ class DwellingIqApp extends StatelessWidget {
           filled: true,
           fillColor: Colors.white,
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.zero,
             borderSide: const BorderSide(color: Color(0xFFD9D9D9)),
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.zero,
             borderSide: const BorderSide(color: Color(0xFFD9D9D9)),
           ),
           contentPadding: const EdgeInsets.symmetric(
