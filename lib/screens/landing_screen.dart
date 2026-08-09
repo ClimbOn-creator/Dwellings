@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import 'home_screen.dart';
+import 'marketing_pages.dart';
 
 const _ink = Color(0xFF050510);
 const _navy = Color(0xFF09091B);
@@ -105,7 +106,7 @@ class _Hero extends StatelessWidget {
             ),
             child: Column(
               children: [
-                _Navigation(onOpen: onOpen),
+                MarketingNavigation(onModel: onOpen),
                 SizedBox(height: desktop ? 70 : 54),
                 if (desktop)
                   Expanded(
@@ -190,91 +191,6 @@ class _GridPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-class _Navigation extends StatelessWidget {
-  const _Navigation({required this.onOpen});
-  final VoidCallback onOpen;
-
-  @override
-  Widget build(BuildContext context) {
-    final narrow = MediaQuery.sizeOf(context).width < 720;
-    return Container(
-      height: 68,
-      padding: const EdgeInsets.symmetric(horizontal: 10),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: .055),
-        borderRadius: BorderRadius.circular(34),
-        border: Border.all(color: Colors.white.withValues(alpha: .11)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-            ),
-            alignment: Alignment.center,
-            child: const Text(
-              'D',
-              style: TextStyle(
-                color: _ink,
-                fontSize: 18,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          const Text(
-            'DWELLINGS',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 13,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 1.3,
-            ),
-          ),
-          const Text(
-            'IQ',
-            style: TextStyle(
-              color: _lilac,
-              fontSize: 13,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 1.3,
-            ),
-          ),
-          const Spacer(),
-          if (!narrow) ...[
-            const _NavLabel('CAPABILITIES'),
-            const SizedBox(width: 30),
-            const _NavLabel('HOW IT WORKS'),
-            const SizedBox(width: 30),
-          ],
-          _PillButton(
-            label: narrow ? 'MODEL' : 'OPEN THE MODEL',
-            onTap: onOpen,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _NavLabel extends StatelessWidget {
-  const _NavLabel(this.label);
-  final String label;
-  @override
-  Widget build(BuildContext context) => Text(
-    label,
-    style: const TextStyle(
-      color: Color(0xFFD6D6E0),
-      fontSize: 10,
-      fontWeight: FontWeight.w700,
-      letterSpacing: .8,
-    ),
-  );
 }
 
 class _PillButton extends StatefulWidget {
