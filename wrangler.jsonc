@@ -1,0 +1,13 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "dwellings-iq",
+  "pages_build_output_dir": "./dist",
+  "compatibility_date": "2026-08-08",
+  "r2_buckets": [
+    {
+      "binding": "PROPERTY_FILES",
+      "bucket_name": "dwellings",
+      "preview_bucket_name": "dwellings"
+    }
+  ]
+}
