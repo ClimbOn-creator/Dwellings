@@ -15,13 +15,13 @@ class DwellingIqApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const ink = Color(0xFF10231B);
-    const green = Color(0xFF1B5E45);
-    const paper = Color(0xFFF5F2E9);
+    const ink = Color(0xFF090909);
+    const purple = Color(0xFF6D28D9);
+    const paper = Color(0xFFF7F7F7);
     final base = ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
-      colorScheme: ColorScheme.fromSeed(seedColor: green, surface: paper),
+      colorScheme: ColorScheme.fromSeed(seedColor: purple, surface: paper),
       scaffoldBackgroundColor: paper,
       textTheme: GoogleFonts.dmSansTextTheme(),
     );
@@ -32,14 +32,14 @@ class DwellingIqApp extends StatelessWidget {
         textTheme: base.textTheme.apply(bodyColor: ink, displayColor: ink),
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
-          fillColor: const Color(0xFFFAFAF6),
+          fillColor: Colors.white,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(color: Color(0xFFDCE2DA)),
+            borderSide: const BorderSide(color: Color(0xFFD9D9D9)),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(color: Color(0xFFDCE2DA)),
+            borderSide: const BorderSide(color: Color(0xFFD9D9D9)),
           ),
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 14,

@@ -5,15 +5,38 @@ import 'package:flutter/material.dart';
 import '../models/housing_model.dart';
 import '../services/backend_service.dart';
 
-const _ink = Color(0xFF0A1913);
-const _green = Color(0xFF164F3B);
-const _lime = Color(0xFFD6FF62);
-const _paper = Color(0xFFF1EFE8);
-const _card = Color(0xFFFFFEFA);
-const _muted = Color(0xFF66736C);
-const _line = Color(0xFFD8DDD5);
-const _risk = Color(0xFFD56345);
-const _copper = Color(0xFFBE7651);
+const _ink = Color(0xFF090909);
+const _green = Color(0xFF6D28D9);
+const _lime = Color(0xFFD6A94B);
+const _paper = Color(0xFFF7F7F7);
+const _card = Color(0xFFFFFFFF);
+const _muted = Color(0xFF666666);
+const _line = Color(0xFFDADADA);
+const _risk = Color(0xFFD92D20);
+const _success = Color(0xFF16825D);
+const _copper = Color(0xFF5B21B6);
+const _monochrome = ColorFilter.matrix(<double>[
+  .33,
+  .33,
+  .33,
+  0,
+  0,
+  .33,
+  .33,
+  .33,
+  0,
+  0,
+  .33,
+  .33,
+  .33,
+  0,
+  0,
+  0,
+  0,
+  0,
+  1,
+  0,
+]);
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -265,13 +288,16 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             ClipRect(
               child: Transform.translate(
-                offset: Offset(0, offset * .16),
+                offset: Offset(0, offset * .045),
                 child: Transform.scale(
-                  scale: 1.08,
-                  child: Image.asset(
-                    'assets/images/hero-city.jpg',
-                    fit: BoxFit.cover,
-                    alignment: Alignment.center,
+                  scale: 1.025,
+                  child: ColorFiltered(
+                    colorFilter: _monochrome,
+                    child: Image.asset(
+                      'assets/images/hero-city.jpg',
+                      fit: BoxFit.cover,
+                      alignment: Alignment.center,
+                    ),
                   ),
                 ),
               ),
@@ -280,9 +306,9 @@ class _HomeScreenState extends State<HomeScreen> {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    Color(0xF20A1913),
-                    Color(0xA60A1913),
-                    Color(0x260A1913),
+                    Color(0xF2090909),
+                    Color(0xB0090909),
+                    Color(0x333B1678),
                   ],
                   stops: [0, .47, 1],
                 ),
@@ -319,7 +345,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           const Text(
                             'One rigorous decision engine for homes, multifamily, retail, office, industrial, mixed-use, land, hospitality and self-storage.',
                             style: TextStyle(
-                              color: Color(0xFFD8E0DC),
+                              color: Color(0xFFE4E4E4),
                               fontSize: 18,
                               height: 1.5,
                             ),
@@ -627,9 +653,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(18),
                 ),
-                child: Image.asset(
-                  'assets/images/residential-courtyard.jpg',
-                  fit: BoxFit.cover,
+                child: ColorFiltered(
+                  colorFilter: _monochrome,
+                  child: Image.asset(
+                    'assets/images/residential-courtyard.jpg',
+                    fit: BoxFit.cover,
+                  ),
                 ),
               ),
             ),
@@ -663,7 +692,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ? 'DOWNSIDE NEEDS WORK'
         : 'MERITS DILIGENCE';
     final verdictColor = strong
-        ? _lime
+        ? _success
         : cautious
         ? const Color(0xFFFFA98F)
         : const Color(0xFFFFD66B);
@@ -710,7 +739,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           Text(
                             '${_propertyType.label} · ${_profile.city}, ${_profile.region}',
                             style: const TextStyle(
-                              color: Color(0xFFA8BBB1),
+                              color: Color(0xFFB7B7B7),
                               fontSize: 11,
                             ),
                           ),
@@ -724,7 +753,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Text(
                   '${(result.probability * 100).round()}% modelled probability of outperforming the local benchmark. ${(result.dataCompleteness * 100).round()}% of core underwriting fields are populated.',
                   style: const TextStyle(
-                    color: Color(0xFFD3DED8),
+                    color: Color(0xFFD6D6D6),
                     height: 1.45,
                   ),
                 ),
@@ -733,7 +762,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   onPressed: _save,
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.white,
-                    side: const BorderSide(color: Color(0xFF456356)),
+                    side: const BorderSide(color: Color(0xFF777777)),
                   ),
                   icon: Icon(_saved ? Icons.bookmark : Icons.bookmark_border),
                   label: Text(_saved ? 'SAVED' : 'SAVE ANALYSIS'),
@@ -764,7 +793,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 20),
                 Container(
                   padding: const EdgeInsets.all(18),
-                  color: const Color(0xFFF0E9DC),
+                  color: const Color(0xFFF1EFF7),
                   child: const Text(
                     'Decision support—not an appraisal, lending commitment, tax opinion or guarantee. Validate rent roll, leases, title, zoning, environmental condition, inspection, taxes, insurance and financing with qualified professionals.',
                     style: TextStyle(color: _muted, fontSize: 10, height: 1.5),
@@ -915,7 +944,7 @@ class _ModeButton extends StatelessWidget {
       duration: const Duration(milliseconds: 180),
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
-        color: active ? _ink : const Color(0xFFF6F5EF),
+        color: active ? _ink : const Color(0xFFF7F7F7),
         border: Border.all(color: active ? _ink : _line),
       ),
       child: Row(
@@ -945,7 +974,7 @@ class _LocationStrip extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.all(13),
-    color: const Color(0xFFE7EEE7),
+    color: const Color(0xFFF0EBFF),
     child: Row(
       children: [
         const Icon(Icons.radar, color: _green),
@@ -1038,7 +1067,7 @@ class _Score extends StatelessWidget {
         ),
         const Text(
           '/ 100',
-          style: TextStyle(color: Color(0xFF9FB1A8), fontSize: 8),
+          style: TextStyle(color: Color(0xFF999999), fontSize: 8),
         ),
       ],
     ),
@@ -1228,28 +1257,35 @@ class _Flag extends StatelessWidget {
   const _Flag(this.text);
   final String text;
   @override
-  Widget build(BuildContext context) => Container(
-    margin: const EdgeInsets.only(bottom: 7),
-    padding: const EdgeInsets.all(12),
-    color: const Color(0xFFFFF2EC),
-    child: Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Icon(Icons.report_gmailerrorred, color: _risk, size: 17),
-        const SizedBox(width: 9),
-        Expanded(
-          child: Text(
-            text,
-            style: const TextStyle(
-              fontSize: 10,
-              height: 1.4,
-              fontWeight: FontWeight.w700,
+  Widget build(BuildContext context) {
+    final safe = text.startsWith('No major');
+    return Container(
+      margin: const EdgeInsets.only(bottom: 7),
+      padding: const EdgeInsets.all(12),
+      color: safe ? const Color(0xFFEAF7F1) : const Color(0xFFFFEFED),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            safe ? Icons.check_circle_outline : Icons.report_gmailerrorred,
+            color: safe ? _success : _risk,
+            size: 17,
+          ),
+          const SizedBox(width: 9),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(
+                fontSize: 10,
+                height: 1.4,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
-        ),
-      ],
-    ),
-  );
+        ],
+      ),
+    );
+  }
 }
 
 class _Driver extends StatelessWidget {
@@ -1311,7 +1347,7 @@ class _EditorialSection extends StatelessWidget {
   final bool dark;
   @override
   Widget build(BuildContext context) => Container(
-    color: dark ? _ink : const Color(0xFFD9E1D6),
+    color: dark ? _ink : const Color(0xFFF0ECFA),
     padding: const EdgeInsets.symmetric(vertical: 90, horizontal: 24),
     child: Center(
       child: ConstrainedBox(
@@ -1326,14 +1362,17 @@ class _EditorialSection extends StatelessWidget {
                   animation: controller,
                   builder: (context, _) {
                     final movement = controller.hasClients
-                        ? ((controller.offset % 900) - 450) * .08
+                        ? ((controller.offset % 900) - 450) * .022
                         : 0.0;
                     return Transform.translate(
                       offset: Offset(0, movement),
                       child: SizedBox(
-                        height: narrow ? 500 : 720,
+                        height: narrow ? 460 : 650,
                         width: double.infinity,
-                        child: Image.asset(image, fit: BoxFit.cover),
+                        child: ColorFiltered(
+                          colorFilter: _monochrome,
+                          child: Image.asset(image, fit: BoxFit.cover),
+                        ),
                       ),
                     );
                   },
@@ -1370,7 +1409,7 @@ class _EditorialSection extends StatelessWidget {
                   Text(
                     body,
                     style: TextStyle(
-                      color: dark ? const Color(0xFFB5C4BC) : _muted,
+                      color: dark ? const Color(0xFFBDBDBD) : _muted,
                       fontSize: 15,
                       height: 1.6,
                     ),
@@ -1411,7 +1450,7 @@ class _Methodology extends StatelessWidget {
             const Text(
               'EXPLAINABLE BY DESIGN',
               style: TextStyle(
-                color: _ink,
+                color: _lime,
                 fontSize: 10,
                 fontWeight: FontWeight.w900,
                 letterSpacing: 1.5,
@@ -1421,7 +1460,7 @@ class _Methodology extends StatelessWidget {
             const Text(
               'The answer is only as strong\nas the assumptions beneath it.',
               style: TextStyle(
-                color: _ink,
+                color: Colors.white,
                 fontSize: 46,
                 height: 1.05,
                 letterSpacing: -1.7,
@@ -1474,19 +1513,33 @@ class _MethodCard extends StatelessWidget {
     constraints: const BoxConstraints(minHeight: 190),
     padding: const EdgeInsets.all(24),
     decoration: BoxDecoration(
-      border: Border.all(color: _ink.withValues(alpha: .38)),
+      border: Border.all(color: Colors.white.withValues(alpha: .38)),
     ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(number, style: const TextStyle(fontWeight: FontWeight.w900)),
+        Text(
+          number,
+          style: const TextStyle(color: _lime, fontWeight: FontWeight.w900),
+        ),
         const SizedBox(height: 42),
         Text(
           title,
-          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w900),
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 15,
+            fontWeight: FontWeight.w900,
+          ),
         ),
         const SizedBox(height: 9),
-        Text(body, style: const TextStyle(fontSize: 11, height: 1.5)),
+        Text(
+          body,
+          style: const TextStyle(
+            color: Color(0xFFD8D0EB),
+            fontSize: 11,
+            height: 1.5,
+          ),
+        ),
       ],
     ),
   );
