@@ -1,78 +1,57 @@
-# DwellingIQ
+# DwellingIQ Flutter MVP
 
-DwellingIQ turns the Housing Moneyball workbook into a deployable property-decision web app. It supports both homebuyer and investor decisions and keeps the model explainable.
+DwellingIQ converts the Housing Moneyball workbook into an explainable, cross-platform Flutter application for homebuyers and property investors.
 
-## Included
+## MVP features
 
-- Responsive Vite web app with address scanning and browser geolocation.
-- All 12 opportunity factors and 10 risk factors from the workbook.
-- Risk-adjusted opportunity score, outperformance probability, appreciation projection, mortgage payment, cap rate, and cash-flow estimates.
-- Supabase magic-link authentication and saved analyses when configured.
-- Safe offline/demo mode using local browser storage before Supabase is connected.
+- Flutter source for web, iOS and macOS, following the same cross-platform approach as Climb On.
+- Homebuyer and investor decision modes.
+- Location-aware demo market profiles for Vancouver, Victoria, Kelowna, Calgary and Toronto.
+- Twelve opportunity factors and ten risk factors from the workbook.
+- Risk-adjusted score, outperformance probability, appreciation projection, mortgage cost, cap rate and investment cash flow.
+- Explainable factor contributions and decision-specific diligence questions.
+- Supabase magic-link authentication and user-owned saved analyses when configured.
+- Safe device-local saving when Supabase is not configured.
+- Cloudflare Pages Functions and authenticated R2 upload endpoint.
 - Supabase SQL migration with Row Level Security.
-- Cloudflare Pages Functions health endpoint and authenticated R2 upload endpoint.
-- Cloudflare Pages and R2 configuration through Wrangler.
 
-## Local setup
+## Flutter development
 
 ```bash
-npm install
-cp .env.example .env.local
-cp .dev.vars.example .dev.vars
-npm run dev
+flutter pub get
+flutter run -d chrome
+flutter test
 ```
 
-Without environment variables, the app still runs in demo mode and saves analyses on the current device.
+To enable Supabase locally, copy `.env.flutter.example.json` to `.env.flutter.json`, add the Project URL and publishable key, then build with:
 
-## Connect Supabase
+```bash
+npm run build:flutter
+```
 
-1. Open the Supabase project's **Connect** dialog.
-2. Put the Project URL and publishable key into `.env.local`.
-3. Put the same values into `.dev.vars` for local Cloudflare Functions.
-4. In Supabase SQL Editor, run `supabase/migrations/202608080001_initial_schema.sql`.
-5. Under **Authentication > URL Configuration**, add the local and deployed URLs as allowed redirect URLs.
+The private `.env.flutter.json` file is ignored by Git. Never place a Supabase secret/service-role key in the Flutter build.
 
-Do not put a Supabase secret or legacy `service_role` key in browser variables. This app does not require one for ordinary user-owned analysis records.
+## Cloudflare deployment
 
-## Connect Cloudflare Pages and R2
-
-The Wrangler configuration is connected to the R2 bucket already present in the Cloudflare account:
-
-- Production binding: `dwellings`
-- Preview binding: `dwellings`
-
-Production and preview currently share the bucket. Before accepting real customer documents, create a separate preview bucket and change `preview_bucket_name` in `wrangler.jsonc`.
-
-In the Cloudflare Pages project, use:
+Flutter is built locally and the static `dist/` bundle is committed for Cloudflare Pages. The Git-connected Cloudflare project uses:
 
 - Repository: `ClimbOn-creator/Dwellings`
 - Production branch: `main`
 - Build command: `npm run build`
-- Build output directory: `dist`
-- Root directory: `/`
+- Output directory: `dist`
+- Pages project: `dwellings-iq`
+- R2 binding: `PROPERTY_FILES` → `dwellings`
 
-Add these environment variables for both Production and Preview builds:
+The Cloudflare build command verifies the committed Flutter bundle. Before pushing a Flutter source change, run `npm run build:flutter` so `dist/` stays synchronized.
 
-- `VITE_SUPABASE_URL`
-- `VITE_SUPABASE_PUBLISHABLE_KEY`
-- `SUPABASE_URL`
-- `SUPABASE_PUBLISHABLE_KEY`
+## Supabase
 
-Bind the production/preview R2 buckets to the variable `PROPERTY_FILES` under the Pages project's **Settings > Bindings**. The server endpoint `/api/property-files` validates a Supabase access token before storing a document and limits files to 15 MB.
+Run `supabase/migrations/202608080001_initial_schema.sql` in the new project's SQL Editor. The migration creates profiles and property analyses with Row Level Security so each user can only access their own records.
 
-## Commands
+Add the deployed Pages URL under Supabase Authentication URL Configuration for magic-link redirects.
 
-```bash
-npm run dev       # Vite front-end development
-npm run build     # Production build
-npm run preview   # Preview the production build
-npm run deploy    # Direct Cloudflare Pages deployment through Wrangler
-```
+## Important limitation
 
-The recommended deployment path is Cloudflare's Git integration. Every push to `main` will then produce a new production deployment, while other branches can create preview deployments.
+The included location profiles are illustrative seed data. Production use requires current and licensed sources for comparable sales, listings, zoning, permits, hazards, insurance, mortgage rates, demographics, employment, transit and rents. Model weights require historical calibration and out-of-sample testing.
 
-## Before real financial use
-
-The included market profiles are illustrative seed data. A production release needs licensed/current sources for comparable sales, listings, zoning, permits, hazards, insurance, mortgage rates, demographics, employment, transit, and rents. The model weights also require time-based historical calibration and out-of-sample testing.
-
-DwellingIQ is a research and decision-support tool, not financial, mortgage, legal, tax, appraisal, or insurance advice.
+DwellingIQ is a research and decision-support tool, not financial, mortgage, legal, tax, appraisal or insurance advice.
