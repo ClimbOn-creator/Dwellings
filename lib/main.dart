@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import 'screens/home_screen.dart';
+import 'screens/landing_screen.dart';
 import 'services/backend_service.dart';
 
 Future<void> main() async {
@@ -47,7 +47,7 @@ class DwellingIqApp extends StatelessWidget {
           ),
         ),
       ),
-      home: const HomeScreen(),
+      home: const LandingScreen(),
     );
   }
 }

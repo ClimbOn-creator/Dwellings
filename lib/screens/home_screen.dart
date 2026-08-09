@@ -7,7 +7,7 @@ import '../services/backend_service.dart';
 
 const _ink = Color(0xFF090909);
 const _green = Color(0xFF6D28D9);
-const _lime = Color(0xFFD6A94B);
+const _lime = Color(0xFFA78BFA);
 const _paper = Color(0xFFF7F7F7);
 const _card = Color(0xFFFFFFFF);
 const _muted = Color(0xFF666666);
@@ -38,14 +38,14 @@ const _monochrome = ColorFilter.matrix(<double>[
   0,
 ]);
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+class UnderwritingScreen extends StatefulWidget {
+  const UnderwritingScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<UnderwritingScreen> createState() => _UnderwritingScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _UnderwritingScreenState extends State<UnderwritingScreen> {
   final _scroll = ScrollController();
   DecisionMode _mode = DecisionMode.invest;
   PropertyType _propertyType = PropertyType.multifamily;
@@ -226,6 +226,13 @@ class _HomeScreenState extends State<HomeScreen> {
               surfaceTintColor: Colors.transparent,
               titleSpacing: 26,
               title: const _Brand(),
+              leading: Navigator.canPop(context)
+                  ? IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.arrow_back, color: Colors.white),
+                      tooltip: 'Back to DwellingsIQ',
+                    )
+                  : null,
               actions: [
                 TextButton(
                   onPressed: _account,
@@ -243,33 +250,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(width: 18),
               ],
             ),
-            SliverToBoxAdapter(child: _hero()),
-            const SliverToBoxAdapter(child: _SignalStrip()),
-            const SliverToBoxAdapter(child: _FuturistManifesto()),
+            const SliverToBoxAdapter(child: _AnalysisHeader()),
             SliverToBoxAdapter(child: _workspace()),
-            SliverToBoxAdapter(
-              child: _EditorialSection(
-                controller: _scroll,
-                image: 'assets/images/commercial-atrium.jpg',
-                kicker: 'COMMERCIAL INTELLIGENCE',
-                title: 'Underwrite the income.\nInterrogate the lease.',
-                body:
-                    'From rent roll durability and tenant concentration to debt yield, break-even occupancy, rollover exposure and exit-cap sensitivity—the model turns operating assumptions into an auditable investment case.',
-                dark: true,
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: _EditorialSection(
-                controller: _scroll,
-                image: 'assets/images/residential-courtyard.jpg',
-                kicker: 'RESIDENTIAL CLARITY',
-                title:
-                    'A home is a life decision\nand a balance-sheet decision.',
-                body:
-                    'See monthly ownership cost, debt-to-income pressure, location fundamentals, physical risk, resale liquidity and long-term value without pretending a forecast is a guarantee.',
-                reverse: true,
-              ),
-            ),
             const SliverToBoxAdapter(child: _Methodology()),
           ],
         ),
@@ -826,6 +808,61 @@ class _Spec {
   final String key;
   final String label;
   final String suffix;
+}
+
+class _AnalysisHeader extends StatelessWidget {
+  const _AnalysisHeader();
+  @override
+  Widget build(BuildContext context) => Container(
+    color: Colors.white,
+    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 64),
+    child: Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 1240),
+        child: LayoutBuilder(
+          builder: (context, constraints) => Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'DWELLINGS IQ / MODEL 01',
+                      style: TextStyle(
+                        color: _green,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Text(
+                      'UNDERWRITE\nTHE PROPERTY.',
+                      style: TextStyle(
+                        fontSize: constraints.maxWidth < 700 ? 48 : 72,
+                        height: .87,
+                        letterSpacing: -3.5,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (constraints.maxWidth >= 760)
+                const SizedBox(
+                  width: 310,
+                  child: Text(
+                    'A dedicated workspace for assumptions, returns, debt, risk and scenario analysis. Nothing is hidden behind the presentation layer.',
+                    style: TextStyle(color: _muted, fontSize: 13, height: 1.55),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
 }
 
 class _HeroSystemCard extends StatelessWidget {
