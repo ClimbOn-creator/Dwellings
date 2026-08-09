@@ -67,51 +67,59 @@ class _LogoPainter extends CustomPainter {
     );
 
     final ink = dark ? brandInk : Colors.white;
-    final structure = Paint()
-      ..color = ink
+    final rearFrame = Paint()
+      ..color = brandPurple
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 3.2 * scale
+      ..strokeWidth = 3.4 * scale
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
 
-    final body = Path()
-      ..moveTo(13 * scale, 11 * scale)
-      ..lineTo(21 * scale, 11 * scale)
-      ..cubicTo(
-        30 * scale,
-        11 * scale,
-        34 * scale,
-        15.5 * scale,
-        34 * scale,
-        22 * scale,
-      )
-      ..cubicTo(
-        34 * scale,
-        28.5 * scale,
-        30 * scale,
-        33 * scale,
-        21 * scale,
-        33 * scale,
-      )
-      ..lineTo(13 * scale, 33 * scale)
-      ..close();
-    canvas.drawPath(body, structure);
+    final frontFrame = Paint()
+      ..color = ink
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3.4 * scale
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
 
-    final doorway = Paint()
-      ..color = brandPurple
-      ..style = PaintingStyle.fill;
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(17 * scale, 22 * scale, 7 * scale, 11 * scale),
-        Radius.circular(2.2 * scale),
-      ),
-      doorway,
+    final rear = Path()
+      ..moveTo(15 * scale, 28 * scale)
+      ..lineTo(15 * scale, 14 * scale)
+      ..lineTo(29 * scale, 14 * scale);
+    canvas.drawPath(rear, rearFrame);
+
+    final front = Path()
+      ..moveTo(20 * scale, 34 * scale)
+      ..lineTo(20 * scale, 20 * scale)
+      ..lineTo(34 * scale, 20 * scale)
+      ..lineTo(34 * scale, 34 * scale);
+    canvas.drawPath(front, frontFrame);
+
+    final threshold = Paint()
+      ..color = ink
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3.4 * scale
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(
+      Offset(20 * scale, 34 * scale),
+      Offset(34 * scale, 34 * scale),
+      threshold,
+    );
+
+    final connection = Paint()
+      ..color = brandLilac
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2 * scale
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(
+      Offset(29 * scale, 14 * scale),
+      Offset(34 * scale, 9 * scale),
+      connection,
     );
 
     final node = Paint()
       ..color = brandLilac
       ..style = PaintingStyle.fill;
-    canvas.drawCircle(Offset(31 * scale, 12 * scale), 3.2 * scale, node);
+    canvas.drawCircle(Offset(35.5 * scale, 7.5 * scale), 3.6 * scale, node);
   }
 
   @override
