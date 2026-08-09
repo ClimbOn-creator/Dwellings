@@ -44,7 +44,7 @@ class BackendService {
         'location_profile': inputs.profile.toJson(),
         'property_inputs': inputs.toJson(),
         'model_output': result.toJson(),
-        'model_version': 'housing-moneyball-0.2-flutter',
+        'model_version': 'dwellings-iq-underwriting-0.3',
       });
       return true;
     }

@@ -1,16 +1,19 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../models/housing_model.dart';
 import '../services/backend_service.dart';
 
-const _ink = Color(0xFF10231B);
-const _green = Color(0xFF1B5E45);
-const _lime = Color(0xFFC9F55B);
-const _paper = Color(0xFFF5F2E9);
-const _card = Color(0xFFFFFDF8);
-const _muted = Color(0xFF65766E);
-const _line = Color(0xFFDDE2DA);
-const _risk = Color(0xFFB7553D);
+const _ink = Color(0xFF0A1913);
+const _green = Color(0xFF164F3B);
+const _lime = Color(0xFFD6FF62);
+const _paper = Color(0xFFF1EFE8);
+const _card = Color(0xFFFFFEFA);
+const _muted = Color(0xFF66736C);
+const _line = Color(0xFFD8DDD5);
+const _risk = Color(0xFFD56345);
+const _copper = Color(0xFFBE7651);
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -20,70 +23,101 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  DecisionMode _mode = DecisionMode.home;
+  final _scroll = ScrollController();
+  DecisionMode _mode = DecisionMode.invest;
+  PropertyType _propertyType = PropertyType.multifamily;
   MarketProfile _profile = marketProfiles.first;
   AnalysisResult? _result;
   bool _scanning = false;
   bool _saved = false;
-
   final _address = TextEditingController(text: 'Kitsilano, Vancouver, BC');
   final Map<String, TextEditingController> _fields = {
     'price': TextEditingController(text: '1200000'),
-    'finishedArea': TextEditingController(text: '1800'),
-    'lotArea': TextEditingController(text: '6500'),
-    'buildable': TextEditingController(text: '0'),
-    'bedrooms': TextEditingController(text: '3'),
-    'bathrooms': TextEditingController(text: '2'),
+    'closingCosts': TextEditingController(text: '30000'),
+    'improvements': TextEditingController(text: '50000'),
+    'area': TextEditingController(text: '6200'),
+    'lot': TextEditingController(text: '6500'),
+    'units': TextEditingController(text: '6'),
     'yearBuilt': TextEditingController(text: '1988'),
-    'repairs': TextEditingController(text: '25000'),
-    'rent': TextEditingController(text: '5000'),
-    'operatingCosts': TextEditingController(text: '12500'),
-    'redevelopment': TextEditingController(text: '55'),
-    'scarcity': TextEditingController(text: '64'),
-    'daysOnMarket': TextEditingController(text: '28'),
-    'downPayment': TextEditingController(text: '20'),
+    'buildable': TextEditingController(text: '9000'),
+    'annualRent': TextEditingController(text: '180000'),
+    'otherIncome': TextEditingController(text: '6000'),
+    'vacancy': TextEditingController(text: '4'),
+    'propertyTax': TextEditingController(text: '12500'),
+    'insurance': TextEditingController(text: '5200'),
+    'utilities': TextEditingController(text: '7200'),
+    'maintenance': TextEditingController(text: '12000'),
+    'management': TextEditingController(text: '5'),
+    'reserves': TextEditingController(text: '9000'),
+    'otherExpenses': TextEditingController(text: '4500'),
+    'downPayment': TextEditingController(text: '30'),
+    'interestRate': TextEditingController(text: '4.5'),
     'amortization': TextEditingController(text: '25'),
-    'holdingPeriod': TextEditingController(text: '5'),
+    'loanTerm': TextEditingController(text: '5'),
+    'interestOnly': TextEditingController(text: '0'),
+    'holdingPeriod': TextEditingController(text: '7'),
+    'exitCap': TextEditingController(text: '5.5'),
+    'sellingCosts': TextEditingController(text: '4'),
+    'rentGrowth': TextEditingController(text: '3'),
+    'expenseGrowth': TextEditingController(text: '2.5'),
+    'appreciation': TextEditingController(text: '3.9'),
+    'discountRate': TextEditingController(text: '8'),
+    'householdIncome': TextEditingController(text: '180000'),
+    'monthlyDebt': TextEditingController(text: '500'),
+    'walt': TextEditingController(text: '4'),
+    'leaseRollover': TextEditingController(text: '20'),
+    'tenantConcentration': TextEditingController(text: '25'),
+    'conditionRisk': TextEditingController(text: '24'),
+    'environmentRisk': TextEditingController(text: '18'),
+    'redevelopment': TextEditingController(text: '58'),
+    'scarcity': TextEditingController(text: '64'),
+    'daysOnMarket': TextEditingController(text: '35'),
   };
 
-  double _number(String key) => double.tryParse(_fields[key]?.text ?? '') ?? 0;
+  double _number(String key) =>
+      double.tryParse(_fields[key]?.text.replaceAll(',', '') ?? '') ?? 0;
 
   PropertyInputs get _inputs => PropertyInputs(
     address: _address.text.trim().isEmpty
         ? 'Untitled property'
         : _address.text.trim(),
-    price: _number('price'),
-    finishedArea: _number('finishedArea'),
-    lotArea: _number('lotArea'),
-    buildable: _number('buildable'),
-    bedrooms: _number('bedrooms'),
-    bathrooms: _number('bathrooms'),
-    yearBuilt: _number('yearBuilt'),
-    repairs: _number('repairs'),
-    rent: _number('rent'),
-    operatingCosts: _number('operatingCosts'),
-    redevelopment: _number('redevelopment'),
-    scarcity: _number('scarcity'),
-    daysOnMarket: _number('daysOnMarket'),
-    downPayment: _number('downPayment'),
-    amortization: _number('amortization'),
-    holdingPeriod: _number('holdingPeriod'),
+    propertyType: _propertyType,
     profile: _profile,
+    values: {
+      for (final entry in _fields.entries) entry.key: _number(entry.key),
+    },
   );
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    _address.dispose();
+    for (final controller in _fields.values) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
 
   Future<void> _scanLocation() async {
     setState(() => _scanning = true);
-    await Future<void>.delayed(const Duration(milliseconds: 700));
+    await Future<void>.delayed(const Duration(milliseconds: 650));
     if (!mounted) return;
     setState(() {
       _profile = profileForAddress(_address.text);
+      _fields['interestRate']!.text = (_profile.mortgage * 100).toStringAsFixed(
+        2,
+      );
+      _fields['appreciation']!.text = (_profile.appreciation * 100)
+          .toStringAsFixed(1);
       _scanning = false;
     });
   }
 
   void _analyze() {
-    if (_number('price') <= 0 || _number('rent') < 0) {
-      _message('Add a valid purchase price before running the analysis.');
+    if (_number('price') <= 0 || _number('area') <= 0) {
+      _message(
+        'Add a purchase price and property area before running the model.',
+      );
       return;
     }
     setState(() {
@@ -101,8 +135,8 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() => _saved = true);
       _message(
         cloud
-            ? 'Analysis saved to your account.'
-            : 'Analysis saved securely on this device.',
+            ? 'Analysis saved to your DwellingsIQ account.'
+            : 'Analysis saved on this device.',
       );
     } catch (error) {
       _message('Could not save: $error');
@@ -112,7 +146,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _account() async {
     if (!BackendService.configured) {
       _message(
-        'Demo mode is active. Supabase will enable accounts after deployment setup.',
+        'Demo mode is active. Connect Supabase to enable accounts and cloud history.',
       );
       return;
     }
@@ -125,7 +159,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final email = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Sign in to DwellingIQ'),
+        title: const Text('Sign in to DwellingsIQ'),
         content: TextField(
           controller: controller,
           keyboardType: TextInputType.emailAddress,
@@ -158,116 +192,223 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: _paper,
       body: SelectionArea(
         child: CustomScrollView(
+          controller: _scroll,
           slivers: [
             SliverAppBar(
               pinned: true,
-              backgroundColor: _paper.withValues(alpha: .96),
+              backgroundColor: _ink.withValues(alpha: .97),
               surfaceTintColor: Colors.transparent,
-              titleSpacing: 28,
+              titleSpacing: 26,
               title: const _Brand(),
               actions: [
                 TextButton(
                   onPressed: _account,
                   child: Text(
                     BackendService.user?.email ??
-                        (BackendService.configured ? 'Sign in' : 'Demo'),
+                        (BackendService.configured ? 'SIGN IN' : 'DEMO MODE'),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1,
+                    ),
                   ),
                 ),
-                const SizedBox(width: 20),
+                const SizedBox(width: 18),
               ],
             ),
             SliverToBoxAdapter(child: _hero()),
             SliverToBoxAdapter(child: _workspace()),
-            const SliverToBoxAdapter(child: _HowItWorks()),
+            SliverToBoxAdapter(
+              child: _EditorialSection(
+                controller: _scroll,
+                image: 'assets/images/commercial-atrium.jpg',
+                kicker: 'COMMERCIAL INTELLIGENCE',
+                title: 'Underwrite the income.\nInterrogate the lease.',
+                body:
+                    'From rent roll durability and tenant concentration to debt yield, break-even occupancy, rollover exposure and exit-cap sensitivity—the model turns operating assumptions into an auditable investment case.',
+                dark: true,
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: _EditorialSection(
+                controller: _scroll,
+                image: 'assets/images/residential-courtyard.jpg',
+                kicker: 'RESIDENTIAL CLARITY',
+                title:
+                    'A home is a life decision\nand a balance-sheet decision.',
+                body:
+                    'See monthly ownership cost, debt-to-income pressure, location fundamentals, physical risk, resale liquidity and long-term value without pretending a forecast is a guarantee.',
+                reverse: true,
+              ),
+            ),
+            const SliverToBoxAdapter(child: _Methodology()),
           ],
         ),
       ),
     );
   }
 
-  Widget _hero() => Center(
-    child: ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 1160),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(28, 72, 28, 54),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _hero() => AnimatedBuilder(
+    animation: _scroll,
+    builder: (context, _) {
+      final offset = _scroll.hasClients
+          ? _scroll.offset.clamp(0, 700).toDouble()
+          : 0.0;
+      return SizedBox(
+        height: MediaQuery.sizeOf(context).width < 700 ? 650 : 720,
+        child: Stack(
+          fit: StackFit.expand,
           children: [
-            const Row(
-              children: [
-                SizedBox(
-                  width: 28,
-                  child: Divider(color: _green, thickness: 3),
-                ),
-                SizedBox(width: 10),
-                Text(
-                  'PROPERTY DECISION INTELLIGENCE',
-                  style: TextStyle(
-                    color: _green,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 1.5,
+            ClipRect(
+              child: Transform.translate(
+                offset: Offset(0, offset * .16),
+                child: Transform.scale(
+                  scale: 1.08,
+                  child: Image.asset(
+                    'assets/images/hero-city.jpg',
+                    fit: BoxFit.cover,
+                    alignment: Alignment.center,
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 18),
-            Text(
-              'Know the property.\nSee the whole picture.',
-              style: TextStyle(
-                fontSize: MediaQuery.sizeOf(context).width < 650 ? 43 : 68,
-                height: .98,
-                fontWeight: FontWeight.w800,
-                letterSpacing: -2.7,
               ),
             ),
-            const SizedBox(height: 24),
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 650),
-              child: const Text(
-                'Location-aware analysis for buying a home or evaluating an investment—built from transparent fundamentals, not sales language.',
-                style: TextStyle(fontSize: 18, height: 1.55, color: _muted),
+            const DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Color(0xF20A1913),
+                    Color(0xA60A1913),
+                    Color(0x260A1913),
+                  ],
+                  stops: [0, .47, 1],
+                ),
               ),
             ),
-            const SizedBox(height: 30),
-            const Wrap(
-              spacing: 34,
-              runSpacing: 14,
-              children: [
-                _HeroStat('22', 'FACTORS SCORED'),
-                _HeroStat('2', 'DECISION LENSES'),
-                _HeroStat('100%', 'EXPLAINABLE'),
-              ],
+            Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1260),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 28),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 760),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const _Kicker('PROPERTY UNDERWRITING, REBUILT'),
+                          const SizedBox(height: 22),
+                          Text(
+                            'See the deal.\nNot the sales pitch.',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: MediaQuery.sizeOf(context).width < 700
+                                  ? 50
+                                  : 82,
+                              height: .92,
+                              letterSpacing: -4,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                          const SizedBox(height: 28),
+                          const Text(
+                            'One rigorous decision engine for homes, multifamily, retail, office, industrial, mixed-use, land, hospitality and self-storage.',
+                            style: TextStyle(
+                              color: Color(0xFFD8E0DC),
+                              fontSize: 18,
+                              height: 1.5,
+                            ),
+                          ),
+                          const SizedBox(height: 34),
+                          Wrap(
+                            spacing: 10,
+                            runSpacing: 10,
+                            children: [
+                              'NOI',
+                              'DSCR',
+                              'IRR',
+                              'DEBT YIELD',
+                              'EXIT STRESS',
+                            ].map((label) => _HeroChip(label)).toList(),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const Positioned(
+              right: 28,
+              bottom: 26,
+              child: Text(
+                'SCROLL TO UNDERWRITE  ↓',
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 9,
+                  letterSpacing: 1.6,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
             ),
           ],
         ),
-      ),
-    ),
+      );
+    },
   );
 
   Widget _workspace() => Center(
     child: ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 1180),
+      constraints: const BoxConstraints(maxWidth: 1280),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 96),
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final desktop = constraints.maxWidth >= 900;
-            final form = _inputPanel();
-            final result = _resultPanel();
-            return desktop
-                ? Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(flex: 11, child: form),
-                      const SizedBox(width: 20),
-                      Expanded(flex: 9, child: result),
-                    ],
-                  )
-                : Column(children: [form, const SizedBox(height: 20), result]);
-          },
+        padding: const EdgeInsets.fromLTRB(20, 80, 20, 110),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const _Kicker('THE UNDERWRITING DESK', darkText: true),
+            const SizedBox(height: 12),
+            const Text(
+              'Put every assumption on the table.',
+              style: TextStyle(
+                fontSize: 42,
+                height: 1.05,
+                fontWeight: FontWeight.w900,
+                letterSpacing: -1.8,
+              ),
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'Start with the essentials. Open the deeper sections when you have inspection, rent-roll, lease or financing data.',
+              style: TextStyle(color: _muted, fontSize: 15),
+            ),
+            const SizedBox(height: 34),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final desktop = constraints.maxWidth >= 980;
+                return desktop
+                    ? Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(flex: 10, child: _inputPanel()),
+                          const SizedBox(width: 20),
+                          Expanded(flex: 11, child: _resultPanel()),
+                        ],
+                      )
+                    : Column(
+                        children: [
+                          _inputPanel(),
+                          const SizedBox(height: 20),
+                          _resultPanel(),
+                        ],
+                      );
+              },
+            ),
+          ],
         ),
       ),
     ),
@@ -277,41 +418,57 @@ class _HomeScreenState extends State<HomeScreen> {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _SectionHeader(
-          kicker: '01 / SET YOUR GOAL',
-          title: 'What are you buying?',
+        const Text('01  ·  STRATEGY', style: _eyebrow),
+        const SizedBox(height: 8),
+        const Text(
+          'What are you evaluating?',
+          style: TextStyle(fontSize: 25, fontWeight: FontWeight.w900),
         ),
         const SizedBox(height: 18),
         Row(
           children: [
             Expanded(
-              child: _ModeCard(
+              child: _ModeButton(
                 active: _mode == DecisionMode.home,
-                icon: Icons.home_outlined,
-                title: 'A home to live in',
-                subtitle: 'Affordability + long-term value',
-                onTap: () => setState(() => _mode = DecisionMode.home),
+                icon: Icons.home_work_outlined,
+                label: 'LIVE IN IT',
+                onTap: () => setState(() {
+                  _mode = DecisionMode.home;
+                  if (!_propertyType.isResidential)
+                    _propertyType = PropertyType.singleFamily;
+                }),
               ),
             ),
             const SizedBox(width: 10),
             Expanded(
-              child: _ModeCard(
+              child: _ModeButton(
                 active: _mode == DecisionMode.invest,
-                icon: Icons.trending_up,
-                title: 'An investment',
-                subtitle: 'Yield + risk-adjusted growth',
+                icon: Icons.query_stats,
+                label: 'INVEST IN IT',
                 onTap: () => setState(() => _mode = DecisionMode.invest),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 28),
-        const _StepLabel(
-          number: '02',
-          title: 'PROPERTY LOCATION',
-          subtitle: 'Let the location do the heavy lifting',
+        const SizedBox(height: 18),
+        DropdownButtonFormField<PropertyType>(
+          initialValue: _propertyType,
+          decoration: const InputDecoration(labelText: 'Asset class'),
+          items: PropertyType.values
+              .where(
+                (type) => _mode == DecisionMode.invest || type.isResidential,
+              )
+              .map(
+                (type) =>
+                    DropdownMenuItem(value: type, child: Text(type.label)),
+              )
+              .toList(),
+          onChanged: (value) =>
+              value == null ? null : setState(() => _propertyType = value),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 28),
+        const Text('02  ·  LOCATION', style: _eyebrow),
+        const SizedBox(height: 10),
         TextField(
           controller: _address,
           decoration: InputDecoration(
@@ -319,358 +476,325 @@ class _HomeScreenState extends State<HomeScreen> {
             prefixIcon: const Icon(Icons.location_on_outlined),
             suffixIcon: Padding(
               padding: const EdgeInsets.all(6),
-              child: FilledButton.icon(
+              child: FilledButton(
                 onPressed: _scanning ? null : _scanLocation,
-                icon: Icon(
-                  _scanning ? Icons.hourglass_top : Icons.auto_awesome,
-                  size: 15,
-                ),
-                label: Text(_scanning ? 'Scanning…' : 'Scan'),
+                child: Text(_scanning ? 'Scanning…' : 'Scan'),
               ),
             ),
           ),
         ),
-        const SizedBox(height: 12),
-        _LocationCard(profile: _profile),
-        const SizedBox(height: 28),
-        const _StepLabel(
-          number: '03',
-          title: 'PROPERTY DETAILS',
-          subtitle: 'Add what you know — estimates are okay',
+        const SizedBox(height: 10),
+        _LocationStrip(profile: _profile),
+        const SizedBox(height: 20),
+        _InputSection(
+          title: 'ACQUISITION & PHYSICAL',
+          subtitle: 'Basis, size, condition and development potential',
+          initiallyExpanded: true,
+          children: _fieldGrid([
+            _Spec('price', 'Purchase price', '\$'),
+            _Spec('closingCosts', 'Closing costs', '\$'),
+            _Spec('improvements', 'Immediate improvements', '\$'),
+            _Spec('area', 'Rentable / finished area', 'sq ft'),
+            _Spec('lot', 'Lot area', 'sq ft'),
+            _Spec('units', 'Units / keys', ''),
+            _Spec('yearBuilt', 'Year built', ''),
+            _Spec('buildable', 'Buildable floor area', 'sq ft'),
+          ]),
         ),
-        const SizedBox(height: 14),
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final width = constraints.maxWidth > 530
-                ? (constraints.maxWidth - 14) / 2
-                : constraints.maxWidth;
-            return Wrap(
-              spacing: 14,
-              runSpacing: 14,
-              children: [
-                _field('price', 'Purchase price', '\$ CAD', width),
-                _field('downPayment', 'Down payment', '%', width),
-                _field('finishedArea', 'Finished area', 'sq ft', width),
-                _field('lotArea', 'Lot size', 'sq ft', width),
-                _field('bedrooms', 'Bedrooms', '', width),
-                _field('bathrooms', 'Bathrooms', '', width),
-                _field('yearBuilt', 'Year built', '', width),
-                _field('repairs', 'Immediate repairs', '\$ CAD', width),
-                _field('rent', 'Monthly market rent', '\$ CAD', width),
-                _field(
-                  'operatingCosts',
-                  'Annual operating costs',
-                  '\$ CAD',
-                  width,
-                ),
-                _field('holdingPeriod', 'Holding period', 'years', width),
-                _field(
-                  'buildable',
-                  'Buildable floor area (optional)',
-                  'sq ft',
-                  width,
-                ),
-              ],
-            );
-          },
+        _InputSection(
+          title: 'INCOME & OPERATIONS',
+          subtitle: 'Revenue leakage and every recurring operating cost',
+          initiallyExpanded: true,
+          children: _fieldGrid([
+            _Spec('annualRent', 'Annual base rent / income', '\$'),
+            _Spec('otherIncome', 'Other annual income', '\$'),
+            _Spec('vacancy', 'Vacancy & credit loss', '%'),
+            _Spec('propertyTax', 'Property tax', '\$/yr'),
+            _Spec('insurance', 'Insurance', '\$/yr'),
+            _Spec('utilities', 'Owner-paid utilities', '\$/yr'),
+            _Spec('maintenance', 'Repairs & maintenance', '\$/yr'),
+            _Spec('management', 'Management fee', '% EGI'),
+            _Spec('reserves', 'Replacement reserves', '\$/yr'),
+            _Spec('otherExpenses', 'Other operating expenses', '\$/yr'),
+          ]),
         ),
-        const SizedBox(height: 22),
+        _InputSection(
+          title: 'CAPITAL STACK & EXIT',
+          subtitle: 'Debt terms, growth, hold and terminal valuation',
+          children: _fieldGrid([
+            _Spec('downPayment', 'Equity / down payment', '%'),
+            _Spec('interestRate', 'Interest rate', '%'),
+            _Spec('amortization', 'Amortization', 'years'),
+            _Spec('loanTerm', 'Loan term', 'years'),
+            _Spec('interestOnly', 'Interest-only period', 'years'),
+            _Spec('holdingPeriod', 'Holding period', 'years'),
+            _Spec('exitCap', 'Exit capitalization rate', '%'),
+            _Spec('sellingCosts', 'Selling costs', '%'),
+            _Spec('rentGrowth', 'Annual income growth', '%'),
+            _Spec('expenseGrowth', 'Annual expense growth', '%'),
+            _Spec('appreciation', 'Home appreciation', '%'),
+            _Spec('discountRate', 'Required return / discount rate', '%'),
+          ]),
+        ),
+        if (_mode == DecisionMode.home)
+          _InputSection(
+            title: 'HOUSEHOLD AFFORDABILITY',
+            subtitle: 'Income and obligations for the live-in decision',
+            children: _fieldGrid([
+              _Spec('householdIncome', 'Gross household income', '\$/yr'),
+              _Spec('monthlyDebt', 'Other monthly debt payments', '\$/mo'),
+            ]),
+          ),
+        _InputSection(
+          title: 'LEASE, SITE & RISK',
+          subtitle: 'Rollover, concentration, liquidity and physical exposure',
+          children: _fieldGrid([
+            _Spec('walt', 'Weighted average lease term', 'years'),
+            _Spec('leaseRollover', 'Income rolling during hold', '%'),
+            _Spec('tenantConcentration', 'Largest tenant / payer share', '%'),
+            _Spec('daysOnMarket', 'Expected sale liquidity', 'days'),
+            _Spec('conditionRisk', 'Condition / capex risk', '0–100'),
+            _Spec('environmentRisk', 'Site environmental risk', '0–100'),
+            _Spec('redevelopment', 'Redevelopment feasibility', '0–100'),
+            _Spec('scarcity', 'Comparable scarcity', '0–100'),
+          ]),
+        ),
+        const SizedBox(height: 16),
         SizedBox(
           width: double.infinity,
-          height: 54,
+          height: 58,
           child: FilledButton.icon(
             onPressed: _analyze,
             style: FilledButton.styleFrom(
-              backgroundColor: _green,
+              backgroundColor: _lime,
+              foregroundColor: _ink,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(4),
               ),
             ),
-            iconAlignment: IconAlignment.end,
-            icon: const Icon(Icons.arrow_forward),
+            icon: const Icon(Icons.arrow_outward),
             label: const Text(
-              'Run full analysis',
-              style: TextStyle(fontWeight: FontWeight.w700),
+              'RUN INSTITUTIONAL ANALYSIS',
+              style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: .5),
             ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        const Center(
-          child: Text(
-            'Location is used for this analysis only. Demo market data is clearly identified.',
-            style: TextStyle(color: _muted, fontSize: 10),
           ),
         ),
       ],
     ),
   );
 
-  Widget _field(String key, String label, String suffix, double width) =>
-      SizedBox(
-        width: width,
-        child: TextField(
-          controller: _fields[key],
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          decoration: InputDecoration(labelText: label, suffixText: suffix),
-        ),
-      );
+  List<Widget> _fieldGrid(List<_Spec> specs) => [
+    LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth > 520
+            ? (constraints.maxWidth - 12) / 2
+            : constraints.maxWidth;
+        return Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: specs
+              .map(
+                (spec) => SizedBox(
+                  width: width,
+                  child: TextField(
+                    controller: _fields[spec.key],
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    decoration: InputDecoration(
+                      labelText: spec.label,
+                      suffixText: spec.suffix,
+                    ),
+                  ),
+                ),
+              )
+              .toList(),
+        );
+      },
+    ),
+  ];
 
   Widget _resultPanel() {
     final result = _result;
     if (result == null) {
-      return const _Panel(
-        child: SizedBox(
-          height: 610,
-          child: Center(
-            child: Padding(
-              padding: EdgeInsets.all(30),
+      return _Panel(
+        padding: EdgeInsets.zero,
+        child: Column(
+          children: [
+            AspectRatio(
+              aspectRatio: 1.45,
+              child: ClipRRect(
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(18),
+                ),
+                child: Image.asset(
+                  'assets/images/residential-courtyard.jpg',
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+            const Padding(
+              padding: EdgeInsets.all(34),
               child: Column(
-                mainAxisSize: MainAxisSize.min,
                 children: [
-                  CircleAvatar(
-                    radius: 54,
-                    backgroundColor: _green,
-                    child: Icon(Icons.query_stats, size: 46, color: _lime),
-                  ),
-                  SizedBox(height: 24),
                   Text(
-                    'Your decision brief will appear here',
+                    'YOUR INVESTMENT MEMO STARTS HERE',
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 23, fontWeight: FontWeight.w800),
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900),
                   ),
                   SizedBox(height: 12),
                   Text(
-                    'Scan a location, add property details, and run the model.',
+                    'Enter the facts you know. The model will calculate returns, expose missing evidence and stress the assumptions.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: _muted, height: 1.5),
+                    style: TextStyle(color: _muted, height: 1.55),
                   ),
                 ],
               ),
             ),
-          ),
+          ],
         ),
       );
     }
-    final verdict = result.net >= 55
-        ? 'Strong candidate'
-        : result.net >= 42
-        ? 'Worth a closer look'
-        : 'Proceed with caution';
-    final tone = result.net >= 55
-        ? const Color(0xFFE7F2E8)
-        : result.net >= 42
-        ? const Color(0xFFF7F0D9)
-        : const Color(0xFFF7E7DF);
+    final strong = result.net >= 55;
+    final cautious = result.net < 42;
+    final verdict = strong
+        ? 'INVESTMENT CASE HOLDS'
+        : cautious
+        ? 'DOWNSIDE NEEDS WORK'
+        : 'MERITS DILIGENCE';
+    final verdictColor = strong
+        ? _lime
+        : cautious
+        ? const Color(0xFFFFA98F)
+        : const Color(0xFFFFD66B);
     return _Panel(
       padding: EdgeInsets.zero,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Padding(
-            padding: const EdgeInsets.all(24),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'DECISION BRIEF',
-                        style: TextStyle(
-                          fontSize: 10,
-                          letterSpacing: 1.3,
-                          color: _muted,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      const SizedBox(height: 5),
-                      Text(
-                        _inputs.address,
-                        style: const TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      Text(
-                        '${_profile.city}, ${_profile.region} · ${_mode == DecisionMode.home ? 'Homebuyer' : 'Investor'} lens',
-                        style: const TextStyle(fontSize: 11, color: _muted),
-                      ),
-                    ],
-                  ),
-                ),
-                OutlinedButton.icon(
-                  onPressed: _save,
-                  icon: Icon(_saved ? Icons.star : Icons.star_border, size: 17),
-                  label: Text(_saved ? 'Saved' : 'Save'),
-                ),
-              ],
-            ),
-          ),
           Container(
-            color: tone,
-            padding: const EdgeInsets.all(24),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        verdict,
-                        style: const TextStyle(
-                          fontSize: 21,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        '${(result.probability * 100).round()}% modelled chance of outperforming the local benchmark over ${_inputs.holdingPeriod.round()} years.',
-                        style: const TextStyle(color: _muted, height: 1.4),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 16),
-                _ScoreCircle(result.net),
-              ],
+            padding: const EdgeInsets.all(28),
+            decoration: const BoxDecoration(
+              color: _ink,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
             ),
-          ),
-          _KpiGrid(result: result, mode: _mode),
-          Padding(
-            padding: const EdgeInsets.all(24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  "WHAT'S DRIVING THE SCORE",
-                  style: TextStyle(
-                    fontSize: 12,
-                    letterSpacing: 1.1,
-                    fontWeight: FontWeight.w800,
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            verdict,
+                            style: TextStyle(
+                              color: verdictColor,
+                              fontSize: 11,
+                              letterSpacing: 1.4,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                          const SizedBox(height: 9),
+                          Text(
+                            _inputs.address,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 22,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${_propertyType.label} · ${_profile.city}, ${_profile.region}',
+                            style: const TextStyle(
+                              color: Color(0xFFA8BBB1),
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    _Score(result.net),
+                  ],
+                ),
+                const SizedBox(height: 22),
+                Text(
+                  '${(result.probability * 100).round()}% modelled probability of outperforming the local benchmark. ${(result.dataCompleteness * 100).round()}% of core underwriting fields are populated.',
+                  style: const TextStyle(
+                    color: Color(0xFFD3DED8),
+                    height: 1.45,
                   ),
                 ),
-                const SizedBox(height: 10),
-                ...result.drivers.take(5).map((driver) => _DriverRow(driver)),
+                const SizedBox(height: 18),
+                OutlinedButton.icon(
+                  onPressed: _save,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    side: const BorderSide(color: Color(0xFF456356)),
+                  ),
+                  icon: Icon(_saved ? Icons.bookmark : Icons.bookmark_border),
+                  label: Text(_saved ? 'SAVED' : 'SAVE ANALYSIS'),
+                ),
               ],
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-            child: Container(
-              decoration: BoxDecoration(
-                color: _ink,
-                borderRadius: BorderRadius.circular(14),
-              ),
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Row(
-                    children: [
-                      Icon(Icons.auto_awesome, color: _lime, size: 18),
-                      SizedBox(width: 9),
-                      Text(
-                        'AI DILIGENCE COACH',
-                        style: TextStyle(
-                          color: _lime,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 1.2,
-                        ),
-                      ),
-                    ],
+            padding: const EdgeInsets.all(22),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('CORE RETURNS & CREDIT', style: _eyebrow),
+                const SizedBox(height: 12),
+                _Metrics(result: result, mode: _mode),
+                const SizedBox(height: 26),
+                const Text('THREE-CASE STRESS TEST', style: _eyebrow),
+                const SizedBox(height: 10),
+                _ScenarioTable(scenarios: result.scenarios),
+                const SizedBox(height: 26),
+                const Text('UNDERWRITING FLAGS', style: _eyebrow),
+                const SizedBox(height: 10),
+                ...result.flags.map((flag) => _Flag(flag)),
+                const SizedBox(height: 24),
+                const Text('BIGGEST SCORE DRIVERS', style: _eyebrow),
+                const SizedBox(height: 8),
+                ...result.drivers.take(7).map((driver) => _Driver(driver)),
+                const SizedBox(height: 20),
+                Container(
+                  padding: const EdgeInsets.all(18),
+                  color: const Color(0xFFF0E9DC),
+                  child: const Text(
+                    'Decision support—not an appraisal, lending commitment, tax opinion or guarantee. Validate rent roll, leases, title, zoning, environmental condition, inspection, taxes, insurance and financing with qualified professionals.',
+                    style: TextStyle(color: _muted, fontSize: 10, height: 1.5),
                   ),
-                  const SizedBox(height: 10),
-                  const Text(
-                    'Your next three questions',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 16,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  _question(
-                    _inputs.buildable <= 0
-                        ? 'Confirm buildable floor area and permitted density with the municipality.'
-                        : 'Verify achievable floor area after setbacks and servicing.',
-                  ),
-                  _question(
-                    'Request an insurance quote covering the mapped local hazards.',
-                  ),
-                  _question(
-                    _mode == DecisionMode.invest
-                        ? 'Validate rent and costs with three recent comparables.'
-                        : 'Stress-test your budget at a mortgage rate two points higher.',
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const Padding(
-            padding: EdgeInsets.fromLTRB(24, 0, 24, 24),
-            child: Text(
-              'Prototype estimate · Market profiles are illustrative seed data. Model weights require historical calibration. Verify financing, inspection, title, zoning, tax and insurance details.',
-              style: TextStyle(color: _muted, fontSize: 9, height: 1.5),
+                ),
+              ],
             ),
           ),
         ],
       ),
     );
   }
-
-  Widget _question(String text) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 4),
-    child: Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text('• ', style: TextStyle(color: _lime)),
-        Expanded(
-          child: Text(
-            text,
-            style: const TextStyle(
-              color: Color(0xFFD7E3DC),
-              fontSize: 11,
-              height: 1.4,
-            ),
-          ),
-        ),
-      ],
-    ),
-  );
 }
 
-class _Brand extends StatelessWidget {
-  const _Brand();
-  @override
-  Widget build(BuildContext context) => const Row(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      CircleAvatar(
-        radius: 16,
-        backgroundColor: _green,
-        child: Icon(Icons.bar_chart_rounded, color: _lime, size: 20),
-      ),
-      SizedBox(width: 10),
-      Text(
-        'Dwelling',
-        style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
-      ),
-      Text(
-        'IQ',
-        style: TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.w800,
-          color: _green,
-        ),
-      ),
-    ],
-  );
+const _eyebrow = TextStyle(
+  color: _muted,
+  fontSize: 10,
+  letterSpacing: 1.35,
+  fontWeight: FontWeight.w900,
+);
+
+class _Spec {
+  const _Spec(this.key, this.label, this.suffix);
+  final String key;
+  final String label;
+  final String suffix;
 }
 
 class _Panel extends StatelessWidget {
-  const _Panel({required this.child, this.padding = const EdgeInsets.all(28)});
+  const _Panel({required this.child, this.padding = const EdgeInsets.all(26)});
   final Widget child;
   final EdgeInsets padding;
   @override
@@ -678,11 +802,11 @@ class _Panel extends StatelessWidget {
     padding: padding,
     decoration: BoxDecoration(
       color: _card,
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(18),
       border: Border.all(color: _line),
       boxShadow: const [
         BoxShadow(
-          color: Color(0x0C1E2F25),
+          color: Color(0x12102218),
           blurRadius: 40,
           offset: Offset(0, 18),
         ),
@@ -692,80 +816,121 @@ class _Panel extends StatelessWidget {
   );
 }
 
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.kicker, required this.title});
-  final String kicker;
-  final String title;
+class _Brand extends StatelessWidget {
+  const _Brand();
   @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
+  Widget build(BuildContext context) => const Row(
+    mainAxisSize: MainAxisSize.min,
     children: [
-      Text(
-        kicker,
-        style: const TextStyle(
-          color: _muted,
-          fontSize: 10,
-          letterSpacing: 1.2,
-          fontWeight: FontWeight.w800,
+      SizedBox(
+        width: 31,
+        height: 31,
+        child: DecoratedBox(
+          decoration: BoxDecoration(color: _lime),
+          child: Icon(Icons.domain, color: _ink, size: 19),
         ),
       ),
-      const SizedBox(height: 4),
+      SizedBox(width: 10),
       Text(
-        title,
-        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
+        'DWELLINGS',
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 17,
+          fontWeight: FontWeight.w900,
+          letterSpacing: 1,
+        ),
+      ),
+      Text(
+        'IQ',
+        style: TextStyle(
+          color: _lime,
+          fontSize: 17,
+          fontWeight: FontWeight.w900,
+        ),
       ),
     ],
   );
 }
 
-class _ModeCard extends StatelessWidget {
-  const _ModeCard({
+class _Kicker extends StatelessWidget {
+  const _Kicker(this.text, {this.darkText = false});
+  final String text;
+  final bool darkText;
+  @override
+  Widget build(BuildContext context) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Container(width: 36, height: 3, color: _lime),
+      const SizedBox(width: 12),
+      Text(
+        text,
+        style: TextStyle(
+          color: darkText ? _green : _lime,
+          fontSize: 10,
+          fontWeight: FontWeight.w900,
+          letterSpacing: 1.7,
+        ),
+      ),
+    ],
+  );
+}
+
+class _HeroChip extends StatelessWidget {
+  const _HeroChip(this.label);
+  final String label;
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 9),
+    decoration: BoxDecoration(
+      color: Colors.black26,
+      border: Border.all(color: Colors.white24),
+    ),
+    child: Text(
+      label,
+      style: const TextStyle(
+        color: Colors.white,
+        fontSize: 9,
+        fontWeight: FontWeight.w900,
+        letterSpacing: 1.2,
+      ),
+    ),
+  );
+}
+
+class _ModeButton extends StatelessWidget {
+  const _ModeButton({
     required this.active,
     required this.icon,
-    required this.title,
-    required this.subtitle,
+    required this.label,
     required this.onTap,
   });
   final bool active;
   final IconData icon;
-  final String title;
-  final String subtitle;
+  final String label;
   final VoidCallback onTap;
   @override
   Widget build(BuildContext context) => InkWell(
     onTap: onTap,
-    borderRadius: BorderRadius.circular(12),
     child: AnimatedContainer(
       duration: const Duration(milliseconds: 180),
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
-        color: active ? const Color(0xFFEDF4EC) : const Color(0xFFFAFAF5),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: active ? _green : _line,
-          width: active ? 2 : 1,
-        ),
+        color: active ? _ink : const Color(0xFFF6F5EF),
+        border: Border.all(color: active ? _ink : _line),
       ),
       child: Row(
         children: [
-          Icon(icon, color: _green),
-          const SizedBox(width: 10),
+          Icon(icon, color: active ? _lime : _green),
+          const SizedBox(width: 9),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                Text(
-                  subtitle,
-                  style: const TextStyle(fontSize: 9, color: _muted),
-                ),
-              ],
+            child: Text(
+              label,
+              style: TextStyle(
+                color: active ? Colors.white : _ink,
+                fontSize: 10,
+                fontWeight: FontWeight.w900,
+                letterSpacing: .7,
+              ),
             ),
           ),
         ],
@@ -774,241 +939,336 @@ class _ModeCard extends StatelessWidget {
   );
 }
 
-class _StepLabel extends StatelessWidget {
-  const _StepLabel({
-    required this.number,
-    required this.title,
-    required this.subtitle,
-  });
-  final String number;
-  final String title;
-  final String subtitle;
-  @override
-  Widget build(BuildContext context) => Row(
-    children: [
-      CircleAvatar(
-        radius: 15,
-        backgroundColor: _ink,
-        child: Text(
-          number,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 10,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-      ),
-      const SizedBox(width: 11),
-      Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 9,
-              color: _muted,
-              letterSpacing: 1.2,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-          Text(
-            subtitle,
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
-          ),
-        ],
-      ),
-    ],
-  );
-}
-
-class _LocationCard extends StatelessWidget {
-  const _LocationCard({required this.profile});
+class _LocationStrip extends StatelessWidget {
+  const _LocationStrip({required this.profile});
   final MarketProfile profile;
   @override
   Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.all(14),
-    decoration: BoxDecoration(
-      color: const Color(0xFFEEF3EC),
-      borderRadius: BorderRadius.circular(11),
-    ),
+    padding: const EdgeInsets.all(13),
+    color: const Color(0xFFE7EEE7),
     child: Row(
       children: [
-        Container(
-          width: 70,
-          height: 58,
-          decoration: BoxDecoration(
-            color: const Color(0xFFD8E5D8),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: const Icon(Icons.map_outlined, color: _green, size: 31),
-        ),
-        const SizedBox(width: 13),
+        const Icon(Icons.radar, color: _green),
+        const SizedBox(width: 10),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'LOCATION PROFILE · DEMO DATA',
-                style: TextStyle(
+              Text(
+                '${profile.city}, ${profile.region} · DEMO MARKET PROFILE',
+                style: const TextStyle(
                   fontSize: 9,
-                  letterSpacing: 1.1,
-                  color: _muted,
-                  fontWeight: FontWeight.w800,
+                  letterSpacing: .8,
+                  fontWeight: FontWeight.w900,
                 ),
               ),
               Text(
-                '${profile.city}, ${profile.region}',
-                style: const TextStyle(fontWeight: FontWeight.w800),
-              ),
-              Text(
-                '${profile.transit.round()}/100 transit · ${profile.inventory} months inventory · ${(profile.appreciation * 100).toStringAsFixed(1)}% benchmark',
+                '${profile.inventory} months inventory  ·  ${(profile.mortgage * 100).toStringAsFixed(2)}% debt rate  ·  ${profile.transit.round()}/100 transit',
                 style: const TextStyle(color: _muted, fontSize: 9),
               ),
             ],
           ),
         ),
-        const Icon(Icons.verified, color: _green, size: 18),
       ],
     ),
   );
 }
 
-class _ScoreCircle extends StatelessWidget {
-  const _ScoreCircle(this.score);
-  final double score;
+class _InputSection extends StatelessWidget {
+  const _InputSection({
+    required this.title,
+    required this.subtitle,
+    required this.children,
+    this.initiallyExpanded = false,
+  });
+  final String title;
+  final String subtitle;
+  final List<Widget> children;
+  final bool initiallyExpanded;
   @override
-  Widget build(BuildContext context) => SizedBox(
-    width: 78,
-    height: 78,
-    child: Stack(
-      fit: StackFit.expand,
-      children: [
-        CircularProgressIndicator(
-          value: score / 100,
-          strokeWidth: 8,
-          color: _green,
-          backgroundColor: const Color(0xFFD5DED5),
-          strokeCap: StrokeCap.round,
-        ),
-        Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                score.round().toString(),
-                style: const TextStyle(
-                  fontSize: 23,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-              const Text('/100', style: TextStyle(fontSize: 9, color: _muted)),
-            ],
+  Widget build(BuildContext context) => Theme(
+    data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+    child: Container(
+      margin: const EdgeInsets.only(top: 10),
+      decoration: BoxDecoration(border: Border.all(color: _line)),
+      child: ExpansionTile(
+        initiallyExpanded: initiallyExpanded,
+        tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        childrenPadding: const EdgeInsets.fromLTRB(16, 2, 16, 18),
+        title: Text(
+          title,
+          style: const TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w900,
+            letterSpacing: .7,
           ),
         ),
+        subtitle: Text(
+          subtitle,
+          style: const TextStyle(color: _muted, fontSize: 9),
+        ),
+        children: children,
+      ),
+    ),
+  );
+}
+
+class _Score extends StatelessWidget {
+  const _Score(this.score);
+  final double score;
+  @override
+  Widget build(BuildContext context) => Container(
+    width: 78,
+    height: 78,
+    decoration: BoxDecoration(
+      shape: BoxShape.circle,
+      border: Border.all(color: _lime, width: 5),
+    ),
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(
+          score.round().toString(),
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 24,
+            height: 1,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        const Text(
+          '/ 100',
+          style: TextStyle(color: Color(0xFF9FB1A8), fontSize: 8),
+        ),
       ],
     ),
   );
 }
 
-class _KpiGrid extends StatelessWidget {
-  const _KpiGrid({required this.result, required this.mode});
+class _Metrics extends StatelessWidget {
+  const _Metrics({required this.result, required this.mode});
   final AnalysisResult result;
   final DecisionMode mode;
   @override
-  Widget build(BuildContext context) => GridView.count(
-    shrinkWrap: true,
-    physics: const NeverScrollableScrollPhysics(),
-    crossAxisCount: 2,
-    childAspectRatio: 1.75,
-    children: [
-      _Kpi(
-        'Expected growth',
-        '${(result.annualAppreciation * 100).toStringAsFixed(1)}%',
-        'annualized estimate',
+  Widget build(BuildContext context) {
+    final metrics = <(String, String, String, bool)>[
+      ('NOI', _money(result.noi), 'annual', result.noi < 0),
+      (
+        'CAP RATE',
+        _percent(result.capRate),
+        'unlevered',
+        result.capRate < .035,
       ),
-      _Kpi(
-        mode == DecisionMode.invest
-            ? 'Monthly cash flow'
-            : 'Monthly housing cost',
+      (
+        'DSCR',
+        '${result.dscr.toStringAsFixed(2)}×',
+        'lender coverage',
+        result.dscr < 1.25,
+      ),
+      (
+        'DEBT YIELD',
+        _percent(result.debtYield),
+        'NOI ÷ debt',
+        result.debtYield < .08,
+      ),
+      (
+        'CASH-ON-CASH',
+        _percent(result.cashOnCash),
+        'year one',
+        result.cashOnCash < 0,
+      ),
+      ('LEVERED IRR', _percent(result.irr), 'base case', result.irr < .08),
+      (
+        'EQUITY MULTIPLE',
+        '${result.equityMultiple.toStringAsFixed(2)}×',
+        'total distributions',
+        result.equityMultiple < 1,
+      ),
+      (
+        'BREAK-EVEN OCC.',
+        _percent(result.breakEvenOccupancy),
+        'cost coverage',
+        result.breakEvenOccupancy > .85,
+      ),
+      ('PROJECTED EXIT', _money(result.projectedValue), 'end of hold', false),
+      ('NPV', _money(result.npv), 'at required return', result.npv < 0),
+      (
+        mode == DecisionMode.home ? 'MONTHLY COST' : 'MONTHLY CASH FLOW',
         _money(result.monthlyCarry),
-        mode == DecisionMode.invest
-            ? 'after mortgage + expenses'
-            : 'mortgage + operating costs',
-        negative: result.monthlyCarry < 0,
+        mode == DecisionMode.home ? 'debt + operations' : 'after debt service',
+        result.monthlyCarry < 0,
       ),
-      _Kpi(
-        'Projected value',
-        _money(result.projectedValue),
-        'at the selected horizon',
+      (
+        mode == DecisionMode.home ? 'HOUSEHOLD DTI' : 'LOAN-TO-VALUE',
+        _percent(mode == DecisionMode.home ? result.dti : result.ltv),
+        mode == DecisionMode.home ? 'incl. other debt' : 'acquisition leverage',
+        mode == DecisionMode.home ? result.dti > .39 : result.ltv > .75,
       ),
-      _Kpi(
-        mode == DecisionMode.invest ? 'Net cap rate' : 'Mortgage payment',
-        mode == DecisionMode.invest
-            ? '${(result.capRate * 100).toStringAsFixed(1)}%'
-            : _money(result.monthlyMortgage),
-        mode == DecisionMode.invest ? 'before financing' : 'per month',
-      ),
-    ],
-  );
+    ];
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final count = constraints.maxWidth > 540 ? 3 : 2;
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: metrics.length,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: count,
+            mainAxisExtent: 100,
+          ),
+          itemBuilder: (context, index) {
+            final metric = metrics[index];
+            return Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                border: Border.all(color: _line, width: .5),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    metric.$1,
+                    style: const TextStyle(
+                      color: _muted,
+                      fontSize: 8,
+                      letterSpacing: .7,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  FittedBox(
+                    child: Text(
+                      metric.$2,
+                      style: TextStyle(
+                        color: metric.$4 ? _risk : _ink,
+                        fontSize: 19,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    metric.$3,
+                    style: const TextStyle(color: _muted, fontSize: 8),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
 }
 
-class _Kpi extends StatelessWidget {
-  const _Kpi(this.label, this.value, this.note, {this.negative = false});
-  final String label;
-  final String value;
-  final String note;
-  final bool negative;
+class _ScenarioTable extends StatelessWidget {
+  const _ScenarioTable({required this.scenarios});
+  final List<ScenarioResult> scenarios;
   @override
   Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.all(18),
-    decoration: BoxDecoration(border: Border.all(color: _line, width: .5)),
+    decoration: BoxDecoration(border: Border.all(color: _line)),
     child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text(label, style: const TextStyle(color: _muted, fontSize: 10)),
-        const SizedBox(height: 4),
-        FittedBox(
-          fit: BoxFit.scaleDown,
-          alignment: Alignment.centerLeft,
-          child: Text(
-            value,
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w900,
-              color: negative ? _risk : _ink,
-            ),
-          ),
+        const _ScenarioRow(['CASE', 'NOI', 'DSCR', 'IRR'], header: true),
+        ...scenarios.map(
+          (s) => _ScenarioRow([
+            s.name.toUpperCase(),
+            _money(s.noi),
+            '${s.dscr.toStringAsFixed(2)}×',
+            _percent(s.irr),
+          ], risk: s.name == 'Downside'),
         ),
-        Text(note, style: const TextStyle(color: _muted, fontSize: 8)),
       ],
     ),
   );
 }
 
-class _DriverRow extends StatelessWidget {
-  const _DriverRow(this.driver);
-  final FactorResult driver;
+class _ScenarioRow extends StatelessWidget {
+  const _ScenarioRow(this.values, {this.header = false, this.risk = false});
+  final List<String> values;
+  final bool header;
+  final bool risk;
   @override
   Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(vertical: 10),
-    decoration: const BoxDecoration(
-      border: Border(top: BorderSide(color: Color(0xFFEDF0EB))),
+    color: header
+        ? _ink
+        : risk
+        ? const Color(0xFFFFF0EA)
+        : Colors.transparent,
+    child: Row(
+      children: values
+          .map(
+            (value) => Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 11,
+                ),
+                child: Text(
+                  value,
+                  style: TextStyle(
+                    color: header
+                        ? Colors.white
+                        : risk
+                        ? _risk
+                        : _ink,
+                    fontSize: header ? 8 : 10,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ),
+          )
+          .toList(),
     ),
+  );
+}
+
+class _Flag extends StatelessWidget {
+  const _Flag(this.text);
+  final String text;
+  @override
+  Widget build(BuildContext context) => Container(
+    margin: const EdgeInsets.only(bottom: 7),
+    padding: const EdgeInsets.all(12),
+    color: const Color(0xFFFFF2EC),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Icon(Icons.report_gmailerrorred, color: _risk, size: 17),
+        const SizedBox(width: 9),
+        Expanded(
+          child: Text(
+            text,
+            style: const TextStyle(
+              fontSize: 10,
+              height: 1.4,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+class _Driver extends StatelessWidget {
+  const _Driver(this.driver);
+  final FactorResult driver;
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 8),
     child: Row(
       children: [
         Container(
-          width: 28,
-          height: 28,
-          decoration: BoxDecoration(
-            color: driver.isRisk
-                ? const Color(0xFFF5E6DF)
-                : const Color(0xFFE3F1E4),
-            borderRadius: BorderRadius.circular(7),
-          ),
+          width: 25,
+          height: 25,
+          color: driver.isRisk
+              ? const Color(0xFFFFE7DE)
+              : const Color(0xFFE0EDD9),
           child: Icon(
-            driver.isRisk ? Icons.priority_high : Icons.trending_up,
-            size: 15,
+            driver.isRisk ? Icons.south_east : Icons.north_east,
+            size: 14,
             color: driver.isRisk ? _risk : _green,
           ),
         ),
@@ -1016,41 +1276,15 @@ class _DriverRow extends StatelessWidget {
         Expanded(
           child: Text(
             driver.name,
-            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800),
+            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800),
           ),
         ),
         Text(
           '${driver.impact >= 0 ? '+' : '−'}${driver.impact.abs().toStringAsFixed(1)}',
-          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800),
-        ),
-      ],
-    ),
-  );
-}
-
-class _HeroStat extends StatelessWidget {
-  const _HeroStat(this.value, this.label);
-  final String value;
-  final String label;
-  @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.only(left: 14),
-    decoration: const BoxDecoration(
-      border: Border(left: BorderSide(color: Color(0xFFCCD3C9))),
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          value,
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
-        ),
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 9,
-            letterSpacing: 1.1,
-            color: _muted,
+          style: TextStyle(
+            color: driver.isRisk ? _risk : _green,
+            fontSize: 10,
+            fontWeight: FontWeight.w900,
           ),
         ),
       ],
@@ -1058,59 +1292,163 @@ class _HeroStat extends StatelessWidget {
   );
 }
 
-class _HowItWorks extends StatelessWidget {
-  const _HowItWorks();
+class _EditorialSection extends StatelessWidget {
+  const _EditorialSection({
+    required this.controller,
+    required this.image,
+    required this.kicker,
+    required this.title,
+    required this.body,
+    this.reverse = false,
+    this.dark = false,
+  });
+  final ScrollController controller;
+  final String image;
+  final String kicker;
+  final String title;
+  final String body;
+  final bool reverse;
+  final bool dark;
   @override
   Widget build(BuildContext context) => Container(
-    color: const Color(0xFF0C2B20),
-    padding: const EdgeInsets.symmetric(vertical: 68, horizontal: 28),
+    color: dark ? _ink : const Color(0xFFD9E1D6),
+    padding: const EdgeInsets.symmetric(vertical: 90, horizontal: 24),
     child: Center(
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 1100),
+        constraints: const BoxConstraints(maxWidth: 1220),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final narrow = constraints.maxWidth < 780;
+            final picture = SizedBox(
+              height: narrow ? 420 : 610,
+              child: ClipRect(
+                child: AnimatedBuilder(
+                  animation: controller,
+                  builder: (context, _) {
+                    final movement = controller.hasClients
+                        ? ((controller.offset % 900) - 450) * .08
+                        : 0.0;
+                    return Transform.translate(
+                      offset: Offset(0, movement),
+                      child: SizedBox(
+                        height: narrow ? 500 : 720,
+                        width: double.infinity,
+                        child: Image.asset(image, fit: BoxFit.cover),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            );
+            final copy = Padding(
+              padding: EdgeInsets.all(narrow ? 10 : 58),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    kicker,
+                    style: TextStyle(
+                      color: dark ? _lime : _green,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1.5,
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  Text(
+                    title,
+                    style: TextStyle(
+                      color: dark ? Colors.white : _ink,
+                      fontSize: narrow ? 34 : 48,
+                      height: 1.02,
+                      letterSpacing: -1.7,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: 22),
+                  Text(
+                    body,
+                    style: TextStyle(
+                      color: dark ? const Color(0xFFB5C4BC) : _muted,
+                      fontSize: 15,
+                      height: 1.6,
+                    ),
+                  ),
+                ],
+              ),
+            );
+            if (narrow)
+              return Column(
+                children: [picture, const SizedBox(height: 30), copy],
+              );
+            final children = [
+              Expanded(flex: 10, child: picture),
+              Expanded(flex: 9, child: copy),
+            ];
+            return Row(
+              children: reverse ? children.reversed.toList() : children,
+            );
+          },
+        ),
+      ),
+    ),
+  );
+}
+
+class _Methodology extends StatelessWidget {
+  const _Methodology();
+  @override
+  Widget build(BuildContext context) => Container(
+    color: _copper,
+    padding: const EdgeInsets.symmetric(vertical: 90, horizontal: 24),
+    child: Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 1120),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'BUILT FOR BETTER QUESTIONS',
+              'EXPLAINABLE BY DESIGN',
               style: TextStyle(
-                color: Color(0xFFA9C9B6),
+                color: _ink,
                 fontSize: 10,
-                letterSpacing: 1.4,
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.5,
               ),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 14),
             const Text(
-              'AI helps with the research.\nYou stay in control of the decision.',
+              'The answer is only as strong\nas the assumptions beneath it.',
               style: TextStyle(
-                color: Colors.white,
-                fontSize: 32,
-                height: 1.15,
-                fontWeight: FontWeight.w800,
+                color: _ink,
+                fontSize: 46,
+                height: 1.05,
+                letterSpacing: -1.7,
+                fontWeight: FontWeight.w900,
               ),
             ),
-            const SizedBox(height: 30),
+            const SizedBox(height: 40),
             LayoutBuilder(
               builder: (context, constraints) {
-                final narrow = constraints.maxWidth < 700;
                 final cards = [
                   const _MethodCard(
                     '01',
-                    'Scan the location',
-                    'Connect market, transit, hazard and demographic evidence to the property.',
+                    'RAW INPUTS',
+                    'Keep purchase, lease, operating, debt and market assumptions visible.',
                   ),
                   const _MethodCard(
                     '02',
-                    'Score fundamentals',
-                    'Normalize upside and risk factors using transparent benchmarks.',
+                    'AUDITABLE MATH',
+                    'Trace NOI, debt service, exit proceeds, IRR and risk scoring.',
                   ),
                   const _MethodCard(
                     '03',
-                    'Explain the result',
-                    'Show assumptions, strongest drivers, missing data and diligence questions.',
+                    'STRESS BEFORE BUYING',
+                    'Compare downside, base and upside cases before committing capital.',
                   ),
                 ];
-                return narrow
+                return constraints.maxWidth < 700
                     ? Column(children: cards)
                     : Row(
                         children: cards
@@ -1133,49 +1471,35 @@ class _MethodCard extends StatelessWidget {
   final String body;
   @override
   Widget build(BuildContext context) => Container(
-    constraints: const BoxConstraints(minHeight: 180),
+    constraints: const BoxConstraints(minHeight: 190),
     padding: const EdgeInsets.all(24),
     decoration: BoxDecoration(
-      border: Border.all(color: const Color(0xFF335145)),
+      border: Border.all(color: _ink.withValues(alpha: .38)),
     ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          number,
-          style: const TextStyle(color: _lime, fontWeight: FontWeight.w800),
-        ),
-        const Spacer(),
+        Text(number, style: const TextStyle(fontWeight: FontWeight.w900)),
+        const SizedBox(height: 42),
         Text(
           title,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 16,
-            fontWeight: FontWeight.w800,
-          ),
+          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w900),
         ),
-        const SizedBox(height: 8),
-        Text(
-          body,
-          style: const TextStyle(
-            color: Color(0xFFAABEB3),
-            fontSize: 11,
-            height: 1.5,
-          ),
-        ),
+        const SizedBox(height: 9),
+        Text(body, style: const TextStyle(fontSize: 11, height: 1.5)),
       ],
     ),
   );
 }
 
+String _percent(double value) => '${(value * 100).toStringAsFixed(1)}%';
 String _money(double value) {
+  if (!value.isFinite) return '—';
   final negative = value < 0;
   final digits = value.abs().round().toString();
-  final parts = <String>[];
+  final chunks = <String>[];
   for (var i = digits.length; i > 0; i -= 3) {
-    parts.insert(0, digits.substring(mathMax(0, i - 3), i));
+    chunks.insert(0, digits.substring(math.max(0, i - 3), i));
   }
-  return '${negative ? '−' : ''}\$${parts.join(',')}';
+  return '${negative ? '−' : ''}\$${chunks.join(',')}';
 }
-
-int mathMax(int a, int b) => a > b ? a : b;
