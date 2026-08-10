@@ -484,6 +484,7 @@ class _DirectorySection extends StatelessWidget {
                     ...List.generate(
                       providers.length,
                       (index) => _ProviderRow(
+                        key: ValueKey(providers[index].id),
                         rank: index + 1,
                         provider: providers[index],
                         city: city,
@@ -617,6 +618,7 @@ class _DemoBanner extends StatelessWidget {
 
 class _ProviderRow extends StatefulWidget {
   const _ProviderRow({
+    super.key,
     required this.rank,
     required this.provider,
     required this.city,
@@ -639,6 +641,15 @@ class _ProviderRowState extends State<_ProviderRow> {
   void initState() {
     super.initState();
     _syncTeamState();
+  }
+
+  @override
+  void didUpdateWidget(covariant _ProviderRow oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.provider.id != widget.provider.id) {
+      _added = false;
+      _syncTeamState();
+    }
   }
 
   Future<void> _syncTeamState() async {
