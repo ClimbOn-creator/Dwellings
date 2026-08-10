@@ -3,7 +3,15 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'backend_service.dart';
 
-enum MemberType { homebuyer, investor, realtor, mortgageBroker, lawyer, lender }
+enum MemberType {
+  homebuyer,
+  investor,
+  realtor,
+  mortgageBroker,
+  lawyer,
+  accountant,
+  lender,
+}
 
 extension MemberTypeDetails on MemberType {
   String get databaseValue => switch (this) {
@@ -12,6 +20,7 @@ extension MemberTypeDetails on MemberType {
     MemberType.realtor => 'realtor',
     MemberType.mortgageBroker => 'mortgage_broker',
     MemberType.lawyer => 'lawyer',
+    MemberType.accountant => 'accountant',
     MemberType.lender => 'lender',
   };
 
@@ -21,6 +30,7 @@ extension MemberTypeDetails on MemberType {
     MemberType.realtor => 'Realtor',
     MemberType.mortgageBroker => 'Mortgage broker',
     MemberType.lawyer => 'Property lawyer',
+    MemberType.accountant => 'Accountant',
     MemberType.lender => 'Bank or lender',
   };
 
@@ -30,6 +40,7 @@ extension MemberTypeDetails on MemberType {
     MemberType.realtor => Icons.real_estate_agent_outlined,
     MemberType.mortgageBroker => Icons.handshake_outlined,
     MemberType.lawyer => Icons.gavel_outlined,
+    MemberType.accountant => Icons.calculate_outlined,
     MemberType.lender => Icons.account_balance_outlined,
   };
 

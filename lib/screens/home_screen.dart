@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../models/housing_model.dart';
 import '../services/backend_service.dart';
+import '../services/account_service.dart';
 import '../services/marketplace_service.dart';
 import '../widgets/site_footer.dart';
 import '../widgets/auth_button.dart';
@@ -108,6 +109,42 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
     'daysOnMarket': TextEditingController(text: '35'),
   };
 
+  @override
+  void initState() {
+    super.initState();
+    _restoreDraft();
+  }
+
+  Future<void> _restoreDraft() async {
+    try {
+      final draft = await AccountService.loadDraft();
+      if (draft == null || !mounted) return;
+      final values = draft['values'] is Map
+          ? Map<String, dynamic>.from(draft['values'] as Map)
+          : <String, dynamic>{};
+      setState(() {
+        _address.text = draft['address'] as String? ?? _address.text;
+        _mode = DecisionMode.values.firstWhere(
+          (value) => value.name == draft['decision_mode'],
+          orElse: () => _mode,
+        );
+        _propertyType = PropertyType.values.firstWhere(
+          (value) => value.name == draft['property_type'],
+          orElse: () => _propertyType,
+        );
+        _profile = profileForAddress(_address.text);
+        for (final entry in values.entries) {
+          if (_fields.containsKey(entry.key)) {
+            _fields[entry.key]!.text = entry.value?.toString() ?? '';
+          }
+        }
+      });
+      _message('Your last property draft was restored.');
+    } catch (_) {
+      // A missing draft should never block the calculator.
+    }
+  }
+
   double _number(String key) =>
       double.tryParse(_fields[key]?.text.replaceAll(',', '') ?? '') ?? 0;
 
@@ -157,7 +194,7 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
     );
   }
 
-  void _analyze() {
+  Future<void> _analyze() async {
     if (_number('price') <= 0 || _number('area') <= 0) {
       _message(
         'Add a purchase price and property area before running the model.',
@@ -167,6 +204,14 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
     setState(() {
       _result = analyzeProperty(_inputs, _mode);
       _saved = false;
+    });
+    await AccountService.saveDraft({
+      'address': _address.text.trim(),
+      'decision_mode': _mode.name,
+      'property_type': _propertyType.name,
+      'values': {
+        for (final entry in _fields.entries) entry.key: entry.value.text,
+      },
     });
   }
 

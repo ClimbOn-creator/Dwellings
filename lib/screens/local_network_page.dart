@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 
 import '../services/marketplace_service.dart';
+import '../services/backend_service.dart';
 import '../widgets/brand_logo.dart';
 import '../widgets/auth_button.dart';
 import '../widgets/site_footer.dart';
+import '../widgets/profile_photo.dart';
+import 'auth_page.dart';
 import 'home_screen.dart';
 import 'marketing_pages.dart';
 
@@ -474,7 +477,8 @@ class _DirectorySection extends StatelessWidget {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (result.isDemo) const _DemoBanner(),
+                    if (providers.any((provider) => provider.isExample))
+                      const _DemoBanner(),
                     if (!result.isDemo && providers.isEmpty)
                       _EmptyDirectory(city: city, category: category),
                     ...List.generate(
@@ -483,7 +487,7 @@ class _DirectorySection extends StatelessWidget {
                         rank: index + 1,
                         provider: providers[index],
                         city: city,
-                        isDemo: result.isDemo,
+                        isDemo: providers[index].isExample,
                       ),
                     ),
                   ],
@@ -597,7 +601,7 @@ class _DemoBanner extends StatelessWidget {
         SizedBox(width: 11),
         Expanded(
           child: Text(
-            'DEMO DIRECTORY · Connect Supabase and onboard verified providers to replace these example listings.',
+            'EXAMPLE PROFESSIONALS · Fictional profiles for previewing team building. They are not verified or available for contact.',
             style: TextStyle(
               color: Color(0xFF4C348F),
               fontSize: 10,
@@ -675,11 +679,13 @@ class _ProviderRowState extends State<_ProviderRow> {
                       const _Badge(label: 'SPONSORED', color: _purple),
                     if (provider.verified)
                       const _Badge(label: 'VERIFIED', color: Color(0xFF16825D)),
+                    if (provider.isExample)
+                      const _Badge(label: 'EXAMPLE', color: _purple),
                   ],
                 ),
                 const SizedBox(height: 5),
                 Text(
-                  provider.company,
+                  '${provider.jobTitle} · ${provider.company}',
                   style: TextStyle(
                     color: hovered ? _muted : const Color(0xFF60606D),
                     fontSize: 12,
@@ -722,13 +728,15 @@ class _ProviderRowState extends State<_ProviderRow> {
                   ),
               ],
             );
-            final button = FilledButton(
-              onPressed: () => _showConnectionDialog(
-                context,
-                provider,
-                widget.city,
-                widget.isDemo,
-              ),
+            final connectButton = FilledButton(
+              onPressed: provider.isExample
+                  ? null
+                  : () => _showConnectionDialog(
+                      context,
+                      provider,
+                      widget.city,
+                      widget.isDemo,
+                    ),
               style: FilledButton.styleFrom(
                 backgroundColor: hovered ? Colors.white : _ink,
                 foregroundColor: hovered ? _ink : Colors.white,
@@ -737,13 +745,52 @@ class _ProviderRowState extends State<_ProviderRow> {
                   vertical: 17,
                 ),
               ),
-              child: const Text(
-                'CONNECT',
-                style: TextStyle(
+              child: Text(
+                provider.isExample ? 'EXAMPLE ONLY' : 'CONNECT',
+                style: const TextStyle(
                   fontSize: 9,
                   fontWeight: FontWeight.w900,
                   letterSpacing: .8,
                 ),
+              ),
+            );
+            final teamButton = OutlinedButton.icon(
+              onPressed: () async {
+                if (BackendService.user == null) {
+                  await Navigator.of(context).push(
+                    MaterialPageRoute<void>(builder: (_) => const AuthPage()),
+                  );
+                  if (!context.mounted || BackendService.user == null) return;
+                }
+                try {
+                  await MarketplaceService.addToTeam(provider);
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('${provider.name} added to your team.'),
+                    ),
+                  );
+                } catch (error) {
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text('$error')));
+                }
+              },
+              style: OutlinedButton.styleFrom(
+                foregroundColor: hovered ? Colors.white : _ink,
+                side: BorderSide(
+                  color: hovered ? Colors.white38 : const Color(0xFFD8D8E0),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 16,
+                ),
+              ),
+              icon: const Icon(Icons.group_add_outlined, size: 16),
+              label: const Text(
+                'ADD TO TEAM',
+                style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800),
               ),
             );
             return narrow
@@ -753,7 +800,7 @@ class _ProviderRowState extends State<_ProviderRow> {
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _Rank(value: widget.rank, dark: hovered),
+                          _ProviderPhoto(provider: provider, rank: widget.rank),
                           const SizedBox(width: 16),
                           Expanded(child: details),
                         ],
@@ -761,17 +808,25 @@ class _ProviderRowState extends State<_ProviderRow> {
                       const SizedBox(height: 18),
                       signals,
                       const SizedBox(height: 18),
-                      SizedBox(width: double.infinity, child: button),
+                      SizedBox(width: double.infinity, child: teamButton),
+                      const SizedBox(height: 8),
+                      SizedBox(width: double.infinity, child: connectButton),
                     ],
                   )
                 : Row(
                     children: [
-                      _Rank(value: widget.rank, dark: hovered),
+                      _ProviderPhoto(provider: provider, rank: widget.rank),
                       const SizedBox(width: 20),
                       Expanded(flex: 5, child: details),
                       Expanded(flex: 3, child: signals),
                       const SizedBox(width: 18),
-                      button,
+                      Column(
+                        children: [
+                          teamButton,
+                          const SizedBox(height: 8),
+                          connectButton,
+                        ],
+                      ),
                     ],
                   );
           },
@@ -781,27 +836,44 @@ class _ProviderRowState extends State<_ProviderRow> {
   }
 }
 
-class _Rank extends StatelessWidget {
-  const _Rank({required this.value, required this.dark});
-  final int value;
-  final bool dark;
+class _ProviderPhoto extends StatelessWidget {
+  const _ProviderPhoto({required this.provider, required this.rank});
+  final MarketplaceProvider provider;
+  final int rank;
+
   @override
-  Widget build(BuildContext context) => Container(
-    width: 48,
-    height: 48,
-    decoration: BoxDecoration(
-      color: dark ? Colors.white10 : const Color(0xFFF0EEF9),
-      borderRadius: BorderRadius.circular(15),
-    ),
-    alignment: Alignment.center,
-    child: Text(
-      '$value',
-      style: TextStyle(
-        color: dark ? _lilac : _purple,
-        fontSize: 16,
-        fontWeight: FontWeight.w900,
+  Widget build(BuildContext context) => Stack(
+    clipBehavior: Clip.none,
+    children: [
+      ProfilePhoto(
+        size: 64,
+        photoUrl: provider.photoUrl,
+        exampleIndex: provider.photoIndex,
+        borderRadius: BorderRadius.circular(18),
       ),
-    ),
+      Positioned(
+        right: -5,
+        bottom: -5,
+        child: Container(
+          width: 24,
+          height: 24,
+          decoration: BoxDecoration(
+            color: _ink,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.white, width: 2),
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            '$rank',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 9,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+      ),
+    ],
   );
 }
 

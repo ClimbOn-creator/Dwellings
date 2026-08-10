@@ -2,13 +2,14 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'backend_service.dart';
 
-enum ProviderCategory { realtor, mortgageBroker, lawyer, lender }
+enum ProviderCategory { realtor, mortgageBroker, lawyer, accountant, lender }
 
 extension ProviderCategoryLabel on ProviderCategory {
   String get databaseValue => switch (this) {
     ProviderCategory.realtor => 'realtor',
     ProviderCategory.mortgageBroker => 'mortgage_broker',
     ProviderCategory.lawyer => 'lawyer',
+    ProviderCategory.accountant => 'accountant',
     ProviderCategory.lender => 'lender',
   };
 
@@ -16,6 +17,7 @@ extension ProviderCategoryLabel on ProviderCategory {
     ProviderCategory.realtor => 'Realtors',
     ProviderCategory.mortgageBroker => 'Mortgage brokers',
     ProviderCategory.lawyer => 'Property lawyers',
+    ProviderCategory.accountant => 'Accountants',
     ProviderCategory.lender => 'Banks & lenders',
   };
 }
@@ -47,6 +49,10 @@ class MarketplaceProvider {
     required this.reviewScore,
     required this.reviewCount,
     required this.experience,
+    required this.jobTitle,
+    required this.isExample,
+    this.photoIndex,
+    this.photoUrl = '',
     this.rateLabel,
     this.rateVerifiedAt,
   });
@@ -61,6 +67,10 @@ class MarketplaceProvider {
   final double reviewScore;
   final int reviewCount;
   final int experience;
+  final String jobTitle;
+  final bool isExample;
+  final int? photoIndex;
+  final String photoUrl;
   final String? rateLabel;
   final DateTime? rateVerifiedAt;
 }
@@ -150,50 +160,33 @@ class MarketplaceService {
   static Future<MarketplaceDirectory> load(MarketplaceCity city) async {
     if (!BackendService.configured) return _demo(city);
     try {
-      final rows = await Supabase.instance.client
+      var rows = await Supabase.instance.client
           .from('provider_profiles')
           .select(
             'id, provider_type, display_name, company_name, description, '
-            'verified, years_experience, review_score, review_count, '
+            'verified, years_experience, review_score, review_count, job_title, '
+            'is_example, photo_index, logo_object_key, '
             'provider_regions!inner(service_regions!inner(city, region, country_code)), '
             'sponsored_placements(disclosure_label, active, starts_at, ends_at), '
             'lender_rates(interest_rate, mortgage_type, verified_at, effective_at, expires_at)',
           )
           .eq('provider_regions.service_regions.city', city.city)
           .eq('provider_regions.service_regions.region', city.region)
-          .eq('verified', true)
           .limit(40);
-      final providers = <MarketplaceProvider>[];
-      for (final raw in rows) {
-        final row = Map<String, dynamic>.from(raw);
-        final category = _categoryFromDatabase(row['provider_type'] as String?);
-        if (category == null) continue;
-        final sponsorships = (row['sponsored_placements'] as List?) ?? const [];
-        final rates = (row['lender_rates'] as List?) ?? const [];
-        final rate = rates.isEmpty
-            ? null
-            : Map<String, dynamic>.from(rates.first as Map);
-        providers.add(
-          MarketplaceProvider(
-            id: row['id'] as String,
-            category: category,
-            name: row['display_name'] as String? ?? 'Provider',
-            company: row['company_name'] as String? ?? '',
-            specialty: row['description'] as String? ?? '',
-            verified: row['verified'] as bool? ?? false,
-            sponsored: sponsorships.isNotEmpty,
-            reviewScore: (row['review_score'] as num?)?.toDouble() ?? 0,
-            reviewCount: row['review_count'] as int? ?? 0,
-            experience: row['years_experience'] as int? ?? 0,
-            rateLabel: rate == null
-                ? null
-                : '${(rate['interest_rate'] as num).toStringAsFixed(2)}%',
-            rateVerifiedAt: rate?['verified_at'] == null
-                ? null
-                : DateTime.tryParse(rate!['verified_at'] as String),
-          ),
-        );
+      if (rows.isEmpty) {
+        rows = await Supabase.instance.client
+            .from('provider_profiles')
+            .select(
+              'id, provider_type, display_name, company_name, description, '
+              'verified, years_experience, review_score, review_count, job_title, '
+              'is_example, photo_index, logo_object_key, '
+              'sponsored_placements(disclosure_label, active, starts_at, ends_at), '
+              'lender_rates(interest_rate, mortgage_type, verified_at, effective_at, expires_at)',
+            )
+            .eq('is_example', true)
+            .limit(20);
       }
+      final providers = providersFromRows(rows);
       providers.sort((a, b) {
         if (a.sponsored != b.sponsored) return a.sponsored ? -1 : 1;
         return b.reviewScore.compareTo(a.reviewScore);
@@ -206,6 +199,55 @@ class MarketplaceService {
     } catch (_) {
       return _demo(city);
     }
+  }
+
+  static List<MarketplaceProvider> providersFromRows(List<dynamic> rows) {
+    final providers = <MarketplaceProvider>[];
+    for (final raw in rows) {
+      final row = Map<String, dynamic>.from(raw);
+      final category = _categoryFromDatabase(row['provider_type'] as String?);
+      if (category == null) continue;
+      final sponsorships = (row['sponsored_placements'] as List?) ?? const [];
+      final rates = (row['lender_rates'] as List?) ?? const [];
+      final rate = rates.isEmpty
+          ? null
+          : Map<String, dynamic>.from(rates.first as Map);
+      providers.add(
+        MarketplaceProvider(
+          id: row['id'] as String,
+          category: category,
+          name: row['display_name'] as String? ?? 'Provider',
+          company: row['company_name'] as String? ?? '',
+          specialty: row['description'] as String? ?? '',
+          verified: row['verified'] as bool? ?? false,
+          sponsored: sponsorships.isNotEmpty,
+          reviewScore: (row['review_score'] as num?)?.toDouble() ?? 0,
+          reviewCount: row['review_count'] as int? ?? 0,
+          experience: row['years_experience'] as int? ?? 0,
+          jobTitle: row['job_title'] as String? ?? category.label,
+          isExample: row['is_example'] as bool? ?? false,
+          photoIndex: row['photo_index'] as int?,
+          photoUrl: row['logo_object_key'] as String? ?? '',
+          rateLabel: rate == null
+              ? null
+              : '${(rate['interest_rate'] as num).toStringAsFixed(2)}%',
+          rateVerifiedAt: rate?['verified_at'] == null
+              ? null
+              : DateTime.tryParse(rate!['verified_at'] as String),
+        ),
+      );
+    }
+    return providers;
+  }
+
+  static Future<void> addToTeam(MarketplaceProvider provider) async {
+    final user = BackendService.user;
+    if (user == null) throw StateError('Sign in to build your team.');
+    if (provider.id.startsWith('demo-')) return;
+    await Supabase.instance.client.from('user_team_members').upsert({
+      'user_id': user.id,
+      'provider_id': provider.id,
+    });
   }
 
   static Future<void> requestConnection({
@@ -241,6 +283,7 @@ class MarketplaceService {
         'realtor' => ProviderCategory.realtor,
         'mortgage_broker' => ProviderCategory.mortgageBroker,
         'lawyer' => ProviderCategory.lawyer,
+        'accountant' => ProviderCategory.accountant,
         'lender' => ProviderCategory.lender,
         _ => null,
       };
@@ -275,6 +318,10 @@ class MarketplaceService {
       ('Residential Lending', 'Keyline Financial'),
       ('Commercial Lending', 'Metro Capital'),
     ];
+    const accountants = [
+      ('Elena Rossi', 'Rossi Property Tax Advisory'),
+      ('Omar Haddad', 'Haddad CPA Practice'),
+    ];
     final providers = <MarketplaceProvider>[];
     void addGroup(
       ProviderCategory category,
@@ -294,6 +341,9 @@ class MarketplaceService {
             reviewScore: 4.9 - index * .1,
             reviewCount: 86 - index * 9,
             experience: 12 - index,
+            jobTitle: category.label,
+            isExample: true,
+            photoIndex: index,
             rateLabel: category == ProviderCategory.lender
                 ? 'Live quote'
                 : null,
@@ -312,6 +362,11 @@ class MarketplaceService {
       ProviderCategory.lawyer,
       lawyerNames,
       'Property purchase & conveyancing',
+    );
+    addGroup(
+      ProviderCategory.accountant,
+      accountants,
+      'Property tax & accounting',
     );
     addGroup(
       ProviderCategory.lender,

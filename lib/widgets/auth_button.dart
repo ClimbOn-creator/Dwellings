@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../screens/auth_page.dart';
+import '../screens/profile_page.dart';
 import '../services/backend_service.dart';
 
 class AuthButton extends StatefulWidget {
@@ -32,9 +33,12 @@ class _AuthButtonState extends State<AuthButton> {
     super.dispose();
   }
 
-  void _open() => Navigator.of(
-    context,
-  ).push(MaterialPageRoute<void>(builder: (_) => const AuthPage()));
+  void _open() => Navigator.of(context).push(
+    MaterialPageRoute<void>(
+      builder: (_) =>
+          BackendService.user == null ? const AuthPage() : const ProfilePage(),
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -56,7 +60,7 @@ class _AuthButtonState extends State<AuthButton> {
       label: widget.compact
           ? const SizedBox.shrink()
           : Text(
-              signedIn ? 'ACCOUNT' : 'SIGN IN',
+              signedIn ? 'PROFILE' : 'SIGN IN',
               style: const TextStyle(
                 fontSize: 9,
                 fontWeight: FontWeight.w700,
