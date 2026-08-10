@@ -53,6 +53,9 @@ class MarketplaceProvider {
     required this.isExample,
     this.photoIndex,
     this.photoUrl = '',
+    this.email = '',
+    this.phone = '',
+    this.websiteUrl = '',
     this.rateLabel,
     this.rateVerifiedAt,
   });
@@ -71,6 +74,9 @@ class MarketplaceProvider {
   final bool isExample;
   final int? photoIndex;
   final String photoUrl;
+  final String email;
+  final String phone;
+  final String websiteUrl;
   final String? rateLabel;
   final DateTime? rateVerifiedAt;
 }
@@ -163,7 +169,7 @@ class MarketplaceService {
       var rows = await Supabase.instance.client
           .from('provider_profiles')
           .select(
-            'id, provider_type, display_name, company_name, description, '
+            'id, provider_type, display_name, company_name, description, phone, email, website_url, '
             'verified, years_experience, review_score, review_count, job_title, '
             'is_example, photo_index, logo_object_key, '
             'provider_regions!inner(service_regions!inner(city, region, country_code)), '
@@ -177,7 +183,7 @@ class MarketplaceService {
         rows = await Supabase.instance.client
             .from('provider_profiles')
             .select(
-              'id, provider_type, display_name, company_name, description, '
+              'id, provider_type, display_name, company_name, description, phone, email, website_url, '
               'verified, years_experience, review_score, review_count, job_title, '
               'is_example, photo_index, logo_object_key, '
               'sponsored_placements(disclosure_label, active, starts_at, ends_at), '
@@ -228,6 +234,9 @@ class MarketplaceService {
           isExample: row['is_example'] as bool? ?? false,
           photoIndex: row['photo_index'] as int?,
           photoUrl: row['logo_object_key'] as String? ?? '',
+          email: row['email'] as String? ?? '',
+          phone: row['phone'] as String? ?? '',
+          websiteUrl: row['website_url'] as String? ?? '',
           rateLabel: rate == null
               ? null
               : '${(rate['interest_rate'] as num).toStringAsFixed(2)}%',
@@ -248,6 +257,28 @@ class MarketplaceService {
       'user_id': user.id,
       'provider_id': provider.id,
     });
+  }
+
+  static Future<void> removeFromTeam(String providerId) async {
+    final user = BackendService.user;
+    if (user == null) throw StateError('Sign in to manage your team.');
+    await Supabase.instance.client
+        .from('user_team_members')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('provider_id', providerId);
+  }
+
+  static Future<bool> isOnTeam(String providerId) async {
+    final user = BackendService.user;
+    if (user == null) return false;
+    final row = await Supabase.instance.client
+        .from('user_team_members')
+        .select('provider_id')
+        .eq('user_id', user.id)
+        .eq('provider_id', providerId)
+        .maybeSingle();
+    return row != null;
   }
 
   static Future<void> requestConnection({

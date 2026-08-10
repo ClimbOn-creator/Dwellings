@@ -68,11 +68,13 @@ class DashboardStats {
   const DashboardStats({
     required this.analysisCount,
     required this.teamCount,
+    required this.introductionCount,
     required this.lastAddress,
     required this.lastRisk,
   });
   final int analysisCount;
   final int teamCount;
+  final int introductionCount;
   final String lastAddress;
   final double? lastRisk;
 }
@@ -187,6 +189,7 @@ class AccountService {
       return const DashboardStats(
         analysisCount: 0,
         teamCount: 0,
+        introductionCount: 0,
         lastAddress: '',
         lastRisk: null,
       );
@@ -201,6 +204,10 @@ class AccountService {
         .from('user_team_members')
         .select('provider_id')
         .eq('user_id', user.id);
+    final introductions = await _client
+        .from('lead_requests')
+        .select('id')
+        .eq('user_id', user.id);
     final latest = analyses.isEmpty
         ? null
         : Map<String, dynamic>.from(analyses.first);
@@ -210,6 +217,7 @@ class AccountService {
     return DashboardStats(
       analysisCount: analyses.length,
       teamCount: team.length,
+      introductionCount: introductions.length,
       lastAddress: latest?['address_label'] as String? ?? '',
       lastRisk: (output['risk'] as num?)?.toDouble(),
     );
@@ -221,7 +229,7 @@ class AccountService {
     final rows = await _client
         .from('user_team_members')
         .select(
-          'provider_profiles(id, provider_type, display_name, company_name, description, '
+          'provider_profiles(id, provider_type, display_name, company_name, description, phone, email, website_url, '
           'verified, years_experience, review_score, review_count, job_title, '
           'is_example, photo_index, logo_object_key, '
           'sponsored_placements(disclosure_label, active, starts_at, ends_at), '
@@ -245,6 +253,28 @@ class AccountService {
         .delete()
         .eq('user_id', user.id)
         .eq('provider_id', providerId);
+  }
+
+  static Future<void> requestIntroduction({
+    required MarketplaceProvider provider,
+    required String propertySummary,
+    String? phone,
+  }) async {
+    final user = BackendService.user;
+    if (user == null) throw StateError('Sign in to request an introduction.');
+    if (provider.isExample) return;
+    final profile = await loadProfile();
+    await _client.from('lead_requests').insert({
+      'user_id': user.id,
+      'provider_id': provider.id,
+      'requester_name': profile?.fullName.isNotEmpty == true
+          ? profile!.fullName
+          : user.email?.split('@').first ?? 'DwellingsIQ member',
+      'requester_email': user.email ?? '',
+      'requester_phone': phone?.trim().isEmpty == true ? null : phone?.trim(),
+      'property_summary': propertySummary.trim(),
+      'consent_to_contact': true,
+    });
   }
 
   static Future<void> saveDraft(Map<String, dynamic> draft) async {

@@ -632,6 +632,57 @@ class _ProviderRow extends StatefulWidget {
 
 class _ProviderRowState extends State<_ProviderRow> {
   bool hovered = false;
+  bool _added = false;
+  bool _changingTeam = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _syncTeamState();
+  }
+
+  Future<void> _syncTeamState() async {
+    final added = await MarketplaceService.isOnTeam(widget.provider.id);
+    if (mounted) setState(() => _added = added);
+  }
+
+  Future<void> _toggleTeam() async {
+    if (BackendService.user == null) {
+      await Navigator.of(
+        context,
+      ).push(MaterialPageRoute<void>(builder: (_) => const AuthPage()));
+      if (!mounted || BackendService.user == null) return;
+      await _syncTeamState();
+    }
+    setState(() => _changingTeam = true);
+    try {
+      if (_added) {
+        await MarketplaceService.removeFromTeam(widget.provider.id);
+      } else {
+        await MarketplaceService.addToTeam(widget.provider);
+      }
+      if (!mounted) return;
+      setState(() => _added = !_added);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            _added
+                ? '${widget.provider.name} added to your team.'
+                : '${widget.provider.name} removed from your team.',
+          ),
+        ),
+      );
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$error')));
+      }
+    } finally {
+      if (mounted) setState(() => _changingTeam = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = widget.provider;
@@ -755,42 +806,36 @@ class _ProviderRowState extends State<_ProviderRow> {
               ),
             );
             final teamButton = OutlinedButton.icon(
-              onPressed: () async {
-                if (BackendService.user == null) {
-                  await Navigator.of(context).push(
-                    MaterialPageRoute<void>(builder: (_) => const AuthPage()),
-                  );
-                  if (!context.mounted || BackendService.user == null) return;
-                }
-                try {
-                  await MarketplaceService.addToTeam(provider);
-                  if (!context.mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('${provider.name} added to your team.'),
-                    ),
-                  );
-                } catch (error) {
-                  if (!context.mounted) return;
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(SnackBar(content: Text('$error')));
-                }
-              },
+              onPressed: _changingTeam ? null : _toggleTeam,
               style: OutlinedButton.styleFrom(
-                foregroundColor: hovered ? Colors.white : _ink,
+                backgroundColor: _added
+                    ? const Color(0xFF16825D)
+                    : Colors.transparent,
+                foregroundColor: _added
+                    ? Colors.white
+                    : (hovered ? Colors.white : _ink),
                 side: BorderSide(
-                  color: hovered ? Colors.white38 : const Color(0xFFD8D8E0),
+                  color: _added
+                      ? const Color(0xFF16825D)
+                      : (hovered ? Colors.white38 : const Color(0xFFD8D8E0)),
                 ),
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
                   vertical: 16,
                 ),
               ),
-              icon: const Icon(Icons.group_add_outlined, size: 16),
-              label: const Text(
-                'ADD TO TEAM',
-                style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800),
+              icon: Icon(
+                _added ? Icons.check_circle : Icons.add_circle_outline,
+                size: 16,
+              ),
+              label: Text(
+                _changingTeam
+                    ? 'UPDATING…'
+                    : (_added ? 'ADDED!' : 'ADD TO TEAM'),
+                style: const TextStyle(
+                  fontSize: 9,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
             );
             return narrow
