@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../widgets/brand_logo.dart';
+import '../widgets/auth_button.dart';
 import '../widgets/site_footer.dart';
 import 'become_member_page.dart';
 import 'home_screen.dart';
@@ -13,14 +14,7 @@ const _purple = brandPurple;
 const _lilac = brandLilac;
 const _muted = Color(0xFFA5A5B5);
 
-enum MarketingDestination {
-  network,
-  capabilities,
-  process,
-  about,
-  team,
-  membership,
-}
+enum MarketingDestination { network, process, about, team, membership }
 
 void openMarketingPage(
   BuildContext context,
@@ -29,7 +23,6 @@ void openMarketingPage(
 }) {
   final Widget page = switch (destination) {
     MarketingDestination.network => const LocalNetworkPage(),
-    MarketingDestination.capabilities => const CapabilitiesPage(),
     MarketingDestination.process => const HowItWorksPage(),
     MarketingDestination.about => const AboutPage(),
     MarketingDestination.team => const TeamPage(),
@@ -121,11 +114,6 @@ class MarketingNavigation extends StatelessWidget {
               onTap: () => _go(context, MarketingDestination.network),
             ),
             _NavItem(
-              label: 'CAPABILITIES',
-              selected: active == MarketingDestination.capabilities,
-              onTap: () => _go(context, MarketingDestination.capabilities),
-            ),
-            _NavItem(
               label: 'HOW IT WORKS',
               selected: active == MarketingDestination.process,
               onTap: () => _go(context, MarketingDestination.process),
@@ -144,7 +132,6 @@ class MarketingNavigation extends StatelessWidget {
               itemBuilder: (_) =>
                   [
                         MarketingDestination.network,
-                        MarketingDestination.capabilities,
                         MarketingDestination.process,
                         MarketingDestination.membership,
                       ]
@@ -163,6 +150,8 @@ class MarketingNavigation extends StatelessWidget {
                       .toList(),
             ),
           const SizedBox(width: 8),
+          AuthButton(dark: true, compact: compact),
+          const SizedBox(width: 4),
           _ModelButton(onTap: onModel ?? () => openUnderwriting(context)),
         ],
       ),
@@ -172,7 +161,6 @@ class MarketingNavigation extends StatelessWidget {
 
 String _destinationLabel(MarketingDestination value) => switch (value) {
   MarketingDestination.network => 'LOCAL NETWORK',
-  MarketingDestination.capabilities => 'CAPABILITIES',
   MarketingDestination.process => 'HOW IT WORKS',
   MarketingDestination.about => 'ABOUT',
   MarketingDestination.team => 'TEAM',
@@ -273,7 +261,7 @@ class CapabilitiesPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => _MarketingPage(
-    active: MarketingDestination.capabilities,
+    active: MarketingDestination.process,
     eyebrow: 'CAPABILITIES',
     title: 'Everything that can change the deal.',
     body:
@@ -827,10 +815,10 @@ class AboutPage extends StatelessWidget {
         const _Principles(),
         _PageCta(
           title: 'Better questions create better properties.',
-          button: 'EXPLORE CAPABILITIES',
+          button: 'SEE HOW IT WORKS',
           onTap: () => openMarketingPage(
             context,
-            MarketingDestination.capabilities,
+            MarketingDestination.process,
             replace: true,
           ),
         ),

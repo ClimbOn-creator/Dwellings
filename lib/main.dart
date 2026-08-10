@@ -23,7 +23,7 @@ class DwellingIqApp extends StatelessWidget {
       brightness: Brightness.light,
       colorScheme: ColorScheme.fromSeed(seedColor: purple, surface: paper),
       scaffoldBackgroundColor: paper,
-      textTheme: GoogleFonts.dmSansTextTheme(),
+      textTheme: GoogleFonts.interTextTheme(),
     );
     return MaterialApp(
       debugShowCheckedModeBanner: false,
@@ -34,16 +34,38 @@ class DwellingIqApp extends StatelessWidget {
           filled: true,
           fillColor: Colors.white,
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.zero,
+            borderRadius: BorderRadius.circular(10),
             borderSide: const BorderSide(color: Color(0xFFD9D9D9)),
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.zero,
+            borderRadius: BorderRadius.circular(10),
             borderSide: const BorderSide(color: Color(0xFFD9D9D9)),
           ),
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 14,
             vertical: 14,
+          ),
+        ),
+        filledButtonTheme: FilledButtonThemeData(
+          style: FilledButton.styleFrom(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            textStyle: const TextStyle(
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0,
+            ),
+          ),
+        ),
+        outlinedButtonTheme: OutlinedButtonThemeData(
+          style: OutlinedButton.styleFrom(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            textStyle: const TextStyle(
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0,
+            ),
           ),
         ),
       ),

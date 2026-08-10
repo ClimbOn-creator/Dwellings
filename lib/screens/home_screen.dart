@@ -6,6 +6,8 @@ import '../models/housing_model.dart';
 import '../services/backend_service.dart';
 import '../services/marketplace_service.dart';
 import '../widgets/site_footer.dart';
+import '../widgets/auth_button.dart';
+import '../widgets/brand_logo.dart';
 import 'local_network_page.dart';
 import 'marketing_pages.dart';
 
@@ -180,45 +182,6 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
     }
   }
 
-  Future<void> _account() async {
-    if (!BackendService.configured) {
-      _message(
-        'Demo mode is active. Connect Supabase to enable accounts and cloud history.',
-      );
-      return;
-    }
-    if (BackendService.user != null) {
-      await BackendService.signOut();
-      if (mounted) setState(() {});
-      return;
-    }
-    final controller = TextEditingController();
-    final email = await showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Sign in to DwellingsIQ'),
-        content: TextField(
-          controller: controller,
-          keyboardType: TextInputType.emailAddress,
-          decoration: const InputDecoration(labelText: 'Email address'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, controller.text.trim()),
-            child: const Text('Send secure link'),
-          ),
-        ],
-      ),
-    );
-    if (email == null || email.isEmpty) return;
-    await BackendService.sendMagicLink(email);
-    _message('Check your email for the secure sign-in link.');
-  }
-
   void _message(String text) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -248,23 +211,10 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
                     )
                   : null,
               actions: [
-                TextButton(
-                  onPressed: _account,
-                  child: Text(
-                    BackendService.user?.email ??
-                        (BackendService.configured ? 'SIGN IN' : 'DEMO MODE'),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1,
-                    ),
-                  ),
-                ),
+                const AuthButton(dark: true),
                 const SizedBox(width: 18),
               ],
             ),
-            const SliverToBoxAdapter(child: _AnalysisHeader()),
             SliverToBoxAdapter(child: _workspace()),
             const SliverToBoxAdapter(child: _Methodology()),
             SliverToBoxAdapter(
@@ -404,9 +354,9 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
     color: _ink,
     child: Center(
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 1280),
+        constraints: const BoxConstraints(maxWidth: 1600),
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 80, 20, 110),
+          padding: const EdgeInsets.fromLTRB(20, 42, 20, 84),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -428,27 +378,11 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
                 style: TextStyle(color: Color(0xFFAAAAAA), fontSize: 15),
               ),
               const SizedBox(height: 34),
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  final desktop = constraints.maxWidth >= 980;
-                  return desktop
-                      ? Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(flex: 10, child: _inputPanel()),
-                            const SizedBox(width: 20),
-                            Expanded(flex: 11, child: _resultPanel()),
-                          ],
-                        )
-                      : Column(
-                          children: [
-                            _inputPanel(),
-                            const SizedBox(height: 20),
-                            _resultPanel(),
-                          ],
-                        );
-                },
-              ),
+              _inputPanel(),
+              if (_result != null) ...[
+                const SizedBox(height: 20),
+                _resultPanel(),
+              ],
             ],
           ),
         ),
@@ -644,9 +578,14 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
   List<Widget> _fieldGrid(List<_Spec> specs) => [
     LayoutBuilder(
       builder: (context, constraints) {
-        final width = constraints.maxWidth > 520
-            ? (constraints.maxWidth - 12) / 2
-            : constraints.maxWidth;
+        final columns = constraints.maxWidth >= 1180
+            ? 4
+            : constraints.maxWidth >= 820
+            ? 3
+            : constraints.maxWidth > 520
+            ? 2
+            : 1;
+        final width = (constraints.maxWidth - (columns - 1) * 12) / columns;
         return Wrap(
           spacing: 12,
           runSpacing: 12,
@@ -675,44 +614,7 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
   Widget _resultPanel() {
     final result = _result;
     if (result == null) {
-      return _Panel(
-        padding: EdgeInsets.zero,
-        child: Column(
-          children: [
-            AspectRatio(
-              aspectRatio: 1.45,
-              child: ClipRRect(
-                borderRadius: BorderRadius.zero,
-                child: ColorFiltered(
-                  colorFilter: _monochrome,
-                  child: Image.asset(
-                    'assets/images/residential-courtyard.jpg',
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
-            ),
-            const Padding(
-              padding: EdgeInsets.all(34),
-              child: Column(
-                children: [
-                  Text(
-                    'YOUR INVESTMENT MEMO STARTS HERE',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900),
-                  ),
-                  SizedBox(height: 12),
-                  Text(
-                    'Enter the facts you know. The model will calculate returns, expose missing evidence and stress the assumptions.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: _muted, height: 1.55),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      );
+      return const SizedBox.shrink();
     }
     final strong = result.net >= 55;
     final cautious = result.net < 42;
@@ -850,61 +752,6 @@ class _Spec {
   final String key;
   final String label;
   final String suffix;
-}
-
-class _AnalysisHeader extends StatelessWidget {
-  const _AnalysisHeader();
-  @override
-  Widget build(BuildContext context) => Container(
-    color: Colors.white,
-    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 64),
-    child: Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 1240),
-        child: LayoutBuilder(
-          builder: (context, constraints) => Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'DWELLINGS IQ / MODEL 01',
-                      style: TextStyle(
-                        color: _green,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 1.5,
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    Text(
-                      'UNDERWRITE\nTHE PROPERTY.',
-                      style: TextStyle(
-                        fontSize: constraints.maxWidth < 700 ? 48 : 72,
-                        height: .87,
-                        letterSpacing: -3.5,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (constraints.maxWidth >= 760)
-                const SizedBox(
-                  width: 310,
-                  child: Text(
-                    'A dedicated workspace for assumptions, returns, debt, risk and scenario analysis. Nothing is hidden behind the presentation layer.',
-                    style: TextStyle(color: _muted, fontSize: 13, height: 1.55),
-                  ),
-                ),
-            ],
-          ),
-        ),
-      ),
-    ),
-  );
 }
 
 class _HeroSystemCard extends StatelessWidget {
@@ -1245,7 +1092,7 @@ class _Panel extends StatelessWidget {
     padding: padding,
     decoration: BoxDecoration(
       color: _card,
-      borderRadius: BorderRadius.zero,
+      borderRadius: BorderRadius.circular(12),
       border: Border.all(color: _line),
       boxShadow: const [
         BoxShadow(color: Color(0x12102218), blurRadius: 0, offset: Offset.zero),
@@ -1258,37 +1105,7 @@ class _Panel extends StatelessWidget {
 class _Brand extends StatelessWidget {
   const _Brand();
   @override
-  Widget build(BuildContext context) => const Row(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      SizedBox(
-        width: 31,
-        height: 31,
-        child: DecoratedBox(
-          decoration: BoxDecoration(color: _lime),
-          child: Icon(Icons.domain, color: _ink, size: 19),
-        ),
-      ),
-      SizedBox(width: 10),
-      Text(
-        'DWELLINGS',
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: 17,
-          fontWeight: FontWeight.w900,
-          letterSpacing: 1,
-        ),
-      ),
-      Text(
-        'IQ',
-        style: TextStyle(
-          color: _lime,
-          fontSize: 17,
-          fontWeight: FontWeight.w900,
-        ),
-      ),
-    ],
-  );
+  Widget build(BuildContext context) => const DwellingIqLogo(size: 38);
 }
 
 class _Kicker extends StatelessWidget {
@@ -1356,6 +1173,7 @@ class _ModeButton extends StatelessWidget {
       decoration: BoxDecoration(
         color: active ? _ink : const Color(0xFFF7F7F7),
         border: Border.all(color: active ? _ink : _line),
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         children: [
@@ -1429,7 +1247,10 @@ class _InputSection extends StatelessWidget {
     data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
     child: Container(
       margin: const EdgeInsets.only(top: 10),
-      decoration: BoxDecoration(border: Border.all(color: _line)),
+      decoration: BoxDecoration(
+        border: Border.all(color: _line),
+        borderRadius: BorderRadius.circular(8),
+      ),
       child: ExpansionTile(
         initiallyExpanded: initiallyExpanded,
         tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),

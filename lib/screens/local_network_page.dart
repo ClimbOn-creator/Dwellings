@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../services/marketplace_service.dart';
 import '../widgets/brand_logo.dart';
+import '../widgets/auth_button.dart';
 import '../widgets/site_footer.dart';
 import 'home_screen.dart';
 import 'marketing_pages.dart';
@@ -238,6 +239,11 @@ class _NetworkNav extends StatelessWidget {
               ),
             ),
           ),
+        AuthButton(
+          dark: true,
+          compact: MediaQuery.sizeOf(context).width <= 720,
+        ),
+        const SizedBox(width: 4),
         FilledButton.icon(
           onPressed: onModel,
           style: FilledButton.styleFrom(

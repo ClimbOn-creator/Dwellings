@@ -8,16 +8,28 @@ import '../models/housing_model.dart';
 class BackendService {
   static const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
   static const supabaseKey = String.fromEnvironment('SUPABASE_PUBLISHABLE_KEY');
+  static const googleAuthEnabled = bool.fromEnvironment('GOOGLE_AUTH_ENABLED');
   static bool get configured =>
       supabaseUrl.isNotEmpty && supabaseKey.isNotEmpty;
 
   static Future<void> initialize() async {
     if (!configured) return;
-    await Supabase.initialize(url: supabaseUrl, anonKey: supabaseKey);
+    await Supabase.initialize(url: supabaseUrl, publishableKey: supabaseKey);
   }
 
   static User? get user =>
       configured ? Supabase.instance.client.auth.currentUser : null;
+
+  static Stream<AuthState>? get authChanges =>
+      configured ? Supabase.instance.client.auth.onAuthStateChange : null;
+
+  static Future<void> signInWithGoogle() async {
+    if (!configured) throw StateError('Supabase is not configured.');
+    await Supabase.instance.client.auth.signInWithOAuth(
+      OAuthProvider.google,
+      redirectTo: Uri.base.origin,
+    );
+  }
 
   static Future<void> sendMagicLink(String email) async {
     if (!configured) throw StateError('Supabase is not configured.');

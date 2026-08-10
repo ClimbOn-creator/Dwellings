@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../services/marketplace_service.dart';
 import '../services/membership_service.dart';
 import '../widgets/brand_logo.dart';
+import '../widgets/auth_button.dart';
 import '../widgets/site_footer.dart';
 
 const _ink = Color(0xFF050510);
@@ -170,6 +171,8 @@ class _BecomeMemberPageState extends State<BecomeMemberPage> {
               child: const DwellingIqLogo(size: 48),
             ),
             const Spacer(),
+            const AuthButton(dark: true),
+            const SizedBox(width: 8),
             TextButton.icon(
               onPressed: widget.onHome,
               icon: const Icon(Icons.arrow_back, size: 16),

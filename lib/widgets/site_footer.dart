@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'brand_logo.dart';
+import 'auth_button.dart';
 
 class SiteFooter extends StatelessWidget {
   const SiteFooter({
@@ -140,6 +141,7 @@ class _FooterLinks extends StatelessWidget {
     spacing: 8,
     runSpacing: 8,
     children: [
+      const AuthButton(dark: true),
       _FooterButton(label: 'ABOUT', onTap: onAbout),
       _FooterButton(label: 'TEAM', onTap: onTeam),
       _FooterButton(
