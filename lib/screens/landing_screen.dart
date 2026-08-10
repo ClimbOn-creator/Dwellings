@@ -328,7 +328,7 @@ class _HeroCopy extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 30),
-        _PillButton(label: 'ANALYZE A PROPERTY', onTap: onOpen),
+        _PillButton(label: 'CALCULATE PROPERTY RISK', onTap: onOpen),
       ],
     );
   }

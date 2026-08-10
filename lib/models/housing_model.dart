@@ -343,6 +343,10 @@ class AnalysisResult {
     required this.ltv,
     required this.dti,
     required this.dataCompleteness,
+    required this.assessedValue,
+    required this.valuationRatio,
+    required this.annualizedSinceLastSale,
+    required this.propertyAge,
     required this.drivers,
     required this.flags,
     required this.scenarios,
@@ -374,6 +378,10 @@ class AnalysisResult {
   final double ltv;
   final double dti;
   final double dataCompleteness;
+  final double assessedValue;
+  final double valuationRatio;
+  final double annualizedSinceLastSale;
+  final int propertyAge;
   final List<FactorResult> drivers;
   final List<String> flags;
   final List<ScenarioResult> scenarios;
@@ -402,6 +410,10 @@ class AnalysisResult {
     'ltv': ltv,
     'dti': dti,
     'dataCompleteness': dataCompleteness,
+    'assessedValue': assessedValue,
+    'valuationRatio': valuationRatio,
+    'annualizedSinceLastSale': annualizedSinceLastSale,
+    'propertyAge': propertyAge,
     'flags': flags,
   };
 }
@@ -525,6 +537,26 @@ AnalysisResult analyzeProperty(PropertyInputs d, DecisionMode mode) {
   final grm = _safeDivide(price, grossPotentialIncome);
   final area = math.max(0.0, d.n('area')).toDouble();
   final pricePerSquareFoot = _safeDivide(price, area);
+  final assessedValue = math
+      .max(0.0, d.n('assessedLand') + d.n('assessedBuilding'))
+      .toDouble();
+  final valuationRatio = assessedValue > 0
+      ? _safeDivide(price, assessedValue)
+      : 0.0;
+  final currentYear = DateTime.now().year;
+  final yearBuilt = d.n('yearBuilt').round();
+  final propertyAge = yearBuilt > 1700 && yearBuilt <= currentYear
+      ? currentYear - yearBuilt
+      : 0;
+  final lastSalePrice = math.max(0.0, d.n('lastSalePrice')).toDouble();
+  final lastSaleYear = d.n('lastSaleYear').round();
+  final yearsSinceLastSale = lastSaleYear > 1700 && lastSaleYear < currentYear
+      ? currentYear - lastSaleYear
+      : 0;
+  final annualizedSinceLastSale =
+      lastSalePrice > 0 && yearsSinceLastSale > 0 && price > 0
+      ? math.pow(price / lastSalePrice, 1 / yearsSinceLastSale).toDouble() - 1
+      : 0.0;
   final holdingPeriod = math.max(1, d.n('holdingPeriod', 5).round());
   final rentGrowth = d.pct('rentGrowth');
   final expenseGrowth = d.pct('expenseGrowth');
@@ -627,37 +659,45 @@ AnalysisResult analyzeProperty(PropertyInputs d, DecisionMode mode) {
       (p.flood + p.wildfire + p.geo + p.nuisance + d.n('environmentRisk')) / 5;
   final creditStress =
       100 * ((p.delinquency / .03) + (p.mbs / .03) + (p.renewal / .40)) / 3;
+  final ageRisk = propertyAge == 0
+      ? 0.0
+      : _normalize(propertyAge.toDouble(), 5, 100);
+  final valuationEvidenceRisk = assessedValue == 0
+      ? 0.0
+      : _normalize(valuationRatio, .95, 1.60);
   final risks = <(String, double, double)>[
-    ('Physical & climate hazard', .14, _normalize(physicalHazard, 0, 100)),
+    ('Physical & climate hazard', .12, _normalize(physicalHazard, 0, 100)),
     (
-      'Condition & capital needs',
-      .12,
+      'Building age, condition & capital needs',
+      .11,
       _normalize(
-        d.n('conditionRisk') +
-            _safeDivide(improvements, math.max(1, price)) * 400,
+        d.n('conditionRisk') * .65 +
+            ageRisk * .25 +
+            _safeDivide(improvements, math.max(1, price)) * 400 * .10,
         0,
         100,
       ),
     ),
     ('Leverage', .12, _normalize(ltv, .45, .90)),
     ('Break-even occupancy', .10, _normalize(breakEvenOccupancy, .55, 1.05)),
-    ('Lease rollover', .09, _normalize(d.n('leaseRollover'), 0, 100)),
+    ('Lease rollover', .08, _normalize(d.n('leaseRollover'), 0, 100)),
     (
       'Tenant concentration',
-      .08,
+      .07,
       _normalize(d.n('tenantConcentration'), 10, 100),
     ),
-    ('Resale liquidity', .08, _normalize(d.n('daysOnMarket'), 15, 120)),
-    ('Local affordability', .08, _normalize(p.priceIncome, 4, 14)),
-    ('Credit & renewal stress', .08, _normalize(creditStress, 0, 100)),
+    ('Resale liquidity', .07, _normalize(d.n('daysOnMarket'), 15, 120)),
+    ('Price vs. assessed value', .10, valuationEvidenceRisk),
+    ('Local affordability', .06, _normalize(p.priceIncome, 4, 14)),
+    ('Credit & renewal stress', .06, _normalize(creditStress, 0, 100)),
     (
       'Labour & cycle exposure',
-      .06,
+      .05,
       _normalize(p.unemployment + p.investor * .12, .03, .17),
     ),
     (
       'Insurance & regulation',
-      .05,
+      .06,
       _normalize((p.insurance + p.regulatory) / 2, 0, 100),
     ),
   ];
@@ -671,22 +711,55 @@ AnalysisResult analyzeProperty(PropertyInputs d, DecisionMode mode) {
   ]..sort((a, b) => b.impact.abs().compareTo(a.impact.abs()));
 
   final flags = <String>[];
-  if (mode == DecisionMode.invest && dscr < 1.25)
+  if (mode == DecisionMode.invest && dscr < 1.25) {
     flags.add('DSCR is below the common 1.25× lender cushion.');
-  if (mode == DecisionMode.invest && debtYield < .08)
+  }
+  if (mode == DecisionMode.invest && debtYield < .08) {
     flags.add('Debt yield is below 8%; financing resilience is thin.');
-  if (ltv > .75)
+  }
+  if (ltv > .75) {
     flags.add('Leverage exceeds 75% LTV and amplifies downside risk.');
-  if (breakEvenOccupancy > .85)
+  }
+  if (breakEvenOccupancy > .85) {
     flags.add('Break-even occupancy exceeds 85%; vacancy headroom is limited.');
-  if (d.n('leaseRollover') > 35)
+  }
+  if (d.n('leaseRollover') > 35) {
     flags.add('More than 35% of income rolls during the hold period.');
-  if (d.n('tenantConcentration') > 40)
+  }
+  if (d.n('tenantConcentration') > 40) {
     flags.add('A single tenant contributes more than 40% of income.');
-  if (mode == DecisionMode.home && dti > .39)
+  }
+  if (mode == DecisionMode.home && dti > .39) {
     flags.add('Housing and debt costs exceed 39% of gross household income.');
-  if (flags.isEmpty)
+  }
+  if (assessedValue == 0) {
+    flags.add(
+      'Assessment land and building values were not entered; the valuation cross-check is incomplete.',
+    );
+  } else if (valuationRatio > 1.35) {
+    flags.add(
+      'Purchase price is more than 35% above the entered assessed value. Confirm the assessment date and current comparable sales.',
+    );
+  } else if (valuationRatio < .75) {
+    flags.add(
+      'Purchase price is more than 25% below the entered assessed value. Investigate condition, title, tenancy and sale circumstances.',
+    );
+  }
+  if (propertyAge == 0) {
+    flags.add('Year built was not entered or is invalid.');
+  }
+  if (lastSalePrice == 0 || yearsSinceLastSale == 0) {
+    flags.add(
+      'Last sale price and year were not entered; historical price growth cannot be checked.',
+    );
+  } else if (annualizedSinceLastSale > .12) {
+    flags.add(
+      'The entered price implies more than 12% annual growth since the last sale; verify renovations and comparable evidence.',
+    );
+  }
+  if (flags.isEmpty) {
     flags.add('No major threshold breach in the entered assumptions.');
+  }
 
   final scenarios = <ScenarioResult>[
     _scenario(
@@ -732,12 +805,18 @@ AnalysisResult analyzeProperty(PropertyInputs d, DecisionMode mode) {
     'amortization',
     'holdingPeriod',
     'exitCap',
+    'lot',
+    'yearBuilt',
+    'assessmentYear',
+    'lastSalePrice',
+    'lastSaleYear',
   ];
+  final completedRequired = required
+      .where((key) => d.values.containsKey(key) && d.n(key) > 0)
+      .length;
+  final assessmentComplete = assessedValue > 0 ? 1 : 0;
   final dataCompleteness =
-      required
-          .where((key) => d.values.containsKey(key) && d.n(key) > 0)
-          .length /
-      required.length;
+      (completedRequired + assessmentComplete) / (required.length + 1);
 
   return AnalysisResult(
     opportunity: opportunity,
@@ -766,6 +845,10 @@ AnalysisResult analyzeProperty(PropertyInputs d, DecisionMode mode) {
     ltv: ltv,
     dti: dti,
     dataCompleteness: dataCompleteness,
+    assessedValue: assessedValue,
+    valuationRatio: valuationRatio,
+    annualizedSinceLastSale: annualizedSinceLastSale,
+    propertyAge: propertyAge,
     drivers: drivers,
     flags: flags,
     scenarios: scenarios,

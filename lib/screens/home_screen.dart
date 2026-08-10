@@ -64,6 +64,11 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
     'price': TextEditingController(text: '1200000'),
     'closingCosts': TextEditingController(text: '30000'),
     'improvements': TextEditingController(text: '50000'),
+    'assessedLand': TextEditingController(),
+    'assessedBuilding': TextEditingController(),
+    'assessmentYear': TextEditingController(),
+    'lastSalePrice': TextEditingController(),
+    'lastSaleYear': TextEditingController(),
     'area': TextEditingController(text: '6200'),
     'lot': TextEditingController(text: '6500'),
     'units': TextEditingController(text: '6'),
@@ -360,10 +365,10 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const _Kicker('THE ANALYSIS ENGINE'),
+              const _Kicker('PROPERTY RISK ASSESSMENT'),
               const SizedBox(height: 12),
               const Text(
-                'Put every assumption on the table.',
+                'Understand what could break the deal.',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 42,
@@ -374,7 +379,7 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
               ),
               const SizedBox(height: 12),
               const Text(
-                'Start with the essentials. Open the deeper sections when you have inspection, rent-roll, lease or financing data.',
+                'Enter the property record, income, debt and condition evidence you have. The calculator scores financial, physical, market and exit risk—and shows what is still missing.',
                 style: TextStyle(color: Color(0xFFAAAAAA), fontSize: 15),
               ),
               const SizedBox(height: 34),
@@ -479,6 +484,29 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
         ),
         const SizedBox(height: 20),
         _InputSection(
+          title: 'PROPERTY RECORD & ASSESSMENT',
+          subtitle:
+              'Enter these values manually from your assessment notice, listing or verified documents',
+          initiallyExpanded: true,
+          children: [
+            ..._fieldGrid([
+              _Spec('assessedLand', 'Assessed land value', '\$'),
+              _Spec('assessedBuilding', 'Assessed building value', '\$'),
+              _Spec('assessmentYear', 'Assessment year', ''),
+              _Spec('lastSalePrice', 'Last recorded sale price', '\$'),
+              _Spec('lastSaleYear', 'Last sale year', ''),
+              _Spec('yearBuilt', 'Year built', ''),
+              _Spec('lot', 'Lot area', 'sq ft'),
+              _Spec('area', 'Finished / rentable area', 'sq ft'),
+            ]),
+            const SizedBox(height: 12),
+            const Text(
+              'Assessment values are dated tax values—not appraisals. DwellingsIQ uses them only as a discrepancy and due-diligence signal.',
+              style: TextStyle(color: _muted, fontSize: 10, height: 1.5),
+            ),
+          ],
+        ),
+        _InputSection(
           title: 'ACQUISITION & PHYSICAL',
           subtitle: 'Basis, size, condition and development potential',
           initiallyExpanded: true,
@@ -486,10 +514,7 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
             _Spec('price', 'Purchase price', '\$'),
             _Spec('closingCosts', 'Closing costs', '\$'),
             _Spec('improvements', 'Immediate improvements', '\$'),
-            _Spec('area', 'Rentable / finished area', 'sq ft'),
-            _Spec('lot', 'Lot area', 'sq ft'),
             _Spec('units', 'Units / keys', ''),
-            _Spec('yearBuilt', 'Year built', ''),
             _Spec('buildable', 'Buildable floor area', 'sq ft'),
           ]),
         ),
@@ -566,7 +591,7 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
             ),
             icon: const Icon(Icons.arrow_outward),
             label: const Text(
-              'RUN INSTITUTIONAL ANALYSIS',
+              'CALCULATE PROPERTY RISK',
               style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: .5),
             ),
           ),
@@ -616,18 +641,19 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
     if (result == null) {
       return const SizedBox.shrink();
     }
-    final strong = result.net >= 55;
-    final cautious = result.net < 42;
-    final verdict = strong
-        ? 'INVESTMENT CASE HOLDS'
-        : cautious
-        ? 'DOWNSIDE NEEDS WORK'
-        : 'MERITS DILIGENCE';
-    final verdictColor = strong
+    final riskScore = result.risk;
+    final verdict = riskScore < 30
+        ? 'LOWER MODELLED RISK'
+        : riskScore < 50
+        ? 'MODERATE RISK'
+        : riskScore < 70
+        ? 'ELEVATED RISK'
+        : 'HIGH RISK';
+    final verdictColor = riskScore < 30
         ? _success
-        : cautious
-        ? const Color(0xFFFFA98F)
-        : const Color(0xFFFFD66B);
+        : riskScore < 50
+        ? const Color(0xFFFFD66B)
+        : const Color(0xFFFF9B83);
     return _Panel(
       padding: EdgeInsets.zero,
       child: Column(
@@ -678,12 +704,12 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
                         ],
                       ),
                     ),
-                    _Score(result.net),
+                    _Score(result.risk, risk: true),
                   ],
                 ),
                 const SizedBox(height: 22),
                 Text(
-                  '${(result.probability * 100).round()}% modelled probability of outperforming the local benchmark. ${(result.dataCompleteness * 100).round()}% of core underwriting fields are populated.',
+                  'Overall risk is ${result.risk.round()}/100. The separate decision score is ${result.net.round()}/100, with ${(result.dataCompleteness * 100).round()}% of core property and underwriting evidence populated.',
                   style: const TextStyle(
                     color: Color(0xFFD6D6D6),
                     height: 1.45,
@@ -707,7 +733,7 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('CORE RETURNS & CREDIT', style: _eyebrow),
+                const Text('RISK, RETURNS & CREDIT', style: _eyebrow),
                 const SizedBox(height: 12),
                 _Metrics(result: result, mode: _mode),
                 const SizedBox(height: 26),
@@ -719,7 +745,10 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
                 const SizedBox(height: 10),
                 ...result.flags.map((flag) => _Flag(flag)),
                 const SizedBox(height: 24),
-                const Text('BIGGEST SCORE DRIVERS', style: _eyebrow),
+                const Text(
+                  'BIGGEST RISK & OPPORTUNITY DRIVERS',
+                  style: _eyebrow,
+                ),
                 const SizedBox(height: 8),
                 ...result.drivers.take(7).map((driver) => _Driver(driver)),
                 const SizedBox(height: 20),
@@ -1274,15 +1303,25 @@ class _InputSection extends StatelessWidget {
 }
 
 class _Score extends StatelessWidget {
-  const _Score(this.score);
+  const _Score(this.score, {this.risk = false});
   final double score;
+  final bool risk;
   @override
   Widget build(BuildContext context) => Container(
     width: 78,
     height: 78,
     decoration: BoxDecoration(
       shape: BoxShape.circle,
-      border: Border.all(color: _lime, width: 5),
+      border: Border.all(
+        color: risk
+            ? score >= 50
+                  ? const Color(0xFFFF9B83)
+                  : score >= 30
+                  ? const Color(0xFFFFD66B)
+                  : _success
+            : _lime,
+        width: 5,
+      ),
     ),
     child: Column(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -1296,9 +1335,9 @@ class _Score extends StatelessWidget {
             fontWeight: FontWeight.w900,
           ),
         ),
-        const Text(
-          '/ 100',
-          style: TextStyle(color: Color(0xFF999999), fontSize: 8),
+        Text(
+          risk ? 'RISK / 100' : '/ 100',
+          style: const TextStyle(color: Color(0xFF999999), fontSize: 7),
         ),
       ],
     ),
@@ -1312,6 +1351,47 @@ class _Metrics extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final metrics = <(String, String, String, bool)>[
+      (
+        'OVERALL RISK',
+        '${result.risk.round()} / 100',
+        'higher means more exposure',
+        result.risk >= 50,
+      ),
+      (
+        'DECISION SCORE',
+        '${result.net.round()} / 100',
+        'risk-adjusted opportunity',
+        result.net < 42,
+      ),
+      (
+        'ASSESSED VALUE',
+        result.assessedValue > 0 ? _money(result.assessedValue) : 'Not entered',
+        'user-supplied tax value',
+        false,
+      ),
+      (
+        'PRICE / ASSESSMENT',
+        result.valuationRatio > 0
+            ? '${result.valuationRatio.toStringAsFixed(2)}×'
+            : 'Not available',
+        'due-diligence signal only',
+        result.valuationRatio > 1.35 ||
+            (result.valuationRatio > 0 && result.valuationRatio < .75),
+      ),
+      (
+        'PROPERTY AGE',
+        result.propertyAge > 0 ? '${result.propertyAge} years' : 'Not entered',
+        'from user-supplied year built',
+        result.propertyAge > 60,
+      ),
+      (
+        'GROWTH SINCE SALE',
+        result.annualizedSinceLastSale != 0
+            ? _percent(result.annualizedSinceLastSale)
+            : 'Not available',
+        'annualized price change',
+        result.annualizedSinceLastSale > .12,
+      ),
       ('NOI', _money(result.noi), 'annual', result.noi < 0),
       (
         'CAP RATE',
@@ -1367,7 +1447,11 @@ class _Metrics extends StatelessWidget {
     ];
     return LayoutBuilder(
       builder: (context, constraints) {
-        final count = constraints.maxWidth > 540 ? 3 : 2;
+        final count = constraints.maxWidth >= 1100
+            ? 4
+            : constraints.maxWidth > 540
+            ? 3
+            : 2;
         return GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),

@@ -5,6 +5,11 @@ Map<String, double> _baseValues() => {
   'price': 1200000,
   'closingCosts': 30000,
   'improvements': 50000,
+  'assessedLand': 700000,
+  'assessedBuilding': 400000,
+  'assessmentYear': 2026,
+  'lastSalePrice': 950000,
+  'lastSaleYear': 2021,
   'area': 6200,
   'annualRent': 180000,
   'otherIncome': 6000,
@@ -91,5 +96,26 @@ void main() {
     expect(result.breakEvenOccupancy.isFinite, isTrue);
     expect(result.irr.isFinite, isTrue);
     expect(result.net, inInclusiveRange(0, 100));
+  });
+
+  test('valuation gap and property condition increase modelled risk', () {
+    final lowerRiskValues = _baseValues()
+      ..['yearBuilt'] = 2005
+      ..['conditionRisk'] = 15;
+    final higherRiskValues = _baseValues()
+      ..['assessedLand'] = 350000
+      ..['assessedBuilding'] = 250000
+      ..['yearBuilt'] = 1950
+      ..['conditionRisk'] = 75;
+    final lowerRisk = analyzeProperty(
+      _inputs(values: lowerRiskValues),
+      DecisionMode.invest,
+    );
+    final higherRisk = analyzeProperty(
+      _inputs(values: higherRiskValues),
+      DecisionMode.invest,
+    );
+    expect(higherRisk.risk, greaterThan(lowerRisk.risk));
+    expect(higherRisk.valuationRatio, greaterThan(1.35));
   });
 }

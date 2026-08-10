@@ -226,7 +226,7 @@ class _ModelButtonState extends State<_ModelButton> {
           children: [
             if (MediaQuery.sizeOf(context).width > 560)
               Text(
-                'OPEN THE MODEL',
+                'OPEN RISK MODEL',
                 style: TextStyle(
                   color: hovered ? Colors.white : _ink,
                   fontSize: 9,

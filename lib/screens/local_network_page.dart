@@ -254,7 +254,9 @@ class _NetworkNav extends StatelessWidget {
           iconAlignment: IconAlignment.end,
           icon: const Icon(Icons.arrow_outward, size: 16),
           label: Text(
-            MediaQuery.sizeOf(context).width > 520 ? 'OPEN THE MODEL' : 'MODEL',
+            MediaQuery.sizeOf(context).width > 520
+                ? 'OPEN RISK MODEL'
+                : 'RISK MODEL',
             style: const TextStyle(
               fontSize: 9,
               fontWeight: FontWeight.w900,
