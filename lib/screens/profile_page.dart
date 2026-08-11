@@ -9,6 +9,7 @@ import '../services/marketplace_service.dart';
 import '../widgets/brand_logo.dart';
 import '../widgets/profile_photo.dart';
 import 'auth_page.dart';
+import 'member_profile_page.dart';
 
 const _ink = Color(0xFF050510);
 const _paper = Color(0xFFF5F5F7);
@@ -633,6 +634,19 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         ),
         const SizedBox(height: 16),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: TextButton.icon(
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => MemberProfilePage(provider: provider),
+              ),
+            ),
+            icon: const Icon(Icons.open_in_new, size: 16),
+            label: const Text('OPEN FULL PROFILE'),
+          ),
+        ),
+        const SizedBox(height: 6),
         Row(
           children: [
             Expanded(

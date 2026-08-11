@@ -9,6 +9,7 @@ import '../widgets/profile_photo.dart';
 import 'auth_page.dart';
 import 'home_screen.dart';
 import 'marketing_pages.dart';
+import 'member_profile_page.dart';
 
 const _ink = brandInk;
 const _navy = Color(0xFF09091B);
@@ -728,13 +729,22 @@ class _ProviderRowState extends State<_ProviderRow> {
                   runSpacing: 7,
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    Text(
-                      provider.name,
-                      style: TextStyle(
-                        color: hovered ? Colors.white : _ink,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: -.5,
+                    InkWell(
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => MemberProfilePage(provider: provider),
+                        ),
+                      ),
+                      child: Text(
+                        provider.name,
+                        style: TextStyle(
+                          color: hovered ? Colors.white : _ink,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -.5,
+                          decoration: TextDecoration.underline,
+                          decorationColor: hovered ? Colors.white54 : _purple,
+                        ),
                       ),
                     ),
                     if (provider.sponsored)

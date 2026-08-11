@@ -230,8 +230,9 @@ class AccountService {
         .from('user_team_members')
         .select(
           'provider_profiles(id, provider_type, display_name, company_name, description, phone, email, website_url, '
-          'verified, years_experience, review_score, review_count, job_title, '
+          'license_number, license_region, accepting_leads, verified, years_experience, review_score, review_count, job_title, '
           'is_example, photo_index, logo_object_key, '
+          'provider_regions(service_regions(city, region, country_code)), '
           'sponsored_placements(disclosure_label, active, starts_at, ends_at), '
           'lender_rates(interest_rate, mortgage_type, verified_at, effective_at, expires_at))',
         )

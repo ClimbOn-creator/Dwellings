@@ -56,6 +56,10 @@ class MarketplaceProvider {
     this.email = '',
     this.phone = '',
     this.websiteUrl = '',
+    this.licenseNumber = '',
+    this.licenseRegion = '',
+    this.acceptingLeads = true,
+    this.locations = const [],
     this.rateLabel,
     this.rateVerifiedAt,
   });
@@ -77,8 +81,39 @@ class MarketplaceProvider {
   final String email;
   final String phone;
   final String websiteUrl;
+  final String licenseNumber;
+  final String licenseRegion;
+  final bool acceptingLeads;
+  final List<String> locations;
   final String? rateLabel;
   final DateTime? rateVerifiedAt;
+}
+
+class ProviderReview {
+  const ProviderReview({
+    required this.id,
+    required this.userId,
+    required this.reviewerName,
+    required this.rating,
+    required this.text,
+    required this.createdAt,
+  });
+
+  final String id;
+  final String userId;
+  final String reviewerName;
+  final int rating;
+  final String text;
+  final DateTime createdAt;
+
+  factory ProviderReview.fromJson(Map<String, dynamic> row) => ProviderReview(
+    id: row['id'] as String,
+    userId: row['user_id'] as String,
+    reviewerName: row['reviewer_name'] as String? ?? 'DwellingsIQ member',
+    rating: row['rating'] as int,
+    text: row['review_text'] as String? ?? '',
+    createdAt: DateTime.parse(row['created_at'] as String),
+  );
 }
 
 class MarketplaceDirectory {
@@ -170,7 +205,7 @@ class MarketplaceService {
           .from('provider_profiles')
           .select(
             'id, provider_type, display_name, company_name, description, phone, email, website_url, '
-            'verified, years_experience, review_score, review_count, job_title, '
+            'license_number, license_region, accepting_leads, verified, years_experience, review_score, review_count, job_title, '
             'is_example, photo_index, logo_object_key, '
             'provider_regions!inner(service_regions!inner(city, region, country_code)), '
             'sponsored_placements(disclosure_label, active, starts_at, ends_at), '
@@ -184,7 +219,7 @@ class MarketplaceService {
             .from('provider_profiles')
             .select(
               'id, provider_type, display_name, company_name, description, phone, email, website_url, '
-              'verified, years_experience, review_score, review_count, job_title, '
+              'license_number, license_region, accepting_leads, verified, years_experience, review_score, review_count, job_title, '
               'is_example, photo_index, logo_object_key, '
               'sponsored_placements(disclosure_label, active, starts_at, ends_at), '
               'lender_rates(interest_rate, mortgage_type, verified_at, effective_at, expires_at)',
@@ -215,6 +250,19 @@ class MarketplaceService {
       if (category == null) continue;
       final sponsorships = (row['sponsored_placements'] as List?) ?? const [];
       final rates = (row['lender_rates'] as List?) ?? const [];
+      final regionRows = (row['provider_regions'] as List?) ?? const [];
+      final locations = regionRows
+          .map((rawRegion) => Map<String, dynamic>.from(rawRegion as Map))
+          .map((region) => region['service_regions'])
+          .whereType<Map>()
+          .map((rawLocation) => Map<String, dynamic>.from(rawLocation))
+          .map(
+            (location) =>
+                '${location['city'] as String? ?? ''}, ${location['region'] as String? ?? ''}',
+          )
+          .where((location) => !location.startsWith(','))
+          .toSet()
+          .toList();
       final rate = rates.isEmpty
           ? null
           : Map<String, dynamic>.from(rates.first as Map);
@@ -237,6 +285,10 @@ class MarketplaceService {
           email: row['email'] as String? ?? '',
           phone: row['phone'] as String? ?? '',
           websiteUrl: row['website_url'] as String? ?? '',
+          licenseNumber: row['license_number'] as String? ?? '',
+          licenseRegion: row['license_region'] as String? ?? '',
+          acceptingLeads: row['accepting_leads'] as bool? ?? true,
+          locations: locations,
           rateLabel: rate == null
               ? null
               : '${(rate['interest_rate'] as num).toStringAsFixed(2)}%',
@@ -279,6 +331,36 @@ class MarketplaceService {
         .eq('provider_id', providerId)
         .maybeSingle();
     return row != null;
+  }
+
+  static Future<List<ProviderReview>> loadReviews(String providerId) async {
+    final rows = await Supabase.instance.client
+        .from('provider_reviews')
+        .select('id, user_id, reviewer_name, rating, review_text, created_at')
+        .eq('provider_id', providerId)
+        .order('created_at', ascending: false)
+        .limit(100);
+    return rows
+        .map((row) => ProviderReview.fromJson(Map<String, dynamic>.from(row)))
+        .toList();
+  }
+
+  static Future<void> saveReview({
+    required MarketplaceProvider provider,
+    required int rating,
+    required String text,
+  }) async {
+    final user = BackendService.user;
+    if (user == null) throw StateError('Sign in to leave a review.');
+    if (provider.isExample) {
+      throw StateError('Example profiles cannot receive real reviews.');
+    }
+    await Supabase.instance.client.from('provider_reviews').upsert({
+      'provider_id': provider.id,
+      'user_id': user.id,
+      'rating': rating,
+      'review_text': text.trim(),
+    }, onConflict: 'provider_id,user_id');
   }
 
   static Future<void> requestConnection({
