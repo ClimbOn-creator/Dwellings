@@ -69,12 +69,14 @@ class DashboardStats {
     required this.analysisCount,
     required this.teamCount,
     required this.introductionCount,
+    required this.dealRoomCount,
     required this.lastAddress,
     required this.lastRisk,
   });
   final int analysisCount;
   final int teamCount;
   final int introductionCount;
+  final int dealRoomCount;
   final String lastAddress;
   final double? lastRisk;
 }
@@ -129,6 +131,19 @@ class IntroductionRequest {
           : DateTime.tryParse(row['responded_at'] as String),
     );
   }
+}
+
+class ProfessionalWorkspaceStats {
+  const ProfessionalWorkspaceStats({
+    required this.membershipTier,
+    required this.teamSaves,
+    required this.introductions,
+    required this.dealRooms,
+  });
+  final String membershipTier;
+  final int teamSaves;
+  final int introductions;
+  final int dealRooms;
 }
 
 class AccountService {
@@ -246,6 +261,7 @@ class AccountService {
         analysisCount: 0,
         teamCount: 0,
         introductionCount: 0,
+        dealRoomCount: 0,
         lastAddress: '',
         lastRisk: null,
       );
@@ -264,6 +280,7 @@ class AccountService {
         .from('lead_requests')
         .select('id')
         .eq('user_id', user.id);
+    final dealRooms = await _client.from('deal_rooms').select('id');
     final latest = analyses.isEmpty
         ? null
         : Map<String, dynamic>.from(analyses.first);
@@ -274,6 +291,7 @@ class AccountService {
       analysisCount: analyses.length,
       teamCount: team.length,
       introductionCount: introductions.length,
+      dealRoomCount: dealRooms.length,
       lastAddress: latest?['address_label'] as String? ?? '',
       lastRisk: (output['risk'] as num?)?.toDouble(),
     );
@@ -286,7 +304,7 @@ class AccountService {
         .from('user_team_members')
         .select(
           'provider_profiles(id, provider_type, display_name, company_name, description, phone, email, website_url, '
-          'license_number, license_region, accepting_leads, verified, years_experience, review_score, review_count, job_title, '
+          'license_number, license_region, accepting_leads, membership_tier, verified, years_experience, review_score, review_count, job_title, '
           'is_example, photo_index, logo_object_key, '
           'provider_regions(service_regions(city, region, country_code)), '
           'sponsored_placements(disclosure_label, active, starts_at, ends_at), '
@@ -382,6 +400,38 @@ class AccountService {
         'response_status': status,
         'response_message': message,
       },
+    );
+  }
+
+  static Future<ProfessionalWorkspaceStats?> loadProfessionalStats() async {
+    final user = BackendService.user;
+    if (user == null) return null;
+    final providers = await _client
+        .from('provider_profiles')
+        .select('id, membership_tier')
+        .eq('owner_user_id', user.id);
+    if (providers.isEmpty) return null;
+    final ids = providers.map((row) => row['id'] as String).toList();
+    final values = await Future.wait([
+      _client
+          .from('user_team_members')
+          .select('provider_id')
+          .inFilter('provider_id', ids),
+      _client
+          .from('lead_requests')
+          .select('provider_id')
+          .inFilter('provider_id', ids),
+      _client
+          .from('deal_room_members')
+          .select('provider_id')
+          .inFilter('provider_id', ids)
+          .neq('status', 'removed'),
+    ]);
+    return ProfessionalWorkspaceStats(
+      membershipTier: providers.first['membership_tier'] as String? ?? 'free',
+      teamSaves: (values[0] as List).length,
+      introductions: (values[1] as List).length,
+      dealRooms: (values[2] as List).length,
     );
   }
 

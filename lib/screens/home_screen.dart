@@ -10,6 +10,7 @@ import '../widgets/site_footer.dart';
 import '../widgets/auth_button.dart';
 import '../widgets/brand_logo.dart';
 import 'local_network_page.dart';
+import 'deal_rooms_page.dart';
 import 'marketing_pages.dart';
 
 const _ink = Color(0xFF090909);
@@ -222,11 +223,22 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
       final cloud = await BackendService.saveAnalysis(_inputs, result, _mode);
       if (!mounted) return;
       setState(() => _saved = true);
-      _message(
-        cloud
-            ? 'Analysis saved to your DwellingsIQ account.'
-            : 'Analysis saved on this device.',
-      );
+      if (cloud) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Analysis saved to your DwellingsIQ account.'),
+            behavior: SnackBarBehavior.floating,
+            action: SnackBarAction(
+              label: 'DEAL ROOMS',
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(builder: (_) => const DealRoomsPage()),
+              ),
+            ),
+          ),
+        );
+      } else {
+        _message('Analysis saved on this device.');
+      }
     } catch (error) {
       _message('Could not save: $error');
     }

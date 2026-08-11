@@ -60,6 +60,7 @@ class MarketplaceProvider {
     this.licenseRegion = '',
     this.acceptingLeads = true,
     this.locations = const [],
+    this.membershipTier = 'free',
     this.rateLabel,
     this.rateVerifiedAt,
   });
@@ -85,6 +86,7 @@ class MarketplaceProvider {
   final String licenseRegion;
   final bool acceptingLeads;
   final List<String> locations;
+  final String membershipTier;
   final String? rateLabel;
   final DateTime? rateVerifiedAt;
 }
@@ -205,7 +207,7 @@ class MarketplaceService {
           .from('provider_profiles')
           .select(
             'id, provider_type, display_name, company_name, description, phone, email, website_url, '
-            'license_number, license_region, accepting_leads, verified, years_experience, review_score, review_count, job_title, '
+            'license_number, license_region, accepting_leads, membership_tier, verified, years_experience, review_score, review_count, job_title, '
             'is_example, photo_index, logo_object_key, '
             'provider_regions!inner(service_regions!inner(city, region, country_code)), '
             'sponsored_placements(disclosure_label, active, starts_at, ends_at), '
@@ -219,7 +221,7 @@ class MarketplaceService {
             .from('provider_profiles')
             .select(
               'id, provider_type, display_name, company_name, description, phone, email, website_url, '
-              'license_number, license_region, accepting_leads, verified, years_experience, review_score, review_count, job_title, '
+              'license_number, license_region, accepting_leads, membership_tier, verified, years_experience, review_score, review_count, job_title, '
               'is_example, photo_index, logo_object_key, '
               'sponsored_placements(disclosure_label, active, starts_at, ends_at), '
               'lender_rates(interest_rate, mortgage_type, verified_at, effective_at, expires_at)',
@@ -289,6 +291,7 @@ class MarketplaceService {
           licenseRegion: row['license_region'] as String? ?? '',
           acceptingLeads: row['accepting_leads'] as bool? ?? true,
           locations: locations,
+          membershipTier: row['membership_tier'] as String? ?? 'free',
           rateLabel: rate == null
               ? null
               : '${(rate['interest_rate'] as num).toStringAsFixed(2)}%',

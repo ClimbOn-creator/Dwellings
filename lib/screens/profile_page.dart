@@ -9,11 +9,13 @@ import '../services/marketplace_service.dart';
 import '../widgets/brand_logo.dart';
 import '../widgets/profile_photo.dart';
 import 'auth_page.dart';
+import 'deal_rooms_page.dart';
 import 'member_profile_page.dart';
 
 const _ink = Color(0xFF050510);
 const _paper = Color(0xFFF5F5F7);
 const _purple = Color(0xFF7657FF);
+const _lilac = Color(0xFFBCAEFF);
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -28,6 +30,7 @@ class _ProfilePageState extends State<ProfilePage> {
   List<MarketplaceProvider> _team = [];
   List<IntroductionRequest> _outgoingIntroductions = [];
   List<IntroductionRequest> _incomingIntroductions = [];
+  ProfessionalWorkspaceStats? _professionalStats;
   bool _loading = true;
   bool _saving = false;
   Timer? _refreshTimer;
@@ -65,6 +68,7 @@ class _ProfilePageState extends State<ProfilePage> {
         AccountService.loadTeam(),
         AccountService.loadOutgoingIntroductions(),
         AccountService.loadIncomingIntroductions(),
+        AccountService.loadProfessionalStats(),
       ]);
       if (!mounted) return;
       setState(() {
@@ -72,6 +76,7 @@ class _ProfilePageState extends State<ProfilePage> {
         _team = values[1] as List<MarketplaceProvider>;
         _outgoingIntroductions = values[2] as List<IntroductionRequest>;
         _incomingIntroductions = values[3] as List<IntroductionRequest>;
+        _professionalStats = values[4] as ProfessionalWorkspaceStats?;
       });
     } catch (_) {
       // Keep the existing dashboard visible and try again on the next refresh.
@@ -90,6 +95,7 @@ class _ProfilePageState extends State<ProfilePage> {
         AccountService.loadTeam(),
         AccountService.loadOutgoingIntroductions(),
         AccountService.loadIncomingIntroductions(),
+        AccountService.loadProfessionalStats(),
       ]);
       final profile = values[0] as AccountProfile?;
       if (!mounted) return;
@@ -99,6 +105,7 @@ class _ProfilePageState extends State<ProfilePage> {
         _team = values[2] as List<MarketplaceProvider>;
         _outgoingIntroductions = values[3] as List<IntroductionRequest>;
         _incomingIntroductions = values[4] as List<IntroductionRequest>;
+        _professionalStats = values[5] as ProfessionalWorkspaceStats?;
         _loading = false;
         _name.text = profile?.fullName ?? '';
         _job.text = profile?.jobTitle ?? '';
@@ -306,6 +313,7 @@ class _ProfilePageState extends State<ProfilePage> {
           analysisCount: 0,
           teamCount: 0,
           introductionCount: 0,
+          dealRoomCount: 0,
           lastAddress: '',
           lastRisk: null,
         );
@@ -326,7 +334,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       LayoutBuilder(
                         builder: (context, constraints) {
                           final width = constraints.maxWidth >= 980
-                              ? (constraints.maxWidth - 48) / 5
+                              ? (constraints.maxWidth - 60) / 6
                               : (constraints.maxWidth - 12) / 2;
                           return Wrap(
                             spacing: 12,
@@ -349,6 +357,11 @@ class _ProfilePageState extends State<ProfilePage> {
                               ),
                               _StatCard(
                                 width: width,
+                                value: '${stats.dealRoomCount}',
+                                label: 'Deal Rooms',
+                              ),
+                              _StatCard(
+                                width: width,
                                 value: stats.lastRisk == null
                                     ? '—'
                                     : '${stats.lastRisk!.round()}/100',
@@ -365,6 +378,10 @@ class _ProfilePageState extends State<ProfilePage> {
                           );
                         },
                       ),
+                      if (_professionalStats != null) ...[
+                        const SizedBox(height: 24),
+                        _professionalWorkspace(_professionalStats!),
+                      ],
                       const SizedBox(height: 42),
                       _introductionCentre(),
                       const SizedBox(height: 42),
@@ -424,6 +441,17 @@ class _ProfilePageState extends State<ProfilePage> {
                 child: const DwellingIqLogo(size: 46),
               ),
               const Spacer(),
+              TextButton.icon(
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const DealRoomsPage(),
+                  ),
+                ),
+                style: TextButton.styleFrom(foregroundColor: Colors.white),
+                icon: const Icon(Icons.meeting_room_outlined, size: 17),
+                label: const Text('DEAL ROOMS'),
+              ),
+              const SizedBox(width: 8),
               TextButton(
                 onPressed: _signOut,
                 style: TextButton.styleFrom(foregroundColor: Colors.white),
@@ -496,6 +524,88 @@ class _ProfilePageState extends State<ProfilePage> {
     ].where((value) => value.isNotEmpty).toList();
     return parts.isEmpty ? _roleLabel(profile.role) : parts.join(' · ');
   }
+
+  Widget _professionalWorkspace(ProfessionalWorkspaceStats stats) => Container(
+    width: double.infinity,
+    padding: const EdgeInsets.all(24),
+    decoration: BoxDecoration(
+      color: _ink,
+      borderRadius: BorderRadius.circular(20),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Expanded(
+              child: Text(
+                'Professional workspace',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: _purple.withValues(alpha: .25),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                stats.membershipTier.toUpperCase(),
+                style: const TextStyle(
+                  color: Color(0xFFD8D0FF),
+                  fontSize: 9,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        const Text(
+          'Your marketplace reach and active client opportunities.',
+          style: TextStyle(color: Color(0xFFB8B8C5), fontSize: 12),
+        ),
+        const SizedBox(height: 18),
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: [
+            _professionalMetric('${stats.teamSaves}', 'TEAM SAVES'),
+            _professionalMetric('${stats.introductions}', 'INTRODUCTIONS'),
+            _professionalMetric('${stats.dealRooms}', 'DEAL ROOMS'),
+          ],
+        ),
+      ],
+    ),
+  );
+
+  Widget _professionalMetric(String value, String label) => Container(
+    width: 150,
+    padding: const EdgeInsets.all(15),
+    decoration: BoxDecoration(
+      color: Colors.white.withValues(alpha: .07),
+      borderRadius: BorderRadius.circular(14),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          value,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 23,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        const SizedBox(height: 5),
+        Text(label, style: const TextStyle(color: _lilac, fontSize: 8)),
+      ],
+    ),
+  );
 
   Widget _introductionCentre() => Column(
     crossAxisAlignment: CrossAxisAlignment.start,

@@ -47,6 +47,7 @@ class _BecomeMemberPageState extends State<BecomeMemberPage> {
   bool _consent = false;
   bool _submitting = false;
   bool _complete = false;
+  String _requestedTier = 'free';
 
   static const _professionalSpecialties = [
     'Residential',
@@ -119,6 +120,7 @@ class _BecomeMemberPageState extends State<BecomeMemberPage> {
         'purchase_timeline': _type.isProfessional ? null : _timeline,
         'financing_help': !_type.isProfessional && _financing,
         'sponsorship_interest': _type.isProfessional && _sponsorship,
+        'requested_tier': _type.isProfessional ? _requestedTier : 'free',
         'notes': _notes.text.trim().isEmpty ? null : _notes.text.trim(),
         'consent_to_contact': true,
       });
@@ -349,6 +351,75 @@ class _BecomeMemberPageState extends State<BecomeMemberPage> {
       ),
       _Field(controller: _license, label: 'Licence number (if applicable)'),
       _provincePicker('Primary licence province or territory'),
+      const SizedBox(height: 20),
+      const Text(
+        'Choose the workspace you want to start with',
+        style: TextStyle(fontWeight: FontWeight.w700),
+      ),
+      const SizedBox(height: 12),
+      LayoutBuilder(
+        builder: (context, constraints) {
+          const tiers = [
+            (
+              'free',
+              'Free member',
+              'Public profile, reviews and limited introductions.',
+            ),
+            (
+              'professional',
+              'Professional',
+              'Deal Rooms, qualified introductions, pipeline and analytics.',
+            ),
+            (
+              'featured',
+              'Featured',
+              'Everything in Professional plus clearly disclosed promotion.',
+            ),
+          ];
+          final width = constraints.maxWidth >= 720
+              ? (constraints.maxWidth - 20) / 3
+              : constraints.maxWidth;
+          return Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: tiers
+                .map(
+                  (tier) => SizedBox(
+                    width: width,
+                    child: ChoiceChip(
+                      selected: _requestedTier == tier.$1,
+                      onSelected: (_) =>
+                          setState(() => _requestedTier = tier.$1),
+                      label: SizedBox(
+                        height: 82,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              tier.$2,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            const SizedBox(height: 5),
+                            Text(
+                              tier.$3,
+                              style: const TextStyle(
+                                fontSize: 10,
+                                height: 1.35,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                )
+                .toList(),
+          );
+        },
+      ),
       const SizedBox(height: 20),
       const Text(
         'What do you specialize in?',
