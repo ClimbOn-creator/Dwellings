@@ -26,6 +26,8 @@ class _ProfilePageState extends State<ProfilePage> {
   AccountProfile? _profile;
   DashboardStats? _stats;
   List<MarketplaceProvider> _team = [];
+  List<IntroductionRequest> _outgoingIntroductions = [];
+  List<IntroductionRequest> _incomingIntroductions = [];
   bool _loading = true;
   bool _saving = false;
   Timer? _refreshTimer;
@@ -61,11 +63,15 @@ class _ProfilePageState extends State<ProfilePage> {
       final values = await Future.wait([
         AccountService.loadStats(),
         AccountService.loadTeam(),
+        AccountService.loadOutgoingIntroductions(),
+        AccountService.loadIncomingIntroductions(),
       ]);
       if (!mounted) return;
       setState(() {
         _stats = values[0] as DashboardStats;
         _team = values[1] as List<MarketplaceProvider>;
+        _outgoingIntroductions = values[2] as List<IntroductionRequest>;
+        _incomingIntroductions = values[3] as List<IntroductionRequest>;
       });
     } catch (_) {
       // Keep the existing dashboard visible and try again on the next refresh.
@@ -82,6 +88,8 @@ class _ProfilePageState extends State<ProfilePage> {
         AccountService.loadProfile(),
         AccountService.loadStats(),
         AccountService.loadTeam(),
+        AccountService.loadOutgoingIntroductions(),
+        AccountService.loadIncomingIntroductions(),
       ]);
       final profile = values[0] as AccountProfile?;
       if (!mounted) return;
@@ -89,6 +97,8 @@ class _ProfilePageState extends State<ProfilePage> {
         _profile = profile;
         _stats = values[1] as DashboardStats;
         _team = values[2] as List<MarketplaceProvider>;
+        _outgoingIntroductions = values[3] as List<IntroductionRequest>;
+        _incomingIntroductions = values[4] as List<IntroductionRequest>;
         _loading = false;
         _name.text = profile?.fullName ?? '';
         _job.text = profile?.jobTitle ?? '';
@@ -356,6 +366,8 @@ class _ProfilePageState extends State<ProfilePage> {
                         },
                       ),
                       const SizedBox(height: 42),
+                      _introductionCentre(),
+                      const SizedBox(height: 42),
                       const Text(
                         'Your property team',
                         style: TextStyle(
@@ -483,6 +495,215 @@ class _ProfilePageState extends State<ProfilePage> {
       profile.companyName,
     ].where((value) => value.isNotEmpty).toList();
     return parts.isEmpty ? _roleLabel(profile.role) : parts.join(' · ');
+  }
+
+  Widget _introductionCentre() => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      const Text(
+        'Introductions',
+        style: TextStyle(
+          fontSize: 30,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -1.2,
+        ),
+      ),
+      const SizedBox(height: 8),
+      const Text(
+        'Track warm introductions between clients and property professionals.',
+        style: TextStyle(color: Color(0xFF666674)),
+      ),
+      const SizedBox(height: 18),
+      if (_incomingIntroductions.isNotEmpty) ...[
+        const _SectionLabel('CLIENT REQUESTS'),
+        const SizedBox(height: 8),
+        ..._incomingIntroductions.map(
+          (request) => _introductionRow(request, incoming: true),
+        ),
+        const SizedBox(height: 18),
+      ],
+      const _SectionLabel('YOUR REQUESTS'),
+      const SizedBox(height: 8),
+      if (_outgoingIntroductions.isEmpty)
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(22),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: const Text(
+            'No introductions yet. Open a professional profile to request one with your property context attached.',
+          ),
+        )
+      else
+        ..._outgoingIntroductions.map(
+          (request) => _introductionRow(request, incoming: false),
+        ),
+    ],
+  );
+
+  Widget _introductionRow(
+    IntroductionRequest request, {
+    required bool incoming,
+  }) => Container(
+    margin: const EdgeInsets.only(bottom: 10),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+    ),
+    child: ExpansionTile(
+      tilePadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
+      childrenPadding: const EdgeInsets.fromLTRB(18, 0, 18, 18),
+      title: Text(
+        incoming ? request.requesterName : request.providerName,
+        style: const TextStyle(fontWeight: FontWeight.w700),
+      ),
+      subtitle: Text(
+        incoming
+            ? 'Request for ${request.providerName}'
+            : request.providerCompany,
+        style: const TextStyle(color: Color(0xFF666674), fontSize: 12),
+      ),
+      trailing: _statusBadge(request.status),
+      children: [
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Text(
+            request.propertySummary.isEmpty
+                ? 'No property details supplied.'
+                : request.propertySummary,
+            style: const TextStyle(fontSize: 13, height: 1.5),
+          ),
+        ),
+        if (request.memberMessage.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              'Response: ${request.memberMessage}',
+              style: const TextStyle(
+                color: _purple,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+        if (incoming) ...[
+          const SizedBox(height: 14),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: SelectableText(
+              [
+                request.requesterEmail,
+                if (request.requesterPhone.isNotEmpty) request.requesterPhone,
+              ].join(' · '),
+              style: const TextStyle(
+                color: Color(0xFF4D4D5A),
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 9,
+            runSpacing: 9,
+            children: [
+              FilledButton(
+                onPressed: request.status == 'new'
+                    ? () => _respondToIntroduction(request, 'accepted')
+                    : null,
+                child: const Text('ACCEPT'),
+              ),
+              OutlinedButton(
+                onPressed: request.status == 'new'
+                    ? () => _respondToIntroduction(request, 'declined')
+                    : null,
+                child: const Text('DECLINE'),
+              ),
+              if (request.status == 'accepted')
+                OutlinedButton(
+                  onPressed: () => _respondToIntroduction(request, 'contacted'),
+                  child: const Text('MARK CONTACTED'),
+                ),
+            ],
+          ),
+        ],
+      ],
+    ),
+  );
+
+  Widget _statusBadge(String status) {
+    final color = switch (status) {
+      'accepted' || 'contacted' || 'closed' => const Color(0xFF16825D),
+      'declined' => const Color(0xFFB42318),
+      _ => _purple,
+    };
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: .1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        status.toUpperCase(),
+        style: TextStyle(
+          color: color,
+          fontSize: 8,
+          fontWeight: FontWeight.w900,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _respondToIntroduction(
+    IntroductionRequest request,
+    String status,
+  ) async {
+    final message = TextEditingController();
+    final action = switch (status) {
+      'accepted' => 'Accept',
+      'declined' => 'Decline',
+      _ => 'Update',
+    };
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text('$action introduction'),
+        content: SizedBox(
+          width: 440,
+          child: TextField(
+            controller: message,
+            minLines: 3,
+            maxLines: 5,
+            decoration: const InputDecoration(
+              labelText: 'Message to the client (optional)',
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Confirm'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      await AccountService.respondToIntroduction(
+        introductionId: request.id,
+        status: status,
+        message: message.text,
+      );
+      await _refreshActivity();
+    }
+    message.dispose();
   }
 
   Widget _profileEditor(AccountProfile? profile) => Container(
@@ -691,6 +912,22 @@ class _ProfilePageState extends State<ProfilePage> {
     'lender' => 'Bank or lender',
     _ => 'Buyer or investor',
   };
+}
+
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel(this.text);
+  final String text;
+
+  @override
+  Widget build(BuildContext context) => Text(
+    text,
+    style: const TextStyle(
+      color: _purple,
+      fontSize: 10,
+      fontWeight: FontWeight.w900,
+      letterSpacing: 1,
+    ),
+  );
 }
 
 class _StatCard extends StatelessWidget {

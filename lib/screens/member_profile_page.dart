@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../services/account_service.dart';
 import '../services/backend_service.dart';
 import '../services/marketplace_service.dart';
 import '../widgets/brand_logo.dart';
@@ -182,6 +183,109 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
       ),
     );
     reviewText.dispose();
+  }
+
+  Future<void> _requestIntroduction() async {
+    if (BackendService.user == null) {
+      await Navigator.of(
+        context,
+      ).push(MaterialPageRoute<void>(builder: (_) => const AuthPage()));
+      if (!mounted || BackendService.user == null) return;
+    }
+    final property = TextEditingController();
+    final phone = TextEditingController();
+    var sending = false;
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setModalState) => AlertDialog(
+          title: Text('Warm introduction to ${provider.name}'),
+          content: SizedBox(
+            width: 470,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Your account name and email are attached automatically. Add only the property context this professional needs.',
+                  style: TextStyle(
+                    color: Color(0xFF666674),
+                    fontSize: 13,
+                    height: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: property,
+                  onChanged: (_) => setModalState(() {}),
+                  minLines: 4,
+                  maxLines: 7,
+                  decoration: const InputDecoration(
+                    labelText: 'What would you like help with?',
+                    hintText:
+                        'Property, city, budget, timeline and the advice you need.',
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: phone,
+                  keyboardType: TextInputType.phone,
+                  decoration: const InputDecoration(
+                    labelText: 'Phone number (optional)',
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: sending ? null : () => Navigator.pop(dialogContext),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: sending || property.text.trim().isEmpty
+                  ? null
+                  : () async {
+                      setModalState(() => sending = true);
+                      try {
+                        await AccountService.requestIntroduction(
+                          provider: provider,
+                          propertySummary: property.text,
+                          phone: phone.text,
+                        );
+                        if (!dialogContext.mounted) return;
+                        Navigator.pop(dialogContext);
+                        if (!mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              provider.isExample
+                                  ? 'Introduction preview complete. Nothing was sent.'
+                                  : 'Introduction sent. Track its status from your Profile.',
+                            ),
+                          ),
+                        );
+                      } catch (error) {
+                        setModalState(() => sending = false);
+                        if (dialogContext.mounted) {
+                          ScaffoldMessenger.of(dialogContext).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Could not send introduction: $error',
+                              ),
+                            ),
+                          );
+                        }
+                      }
+                    },
+              child: Text(sending ? 'Sending…' : 'Send introduction'),
+            ),
+          ],
+        ),
+      ),
+    );
+    property.dispose();
+    phone.dispose();
   }
 
   @override
@@ -388,6 +492,12 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
             Icons.location_on_outlined,
             provider.locations.join(', '),
           ),
+        FilledButton.icon(
+          onPressed: _requestIntroduction,
+          icon: const Icon(Icons.handshake_outlined, size: 18),
+          label: const Text('REQUEST A WARM INTRODUCTION'),
+        ),
+        const SizedBox(height: 10),
         if (provider.phone.isNotEmpty)
           _contactButton(
             Icons.call_outlined,

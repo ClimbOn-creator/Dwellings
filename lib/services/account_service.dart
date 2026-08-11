@@ -79,8 +79,64 @@ class DashboardStats {
   final double? lastRisk;
 }
 
+class IntroductionRequest {
+  const IntroductionRequest({
+    required this.id,
+    required this.providerId,
+    required this.providerName,
+    required this.providerCompany,
+    required this.status,
+    required this.requesterName,
+    required this.requesterEmail,
+    required this.requesterPhone,
+    required this.propertySummary,
+    required this.memberMessage,
+    required this.createdAt,
+    required this.respondedAt,
+  });
+
+  final String id;
+  final String providerId;
+  final String providerName;
+  final String providerCompany;
+  final String status;
+  final String requesterName;
+  final String requesterEmail;
+  final String requesterPhone;
+  final String propertySummary;
+  final String memberMessage;
+  final DateTime createdAt;
+  final DateTime? respondedAt;
+
+  factory IntroductionRequest.fromJson(Map<String, dynamic> row) {
+    final provider = row['provider_profiles'] is Map
+        ? Map<String, dynamic>.from(row['provider_profiles'] as Map)
+        : <String, dynamic>{};
+    return IntroductionRequest(
+      id: row['id'] as String,
+      providerId: row['provider_id'] as String,
+      providerName: provider['display_name'] as String? ?? 'Professional',
+      providerCompany: provider['company_name'] as String? ?? '',
+      status: row['status'] as String? ?? 'new',
+      requesterName: row['requester_name'] as String? ?? '',
+      requesterEmail: row['requester_email'] as String? ?? '',
+      requesterPhone: row['requester_phone'] as String? ?? '',
+      propertySummary: row['property_summary'] as String? ?? '',
+      memberMessage: row['member_message'] as String? ?? '',
+      createdAt: DateTime.parse(row['created_at'] as String),
+      respondedAt: row['responded_at'] == null
+          ? null
+          : DateTime.tryParse(row['responded_at'] as String),
+    );
+  }
+}
+
 class AccountService {
   static SupabaseClient get _client => Supabase.instance.client;
+  static const _introductionSelect =
+      'id, provider_id, status, requester_name, requester_email, requester_phone, '
+      'property_summary, member_message, created_at, responded_at, '
+      'provider_profiles(id, display_name, company_name, owner_user_id)';
 
   static Future<bool> usernameAvailable(String username) async {
     final value = await _client.rpc(
@@ -276,6 +332,57 @@ class AccountService {
       'property_summary': propertySummary.trim(),
       'consent_to_contact': true,
     });
+  }
+
+  static Future<List<IntroductionRequest>> loadOutgoingIntroductions() async {
+    final user = BackendService.user;
+    if (user == null) return [];
+    final rows = await _client
+        .from('lead_requests')
+        .select(_introductionSelect)
+        .eq('user_id', user.id)
+        .order('created_at', ascending: false)
+        .limit(50);
+    return rows
+        .map(
+          (row) => IntroductionRequest.fromJson(Map<String, dynamic>.from(row)),
+        )
+        .toList();
+  }
+
+  static Future<List<IntroductionRequest>> loadIncomingIntroductions() async {
+    final user = BackendService.user;
+    if (user == null) return [];
+    final rows = await _client
+        .from('lead_requests')
+        .select(
+          'id, provider_id, status, requester_name, requester_email, requester_phone, '
+          'property_summary, member_message, created_at, responded_at, '
+          'provider_profiles!inner(id, display_name, company_name, owner_user_id)',
+        )
+        .eq('provider_profiles.owner_user_id', user.id)
+        .order('created_at', ascending: false)
+        .limit(50);
+    return rows
+        .map(
+          (row) => IntroductionRequest.fromJson(Map<String, dynamic>.from(row)),
+        )
+        .toList();
+  }
+
+  static Future<void> respondToIntroduction({
+    required String introductionId,
+    required String status,
+    String message = '',
+  }) async {
+    await _client.rpc(
+      'respond_to_introduction',
+      params: {
+        'introduction_id': introductionId,
+        'response_status': status,
+        'response_message': message,
+      },
+    );
   }
 
   static Future<void> saveDraft(Map<String, dynamic> draft) async {
