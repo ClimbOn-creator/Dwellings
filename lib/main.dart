@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'screens/landing_screen.dart';
+import 'screens/business_acquisition_page.dart';
 import 'services/backend_service.dart';
 
 Future<void> main() async {
@@ -69,7 +70,9 @@ class DwellingIqApp extends StatelessWidget {
           ),
         ),
       ),
-      home: const LandingScreen(),
+      home: Uri.base.queryParameters['module'] == 'business'
+          ? const BusinessAcquisitionPage()
+          : const LandingScreen(),
     );
   }
 }

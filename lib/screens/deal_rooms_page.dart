@@ -150,7 +150,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
               const SizedBox(
                 width: 650,
                 child: Text(
-                  'Turn a saved risk analysis into a private workspace for decisions, due diligence, financing, legal work and closing.',
+                  'Turn a saved property or business assessment into a private workspace for decisions, diligence, financing, legal work and closing.',
                   style: TextStyle(
                     color: Color(0xFFC5C5D0),
                     height: 1.55,
@@ -242,7 +242,10 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
               color: const Color(0xFFEDE9FE),
               borderRadius: BorderRadius.circular(17),
             ),
-            child: const Icon(Icons.apartment, color: _purple),
+            child: Icon(
+              room.isBusiness ? Icons.storefront_outlined : Icons.apartment,
+              color: _purple,
+            ),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -367,6 +370,7 @@ class _DealRoomPageState extends State<DealRoomPage> {
         riskSnapshot: _room.riskSnapshot,
         sharingPreferences: _room.sharingPreferences,
         updatedAt: DateTime.now(),
+        transactionType: _room.transactionType,
       );
       _refresh();
     } finally {
@@ -394,6 +398,7 @@ class _DealRoomPageState extends State<DealRoomPage> {
         riskSnapshot: _room.riskSnapshot,
         sharingPreferences: preferences,
         updatedAt: DateTime.now(),
+        transactionType: _room.transactionType,
       );
     });
   }
@@ -446,6 +451,8 @@ class _DealRoomPageState extends State<DealRoomPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        if (_room.isBusiness) _businessSecurityBoundary(),
+                        if (_room.isBusiness) const SizedBox(height: 18),
                         _metrics(),
                         const SizedBox(height: 24),
                         LayoutBuilder(
@@ -475,8 +482,10 @@ class _DealRoomPageState extends State<DealRoomPage> {
                         const SizedBox(height: 24),
                         _checklist(bundle.tasks),
                         const SizedBox(height: 24),
-                        if (_room.ownedByCurrentUser ||
-                            _room.sharingPreferences['documents'] == true) ...[
+                        if (!_room.isBusiness &&
+                            (_room.ownedByCurrentUser ||
+                                _room.sharingPreferences['documents'] ==
+                                    true)) ...[
                           _documents(bundle.documents),
                           const SizedBox(height: 24),
                         ],
@@ -522,7 +531,9 @@ class _DealRoomPageState extends State<DealRoomPage> {
               const SizedBox(height: 52),
               Text(
                 _room.ownedByCurrentUser
-                    ? 'PRIVATE PROPERTY WORKSPACE'
+                    ? (_room.isBusiness
+                          ? 'PRIVATE ACQUISITION WORKSPACE'
+                          : 'PRIVATE PROPERTY WORKSPACE')
                     : 'SHARED PROFESSIONAL WORKSPACE',
                 style: const TextStyle(
                   color: _lilac,
@@ -560,7 +571,11 @@ class _DealRoomPageState extends State<DealRoomPage> {
         _room.sharingPreferences['financials'] != false;
     final riskVisible =
         _room.ownedByCurrentUser || _room.sharingPreferences['risk'] != false;
-    final risk = (_room.riskSnapshot['risk'] as num?)?.toDouble();
+    final risk =
+        (_room.riskSnapshot[_room.isBusiness ? 'risk_score' : 'risk'] as num?)
+            ?.toDouble();
+    final viability = (_room.riskSnapshot['viability_score'] as num?)
+        ?.toDouble();
     final capRate = (_room.riskSnapshot['capRate'] as num?)?.toDouble();
     final dscr = (_room.riskSnapshot['dscr'] as num?)?.toDouble();
     final monthly = (_room.riskSnapshot['monthlyCarry'] as num?)?.toDouble();
@@ -579,27 +594,44 @@ class _DealRoomPageState extends State<DealRoomPage> {
                 ).format(_room.purchasePrice),
         ),
         _metric(
-          'RISK',
+          _room.isBusiness ? 'ACQUISITION RISK' : 'RISK',
           !riskVisible
               ? 'PRIVATE'
               : (risk == null ? '—' : '${risk.round()}/100'),
         ),
+        if (_room.isBusiness)
+          _metric(
+            'VIABILITY',
+            !riskVisible
+                ? 'PRIVATE'
+                : (viability == null ? '—' : '${viability.round()}/100'),
+          )
+        else
+          _metric(
+            'CAP RATE',
+            !financialsVisible
+                ? 'PRIVATE'
+                : (capRate == null ? '—' : '${capRate.toStringAsFixed(2)}%'),
+          ),
         _metric(
-          'CAP RATE',
-          !financialsVisible
-              ? 'PRIVATE'
-              : (capRate == null ? '—' : '${capRate.toStringAsFixed(2)}%'),
-        ),
-        _metric(
-          'DSCR',
+          _room.isBusiness ? 'ACQUISITION DSCR' : 'DSCR',
           !financialsVisible
               ? 'PRIVATE'
               : (dscr == null ? '—' : '${dscr.toStringAsFixed(2)}×'),
         ),
         _metric(
-          'MONTHLY CARRY',
+          _room.isBusiness ? 'CASH AFTER OWNER' : 'MONTHLY CARRY',
           !financialsVisible
               ? 'PRIVATE'
+              : _room.isBusiness
+              ? NumberFormat.simpleCurrency(
+                  name: 'CAD',
+                  decimalDigits: 0,
+                ).format(
+                  (_room.riskSnapshot['cash_after_owner_salary'] as num?)
+                          ?.toDouble() ??
+                      0,
+                )
               : monthly == null
               ? '—'
               : NumberFormat.simpleCurrency(
@@ -610,6 +642,34 @@ class _DealRoomPageState extends State<DealRoomPage> {
       ],
     );
   }
+
+  Widget _businessSecurityBoundary() => Container(
+    width: double.infinity,
+    padding: const EdgeInsets.all(18),
+    decoration: BoxDecoration(
+      color: const Color(0xFFFFF4E5),
+      borderRadius: BorderRadius.circular(16),
+      border: Border.all(color: const Color(0xFFF2C879)),
+    ),
+    child: const Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(Icons.lock_outline, color: Color(0xFF8A5800)),
+        SizedBox(width: 11),
+        Expanded(
+          child: Text(
+            'CONFIDENTIAL DOCUMENT VAULT DISABLED · Use this workspace for summarized figures, tasks and non-sensitive notes only. Sensitive M&A uploads will remain blocked until mandatory MFA, malware scanning, audit logs, watermarks and expiring downloads are operational and independently tested.',
+            style: TextStyle(
+              color: Color(0xFF6D4805),
+              fontSize: 11,
+              height: 1.45,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
 
   Widget _metric(String label, String value) => Container(
     width: 190,
@@ -720,12 +780,13 @@ class _DealRoomPageState extends State<DealRoomPage> {
             title: const Text('Share risk assessment'),
             contentPadding: EdgeInsets.zero,
           ),
-          SwitchListTile(
-            value: _room.sharingPreferences['documents'] == true,
-            onChanged: (value) => _setSharing('documents', value),
-            title: const Text('Allow document access'),
-            contentPadding: EdgeInsets.zero,
-          ),
+          if (!_room.isBusiness)
+            SwitchListTile(
+              value: _room.sharingPreferences['documents'] == true,
+              onChanged: (value) => _setSharing('documents', value),
+              title: const Text('Allow document access'),
+              contentPadding: EdgeInsets.zero,
+            ),
         ],
       ],
     ),

@@ -22,6 +22,7 @@ class DealRoom {
     required this.riskSnapshot,
     required this.sharingPreferences,
     required this.updatedAt,
+    required this.transactionType,
   });
 
   final String id;
@@ -37,6 +38,8 @@ class DealRoom {
   final Map<String, dynamic> riskSnapshot;
   final Map<String, dynamic> sharingPreferences;
   final DateTime updatedAt;
+  final String transactionType;
+  bool get isBusiness => transactionType == 'business';
 
   bool get ownedByCurrentUser => userId == BackendService.user?.id;
 
@@ -60,6 +63,7 @@ class DealRoom {
         ? Map<String, dynamic>.from(row['sharing_preferences'] as Map)
         : {},
     updatedAt: DateTime.parse(row['updated_at'] as String),
+    transactionType: row['transaction_type'] as String? ?? 'property',
   );
 }
 
@@ -166,7 +170,7 @@ class DealRoomService {
 
   static const _roomSelect =
       'id, user_id, title, property_address, city, purchase_price, timeline, goals, '
-      'status, property_snapshot, risk_snapshot, sharing_preferences, updated_at';
+      'status, transaction_type, property_snapshot, risk_snapshot, sharing_preferences, updated_at';
 
   static Future<List<DealRoom>> loadRooms() async {
     if (BackendService.user == null) return [];

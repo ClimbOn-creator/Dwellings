@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../widgets/site_footer.dart';
 import 'home_screen.dart';
+import 'business_acquisition_page.dart';
 import 'marketing_pages.dart';
 
 const _ink = Color(0xFF050510);
@@ -50,6 +51,19 @@ class _LandingScreenState extends State<LandingScreen> {
     );
   }
 
+  void _openBusiness() {
+    Navigator.of(context).push(
+      PageRouteBuilder<void>(
+        transitionDuration: const Duration(milliseconds: 600),
+        pageBuilder: (_, animation, _) => const BusinessAcquisitionPage(),
+        transitionsBuilder: (_, animation, _, child) => FadeTransition(
+          opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
+          child: child,
+        ),
+      ),
+    );
+  }
+
   void _scrollToCapabilities() {
     _scrollController.animateTo(
       MediaQuery.sizeOf(context).height * .92,
@@ -74,7 +88,9 @@ class _LandingScreenState extends State<LandingScreen> {
           child: _Hero(onOpen: _openModel, onExplore: _scrollToCapabilities),
         ),
         const SliverToBoxAdapter(child: _ProofStrip()),
-        SliverToBoxAdapter(child: _AssetGrid(onOpen: _openModel)),
+        SliverToBoxAdapter(
+          child: _AssetGrid(onOpen: _openModel, onBusiness: _openBusiness),
+        ),
         SliverToBoxAdapter(child: _IntelligenceSection(onOpen: _openModel)),
         SliverToBoxAdapter(child: _ProcessSection(onOpen: _openModel)),
         SliverToBoxAdapter(child: _ClosingSection(onOpen: _openModel)),
@@ -672,8 +688,9 @@ class _Proof extends StatelessWidget {
 }
 
 class _AssetGrid extends StatelessWidget {
-  const _AssetGrid({required this.onOpen});
+  const _AssetGrid({required this.onOpen, required this.onBusiness});
   final VoidCallback onOpen;
+  final VoidCallback onBusiness;
 
   @override
   Widget build(BuildContext context) => Container(
@@ -686,9 +703,9 @@ class _AssetGrid extends StatelessWidget {
           children: [
             const _SectionHeader(
               eyebrow: 'BUILT FOR THE WHOLE MARKET',
-              title: 'Every property tells a different story.',
+              title: 'Every deal tells a different story.',
               body:
-                  'Switch the lens, not the platform. DwellingsIQ adapts its analysis to the asset and the decision in front of you.',
+                  'Switch the lens, not the platform. PropertyIQ and AcquisitionIQ organize the decision, evidence and professional team around the deal.',
               dark: false,
             ),
             const SizedBox(height: 48),
@@ -712,6 +729,17 @@ class _AssetGrid extends StatelessWidget {
                       asset: 'assets/images/residential-courtyard.jpg',
                       accent: _purple,
                       onOpen: onOpen,
+                    ),
+                    _AssetCard(
+                      width: cardWidth,
+                      height: desktop ? 390 : 500,
+                      title: 'Buy an operating business',
+                      tag: 'ACQUISITIONIQ · PLACEHOLDER',
+                      detail:
+                          'Earnings · debt · owner salary · diligence · transition',
+                      asset: 'assets/images/hero-city.jpg',
+                      accent: const Color(0xFF8B5CF6),
+                      onOpen: onBusiness,
                     ),
                     _AssetCard(
                       width: cardWidth,

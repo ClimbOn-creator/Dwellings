@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "dwellings-iq",
+  "name": "dwelling-iq-app",
   "pages_build_output_dir": "./dist",
   "compatibility_date": "2026-08-08",
   "r2_buckets": [
