@@ -8,9 +8,10 @@ import '../services/business_service.dart';
 import '../services/marketplace_service.dart';
 import '../widgets/brand_logo.dart';
 import '../widgets/platform_switcher.dart';
+import '../widgets/current_deals_button.dart';
 import 'auth_page.dart';
 import 'deal_rooms_page.dart';
-import 'home_screen.dart';
+import 'platform_hub_page.dart';
 import 'landing_screen.dart';
 import 'local_network_page.dart';
 
@@ -221,7 +222,9 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
   void _openSide(PlatformSide side) {
     if (side == PlatformSide.business) return;
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute<void>(builder: (_) => const UnderwritingScreen()),
+      MaterialPageRoute<void>(
+        builder: (_) => const PlatformHubPage(side: PlatformSide.property),
+      ),
     );
   }
 
@@ -231,12 +234,6 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
         side: PlatformSide.business,
         initialCity: MarketplaceService.inferCity(_location.text),
       ),
-    ),
-  );
-
-  void _openDealRooms() => Navigator.of(context).push(
-    MaterialPageRoute<void>(
-      builder: (_) => const DealRoomsPage(initialSide: PlatformSide.business),
     ),
   );
 
@@ -388,12 +385,9 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
                       ),
                       child: const Text('NETWORK'),
                     ),
-                    TextButton(
-                      onPressed: _openDealRooms,
-                      style: TextButton.styleFrom(
-                        foregroundColor: Colors.white,
-                      ),
-                      child: const Text('DEAL ROOMS'),
+                    const CurrentDealsButton(
+                      side: PlatformSide.business,
+                      compact: true,
                     ),
                   ],
                   TextButton.icon(
@@ -423,12 +417,9 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
                       ),
                       child: const Text('NETWORK'),
                     ),
-                    TextButton(
-                      onPressed: _openDealRooms,
-                      style: TextButton.styleFrom(
-                        foregroundColor: Colors.white,
-                      ),
-                      child: const Text('DEAL ROOMS'),
+                    const CurrentDealsButton(
+                      side: PlatformSide.business,
+                      compact: true,
                     ),
                   ],
                 ),

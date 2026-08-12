@@ -8,6 +8,7 @@ import '../widgets/auth_button.dart';
 import '../widgets/site_footer.dart';
 import '../widgets/profile_photo.dart';
 import '../widgets/platform_switcher.dart';
+import '../widgets/current_deals_button.dart';
 import 'auth_page.dart';
 import 'business_acquisition_page.dart';
 import 'home_screen.dart';
@@ -302,6 +303,8 @@ class _NetworkNav extends StatelessWidget {
           dark: true,
           compact: MediaQuery.sizeOf(context).width <= 720,
         ),
+        const SizedBox(width: 4),
+        CurrentDealsButton(side: side, compact: true),
         const SizedBox(width: 4),
         FilledButton.icon(
           onPressed: onModel,

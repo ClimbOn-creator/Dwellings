@@ -6,11 +6,16 @@ import 'package:image_picker/image_picker.dart';
 import '../services/account_service.dart';
 import '../services/backend_service.dart';
 import '../services/marketplace_service.dart';
+import '../services/deal_room_service.dart';
+import '../models/platform_side.dart';
 import '../widgets/brand_logo.dart';
+import '../widgets/current_deals_button.dart';
+import '../widgets/platform_switcher.dart';
 import '../widgets/profile_photo.dart';
 import 'auth_page.dart';
 import 'deal_rooms_page.dart';
 import 'member_profile_page.dart';
+import 'platform_hub_page.dart';
 
 const _ink = Color(0xFF050510);
 const _paper = Color(0xFFF5F5F7);
@@ -30,6 +35,7 @@ class _ProfilePageState extends State<ProfilePage> {
   List<MarketplaceProvider> _team = [];
   List<IntroductionRequest> _outgoingIntroductions = [];
   List<IntroductionRequest> _incomingIntroductions = [];
+  List<DealRoom> _deals = [];
   ProfessionalWorkspaceStats? _professionalStats;
   bool _loading = true;
   bool _saving = false;
@@ -69,6 +75,7 @@ class _ProfilePageState extends State<ProfilePage> {
         AccountService.loadOutgoingIntroductions(),
         AccountService.loadIncomingIntroductions(),
         AccountService.loadProfessionalStats(),
+        DealRoomService.loadRooms(),
       ]);
       if (!mounted) return;
       setState(() {
@@ -77,6 +84,7 @@ class _ProfilePageState extends State<ProfilePage> {
         _outgoingIntroductions = values[2] as List<IntroductionRequest>;
         _incomingIntroductions = values[3] as List<IntroductionRequest>;
         _professionalStats = values[4] as ProfessionalWorkspaceStats?;
+        _deals = values[5] as List<DealRoom>;
       });
     } catch (_) {
       // Keep the existing dashboard visible and try again on the next refresh.
@@ -96,6 +104,7 @@ class _ProfilePageState extends State<ProfilePage> {
         AccountService.loadOutgoingIntroductions(),
         AccountService.loadIncomingIntroductions(),
         AccountService.loadProfessionalStats(),
+        DealRoomService.loadRooms(),
       ]);
       final profile = values[0] as AccountProfile?;
       if (!mounted) return;
@@ -106,6 +115,7 @@ class _ProfilePageState extends State<ProfilePage> {
         _outgoingIntroductions = values[3] as List<IntroductionRequest>;
         _incomingIntroductions = values[4] as List<IntroductionRequest>;
         _professionalStats = values[5] as ProfessionalWorkspaceStats?;
+        _deals = values[6] as List<DealRoom>;
         _loading = false;
         _name.text = profile?.fullName ?? '';
         _job.text = profile?.jobTitle ?? '';
@@ -378,6 +388,8 @@ class _ProfilePageState extends State<ProfilePage> {
                           );
                         },
                       ),
+                      const SizedBox(height: 24),
+                      _currentDeals(),
                       if (_professionalStats != null) ...[
                         const SizedBox(height: 24),
                         _professionalWorkspace(_professionalStats!),
@@ -441,24 +453,49 @@ class _ProfilePageState extends State<ProfilePage> {
                 child: const DwellingIqLogo(size: 46),
               ),
               const Spacer(),
-              TextButton.icon(
-                onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => const DealRoomsPage(),
+              if (MediaQuery.sizeOf(context).width >= 760) ...[
+                PlatformSwitcher(
+                  selected: null,
+                  onChanged: (side) => Navigator.of(context).pushReplacement(
+                    MaterialPageRoute<void>(
+                      builder: (_) => PlatformHubPage(side: side),
+                    ),
                   ),
                 ),
-                style: TextButton.styleFrom(foregroundColor: Colors.white),
-                icon: const Icon(Icons.meeting_room_outlined, size: 17),
-                label: const Text('DEAL ROOMS'),
+                const SizedBox(width: 6),
+              ],
+              CurrentDealsButton(
+                side: PlatformSide.property,
+                compact: MediaQuery.sizeOf(context).width < 700,
               ),
               const SizedBox(width: 8),
-              TextButton(
-                onPressed: _signOut,
-                style: TextButton.styleFrom(foregroundColor: Colors.white),
-                child: const Text('SIGN OUT'),
-              ),
+              if (MediaQuery.sizeOf(context).width >= 700)
+                TextButton(
+                  onPressed: _signOut,
+                  style: TextButton.styleFrom(foregroundColor: Colors.white),
+                  child: const Text('SIGN OUT'),
+                )
+              else
+                IconButton(
+                  onPressed: _signOut,
+                  color: Colors.white,
+                  tooltip: 'Sign out',
+                  icon: const Icon(Icons.logout, size: 18),
+                ),
             ],
           ),
+          if (MediaQuery.sizeOf(context).width < 760) ...[
+            const SizedBox(height: 12),
+            PlatformSwitcher(
+              selected: null,
+              onChanged: (side) => Navigator.of(context).pushReplacement(
+                MaterialPageRoute<void>(
+                  builder: (_) => PlatformHubPage(side: side),
+                ),
+              ),
+              compact: true,
+            ),
+          ],
           const SizedBox(height: 54),
           Row(
             crossAxisAlignment: CrossAxisAlignment.end,
@@ -513,6 +550,108 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         ],
       ),
+    ),
+  );
+
+  Widget _currentDeals() => Container(
+    width: double.infinity,
+    padding: const EdgeInsets.all(24),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(color: const Color(0xFFE2E2E9)),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Expanded(
+              child: Text(
+                'Current deals',
+                style: TextStyle(
+                  fontSize: 25,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -.8,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(builder: (_) => const DealRoomsPage()),
+              ),
+              child: const Text('VIEW ALL'),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        if (_deals.isEmpty)
+          const Text(
+            'No active deals yet. Your next property or business acquisition will appear here.',
+            style: TextStyle(color: Color(0xFF666674), height: 1.45),
+          )
+        else
+          ..._deals
+              .take(3)
+              .map(
+                (deal) => InkWell(
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => DealRoomPage(room: deal),
+                    ),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                deal.title,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 15,
+                                ),
+                              ),
+                            ),
+                            Text(
+                              '${deal.completedTaskCount}/${deal.totalTaskCount}',
+                              style: const TextStyle(
+                                color: _purple,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        LinearProgressIndicator(
+                          value: deal.progress,
+                          minHeight: 4,
+                          borderRadius: BorderRadius.circular(10),
+                          backgroundColor: const Color(0xFFE8E8EF),
+                          color: _purple,
+                        ),
+                        const SizedBox(height: 7),
+                        Text(
+                          'CURRENT STEP · ${deal.currentStep.toUpperCase()}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Color(0xFF666674),
+                            fontSize: 9,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: .45,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+      ],
     ),
   );
 

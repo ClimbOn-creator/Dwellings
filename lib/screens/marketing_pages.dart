@@ -4,11 +4,12 @@ import '../models/platform_side.dart';
 import '../widgets/brand_logo.dart';
 import '../widgets/auth_button.dart';
 import '../widgets/site_footer.dart';
+import '../widgets/current_deals_button.dart';
 import '../widgets/platform_switcher.dart';
 import 'become_member_page.dart';
-import 'business_acquisition_page.dart';
 import 'home_screen.dart';
 import 'local_network_page.dart';
+import 'platform_hub_page.dart';
 
 const _ink = brandInk;
 const _navy = Color(0xFF09091B);
@@ -100,21 +101,78 @@ class MarketingNavigation extends StatelessWidget {
   }
 
   void _openSide(BuildContext context, PlatformSide value) {
-    if (value == PlatformSide.property) {
-      (onModel ?? () => openUnderwriting(context))();
-    } else {
-      (onBusiness ??
-          () => Navigator.of(context).push(
-            MaterialPageRoute<void>(
-              builder: (_) => const BusinessAcquisitionPage(),
-            ),
-          ))();
-    }
+    final callback = value == PlatformSide.property ? onModel : onBusiness;
+    if (callback != null) return callback();
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => PlatformHubPage(side: value)),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final compact = MediaQuery.sizeOf(context).width < 1080;
+    final viewportWidth = MediaQuery.sizeOf(context).width;
+    final compact = viewportWidth < 1080;
+    if (viewportWidth < 760) {
+      return Container(
+        height: 122,
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: .055),
+          borderRadius: BorderRadius.circular(30),
+          border: Border.all(color: Colors.white.withValues(alpha: .11)),
+        ),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                InkWell(
+                  onTap: () => _home(context),
+                  borderRadius: BorderRadius.circular(18),
+                  child: const DwellingIqLogo(size: 42),
+                ),
+                const Spacer(),
+                PopupMenuButton<MarketingDestination>(
+                  tooltip: 'Open navigation',
+                  color: const Color(0xFF171728),
+                  icon: const Icon(Icons.menu_rounded, color: Colors.white),
+                  onSelected: (value) => _go(context, value),
+                  itemBuilder: (_) =>
+                      [
+                            MarketingDestination.network,
+                            MarketingDestination.process,
+                            MarketingDestination.membership,
+                          ]
+                          .map(
+                            (value) => PopupMenuItem(
+                              value: value,
+                              child: Text(
+                                _destinationLabel(value),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                          )
+                          .toList(),
+                ),
+                CurrentDealsButton(
+                  side: side ?? PlatformSide.property,
+                  compact: true,
+                ),
+                const AuthButton(dark: true, compact: true),
+              ],
+            ),
+            const Spacer(),
+            PlatformSwitcher(
+              selected: side,
+              onChanged: (value) => _openSide(context, value),
+              compact: true,
+            ),
+          ],
+        ),
+      );
+    }
     return Container(
       height: 68,
       padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -182,6 +240,10 @@ class MarketingNavigation extends StatelessWidget {
                       .toList(),
             ),
           const SizedBox(width: 8),
+          CurrentDealsButton(
+            side: side ?? PlatformSide.property,
+            compact: compact,
+          ),
           AuthButton(dark: true, compact: compact),
           const SizedBox(width: 4),
           _ModelButton(onTap: onModel ?? () => openUnderwriting(context)),

@@ -58,57 +58,35 @@ class _LogoPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final scale = size.width / 44;
-    final background = Paint()
-      ..color = dark ? Colors.white : brandInk
-      ..style = PaintingStyle.fill;
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(Offset.zero & size, Radius.circular(14 * scale)),
-      background,
-    );
-
-    final ink = dark ? brandInk : Colors.white;
-    final housePaint = Paint()
-      ..color = ink
+    final foreground = dark ? Colors.white : brandInk;
+    final mark = Paint()
+      ..color = foreground
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 3.4 * scale
+      ..strokeWidth = 3 * scale
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
-
-    final house = Path()
-      ..moveTo(10 * scale, 23 * scale)
-      ..lineTo(22 * scale, 12 * scale)
-      ..lineTo(34 * scale, 23 * scale)
-      ..lineTo(34 * scale, 34 * scale)
-      ..lineTo(10 * scale, 34 * scale)
-      ..close();
-    canvas.drawPath(house, housePaint);
-
-    final door = Paint()
-      ..color = brandPurple
-      ..style = PaintingStyle.fill;
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(18 * scale, 24 * scale, 8 * scale, 10 * scale),
-        Radius.circular(2 * scale),
-      ),
-      door,
+    final frame = RRect.fromRectAndRadius(
+      Rect.fromLTWH(5 * scale, 5 * scale, 34 * scale, 34 * scale),
+      Radius.circular(10 * scale),
     );
-
-    final connection = Paint()
-      ..color = brandLilac
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2 * scale
-      ..strokeCap = StrokeCap.round;
+    canvas.drawRRect(frame, mark);
     canvas.drawLine(
-      Offset(28 * scale, 17.5 * scale),
-      Offset(34.5 * scale, 11 * scale),
-      connection,
+      Offset(14 * scale, 29 * scale),
+      Offset(22 * scale, 16 * scale),
+      mark,
     );
-
-    final node = Paint()
-      ..color = brandLilac
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(Offset(36 * scale, 9.5 * scale), 3.6 * scale, node);
+    canvas.drawLine(
+      Offset(22 * scale, 16 * scale),
+      Offset(30 * scale, 29 * scale),
+      mark,
+    );
+    canvas.drawLine(
+      Offset(14 * scale, 29 * scale),
+      Offset(30 * scale, 29 * scale),
+      mark,
+    );
+    final accent = Paint()..color = brandPurple;
+    canvas.drawCircle(Offset(33.5 * scale, 10.5 * scale), 2.6 * scale, accent);
   }
 
   @override

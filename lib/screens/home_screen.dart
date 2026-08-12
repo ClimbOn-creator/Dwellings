@@ -9,9 +9,10 @@ import '../services/account_service.dart';
 import '../services/marketplace_service.dart';
 import '../widgets/site_footer.dart';
 import '../widgets/auth_button.dart';
+import '../widgets/current_deals_button.dart';
 import '../widgets/brand_logo.dart';
 import '../widgets/platform_switcher.dart';
-import 'business_acquisition_page.dart';
+import 'platform_hub_page.dart';
 import 'local_network_page.dart';
 import 'deal_rooms_page.dart';
 import 'marketing_pages.dart';
@@ -200,7 +201,9 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
   }
 
   void _openBusiness() => Navigator.of(context).pushReplacement(
-    MaterialPageRoute<void>(builder: (_) => const BusinessAcquisitionPage()),
+    MaterialPageRoute<void>(
+      builder: (_) => const PlatformHubPage(side: PlatformSide.business),
+    ),
   );
 
   Future<void> _analyze() async {
@@ -306,6 +309,11 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
                   )
                 else
                   const SizedBox.shrink(),
+                const SizedBox(width: 8),
+                const CurrentDealsButton(
+                  side: PlatformSide.property,
+                  compact: true,
+                ),
                 const SizedBox(width: 8),
                 const AuthButton(dark: true),
                 const SizedBox(width: 18),

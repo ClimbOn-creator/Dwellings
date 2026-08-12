@@ -23,6 +23,9 @@ class DealRoom {
     required this.sharingPreferences,
     required this.updatedAt,
     required this.transactionType,
+    this.completedTaskCount = 0,
+    this.totalTaskCount = 0,
+    this.currentStep = 'Open the workspace to begin',
   });
 
   final String id;
@@ -39,32 +42,61 @@ class DealRoom {
   final Map<String, dynamic> sharingPreferences;
   final DateTime updatedAt;
   final String transactionType;
+  final int completedTaskCount;
+  final int totalTaskCount;
+  final String currentStep;
   bool get isBusiness => transactionType == 'business';
+  double get progress =>
+      totalTaskCount == 0 ? 0 : completedTaskCount / totalTaskCount;
 
   bool get ownedByCurrentUser => userId == BackendService.user?.id;
 
-  factory DealRoom.fromJson(Map<String, dynamic> row) => DealRoom(
-    id: row['id'] as String,
-    userId: row['user_id'] as String,
-    title: row['title'] as String? ?? 'Property Deal Room',
-    address: row['property_address'] as String? ?? '',
-    city: row['city'] as String? ?? '',
-    purchasePrice: (row['purchase_price'] as num?)?.toDouble() ?? 0,
-    timeline: row['timeline'] as String? ?? '',
-    goals: row['goals'] as String? ?? '',
-    status: row['status'] as String? ?? 'active',
-    propertySnapshot: row['property_snapshot'] is Map
-        ? Map<String, dynamic>.from(row['property_snapshot'] as Map)
-        : {},
-    riskSnapshot: row['risk_snapshot'] is Map
-        ? Map<String, dynamic>.from(row['risk_snapshot'] as Map)
-        : {},
-    sharingPreferences: row['sharing_preferences'] is Map
-        ? Map<String, dynamic>.from(row['sharing_preferences'] as Map)
-        : {},
-    updatedAt: DateTime.parse(row['updated_at'] as String),
-    transactionType: row['transaction_type'] as String? ?? 'property',
-  );
+  factory DealRoom.fromJson(Map<String, dynamic> row) {
+    final tasks =
+        (row['deal_room_tasks'] as List<dynamic>? ?? [])
+            .map((value) => Map<String, dynamic>.from(value as Map))
+            .toList()
+          ..sort(
+            (a, b) => ((a['position'] as num?)?.toInt() ?? 0).compareTo(
+              (b['position'] as num?)?.toInt() ?? 0,
+            ),
+          );
+    final completed = tasks.where((task) => task['completed'] == true).length;
+    final next = tasks.cast<Map<String, dynamic>?>().firstWhere(
+      (task) => task?['completed'] != true,
+      orElse: () => null,
+    );
+    final currentStep = tasks.isEmpty
+        ? 'Open the workspace to begin'
+        : next == null
+        ? 'All checklist steps complete'
+        : next['title'] as String? ?? 'Continue the checklist';
+    return DealRoom(
+      id: row['id'] as String,
+      userId: row['user_id'] as String,
+      title: row['title'] as String? ?? 'Property Deal Room',
+      address: row['property_address'] as String? ?? '',
+      city: row['city'] as String? ?? '',
+      purchasePrice: (row['purchase_price'] as num?)?.toDouble() ?? 0,
+      timeline: row['timeline'] as String? ?? '',
+      goals: row['goals'] as String? ?? '',
+      status: row['status'] as String? ?? 'active',
+      propertySnapshot: row['property_snapshot'] is Map
+          ? Map<String, dynamic>.from(row['property_snapshot'] as Map)
+          : {},
+      riskSnapshot: row['risk_snapshot'] is Map
+          ? Map<String, dynamic>.from(row['risk_snapshot'] as Map)
+          : {},
+      sharingPreferences: row['sharing_preferences'] is Map
+          ? Map<String, dynamic>.from(row['sharing_preferences'] as Map)
+          : {},
+      updatedAt: DateTime.parse(row['updated_at'] as String),
+      transactionType: row['transaction_type'] as String? ?? 'property',
+      completedTaskCount: completed,
+      totalTaskCount: tasks.length,
+      currentStep: currentStep,
+    );
+  }
 }
 
 class DealRoomTask {
@@ -170,7 +202,8 @@ class DealRoomService {
 
   static const _roomSelect =
       'id, user_id, title, property_address, city, purchase_price, timeline, goals, '
-      'status, transaction_type, property_snapshot, risk_snapshot, sharing_preferences, updated_at';
+      'status, transaction_type, property_snapshot, risk_snapshot, sharing_preferences, updated_at, '
+      'deal_room_tasks(title, completed, position)';
 
   static Future<List<DealRoom>> loadRooms() async {
     if (BackendService.user == null) return [];

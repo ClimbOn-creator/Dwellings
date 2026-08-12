@@ -7,6 +7,7 @@ import 'screens/home_screen.dart';
 import 'screens/landing_screen.dart';
 import 'screens/business_acquisition_page.dart';
 import 'screens/local_network_page.dart';
+import 'screens/platform_hub_page.dart';
 import 'services/backend_service.dart';
 
 Future<void> main() async {
@@ -84,8 +85,10 @@ class DwellingIqApp extends StatelessWidget {
         ? PlatformSide.business
         : PlatformSide.property;
     return switch (module) {
-      'business' => const BusinessAcquisitionPage(),
-      'property' => const UnderwritingScreen(),
+      'business' => const PlatformHubPage(side: PlatformSide.business),
+      'property' => const PlatformHubPage(side: PlatformSide.property),
+      'business-calculator' => const BusinessAcquisitionPage(),
+      'property-calculator' => const UnderwritingScreen(),
       'network' => LocalNetworkPage(side: side),
       'deal-rooms' => DealRoomsPage(initialSide: side),
       _ => const LandingScreen(),
