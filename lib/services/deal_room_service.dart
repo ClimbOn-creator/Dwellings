@@ -23,9 +23,15 @@ class DealRoom {
     required this.sharingPreferences,
     required this.updatedAt,
     required this.transactionType,
+    this.dealKind = 'residential',
+    this.currentStage = 'discovery',
+    this.targetCloseDate,
+    this.archivedAt,
     this.completedTaskCount = 0,
     this.totalTaskCount = 0,
     this.currentStep = 'Open the workspace to begin',
+    this.blockedTaskCount = 0,
+    this.nextDueAt,
   });
 
   final String id;
@@ -42,9 +48,15 @@ class DealRoom {
   final Map<String, dynamic> sharingPreferences;
   final DateTime updatedAt;
   final String transactionType;
+  final String dealKind;
+  final String currentStage;
+  final DateTime? targetCloseDate;
+  final DateTime? archivedAt;
   final int completedTaskCount;
   final int totalTaskCount;
   final String currentStep;
+  final int blockedTaskCount;
+  final DateTime? nextDueAt;
   bool get isBusiness => transactionType == 'business';
   double get progress =>
       totalTaskCount == 0 ? 0 : completedTaskCount / totalTaskCount;
@@ -62,6 +74,18 @@ class DealRoom {
             ),
           );
     final completed = tasks.where((task) => task['completed'] == true).length;
+    final blocked = tasks
+        .where((task) => task['task_status'] == 'blocked')
+        .length;
+    final dueDates =
+        tasks
+            .where(
+              (task) => task['completed'] != true && task['due_at'] is String,
+            )
+            .map((task) => DateTime.tryParse(task['due_at'] as String))
+            .whereType<DateTime>()
+            .toList()
+          ..sort();
     final next = tasks.cast<Map<String, dynamic>?>().firstWhere(
       (task) => task?['completed'] != true,
       orElse: () => null,
@@ -92,9 +116,23 @@ class DealRoom {
           : {},
       updatedAt: DateTime.parse(row['updated_at'] as String),
       transactionType: row['transaction_type'] as String? ?? 'property',
+      dealKind:
+          row['deal_kind'] as String? ??
+          ((row['transaction_type'] as String? ?? 'property') == 'business'
+              ? 'business'
+              : 'residential'),
+      currentStage: row['current_stage'] as String? ?? 'discovery',
+      targetCloseDate: row['target_close_date'] == null
+          ? null
+          : DateTime.tryParse(row['target_close_date'] as String),
+      archivedAt: row['archived_at'] == null
+          ? null
+          : DateTime.tryParse(row['archived_at'] as String),
       completedTaskCount: completed,
       totalTaskCount: tasks.length,
       currentStep: currentStep,
+      blockedTaskCount: blocked,
+      nextDueAt: dueDates.isEmpty ? null : dueDates.first,
     );
   }
 }
@@ -106,12 +144,25 @@ class DealRoomTask {
     required this.category,
     required this.completed,
     required this.position,
+    this.details = '',
+    this.stage = 'discovery',
+    this.status = 'not_started',
+    this.blockerNote = '',
+    this.dueAt,
+    this.assignedProviderId,
   });
   final String id;
   final String title;
   final String category;
   final bool completed;
   final int position;
+  final String details;
+  final String stage;
+  final String status;
+  final String blockerNote;
+  final DateTime? dueAt;
+  final String? assignedProviderId;
+  bool get blocked => status == 'blocked';
 
   factory DealRoomTask.fromJson(Map<String, dynamic> row) => DealRoomTask(
     id: row['id'] as String,
@@ -119,6 +170,16 @@ class DealRoomTask {
     category: row['category'] as String? ?? 'general',
     completed: row['completed'] as bool? ?? false,
     position: row['position'] as int? ?? 0,
+    details: row['details'] as String? ?? '',
+    stage: row['stage'] as String? ?? 'discovery',
+    status:
+        row['task_status'] as String? ??
+        ((row['completed'] as bool? ?? false) ? 'completed' : 'not_started'),
+    blockerNote: row['blocker_note'] as String? ?? '',
+    dueAt: row['due_at'] == null
+        ? null
+        : DateTime.tryParse(row['due_at'] as String),
+    assignedProviderId: row['assigned_provider_id'] as String?,
   );
 }
 
@@ -197,13 +258,178 @@ class DealRoomBundle {
   final List<DealRoomDocument> documents;
 }
 
+class DealTaskTemplate {
+  const DealTaskTemplate(this.title, this.details, this.stage, this.category);
+  final String title;
+  final String details;
+  final String stage;
+  final String category;
+}
+
 class DealRoomService {
   static SupabaseClient get _client => Supabase.instance.client;
 
   static const _roomSelect =
       'id, user_id, title, property_address, city, purchase_price, timeline, goals, '
       'status, transaction_type, property_snapshot, risk_snapshot, sharing_preferences, updated_at, '
-      'deal_room_tasks(title, completed, position)';
+      'deal_kind, current_stage, target_close_date, archived_at, '
+      'deal_room_tasks(title, completed, task_status, due_at, position)';
+
+  static const stageOrder = <String>[
+    'discovery',
+    'financing',
+    'offer',
+    'diligence',
+    'legal',
+    'closing',
+    'transition',
+    'complete',
+  ];
+
+  static const residentialStages = <String>[
+    'discovery',
+    'financing',
+    'search',
+    'offer',
+    'diligence',
+    'closing',
+    'complete',
+  ];
+
+  static const commercialStages = <String>[
+    'discovery',
+    'underwriting',
+    'financing',
+    'offer',
+    'diligence',
+    'legal',
+    'closing',
+    'complete',
+  ];
+
+  static const businessStages = <String>[
+    'discovery',
+    'screening',
+    'offer',
+    'diligence',
+    'financing',
+    'legal',
+    'closing',
+    'transition',
+    'complete',
+  ];
+
+  static List<String> stagesFor(String kind) => switch (kind) {
+    'business' => businessStages,
+    'commercial' => commercialStages,
+    _ => residentialStages,
+  };
+
+  static List<DealTaskTemplate> templatesFor(String kind) => switch (kind) {
+    'business' => _businessTemplates,
+    'commercial' => _commercialTemplates,
+    _ => _residentialTemplates,
+  };
+
+  static Future<DealRoom> createManualRoom({
+    required String title,
+    required String dealKind,
+    required String location,
+    required double purchasePrice,
+    required String goals,
+    DateTime? targetCloseDate,
+  }) async {
+    final user = BackendService.user;
+    if (user == null) throw StateError('Sign in to start a deal.');
+    final transactionType = dealKind == 'business' ? 'business' : 'property';
+    final inserted = await _client
+        .from('deal_rooms')
+        .insert({
+          'user_id': user.id,
+          'transaction_type': transactionType,
+          'deal_kind': dealKind,
+          'current_stage': 'discovery',
+          'title': title.trim(),
+          'property_address': location.trim(),
+          'city': location.trim(),
+          'purchase_price': purchasePrice,
+          'goals': goals.trim(),
+          'target_close_date': targetCloseDate == null
+              ? null
+              : _dateOnly(targetCloseDate),
+          'sharing_preferences': {
+            'financials': dealKind != 'business',
+            'risk': true,
+            'documents': false,
+          },
+        })
+        .select(_roomSelect)
+        .single();
+    final room = DealRoom.fromJson(Map<String, dynamic>.from(inserted));
+    await _insertTemplates(room.id, dealKind);
+    await _attachSelectedTeam(room.id, dealKind, user.id);
+    return room;
+  }
+
+  static Future<void> _insertTemplates(String roomId, String kind) async {
+    final templates = templatesFor(kind);
+    await _client.from('deal_room_tasks').insert([
+      for (var index = 0; index < templates.length; index++)
+        {
+          'deal_room_id': roomId,
+          'title': templates[index].title,
+          'details': templates[index].details,
+          'stage': templates[index].stage,
+          'category': templates[index].category,
+          'position': index,
+        },
+    ]);
+  }
+
+  static Future<void> addGuidedChecklist(String roomId, String kind) =>
+      _insertTemplates(roomId, kind);
+
+  static Future<void> _attachSelectedTeam(
+    String roomId,
+    String kind,
+    String userId,
+  ) async {
+    final providerTypes = kind == 'business'
+        ? const [
+            'business_broker',
+            'ma_lawyer',
+            'quality_of_earnings',
+            'commercial_lender',
+            'tax_advisor',
+            'insurance_advisor',
+            'human_resources',
+            'cybersecurity',
+            'industry_advisor',
+            'wealth_manager',
+          ]
+        : const [
+            'realtor',
+            'mortgage_broker',
+            'lawyer',
+            'accountant',
+            'lender',
+          ];
+    final rows = await _client
+        .from('user_team_members')
+        .select('provider_id, provider_profiles!inner(provider_type)')
+        .eq('user_id', userId)
+        .inFilter('provider_profiles.provider_type', providerTypes);
+    if (rows.isEmpty) return;
+    await _client.from('deal_room_members').insert([
+      for (final row in rows)
+        {
+          'deal_room_id': roomId,
+          'provider_id': row['provider_id'],
+          'invited_by': userId,
+          'access_level': kind == 'business' ? 'summary' : 'standard',
+        },
+    ]);
+  }
 
   static Future<List<DealRoom>> loadRooms() async {
     if (BackendService.user == null) return [];
@@ -242,6 +468,19 @@ class DealRoomService {
         ? Map<String, dynamic>.from(analysis['model_output'] as Map)
         : <String, dynamic>{};
     final address = analysis['address_label'] as String? ?? '';
+    const commercialTypes = {
+      'office',
+      'retail',
+      'industrial',
+      'multifamily',
+      'mixedUse',
+      'land',
+      'hospitality',
+    };
+    final propertyType = inputs['propertyType'] as String? ?? '';
+    final dealKind = commercialTypes.contains(propertyType)
+        ? 'commercial'
+        : 'residential';
     final inserted = await _client
         .from('deal_rooms')
         .insert({
@@ -251,6 +490,8 @@ class DealRoomService {
           'property_address': address,
           'city': location['city'] as String? ?? '',
           'purchase_price': (inputs['price'] as num?)?.toDouble() ?? 0,
+          'deal_kind': dealKind,
+          'current_stage': 'discovery',
           'timeline': '',
           'goals': analysis['decision_mode'] == 'invest'
               ? 'Evaluate and complete an investment property acquisition.'
@@ -262,23 +503,7 @@ class DealRoomService {
         .single();
     final room = DealRoom.fromJson(Map<String, dynamic>.from(inserted));
 
-    const taskTemplates = [
-      ('Confirm purchase goals and timeline', 'planning'),
-      ('Review financing and pre-approval', 'financing'),
-      ('Complete property due diligence', 'property'),
-      ('Review offer and conditions', 'legal'),
-      ('Confirm insurance and closing costs', 'closing'),
-      ('Prepare closing documents', 'closing'),
-    ];
-    await _client.from('deal_room_tasks').insert([
-      for (var index = 0; index < taskTemplates.length; index++)
-        {
-          'deal_room_id': room.id,
-          'title': taskTemplates[index].$1,
-          'category': taskTemplates[index].$2,
-          'position': index,
-        },
-    ]);
+    await _insertTemplates(room.id, dealKind);
 
     final teamRows = await _client
         .from('user_team_members')
@@ -305,10 +530,16 @@ class DealRoomService {
   }
 
   static Future<DealRoomBundle> loadBundle(DealRoom room) async {
+    if (room.ownedByCurrentUser) {
+      await _ensureGuidedChecklist(room);
+    }
     final values = await Future.wait([
       _client
           .from('deal_room_tasks')
-          .select('id, title, category, completed, position')
+          .select(
+            'id, title, details, category, stage, task_status, blocker_note, '
+            'completed, due_at, assigned_provider_id, position',
+          )
           .eq('deal_room_id', room.id)
           .order('position'),
       _client
@@ -371,14 +602,66 @@ class DealRoomService {
     );
   }
 
+  static Future<void> _ensureGuidedChecklist(DealRoom room) async {
+    final existingRows = await _client
+        .from('deal_room_tasks')
+        .select('title, position')
+        .eq('deal_room_id', room.id);
+    final titles = existingRows
+        .map((row) => row['title'] as String? ?? '')
+        .toSet();
+    final templates = templatesFor(room.dealKind);
+    final missing = templates.where((task) => !titles.contains(task.title));
+    if (missing.isEmpty) return;
+    final highestPosition = existingRows.fold<int>(
+      -1,
+      (highest, row) => ((row['position'] as num?)?.toInt() ?? -1) > highest
+          ? (row['position'] as num?)?.toInt() ?? highest
+          : highest,
+    );
+    var offset = 0;
+    await _client.from('deal_room_tasks').insert([
+      for (final task in missing)
+        {
+          'deal_room_id': room.id,
+          'title': task.title,
+          'details': task.details,
+          'stage': task.stage,
+          'category': task.category,
+          'position': highestPosition + (++offset),
+        },
+    ]);
+  }
+
   static Future<void> toggleTask(DealRoomTask task, bool completed) async {
     await _client
         .from('deal_room_tasks')
         .update({
           'completed': completed,
+          'task_status': completed ? 'completed' : 'not_started',
           'updated_at': DateTime.now().toIso8601String(),
         })
         .eq('id', task.id);
+  }
+
+  static Future<void> updateTask({
+    required String taskId,
+    required String status,
+    required String blockerNote,
+    DateTime? dueAt,
+    String? assignedProviderId,
+  }) async {
+    await _client
+        .from('deal_room_tasks')
+        .update({
+          'task_status': status,
+          'completed': status == 'completed',
+          'blocker_note': status == 'blocked' ? blockerNote.trim() : '',
+          'due_at': dueAt?.toIso8601String(),
+          'assigned_provider_id': assignedProviderId,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('id', taskId);
   }
 
   static Future<void> addNote(String roomId, String text) async {
@@ -437,6 +720,8 @@ class DealRoomService {
     required String status,
     required String timeline,
     required String goals,
+    String? currentStage,
+    DateTime? targetCloseDate,
   }) async {
     await _client
         .from('deal_rooms')
@@ -444,10 +729,22 @@ class DealRoomService {
           'status': status,
           'timeline': timeline.trim(),
           'goals': goals.trim(),
+          'current_stage': ?currentStage,
+          'target_close_date': targetCloseDate == null
+              ? null
+              : _dateOnly(targetCloseDate),
+          'archived_at': status == 'archived'
+              ? DateTime.now().toIso8601String()
+              : null,
           'updated_at': DateTime.now().toIso8601String(),
         })
         .eq('id', roomId);
   }
+
+  static String _dateOnly(DateTime value) =>
+      '${value.year.toString().padLeft(4, '0')}-'
+      '${value.month.toString().padLeft(2, '0')}-'
+      '${value.day.toString().padLeft(2, '0')}';
 
   static Future<void> updateSharing(
     String roomId,
@@ -481,4 +778,307 @@ class DealRoomService {
       },
     );
   }
+
+  static const _residentialTemplates = <DealTaskTemplate>[
+    DealTaskTemplate(
+      'Define needs and budget',
+      'Record must-haves, preferred areas, maximum monthly carrying cost and decision-makers.',
+      'discovery',
+      'planning',
+    ),
+    DealTaskTemplate(
+      'Confirm representation',
+      'Review the buyer agency agreement, scope, compensation and conflicts with the selected realtor.',
+      'discovery',
+      'team',
+    ),
+    DealTaskTemplate(
+      'Obtain mortgage pre-approval',
+      'Confirm maximum loan, down payment, rate hold, stress-test assumptions and expiry date.',
+      'financing',
+      'financing',
+    ),
+    DealTaskTemplate(
+      'Document available funds',
+      'Confirm down payment, deposit and closing-cost funds and where each amount is held.',
+      'financing',
+      'financing',
+    ),
+    DealTaskTemplate(
+      'Build the property shortlist',
+      'Compare location, condition, strata, taxes, commute, schools and resale considerations.',
+      'search',
+      'property',
+    ),
+    DealTaskTemplate(
+      'Review comparable sales',
+      'Assess recent licensed comparables and document adjustments supporting the offer range.',
+      'offer',
+      'valuation',
+    ),
+    DealTaskTemplate(
+      'Prepare offer and conditions',
+      'Set price, deposit, completion, possession and conditions for financing, inspection and documents.',
+      'offer',
+      'legal',
+    ),
+    DealTaskTemplate(
+      'Complete property inspection',
+      'Review structure, systems, moisture, safety, maintenance and major future capital items.',
+      'diligence',
+      'property',
+    ),
+    DealTaskTemplate(
+      'Review title and disclosures',
+      'Check title, charges, easements, property disclosure statement and known defects with counsel.',
+      'diligence',
+      'legal',
+    ),
+    DealTaskTemplate(
+      'Review strata or condo records',
+      'Review bylaws, minutes, depreciation report, insurance, contingency reserve and special levies.',
+      'diligence',
+      'property',
+    ),
+    DealTaskTemplate(
+      'Finalize financing',
+      'Submit the accepted contract, satisfy lender conditions and confirm final mortgage instructions.',
+      'diligence',
+      'financing',
+    ),
+    DealTaskTemplate(
+      'Bind property insurance',
+      'Confirm coverage, exclusions, deductible, replacement cost and effective date.',
+      'closing',
+      'insurance',
+    ),
+    DealTaskTemplate(
+      'Approve closing statement',
+      'Review adjustments, property transfer tax, legal fees and cash required to close.',
+      'closing',
+      'legal',
+    ),
+    DealTaskTemplate(
+      'Complete final walkthrough',
+      'Verify agreed condition, inclusions, repairs and vacant possession before completion.',
+      'closing',
+      'property',
+    ),
+    DealTaskTemplate(
+      'Complete purchase and possession',
+      'Sign closing documents, transfer funds, receive keys and record warranties and service contacts.',
+      'complete',
+      'closing',
+    ),
+  ];
+
+  static const _commercialTemplates = <DealTaskTemplate>[
+    DealTaskTemplate(
+      'Define investment mandate',
+      'Set asset class, geography, target return, hold period, leverage and risk limits.',
+      'discovery',
+      'planning',
+    ),
+    DealTaskTemplate(
+      'Assemble acquisition team',
+      'Confirm broker, lender, commercial lawyer, accountant, inspector and environmental consultants.',
+      'discovery',
+      'team',
+    ),
+    DealTaskTemplate(
+      'Build initial underwriting',
+      'Model rent roll, recoveries, vacancy, operating costs, capital needs, NOI, cap rate and exit.',
+      'underwriting',
+      'financial',
+    ),
+    DealTaskTemplate(
+      'Stress-test downside cases',
+      'Test vacancy, renewal probability, interest rates, capex, rent decline and exit cap expansion.',
+      'underwriting',
+      'risk',
+    ),
+    DealTaskTemplate(
+      'Confirm financing strategy',
+      'Compare term, amortization, recourse, covenants, fees, reserves and lender underwriting.',
+      'financing',
+      'financing',
+    ),
+    DealTaskTemplate(
+      'Submit letter of intent',
+      'Set price, deposit, exclusivity, diligence access, financing condition and closing structure.',
+      'offer',
+      'legal',
+    ),
+    DealTaskTemplate(
+      'Review title, survey and zoning',
+      'Confirm permitted use, access, easements, encroachments, parking and development constraints.',
+      'diligence',
+      'legal',
+    ),
+    DealTaskTemplate(
+      'Audit leases and rent roll',
+      'Reconcile leases, amendments, arrears, inducements, options, deposits and tenant correspondence.',
+      'diligence',
+      'leasing',
+    ),
+    DealTaskTemplate(
+      'Inspect building and systems',
+      'Assess envelope, roof, structure, HVAC, electrical, plumbing, elevators and accessibility.',
+      'diligence',
+      'property',
+    ),
+    DealTaskTemplate(
+      'Complete environmental review',
+      'Complete appropriate Phase I/II work and evaluate remediation and reliance rights.',
+      'diligence',
+      'environmental',
+    ),
+    DealTaskTemplate(
+      'Validate operating statements',
+      'Reconcile taxes, utilities, repairs, management, recoveries and normalized NOI.',
+      'diligence',
+      'financial',
+    ),
+    DealTaskTemplate(
+      'Review service contracts',
+      'Check property management, maintenance, security, equipment leases and termination rights.',
+      'diligence',
+      'operations',
+    ),
+    DealTaskTemplate(
+      'Negotiate purchase agreement',
+      'Resolve representations, conditions, adjustments, holdbacks, indemnities and closing deliverables.',
+      'legal',
+      'legal',
+    ),
+    DealTaskTemplate(
+      'Satisfy lender conditions',
+      'Deliver valuation, environmental, leases, insurance, entity and legal documentation.',
+      'closing',
+      'financing',
+    ),
+    DealTaskTemplate(
+      'Approve closing funds and adjustments',
+      'Confirm tax, rent, deposit, utility and operating-cost adjustments and closing funds.',
+      'closing',
+      'closing',
+    ),
+    DealTaskTemplate(
+      'Launch ownership transition',
+      'Notify tenants and vendors, transfer accounts and execute the first 100-day asset plan.',
+      'complete',
+      'transition',
+    ),
+  ];
+
+  static const _businessTemplates = <DealTaskTemplate>[
+    DealTaskTemplate(
+      'Define acquisition criteria',
+      'Set industry, geography, purchase range, owner role, target earnings and risk limits.',
+      'discovery',
+      'planning',
+    ),
+    DealTaskTemplate(
+      'Confirm adviser team',
+      'Select business broker, M&A counsel, accountant/QoE, lender, tax and insurance advisers.',
+      'discovery',
+      'team',
+    ),
+    DealTaskTemplate(
+      'Execute confidentiality agreement',
+      'Review permitted use, disclosure restrictions, clean-team needs and return/destruction terms.',
+      'screening',
+      'confidentiality',
+    ),
+    DealTaskTemplate(
+      'Complete initial viability screen',
+      'Test normalized earnings, owner compensation, debt service, working capital and buyer cash flow.',
+      'screening',
+      'financial',
+    ),
+    DealTaskTemplate(
+      'Review information memorandum',
+      'Identify unsupported claims, missing evidence and questions for management.',
+      'screening',
+      'commercial',
+    ),
+    DealTaskTemplate(
+      'Prepare and negotiate LOI',
+      'Set price, structure, working capital, exclusivity, financing, diligence and transition expectations.',
+      'offer',
+      'legal',
+    ),
+    DealTaskTemplate(
+      'Complete quality of earnings',
+      'Reconcile financial statements, tax returns, bank activity, add-backs and normalized EBITDA/SDE.',
+      'diligence',
+      'financial',
+    ),
+    DealTaskTemplate(
+      'Analyze customers and revenue',
+      'Review concentration, churn, contracts, pipeline, pricing, recurring revenue and bad debts.',
+      'diligence',
+      'commercial',
+    ),
+    DealTaskTemplate(
+      'Analyze suppliers and operations',
+      'Review concentration, lead times, inventory, capacity, quality systems and key dependencies.',
+      'diligence',
+      'operations',
+    ),
+    DealTaskTemplate(
+      'Review people and owner dependence',
+      'Assess key employees, compensation, contractors, liabilities, retention and succession risk.',
+      'diligence',
+      'people',
+    ),
+    DealTaskTemplate(
+      'Review legal and regulatory matters',
+      'Check entity records, licences, disputes, IP, privacy, material contracts and compliance.',
+      'diligence',
+      'legal',
+    ),
+    DealTaskTemplate(
+      'Assess technology and cybersecurity',
+      'Review systems ownership, access, backups, incidents, vendors and transition requirements.',
+      'diligence',
+      'technology',
+    ),
+    DealTaskTemplate(
+      'Finalize financing and working capital',
+      'Confirm lender structure, covenants, equity, seller financing and opening liquidity.',
+      'financing',
+      'financing',
+    ),
+    DealTaskTemplate(
+      'Finalize tax and acquisition structure',
+      'Compare asset/share structure, allocations, rollover options and post-close tax obligations.',
+      'legal',
+      'tax',
+    ),
+    DealTaskTemplate(
+      'Negotiate definitive agreements',
+      'Resolve representations, indemnities, holdbacks, earn-outs, conditions and closing deliverables.',
+      'legal',
+      'legal',
+    ),
+    DealTaskTemplate(
+      'Complete closing readiness review',
+      'Confirm funds flow, consents, releases, insurance, accounts, payroll and Day One communications.',
+      'closing',
+      'closing',
+    ),
+    DealTaskTemplate(
+      'Execute 100-day transition plan',
+      'Transfer relationships and knowledge, retain key people and monitor cash, customers and milestones.',
+      'transition',
+      'transition',
+    ),
+    DealTaskTemplate(
+      'Close transition and measure thesis',
+      'Compare actual performance with the acquisition thesis and assign ongoing improvement actions.',
+      'complete',
+      'transition',
+    ),
+  ];
 }

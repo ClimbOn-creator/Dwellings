@@ -28,6 +28,8 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
   late Future<List<DealRoom>> _rooms;
   late PlatformSide _side;
   bool _creating = false;
+  bool _showAll = true;
+  bool _showArchived = false;
 
   @override
   void initState() {
@@ -37,6 +39,42 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
   }
 
   void _refresh() => setState(() => _rooms = DealRoomService.loadRooms());
+
+  Future<void> _manualCreate() async {
+    final result = await showDialog<_NewDealDetails>(
+      context: context,
+      builder: (_) => _NewDealDialog(
+        initialKind: _side == PlatformSide.business
+            ? 'business'
+            : 'residential',
+      ),
+    );
+    if (result == null) return;
+    setState(() => _creating = true);
+    try {
+      final room = await DealRoomService.createManualRoom(
+        title: result.title,
+        dealKind: result.kind,
+        location: result.location,
+        purchasePrice: result.purchasePrice,
+        goals: result.goals,
+        targetCloseDate: result.targetCloseDate,
+      );
+      if (!mounted) return;
+      await Navigator.of(
+        context,
+      ).push(MaterialPageRoute<void>(builder: (_) => DealRoomPage(room: room)));
+      _refresh();
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not create deal: $error')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _creating = false);
+    }
+  }
 
   Future<void> _create() async {
     if (_side == PlatformSide.business) {
@@ -88,19 +126,30 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                         child: Center(child: CircularProgressIndicator()),
                       );
                     }
-                    final rooms = snapshot.data!
-                        .where(
-                          (room) => _side == PlatformSide.business
-                              ? room.isBusiness
-                              : !room.isBusiness,
-                        )
-                        .toList();
+                    final allRooms = snapshot.data!;
+                    final rooms = allRooms.where((room) {
+                      final lifecycleMatch = _showArchived
+                          ? room.status == 'archived' ||
+                                room.status == 'completed' ||
+                                room.status == 'cancelled'
+                          : room.status != 'archived' &&
+                                room.status != 'completed' &&
+                                room.status != 'cancelled';
+                      final sideMatch = _showAll
+                          ? true
+                          : _side == PlatformSide.business
+                          ? room.isBusiness
+                          : !room.isBusiness;
+                      return lifecycleMatch && sideMatch;
+                    }).toList();
                     if (rooms.isEmpty) return _empty();
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        _summary(allRooms),
+                        const SizedBox(height: 26),
                         Text(
-                          '${rooms.length} ACTIVE WORKSPACE${rooms.length == 1 ? '' : 'S'}',
+                          '${rooms.length} ${_showArchived ? 'PAST' : 'CURRENT'} DEAL${rooms.length == 1 ? '' : 'S'}',
                           style: const TextStyle(
                             color: _purple,
                             fontSize: 10,
@@ -140,23 +189,45 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                     child: const DwellingIqLogo(size: 46),
                   ),
                   const Spacer(),
-                  PlatformSwitcher(
-                    selected: _side,
-                    onChanged: (side) => setState(() => _side = side),
-                    compact: true,
-                  ),
-                  const SizedBox(width: 10),
+                  if (MediaQuery.sizeOf(context).width >= 700)
+                    PlatformSwitcher(
+                      selected: _showAll ? null : _side,
+                      onChanged: (side) => setState(() {
+                        _side = side;
+                        _showAll = false;
+                      }),
+                      compact: true,
+                    ),
+                  if (MediaQuery.sizeOf(context).width >= 700)
+                    const SizedBox(width: 10),
                   TextButton.icon(
                     onPressed: () => Navigator.pop(context),
                     style: TextButton.styleFrom(foregroundColor: Colors.white),
                     icon: const Icon(Icons.arrow_back, size: 17),
-                    label: const Text('PROFILE'),
+                    label: Text(
+                      MediaQuery.sizeOf(context).width < 520
+                          ? 'BACK'
+                          : 'PROFILE',
+                    ),
                   ),
                 ],
               ),
+              if (MediaQuery.sizeOf(context).width < 700) ...[
+                const SizedBox(height: 12),
+                PlatformSwitcher(
+                  selected: _showAll ? null : _side,
+                  onChanged: (side) => setState(() {
+                    _side = side;
+                    _showAll = false;
+                  }),
+                  compact: true,
+                ),
+              ],
               const SizedBox(height: 68),
               Text(
-                _side == PlatformSide.business
+                _showAll
+                    ? 'CURRENT DEALS'
+                    : _side == PlatformSide.business
                     ? 'DEALIQ WORKSPACES'
                     : 'PROPERTYIQ WORKSPACES',
                 style: const TextStyle(
@@ -168,7 +239,9 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
               ),
               const SizedBox(height: 14),
               Text(
-                _side == PlatformSide.business
+                _showAll
+                    ? 'Every acquisition.\nOne command centre.'
+                    : _side == PlatformSide.business
                     ? 'Every acquisition.\nOne working team.'
                     : 'Every property.\nOne working team.',
                 style: TextStyle(
@@ -180,10 +253,12 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                 ),
               ),
               const SizedBox(height: 28),
-              const SizedBox(
+              SizedBox(
                 width: 650,
                 child: Text(
-                  'Turn a saved property or business assessment into a private workspace for decisions, diligence, financing, legal work and closing.',
+                  _showAll
+                      ? 'Start, organize and finish residential, commercial and business acquisitions with clear stages, owners, deadlines and blockers.'
+                      : 'Turn an assessment into a private workspace for decisions, diligence, financing, legal work and closing.',
                   style: TextStyle(
                     color: Color(0xFFC5C5D0),
                     height: 1.55,
@@ -192,29 +267,61 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                 ),
               ),
               const SizedBox(height: 26),
-              FilledButton.icon(
-                onPressed: _creating ? null : _create,
-                style: FilledButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: _ink,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 22,
-                    vertical: 18,
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: [
+                  FilledButton.icon(
+                    onPressed: _creating ? null : _manualCreate,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: _ink,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 22,
+                        vertical: 18,
+                      ),
+                    ),
+                    icon: _creating
+                        ? const SizedBox.square(
+                            dimension: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.add),
+                    label: Text(_creating ? 'CREATING…' : 'START A NEW DEAL'),
                   ),
-                ),
-                icon: _creating
-                    ? const SizedBox.square(
-                        dimension: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.add),
-                label: Text(
-                  _creating
-                      ? 'CREATING…'
-                      : _side == PlatformSide.business
-                      ? 'START BUSINESS ASSESSMENT'
-                      : 'CREATE FROM LATEST ANALYSIS',
-                ),
+                  if (_side == PlatformSide.property)
+                    OutlinedButton.icon(
+                      onPressed: _creating ? null : _create,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        side: const BorderSide(color: Colors.white38),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 18,
+                        ),
+                      ),
+                      icon: const Icon(Icons.auto_graph, size: 18),
+                      label: const Text('USE LATEST ANALYSIS'),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  ChoiceChip(
+                    label: const Text('ALL DEALS'),
+                    selected: _showAll,
+                    onSelected: (_) => setState(() => _showAll = true),
+                  ),
+                  ChoiceChip(
+                    label: Text(_showArchived ? 'PAST / ARCHIVED' : 'CURRENT'),
+                    selected: _showArchived,
+                    onSelected: (value) =>
+                        setState(() => _showArchived = value),
+                  ),
+                ],
               ),
             ],
           ),
@@ -235,27 +342,83 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
         const Icon(Icons.meeting_room_outlined, size: 44, color: _purple),
         const SizedBox(height: 15),
         Text(
-          _side == PlatformSide.business
-              ? 'No business acquisition workspaces yet'
-              : 'No property Deal Rooms yet',
+          _showArchived ? 'No past deals yet' : 'No current deals yet',
           style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 8),
         Text(
-          _side == PlatformSide.business
-              ? 'Run a DealIQ viability assessment, then create its guided acquisition workspace.'
-              : 'Run and save a property analysis, then create its collaborative workspace here.',
+          _showArchived
+              ? 'Completed, cancelled and archived transactions will remain available here.'
+              : 'Start a residential, commercial or business transaction and the guided checklist will be created automatically.',
           textAlign: TextAlign.center,
           style: TextStyle(color: Color(0xFF666674)),
         ),
         const SizedBox(height: 18),
         FilledButton(
-          onPressed: _creating ? null : _create,
-          child: Text(
-            _side == PlatformSide.business
-                ? 'OPEN BUSINESS ASSESSMENT'
-                : 'CREATE DEAL ROOM',
-          ),
+          onPressed: _creating ? null : _manualCreate,
+          child: const Text('START A NEW DEAL'),
+        ),
+      ],
+    ),
+  );
+
+  Widget _summary(List<DealRoom> rooms) {
+    final active = rooms
+        .where(
+          (room) =>
+              room.status != 'completed' &&
+              room.status != 'cancelled' &&
+              room.status != 'archived',
+        )
+        .toList();
+    final blocked = active.fold<int>(
+      0,
+      (total, room) => total + room.blockedTaskCount,
+    );
+    final now = DateTime.now();
+    final dueSoon = active.where((room) {
+      final due = room.nextDueAt;
+      return due != null && due.isBefore(now.add(const Duration(days: 8)));
+    }).length;
+    return Wrap(
+      spacing: 12,
+      runSpacing: 12,
+      children: [
+        _summaryMetric('${active.length}', 'ACTIVE DEALS', Icons.track_changes),
+        _summaryMetric('$blocked', 'BLOCKED TASKS', Icons.warning_amber),
+        _summaryMetric('$dueSoon', 'DUE IN 7 DAYS', Icons.event_outlined),
+      ],
+    );
+  }
+
+  Widget _summaryMetric(String value, String label, IconData icon) => Container(
+    width: 210,
+    padding: const EdgeInsets.all(18),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(17),
+      border: Border.all(color: const Color(0xFFE2E2E9)),
+    ),
+    child: Row(
+      children: [
+        Icon(icon, color: _purple, size: 20),
+        const SizedBox(width: 12),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              value,
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
+            ),
+            Text(
+              label,
+              style: const TextStyle(
+                color: Color(0xFF777785),
+                fontSize: 8,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ],
         ),
       ],
     ),
@@ -310,6 +473,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                       ),
                     ),
                     _status(room.status),
+                    _status(room.dealKind),
                     if (!room.ownedByCurrentUser) _status('shared'),
                   ],
                 ),
@@ -323,6 +487,8 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                         decimalDigits: 0,
                       ).format(room.purchasePrice),
                     'Updated ${DateFormat.MMMd().format(room.updatedAt)}',
+                    if (room.targetCloseDate != null)
+                      'Target ${DateFormat.MMMd().format(room.targetCloseDate!)}',
                   ].join(' · '),
                   style: const TextStyle(
                     color: Color(0xFF666674),
@@ -356,7 +522,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'CURRENT STEP · ${room.currentStep.toUpperCase()}',
+                  '${room.currentStage.toUpperCase()} · ${room.currentStep.toUpperCase()}',
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
@@ -366,6 +532,17 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                     letterSpacing: .45,
                   ),
                 ),
+                if (room.blockedTaskCount > 0) ...[
+                  const SizedBox(height: 7),
+                  Text(
+                    '${room.blockedTaskCount} BLOCKER${room.blockedTaskCount == 1 ? '' : 'S'} NEED ATTENTION',
+                    style: const TextStyle(
+                      color: Color(0xFFB42318),
+                      fontSize: 9,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -392,6 +569,331 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
   );
 }
 
+class _NewDealDetails {
+  const _NewDealDetails({
+    required this.title,
+    required this.kind,
+    required this.location,
+    required this.purchasePrice,
+    required this.goals,
+    required this.targetCloseDate,
+  });
+  final String title;
+  final String kind;
+  final String location;
+  final double purchasePrice;
+  final String goals;
+  final DateTime? targetCloseDate;
+}
+
+class _NewDealDialog extends StatefulWidget {
+  const _NewDealDialog({required this.initialKind});
+  final String initialKind;
+
+  @override
+  State<_NewDealDialog> createState() => _NewDealDialogState();
+}
+
+class _NewDealDialogState extends State<_NewDealDialog> {
+  final _title = TextEditingController();
+  final _location = TextEditingController();
+  final _price = TextEditingController();
+  final _goals = TextEditingController();
+  late String _kind;
+  DateTime? _targetDate;
+
+  @override
+  void initState() {
+    super.initState();
+    _kind = widget.initialKind;
+  }
+
+  @override
+  void dispose() {
+    _title.dispose();
+    _location.dispose();
+    _price.dispose();
+    _goals.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickDate() async {
+    final date = await showDatePicker(
+      context: context,
+      initialDate: _targetDate ?? DateTime.now().add(const Duration(days: 60)),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 3650)),
+    );
+    if (date != null) setState(() => _targetDate = date);
+  }
+
+  void _submit() {
+    if (_title.text.trim().isEmpty) return;
+    Navigator.pop(
+      context,
+      _NewDealDetails(
+        title: _title.text.trim(),
+        kind: _kind,
+        location: _location.text.trim(),
+        purchasePrice:
+            double.tryParse(_price.text.replaceAll(',', '').trim()) ?? 0,
+        goals: _goals.text.trim(),
+        targetCloseDate: _targetDate,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    backgroundColor: Colors.white,
+    surfaceTintColor: Colors.transparent,
+    title: const Text('Start a new deal'),
+    content: SizedBox(
+      width: 560,
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            DropdownButtonFormField<String>(
+              initialValue: _kind,
+              decoration: const InputDecoration(labelText: 'Transaction type'),
+              items: const [
+                DropdownMenuItem(
+                  value: 'residential',
+                  child: Text('Residential property'),
+                ),
+                DropdownMenuItem(
+                  value: 'commercial',
+                  child: Text('Commercial property'),
+                ),
+                DropdownMenuItem(
+                  value: 'business',
+                  child: Text('Business acquisition'),
+                ),
+              ],
+              onChanged: (value) => setState(() => _kind = value ?? _kind),
+            ),
+            const SizedBox(height: 13),
+            TextField(
+              controller: _title,
+              autofocus: true,
+              decoration: InputDecoration(
+                labelText: _kind == 'business'
+                    ? 'Business or opportunity name'
+                    : 'Property or deal name',
+              ),
+            ),
+            const SizedBox(height: 13),
+            TextField(
+              controller: _location,
+              decoration: const InputDecoration(
+                labelText: 'Address, city or market',
+              ),
+            ),
+            const SizedBox(height: 13),
+            TextField(
+              controller: _price,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Expected purchase price (CAD)',
+                prefixText: r'$ ',
+              ),
+            ),
+            const SizedBox(height: 13),
+            TextField(
+              controller: _goals,
+              minLines: 2,
+              maxLines: 4,
+              decoration: const InputDecoration(
+                labelText: 'Goals and important context',
+              ),
+            ),
+            const SizedBox(height: 13),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: _pickDate,
+                icon: const Icon(Icons.event_outlined),
+                label: Text(
+                  _targetDate == null
+                      ? 'ADD TARGET CLOSING DATE'
+                      : 'TARGET ${DateFormat.yMMMd().format(_targetDate!)}',
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              '${DealRoomService.templatesFor(_kind).length} guided tasks will be created across ${DealRoomService.stagesFor(_kind).length} transaction stages.',
+              style: const TextStyle(color: Color(0xFF666674), fontSize: 11),
+            ),
+          ],
+        ),
+      ),
+    ),
+    actions: [
+      TextButton(
+        onPressed: () => Navigator.pop(context),
+        child: const Text('CANCEL'),
+      ),
+      FilledButton(onPressed: _submit, child: const Text('CREATE DEAL')),
+    ],
+  );
+}
+
+class _TaskUpdate {
+  const _TaskUpdate({
+    required this.status,
+    required this.blockerNote,
+    required this.dueAt,
+    required this.assignedProviderId,
+  });
+  final String status;
+  final String blockerNote;
+  final DateTime? dueAt;
+  final String? assignedProviderId;
+}
+
+class _TaskDialog extends StatefulWidget {
+  const _TaskDialog({required this.task, required this.members});
+  final DealRoomTask task;
+  final List<DealRoomMember> members;
+
+  @override
+  State<_TaskDialog> createState() => _TaskDialogState();
+}
+
+class _TaskDialogState extends State<_TaskDialog> {
+  late String _status;
+  late DateTime? _dueAt;
+  late String? _assignedProviderId;
+  late final TextEditingController _blocker;
+
+  @override
+  void initState() {
+    super.initState();
+    _status = widget.task.status;
+    _dueAt = widget.task.dueAt;
+    _assignedProviderId = widget.task.assignedProviderId;
+    _blocker = TextEditingController(text: widget.task.blockerNote);
+  }
+
+  @override
+  void dispose() {
+    _blocker.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    title: Text(widget.task.title),
+    content: SizedBox(
+      width: 520,
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (widget.task.details.isNotEmpty)
+              Text(
+                widget.task.details,
+                style: const TextStyle(color: Color(0xFF666674), height: 1.45),
+              ),
+            const SizedBox(height: 16),
+            DropdownButtonFormField<String>(
+              initialValue: _status,
+              decoration: const InputDecoration(labelText: 'Task status'),
+              items: const [
+                DropdownMenuItem(
+                  value: 'not_started',
+                  child: Text('Not started'),
+                ),
+                DropdownMenuItem(
+                  value: 'in_progress',
+                  child: Text('In progress'),
+                ),
+                DropdownMenuItem(value: 'blocked', child: Text('Blocked')),
+                DropdownMenuItem(value: 'completed', child: Text('Completed')),
+              ],
+              onChanged: (value) => setState(() => _status = value ?? _status),
+            ),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<String?>(
+              initialValue: _assignedProviderId,
+              decoration: const InputDecoration(labelText: 'Assigned to'),
+              items: [
+                const DropdownMenuItem<String?>(
+                  value: null,
+                  child: Text('Unassigned / deal owner'),
+                ),
+                ...widget.members.map(
+                  (member) => DropdownMenuItem<String?>(
+                    value: member.provider.id,
+                    child: Text(member.provider.name),
+                  ),
+                ),
+              ],
+              onChanged: (value) => setState(() => _assignedProviderId = value),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () async {
+                  final selected = await showDatePicker(
+                    context: context,
+                    initialDate:
+                        _dueAt ?? DateTime.now().add(const Duration(days: 7)),
+                    firstDate: DateTime.now().subtract(
+                      const Duration(days: 365),
+                    ),
+                    lastDate: DateTime.now().add(const Duration(days: 3650)),
+                  );
+                  if (selected != null) setState(() => _dueAt = selected);
+                },
+                icon: const Icon(Icons.event_outlined),
+                label: Text(
+                  _dueAt == null
+                      ? 'ADD DUE DATE'
+                      : 'DUE ${DateFormat.yMMMd().format(_dueAt!)}',
+                ),
+              ),
+            ),
+            if (_status == 'blocked') ...[
+              const SizedBox(height: 12),
+              TextField(
+                controller: _blocker,
+                minLines: 2,
+                maxLines: 4,
+                decoration: const InputDecoration(
+                  labelText: 'What is blocking this task?',
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    ),
+    actions: [
+      TextButton(
+        onPressed: () => Navigator.pop(context),
+        child: const Text('CANCEL'),
+      ),
+      FilledButton(
+        onPressed: () => Navigator.pop(
+          context,
+          _TaskUpdate(
+            status: _status,
+            blockerNote: _blocker.text,
+            dueAt: _dueAt,
+            assignedProviderId: _assignedProviderId,
+          ),
+        ),
+        child: const Text('SAVE TASK'),
+      ),
+    ],
+  );
+}
+
 class DealRoomPage extends StatefulWidget {
   const DealRoomPage({super.key, required this.room});
   final DealRoom room;
@@ -406,6 +908,7 @@ class _DealRoomPageState extends State<DealRoomPage> {
   final _note = TextEditingController();
   final _timeline = TextEditingController();
   final _goals = TextEditingController();
+  DateTime? _targetDate;
   bool _saving = false;
   bool _uploading = false;
 
@@ -415,6 +918,7 @@ class _DealRoomPageState extends State<DealRoomPage> {
     _room = widget.room;
     _timeline.text = _room.timeline;
     _goals.text = _room.goals;
+    _targetDate = _room.targetCloseDate;
     _bundle = DealRoomService.loadBundle(_room);
   }
 
@@ -429,14 +933,17 @@ class _DealRoomPageState extends State<DealRoomPage> {
   void _refresh() =>
       setState(() => _bundle = DealRoomService.loadBundle(_room));
 
-  Future<void> _saveRoom(String status) async {
+  Future<void> _saveRoom(String status, {String? currentStage}) async {
     setState(() => _saving = true);
     try {
+      final nextStage = currentStage ?? _room.currentStage;
       await DealRoomService.updateRoom(
         roomId: _room.id,
         status: status,
         timeline: _timeline.text,
         goals: _goals.text,
+        currentStage: nextStage,
+        targetCloseDate: _targetDate,
       );
       _room = DealRoom(
         id: _room.id,
@@ -453,9 +960,15 @@ class _DealRoomPageState extends State<DealRoomPage> {
         sharingPreferences: _room.sharingPreferences,
         updatedAt: DateTime.now(),
         transactionType: _room.transactionType,
+        dealKind: _room.dealKind,
+        currentStage: nextStage,
+        targetCloseDate: _targetDate,
+        archivedAt: status == 'archived' ? DateTime.now() : null,
         completedTaskCount: _room.completedTaskCount,
         totalTaskCount: _room.totalTaskCount,
         currentStep: _room.currentStep,
+        blockedTaskCount: _room.blockedTaskCount,
+        nextDueAt: _room.nextDueAt,
       );
       _refresh();
     } finally {
@@ -484,9 +997,15 @@ class _DealRoomPageState extends State<DealRoomPage> {
         sharingPreferences: preferences,
         updatedAt: DateTime.now(),
         transactionType: _room.transactionType,
+        dealKind: _room.dealKind,
+        currentStage: _room.currentStage,
+        targetCloseDate: _room.targetCloseDate,
+        archivedAt: _room.archivedAt,
         completedTaskCount: _room.completedTaskCount,
         totalTaskCount: _room.totalTaskCount,
         currentStep: _room.currentStep,
+        blockedTaskCount: _room.blockedTaskCount,
+        nextDueAt: _room.nextDueAt,
       );
     });
   }
@@ -541,6 +1060,8 @@ class _DealRoomPageState extends State<DealRoomPage> {
                       children: [
                         if (_room.isBusiness) _businessSecurityBoundary(),
                         if (_room.isBusiness) const SizedBox(height: 18),
+                        _commandBar(bundle.tasks),
+                        const SizedBox(height: 18),
                         _metrics(),
                         const SizedBox(height: 24),
                         LayoutBuilder(
@@ -568,7 +1089,7 @@ class _DealRoomPageState extends State<DealRoomPage> {
                           },
                         ),
                         const SizedBox(height: 24),
-                        _checklist(bundle.tasks),
+                        _checklist(bundle.tasks, bundle.members),
                         const SizedBox(height: 24),
                         if (!_room.isBusiness &&
                             (_room.ownedByCurrentUser ||
@@ -672,7 +1193,7 @@ class _DealRoomPageState extends State<DealRoomPage> {
               ),
               const SizedBox(height: 14),
               Text(
-                '${_room.status.toUpperCase().replaceAll('_', ' ')} · ${bundle.members.length} TEAM MEMBER${bundle.members.length == 1 ? '' : 'S'}',
+                '${_room.dealKind.toUpperCase()} · ${_room.currentStage.toUpperCase().replaceAll('_', ' ')} · ${bundle.members.length} TEAM MEMBER${bundle.members.length == 1 ? '' : 'S'}',
                 style: const TextStyle(color: Color(0xFFBCAEFF), fontSize: 12),
               ),
             ],
@@ -680,6 +1201,90 @@ class _DealRoomPageState extends State<DealRoomPage> {
         ),
       ),
     ),
+  );
+
+  Widget _commandBar(List<DealRoomTask> tasks) {
+    final next = tasks.cast<DealRoomTask?>().firstWhere(
+      (task) =>
+          task != null && !task.completed && task.stage == _room.currentStage,
+      orElse: () => tasks.cast<DealRoomTask?>().firstWhere(
+        (task) => task != null && !task.completed,
+        orElse: () => null,
+      ),
+    );
+    final blockers = tasks.where((task) => task.blocked).length;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: _ink,
+        borderRadius: BorderRadius.circular(19),
+      ),
+      child: Wrap(
+        spacing: 26,
+        runSpacing: 16,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          SizedBox(
+            width: 420,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'NEXT ACTION',
+                  style: TextStyle(
+                    color: _lilac,
+                    fontSize: 8,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  next?.title ?? 'All guided tasks are complete',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          _commandMetric(
+            blockers == 0 ? 'CLEAR' : '$blockers',
+            blockers == 0 ? 'NO BLOCKERS' : 'BLOCKERS',
+            blockers > 0,
+          ),
+          _commandMetric(
+            _targetDate == null
+                ? 'NOT SET'
+                : DateFormat.MMMd().format(_targetDate!),
+            'TARGET CLOSE',
+            false,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _commandMetric(String value, String label, bool alert) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        value,
+        style: TextStyle(
+          color: alert ? const Color(0xFFFF8177) : Colors.white,
+          fontSize: 17,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+      const SizedBox(height: 4),
+      Text(
+        label,
+        style: const TextStyle(color: Color(0xFF9D9DAC), fontSize: 8),
+      ),
+    ],
   );
 
   Widget _metrics() {
@@ -834,6 +1439,52 @@ class _DealRoomPageState extends State<DealRoomPage> {
             labelText: 'Timeline or target closing date',
           ),
         ),
+        const SizedBox(height: 12),
+        if (_room.ownedByCurrentUser)
+          DropdownButtonFormField<String>(
+            initialValue: _room.currentStage,
+            decoration: const InputDecoration(labelText: 'Current step'),
+            items: DealRoomService.stagesFor(_room.dealKind)
+                .map(
+                  (stage) => DropdownMenuItem(
+                    value: stage,
+                    child: Text(stage.toUpperCase().replaceAll('_', ' ')),
+                  ),
+                )
+                .toList(),
+            onChanged: _saving
+                ? null
+                : (value) => value == null
+                      ? null
+                      : _saveRoom(_room.status, currentStage: value),
+          ),
+        if (_room.ownedByCurrentUser) ...[
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () async {
+                final selected = await showDatePicker(
+                  context: context,
+                  initialDate:
+                      _targetDate ??
+                      DateTime.now().add(const Duration(days: 45)),
+                  firstDate: DateTime.now().subtract(const Duration(days: 365)),
+                  lastDate: DateTime.now().add(const Duration(days: 3650)),
+                );
+                if (selected == null || !mounted) return;
+                setState(() => _targetDate = selected);
+                await _saveRoom(_room.status);
+              },
+              icon: const Icon(Icons.event_outlined),
+              label: Text(
+                _targetDate == null
+                    ? 'ADD TARGET CLOSING DATE'
+                    : 'TARGET CLOSE · ${DateFormat.yMMMd().format(_targetDate!)}',
+              ),
+            ),
+          ),
+        ],
         if (_room.ownedByCurrentUser) ...[
           const SizedBox(height: 14),
           Row(
@@ -849,6 +1500,7 @@ class _DealRoomPageState extends State<DealRoomPage> {
                             'under_offer',
                             'closing',
                             'completed',
+                            'cancelled',
                             'archived',
                           ]
                           .map(
@@ -1004,30 +1656,245 @@ class _DealRoomPageState extends State<DealRoomPage> {
           ),
   );
 
-  Widget _checklist(List<DealRoomTask> tasks) {
+  Future<void> _editTask(
+    DealRoomTask task,
+    List<DealRoomMember> members,
+  ) async {
+    final result = await showDialog<_TaskUpdate>(
+      context: context,
+      builder: (_) => _TaskDialog(task: task, members: members),
+    );
+    if (result == null) return;
+    await DealRoomService.updateTask(
+      taskId: task.id,
+      status: result.status,
+      blockerNote: result.blockerNote,
+      dueAt: result.dueAt,
+      assignedProviderId: result.assignedProviderId,
+    );
+    _refresh();
+  }
+
+  Widget _checklist(List<DealRoomTask> tasks, List<DealRoomMember> members) {
     final complete = tasks.where((task) => task.completed).length;
+    final blocked = tasks.where((task) => task.blocked).length;
+    final grouped = <String, List<DealRoomTask>>{};
+    for (final stage in DealRoomService.stagesFor(_room.dealKind)) {
+      grouped[stage] = tasks.where((task) => task.stage == stage).toList();
+    }
+    for (final task in tasks) {
+      if (!grouped.containsKey(task.stage)) {
+        grouped.putIfAbsent(task.stage, () => []).add(task);
+      }
+    }
     return _card(
-      'Transaction checklist · $complete/${tasks.length}',
+      'Guided transaction plan',
       Column(
-        children: tasks
-            .map(
-              (task) => CheckboxListTile(
-                value: task.completed,
-                onChanged: (value) async {
-                  await DealRoomService.toggleTask(task, value ?? false);
-                  _refresh();
-                },
-                title: Text(task.title),
-                subtitle: Text(task.category.toUpperCase()),
-                contentPadding: EdgeInsets.zero,
-                activeColor: _purple,
-                controlAffinity: ListTileControlAffinity.leading,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: LinearProgressIndicator(
+                    value: tasks.isEmpty ? 0 : complete / tasks.length,
+                    minHeight: 8,
+                    backgroundColor: const Color(0xFFE8E8EF),
+                    color: _purple,
+                  ),
+                ),
               ),
-            )
-            .toList(),
+              const SizedBox(width: 12),
+              Text(
+                '$complete/${tasks.length} COMPLETE',
+                style: const TextStyle(
+                  color: _purple,
+                  fontSize: 9,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
+          ),
+          if (blocked > 0) ...[
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFE9E7),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                '$blocked BLOCKED TASK${blocked == 1 ? '' : 'S'} · Resolve these before the transaction can move cleanly.',
+                style: const TextStyle(
+                  color: Color(0xFF9D2018),
+                  fontSize: 10,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ],
+          const SizedBox(height: 18),
+          ...grouped.entries
+              .where((entry) => entry.value.isNotEmpty)
+              .map((entry) => _stageSection(entry.key, entry.value, members)),
+        ],
       ),
     );
   }
+
+  Widget _stageSection(
+    String stage,
+    List<DealRoomTask> tasks,
+    List<DealRoomMember> members,
+  ) {
+    final complete = tasks.where((task) => task.completed).length;
+    final current = stage == _room.currentStage;
+    return Theme(
+      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+      child: ExpansionTile(
+        initiallyExpanded: current || tasks.any((task) => task.blocked),
+        tilePadding: EdgeInsets.zero,
+        childrenPadding: const EdgeInsets.only(bottom: 12),
+        leading: Container(
+          width: 31,
+          height: 31,
+          decoration: BoxDecoration(
+            color: current ? _purple : const Color(0xFFEDE9FE),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            complete == tasks.length ? Icons.check : Icons.arrow_forward,
+            size: 16,
+            color: current ? Colors.white : _purple,
+          ),
+        ),
+        title: Text(
+          stage.toUpperCase().replaceAll('_', ' '),
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w900,
+            color: current ? _purple : _ink,
+            letterSpacing: .8,
+          ),
+        ),
+        subtitle: Text('$complete/${tasks.length} complete'),
+        children: tasks.map((task) => _taskRow(task, members)).toList(),
+      ),
+    );
+  }
+
+  Widget _taskRow(DealRoomTask task, List<DealRoomMember> members) {
+    final overdue =
+        task.dueAt != null &&
+        !task.completed &&
+        task.dueAt!.isBefore(DateTime.now());
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.fromLTRB(10, 8, 8, 8),
+      decoration: BoxDecoration(
+        color: task.blocked ? const Color(0xFFFFF0EE) : const Color(0xFFF7F7FA),
+        borderRadius: BorderRadius.circular(13),
+        border: Border.all(
+          color: task.blocked
+              ? const Color(0xFFE9A39D)
+              : const Color(0xFFE7E7ED),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Checkbox(
+            value: task.completed,
+            onChanged: (value) async {
+              await DealRoomService.toggleTask(task, value ?? false);
+              _refresh();
+            },
+            activeColor: _purple,
+          ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    task.title,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      decoration: task.completed
+                          ? TextDecoration.lineThrough
+                          : null,
+                    ),
+                  ),
+                  if (task.details.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      task.details,
+                      style: const TextStyle(
+                        color: Color(0xFF666674),
+                        fontSize: 11,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 5,
+                    children: [
+                      _taskTag(task.status, task.blocked),
+                      if (task.dueAt != null)
+                        _taskTag(
+                          '${overdue ? 'OVERDUE' : 'DUE'} ${DateFormat.MMMd().format(task.dueAt!)}',
+                          overdue,
+                        ),
+                      if (task.assignedProviderId != null)
+                        _taskTag('ASSIGNED', false),
+                    ],
+                  ),
+                  if (task.blockerNote.isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      'BLOCKER · ${task.blockerNote}',
+                      style: const TextStyle(
+                        color: Color(0xFF9D2018),
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+          IconButton(
+            onPressed: () => _editTask(task, members),
+            tooltip: 'Task details',
+            icon: const Icon(Icons.tune, size: 18),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _taskTag(String label, bool alert) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+    decoration: BoxDecoration(
+      color: alert ? const Color(0xFFFFDAD6) : const Color(0xFFEDE9FE),
+      borderRadius: BorderRadius.circular(8),
+    ),
+    child: Text(
+      label.toUpperCase().replaceAll('_', ' '),
+      style: TextStyle(
+        color: alert ? const Color(0xFF9D2018) : _purple,
+        fontSize: 7,
+        fontWeight: FontWeight.w900,
+      ),
+    ),
+  );
 
   Widget _notes(List<DealRoomNote> notes) => _card(
     'Shared notes',

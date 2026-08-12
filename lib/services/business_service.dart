@@ -43,6 +43,8 @@ class BusinessService {
           'user_id': user.id,
           'business_assessment_id': assessmentId,
           'transaction_type': 'business',
+          'deal_kind': 'business',
+          'current_stage': 'discovery',
           'title': inputs.businessName.trim().isEmpty
               ? 'Confidential business acquisition'
               : inputs.businessName.trim(),
@@ -60,37 +62,11 @@ class BusinessService {
           },
         })
         .select(
-          'id, user_id, title, property_address, city, purchase_price, timeline, goals, status, transaction_type, property_snapshot, risk_snapshot, sharing_preferences, updated_at',
+          'id, user_id, title, property_address, city, purchase_price, timeline, goals, status, transaction_type, deal_kind, current_stage, target_close_date, archived_at, property_snapshot, risk_snapshot, sharing_preferences, updated_at',
         )
         .single();
     final room = DealRoom.fromJson(Map<String, dynamic>.from(inserted));
-    const stages = [
-      ('Define buyer criteria and acquisition goals', 'planning'),
-      ('Execute confidentiality agreement', 'confidentiality'),
-      ('Collect three years of financial statements', 'financial'),
-      ('Reconcile tax returns and bank statements', 'financial'),
-      ('Verify seller add-backs and normalized earnings', 'financial'),
-      ('Review customers, suppliers and concentration', 'commercial'),
-      ('Assess owner dependence and management transition', 'operations'),
-      ('Review employees, contractors and obligations', 'people'),
-      ('Review leases, licences and material contracts', 'legal'),
-      ('Assess technology, privacy and cybersecurity', 'technology'),
-      ('Confirm financing structure and working capital', 'financing'),
-      ('Prepare and negotiate letter of intent', 'legal'),
-      ('Complete quality-of-earnings review', 'financial'),
-      ('Finalize tax and ownership structure', 'tax'),
-      ('Negotiate purchase agreement and closing conditions', 'legal'),
-      ('Prepare transition and first 100-day plan', 'transition'),
-    ];
-    await _client.from('deal_room_tasks').insert([
-      for (var index = 0; index < stages.length; index++)
-        {
-          'deal_room_id': room.id,
-          'title': stages[index].$1,
-          'category': stages[index].$2,
-          'position': index,
-        },
-    ]);
+    await DealRoomService.addGuidedChecklist(room.id, 'business');
     final selectedAdvisers = await _client
         .from('user_team_members')
         .select('provider_id, provider_profiles!inner(provider_type)')
