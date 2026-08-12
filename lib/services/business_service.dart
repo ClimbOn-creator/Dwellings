@@ -96,9 +96,16 @@ class BusinessService {
         .select('provider_id, provider_profiles!inner(provider_type)')
         .eq('user_id', user.id)
         .inFilter('provider_profiles.provider_type', [
-          'lawyer',
-          'accountant',
-          'lender',
+          'business_broker',
+          'ma_lawyer',
+          'quality_of_earnings',
+          'commercial_lender',
+          'tax_advisor',
+          'insurance_advisor',
+          'human_resources',
+          'cybersecurity',
+          'industry_advisor',
+          'wealth_manager',
         ]);
     if (selectedAdvisers.isNotEmpty) {
       await _client.from('deal_room_members').insert([

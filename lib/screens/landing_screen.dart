@@ -85,7 +85,11 @@ class _LandingScreenState extends State<LandingScreen> {
       controller: _scrollController,
       slivers: [
         SliverToBoxAdapter(
-          child: _Hero(onOpen: _openModel, onExplore: _scrollToCapabilities),
+          child: _Hero(
+            onOpen: _openModel,
+            onBusiness: _openBusiness,
+            onExplore: _scrollToCapabilities,
+          ),
         ),
         const SliverToBoxAdapter(child: _ProofStrip()),
         SliverToBoxAdapter(
@@ -114,8 +118,13 @@ class _LandingScreenState extends State<LandingScreen> {
 }
 
 class _Hero extends StatelessWidget {
-  const _Hero({required this.onOpen, required this.onExplore});
+  const _Hero({
+    required this.onOpen,
+    required this.onBusiness,
+    required this.onExplore,
+  });
   final VoidCallback onOpen;
+  final VoidCallback onBusiness;
   final VoidCallback onExplore;
 
   @override
@@ -123,7 +132,7 @@ class _Hero extends StatelessWidget {
     final width = MediaQuery.sizeOf(context).width;
     final desktop = width >= 900;
     return SizedBox(
-      height: desktop ? 820 : 1280,
+      height: desktop ? 820 : 1480,
       child: Stack(
         fit: StackFit.expand,
         children: [
@@ -137,8 +146,14 @@ class _Hero extends StatelessWidget {
             ),
             child: Column(
               children: [
-                MarketingNavigation(onModel: onOpen),
-                SizedBox(height: desktop ? 70 : 54),
+                MarketingNavigation(onModel: onOpen, onBusiness: onBusiness),
+                SizedBox(height: desktop ? 24 : 20),
+                _PathChooser(
+                  onProperty: onOpen,
+                  onBusiness: onBusiness,
+                  desktop: desktop,
+                ),
+                SizedBox(height: desktop ? 26 : 36),
                 if (desktop)
                   Expanded(
                     child: Row(
@@ -163,6 +178,139 @@ class _Hero extends StatelessWidget {
       ),
     );
   }
+}
+
+class _PathChooser extends StatelessWidget {
+  const _PathChooser({
+    required this.onProperty,
+    required this.onBusiness,
+    required this.desktop,
+  });
+
+  final VoidCallback onProperty;
+  final VoidCallback onBusiness;
+  final bool desktop;
+
+  @override
+  Widget build(BuildContext context) {
+    final property = _PathCard(
+      eyebrow: 'PROPERTYIQ',
+      title: 'Buy property',
+      detail: 'Residential · investment · commercial real estate',
+      icon: Icons.apartment_outlined,
+      onTap: onProperty,
+    );
+    final business = _PathCard(
+      eyebrow: 'DEALIQ',
+      title: 'Buy a business',
+      detail: 'Viability · diligence · financing · transition',
+      icon: Icons.storefront_outlined,
+      onTap: onBusiness,
+    );
+    return desktop
+        ? Row(
+            children: [
+              Expanded(child: property),
+              const SizedBox(width: 12),
+              Expanded(child: business),
+            ],
+          )
+        : Column(children: [property, const SizedBox(height: 10), business]);
+  }
+}
+
+class _PathCard extends StatefulWidget {
+  const _PathCard({
+    required this.eyebrow,
+    required this.title,
+    required this.detail,
+    required this.icon,
+    required this.onTap,
+  });
+
+  final String eyebrow;
+  final String title;
+  final String detail;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  State<_PathCard> createState() => _PathCardState();
+}
+
+class _PathCardState extends State<_PathCard> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) => MouseRegion(
+    onEnter: (_) => setState(() => _hovered = true),
+    onExit: (_) => setState(() => _hovered = false),
+    child: InkWell(
+      onTap: widget.onTap,
+      borderRadius: BorderRadius.circular(22),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 240),
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: _hovered
+              ? _purple.withValues(alpha: .27)
+              : Colors.white.withValues(alpha: .055),
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(
+            color: _hovered
+                ? _lilac.withValues(alpha: .65)
+                : Colors.white.withValues(alpha: .13),
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: .1),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Icon(widget.icon, color: Colors.white),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    widget.eyebrow,
+                    style: const TextStyle(
+                      color: _lilac,
+                      fontSize: 8,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    widget.title,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    widget.detail,
+                    style: const TextStyle(color: _muted, fontSize: 11),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_outward, color: Colors.white70, size: 18),
+          ],
+        ),
+      ),
+    ),
+  );
 }
 
 class _Atmosphere extends StatelessWidget {

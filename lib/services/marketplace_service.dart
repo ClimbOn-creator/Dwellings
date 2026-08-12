@@ -1,8 +1,25 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../models/platform_side.dart';
 import 'backend_service.dart';
 
-enum ProviderCategory { realtor, mortgageBroker, lawyer, accountant, lender }
+enum ProviderCategory {
+  realtor,
+  mortgageBroker,
+  lawyer,
+  accountant,
+  lender,
+  businessBroker,
+  maLawyer,
+  qualityOfEarnings,
+  commercialLender,
+  taxAdvisor,
+  insuranceAdvisor,
+  humanResources,
+  cybersecurity,
+  industryAdvisor,
+  wealthManager,
+}
 
 extension ProviderCategoryLabel on ProviderCategory {
   String get databaseValue => switch (this) {
@@ -11,6 +28,16 @@ extension ProviderCategoryLabel on ProviderCategory {
     ProviderCategory.lawyer => 'lawyer',
     ProviderCategory.accountant => 'accountant',
     ProviderCategory.lender => 'lender',
+    ProviderCategory.businessBroker => 'business_broker',
+    ProviderCategory.maLawyer => 'ma_lawyer',
+    ProviderCategory.qualityOfEarnings => 'quality_of_earnings',
+    ProviderCategory.commercialLender => 'commercial_lender',
+    ProviderCategory.taxAdvisor => 'tax_advisor',
+    ProviderCategory.insuranceAdvisor => 'insurance_advisor',
+    ProviderCategory.humanResources => 'human_resources',
+    ProviderCategory.cybersecurity => 'cybersecurity',
+    ProviderCategory.industryAdvisor => 'industry_advisor',
+    ProviderCategory.wealthManager => 'wealth_manager',
   };
 
   String get label => switch (this) {
@@ -19,8 +46,30 @@ extension ProviderCategoryLabel on ProviderCategory {
     ProviderCategory.lawyer => 'Property lawyers',
     ProviderCategory.accountant => 'Accountants',
     ProviderCategory.lender => 'Banks & lenders',
+    ProviderCategory.businessBroker => 'Business brokers',
+    ProviderCategory.maLawyer => 'M&A lawyers',
+    ProviderCategory.qualityOfEarnings => 'QOE professionals',
+    ProviderCategory.commercialLender => 'Commercial lenders',
+    ProviderCategory.taxAdvisor => 'Tax advisers',
+    ProviderCategory.insuranceAdvisor => 'Insurance advisers',
+    ProviderCategory.humanResources => 'HR specialists',
+    ProviderCategory.cybersecurity => 'Cybersecurity',
+    ProviderCategory.industryAdvisor => 'Industry advisers',
+    ProviderCategory.wealthManager => 'Wealth managers',
+  };
+
+  PlatformSide get side => switch (this) {
+    ProviderCategory.realtor ||
+    ProviderCategory.mortgageBroker ||
+    ProviderCategory.lawyer ||
+    ProviderCategory.accountant ||
+    ProviderCategory.lender => PlatformSide.property,
+    _ => PlatformSide.business,
   };
 }
+
+List<ProviderCategory> providerCategoriesFor(PlatformSide side) =>
+    ProviderCategory.values.where((category) => category.side == side).toList();
 
 class MarketplaceCity {
   const MarketplaceCity(this.city, this.region, this.countryCode);
@@ -200,8 +249,14 @@ class MarketplaceService {
     );
   }
 
-  static Future<MarketplaceDirectory> load(MarketplaceCity city) async {
-    if (!BackendService.configured) return _demo(city);
+  static Future<MarketplaceDirectory> load(
+    MarketplaceCity city, {
+    PlatformSide side = PlatformSide.property,
+  }) async {
+    final providerTypes = providerCategoriesFor(
+      side,
+    ).map((category) => category.databaseValue).toList();
+    if (!BackendService.configured) return _demo(city, side);
     try {
       var rows = await Supabase.instance.client
           .from('provider_profiles')
@@ -215,7 +270,8 @@ class MarketplaceService {
           )
           .eq('provider_regions.service_regions.city', city.city)
           .eq('provider_regions.service_regions.region', city.region)
-          .limit(40);
+          .inFilter('provider_type', providerTypes)
+          .limit(80);
       if (rows.isEmpty) {
         rows = await Supabase.instance.client
             .from('provider_profiles')
@@ -227,7 +283,8 @@ class MarketplaceService {
               'lender_rates(interest_rate, mortgage_type, verified_at, effective_at, expires_at)',
             )
             .eq('is_example', true)
-            .limit(20);
+            .inFilter('provider_type', providerTypes)
+            .limit(80);
       }
       final providers = providersFromRows(rows);
       providers.sort((a, b) {
@@ -240,7 +297,7 @@ class MarketplaceService {
         isDemo: false,
       );
     } catch (_) {
-      return _demo(city);
+      return _demo(city, side);
     }
   }
 
@@ -401,10 +458,20 @@ class MarketplaceService {
         'lawyer' => ProviderCategory.lawyer,
         'accountant' => ProviderCategory.accountant,
         'lender' => ProviderCategory.lender,
+        'business_broker' => ProviderCategory.businessBroker,
+        'ma_lawyer' => ProviderCategory.maLawyer,
+        'quality_of_earnings' => ProviderCategory.qualityOfEarnings,
+        'commercial_lender' => ProviderCategory.commercialLender,
+        'tax_advisor' => ProviderCategory.taxAdvisor,
+        'insurance_advisor' => ProviderCategory.insuranceAdvisor,
+        'human_resources' => ProviderCategory.humanResources,
+        'cybersecurity' => ProviderCategory.cybersecurity,
+        'industry_advisor' => ProviderCategory.industryAdvisor,
+        'wealth_manager' => ProviderCategory.wealthManager,
         _ => null,
       };
 
-  static MarketplaceDirectory _demo(MarketplaceCity city) {
+  static MarketplaceDirectory _demo(MarketplaceCity city, PlatformSide side) {
     final cityName = city.city;
     const names = [
       ('Avery Chen', 'Northline Property Group'),
@@ -438,6 +505,48 @@ class MarketplaceService {
       ('Elena Rossi', 'Rossi Property Tax Advisory'),
       ('Omar Haddad', 'Haddad CPA Practice'),
     ];
+    const businessGroups = <ProviderCategory, List<(String, String)>>{
+      ProviderCategory.businessBroker: [
+        ('Amelia Foster', 'Northstar Business Sales'),
+        ('Liam Desai', 'Pacific Transaction Partners'),
+      ],
+      ProviderCategory.maLawyer: [
+        ('Nadia Campbell', 'Campbell M&A Law'),
+        ('Julian Park', 'Harbour Corporate Legal'),
+      ],
+      ProviderCategory.qualityOfEarnings: [
+        ('Grace Okafor', 'ClearLedger Advisory'),
+        ('Thomas Leung', 'Northline Transaction Services'),
+      ],
+      ProviderCategory.commercialLender: [
+        ('Mia Reynolds', 'Western Commercial Bank'),
+        ('Arjun Mehta', 'Growth Capital Credit'),
+      ],
+      ProviderCategory.taxAdvisor: [
+        ('Sophie Tremblay', 'Continuity Tax Partners'),
+        ('Marcus Chen', 'Keystone Tax Advisory'),
+      ],
+      ProviderCategory.insuranceAdvisor: [
+        ('Olivia Brooks', 'Shieldline Risk'),
+        ('Ethan Clarke', 'Continuum Insurance'),
+      ],
+      ProviderCategory.humanResources: [
+        ('Aisha Morgan', 'PeopleBridge HR'),
+        ('Lucas Nguyen', 'Transition Workforce Advisory'),
+      ],
+      ProviderCategory.cybersecurity: [
+        ('Isabelle Roy', 'SignalFort Security'),
+        ('Mateo Wilson', 'Northwall Cyber'),
+      ],
+      ProviderCategory.industryAdvisor: [
+        ('Chloe Bennett', 'SectorWorks Advisory'),
+        ('Benjamin Singh', 'Operator Insight Group'),
+      ],
+      ProviderCategory.wealthManager: [
+        ('Emma Laurent', 'Longview Private Wealth'),
+        ('Nathan Patel', 'Continuity Wealth Partners'),
+      ],
+    };
     final providers = <MarketplaceProvider>[];
     void addGroup(
       ProviderCategory category,
@@ -460,7 +569,9 @@ class MarketplaceService {
             jobTitle: category.label,
             isExample: true,
             photoIndex: index,
-            rateLabel: category == ProviderCategory.lender
+            rateLabel:
+                category == ProviderCategory.lender ||
+                    category == ProviderCategory.commercialLender
                 ? 'Live quote'
                 : null,
           ),
@@ -468,27 +579,52 @@ class MarketplaceService {
       }
     }
 
-    addGroup(ProviderCategory.realtor, names, 'Buyer representation');
-    addGroup(
-      ProviderCategory.mortgageBroker,
-      brokerNames,
-      'Residential & investment financing',
-    );
-    addGroup(
-      ProviderCategory.lawyer,
-      lawyerNames,
-      'Property purchase & conveyancing',
-    );
-    addGroup(
-      ProviderCategory.accountant,
-      accountants,
-      'Property tax & accounting',
-    );
-    addGroup(
-      ProviderCategory.lender,
-      lenders,
-      'Qualification-dependent pricing',
-    );
+    if (side == PlatformSide.property) {
+      addGroup(ProviderCategory.realtor, names, 'Buyer representation');
+      addGroup(
+        ProviderCategory.mortgageBroker,
+        brokerNames,
+        'Residential & investment financing',
+      );
+      addGroup(
+        ProviderCategory.lawyer,
+        lawyerNames,
+        'Property purchase & conveyancing',
+      );
+      addGroup(
+        ProviderCategory.accountant,
+        accountants,
+        'Property tax & accounting',
+      );
+      addGroup(
+        ProviderCategory.lender,
+        lenders,
+        'Qualification-dependent pricing',
+      );
+    } else {
+      const specialties = {
+        ProviderCategory.businessBroker: 'Search, valuation and negotiation',
+        ProviderCategory.maLawyer: 'LOI, diligence and purchase agreements',
+        ProviderCategory.qualityOfEarnings:
+            'Earnings normalization and financial diligence',
+        ProviderCategory.commercialLender:
+            'Acquisition and working-capital financing',
+        ProviderCategory.taxAdvisor: 'Deal structure and tax diligence',
+        ProviderCategory.insuranceAdvisor:
+            'Transaction, liability and continuity coverage',
+        ProviderCategory.humanResources:
+            'Employment obligations and transition planning',
+        ProviderCategory.cybersecurity:
+            'Technology, privacy and cyber-risk diligence',
+        ProviderCategory.industryAdvisor:
+            'Sector benchmarks and operating diligence',
+        ProviderCategory.wealthManager:
+            'Buyer liquidity and post-close wealth planning',
+      };
+      for (final entry in businessGroups.entries) {
+        addGroup(entry.key, entry.value, specialties[entry.key]!);
+      }
+    }
     return MarketplaceDirectory(city: city, providers: providers, isDemo: true);
   }
 }

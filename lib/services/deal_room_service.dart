@@ -249,8 +249,15 @@ class DealRoomService {
 
     final teamRows = await _client
         .from('user_team_members')
-        .select('provider_id')
-        .eq('user_id', user.id);
+        .select('provider_id, provider_profiles!inner(provider_type)')
+        .eq('user_id', user.id)
+        .inFilter('provider_profiles.provider_type', [
+          'realtor',
+          'mortgage_broker',
+          'lawyer',
+          'accountant',
+          'lender',
+        ]);
     if (teamRows.isNotEmpty) {
       await _client.from('deal_room_members').insert([
         for (final row in teamRows)

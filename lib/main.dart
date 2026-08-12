@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'models/platform_side.dart';
+import 'screens/deal_rooms_page.dart';
+import 'screens/home_screen.dart';
 import 'screens/landing_screen.dart';
 import 'screens/business_acquisition_page.dart';
+import 'screens/local_network_page.dart';
 import 'services/backend_service.dart';
 
 Future<void> main() async {
@@ -70,9 +74,21 @@ class DwellingIqApp extends StatelessWidget {
           ),
         ),
       ),
-      home: Uri.base.queryParameters['module'] == 'business'
-          ? const BusinessAcquisitionPage()
-          : const LandingScreen(),
+      home: _initialPage(),
     );
+  }
+
+  Widget _initialPage() {
+    final module = Uri.base.queryParameters['module'];
+    final side = Uri.base.queryParameters['side'] == 'business'
+        ? PlatformSide.business
+        : PlatformSide.property;
+    return switch (module) {
+      'business' => const BusinessAcquisitionPage(),
+      'property' => const UnderwritingScreen(),
+      'network' => LocalNetworkPage(side: side),
+      'deal-rooms' => DealRoomsPage(initialSide: side),
+      _ => const LandingScreen(),
+    };
   }
 }

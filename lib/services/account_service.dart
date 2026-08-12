@@ -5,7 +5,24 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'backend_service.dart';
 import 'marketplace_service.dart';
 
-enum AccountRole { user, realtor, mortgageBroker, lawyer, accountant, lender }
+enum AccountRole {
+  user,
+  realtor,
+  mortgageBroker,
+  lawyer,
+  accountant,
+  lender,
+  businessBroker,
+  maLawyer,
+  qualityOfEarnings,
+  commercialLender,
+  taxAdvisor,
+  insuranceAdvisor,
+  humanResources,
+  cybersecurity,
+  industryAdvisor,
+  wealthManager,
+}
 
 extension AccountRoleDetails on AccountRole {
   String get databaseValue => switch (this) {
@@ -15,6 +32,16 @@ extension AccountRoleDetails on AccountRole {
     AccountRole.lawyer => 'lawyer',
     AccountRole.accountant => 'accountant',
     AccountRole.lender => 'lender',
+    AccountRole.businessBroker => 'business_broker',
+    AccountRole.maLawyer => 'ma_lawyer',
+    AccountRole.qualityOfEarnings => 'quality_of_earnings',
+    AccountRole.commercialLender => 'commercial_lender',
+    AccountRole.taxAdvisor => 'tax_advisor',
+    AccountRole.insuranceAdvisor => 'insurance_advisor',
+    AccountRole.humanResources => 'human_resources',
+    AccountRole.cybersecurity => 'cybersecurity',
+    AccountRole.industryAdvisor => 'industry_advisor',
+    AccountRole.wealthManager => 'wealth_manager',
   };
 
   String get label => switch (this) {
@@ -24,6 +51,16 @@ extension AccountRoleDetails on AccountRole {
     AccountRole.lawyer => 'Property lawyer',
     AccountRole.accountant => 'Accountant',
     AccountRole.lender => 'Bank or lender',
+    AccountRole.businessBroker => 'Business broker',
+    AccountRole.maLawyer => 'M&A lawyer',
+    AccountRole.qualityOfEarnings => 'QOE professional',
+    AccountRole.commercialLender => 'Commercial lender',
+    AccountRole.taxAdvisor => 'Tax adviser',
+    AccountRole.insuranceAdvisor => 'Insurance adviser',
+    AccountRole.humanResources => 'HR specialist',
+    AccountRole.cybersecurity => 'Cybersecurity consultant',
+    AccountRole.industryAdvisor => 'Industry adviser',
+    AccountRole.wealthManager => 'Wealth manager',
   };
 }
 

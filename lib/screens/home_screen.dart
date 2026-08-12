@@ -3,12 +3,15 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../models/housing_model.dart';
+import '../models/platform_side.dart';
 import '../services/backend_service.dart';
 import '../services/account_service.dart';
 import '../services/marketplace_service.dart';
 import '../widgets/site_footer.dart';
 import '../widgets/auth_button.dart';
 import '../widgets/brand_logo.dart';
+import '../widgets/platform_switcher.dart';
+import 'business_acquisition_page.dart';
 import 'local_network_page.dart';
 import 'deal_rooms_page.dart';
 import 'marketing_pages.dart';
@@ -189,11 +192,16 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => LocalNetworkPage(
+          side: PlatformSide.property,
           initialCity: MarketplaceService.inferCity(_profile.city),
         ),
       ),
     );
   }
+
+  void _openBusiness() => Navigator.of(context).pushReplacement(
+    MaterialPageRoute<void>(builder: (_) => const BusinessAcquisitionPage()),
+  );
 
   Future<void> _analyze() async {
     if (_number('price') <= 0 || _number('area') <= 0) {
@@ -272,7 +280,33 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
                       tooltip: 'Back to DwellingsIQ',
                     )
                   : null,
+              bottom: MediaQuery.sizeOf(context).width < 760
+                  ? PreferredSize(
+                      preferredSize: const Size.fromHeight(54),
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: PlatformSwitcher(
+                          selected: PlatformSide.property,
+                          onChanged: (side) {
+                            if (side == PlatformSide.business) _openBusiness();
+                          },
+                          compact: true,
+                        ),
+                      ),
+                    )
+                  : null,
               actions: [
+                if (MediaQuery.sizeOf(context).width >= 760)
+                  PlatformSwitcher(
+                    selected: PlatformSide.property,
+                    onChanged: (side) {
+                      if (side == PlatformSide.business) _openBusiness();
+                    },
+                    compact: true,
+                  )
+                else
+                  const SizedBox.shrink(),
+                const SizedBox(width: 8),
                 const AuthButton(dark: true),
                 const SizedBox(width: 18),
               ],

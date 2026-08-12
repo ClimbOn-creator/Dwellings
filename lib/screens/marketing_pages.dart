@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 
+import '../models/platform_side.dart';
 import '../widgets/brand_logo.dart';
 import '../widgets/auth_button.dart';
 import '../widgets/site_footer.dart';
+import '../widgets/platform_switcher.dart';
 import 'become_member_page.dart';
+import 'business_acquisition_page.dart';
 import 'home_screen.dart';
 import 'local_network_page.dart';
 
@@ -75,10 +78,18 @@ void openUnderwriting(BuildContext context) {
 }
 
 class MarketingNavigation extends StatelessWidget {
-  const MarketingNavigation({super.key, this.active, this.onModel});
+  const MarketingNavigation({
+    super.key,
+    this.active,
+    this.onModel,
+    this.onBusiness,
+    this.side,
+  });
 
   final MarketingDestination? active;
   final VoidCallback? onModel;
+  final VoidCallback? onBusiness;
+  final PlatformSide? side;
 
   void _home(BuildContext context) =>
       Navigator.of(context).popUntil((route) => route.isFirst);
@@ -86,6 +97,19 @@ class MarketingNavigation extends StatelessWidget {
   void _go(BuildContext context, MarketingDestination destination) {
     if (active == destination) return;
     openMarketingPage(context, destination, replace: active != null);
+  }
+
+  void _openSide(BuildContext context, PlatformSide value) {
+    if (value == PlatformSide.property) {
+      (onModel ?? () => openUnderwriting(context))();
+    } else {
+      (onBusiness ??
+          () => Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => const BusinessAcquisitionPage(),
+            ),
+          ))();
+    }
   }
 
   @override
@@ -106,6 +130,14 @@ class MarketingNavigation extends StatelessWidget {
             borderRadius: BorderRadius.circular(18),
             child: const DwellingIqLogo(size: 44),
           ),
+          if (MediaQuery.sizeOf(context).width >= 760) ...[
+            const SizedBox(width: 10),
+            PlatformSwitcher(
+              selected: side,
+              onChanged: (value) => _openSide(context, value),
+              compact: MediaQuery.sizeOf(context).width < 1180,
+            ),
+          ],
           const Spacer(),
           if (!compact) ...[
             _NavItem(

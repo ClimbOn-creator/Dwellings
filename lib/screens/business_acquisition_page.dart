@@ -2,12 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../models/business_model.dart';
+import '../models/platform_side.dart';
 import '../services/backend_service.dart';
 import '../services/business_service.dart';
+import '../services/marketplace_service.dart';
 import '../widgets/brand_logo.dart';
+import '../widgets/platform_switcher.dart';
 import 'auth_page.dart';
 import 'deal_rooms_page.dart';
+import 'home_screen.dart';
 import 'landing_screen.dart';
+import 'local_network_page.dart';
 
 const _ink = Color(0xFF050510);
 const _paper = Color(0xFFF5F5F7);
@@ -213,6 +218,28 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
     );
   }
 
+  void _openSide(PlatformSide side) {
+    if (side == PlatformSide.business) return;
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute<void>(builder: (_) => const UnderwritingScreen()),
+    );
+  }
+
+  void _openNetwork() => Navigator.of(context).push(
+    MaterialPageRoute<void>(
+      builder: (_) => LocalNetworkPage(
+        side: PlatformSide.business,
+        initialCity: MarketplaceService.inferCity(_location.text),
+      ),
+    ),
+  );
+
+  void _openDealRooms() => Navigator.of(context).push(
+    MaterialPageRoute<void>(
+      builder: (_) => const DealRoomsPage(initialSide: PlatformSide.business),
+    ),
+  );
+
   BusinessInputs get _inputs => BusinessInputs(
     businessName: _businessName.text,
     industry: _industry.text,
@@ -347,6 +374,28 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
                     child: const DwellingIqLogo(size: 46),
                   ),
                   const Spacer(),
+                  if (MediaQuery.sizeOf(context).width >= 820) ...[
+                    PlatformSwitcher(
+                      selected: PlatformSide.business,
+                      onChanged: _openSide,
+                      compact: true,
+                    ),
+                    const SizedBox(width: 8),
+                    TextButton(
+                      onPressed: _openNetwork,
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.white,
+                      ),
+                      child: const Text('NETWORK'),
+                    ),
+                    TextButton(
+                      onPressed: _openDealRooms,
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.white,
+                      ),
+                      child: const Text('DEAL ROOMS'),
+                    ),
+                  ],
                   TextButton.icon(
                     onPressed: _goBack,
                     style: TextButton.styleFrom(foregroundColor: Colors.white),
@@ -355,6 +404,35 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
                   ),
                 ],
               ),
+              if (MediaQuery.sizeOf(context).width < 820) ...[
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    PlatformSwitcher(
+                      selected: PlatformSide.business,
+                      onChanged: _openSide,
+                      compact: true,
+                    ),
+                    TextButton(
+                      onPressed: _openNetwork,
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.white,
+                      ),
+                      child: const Text('NETWORK'),
+                    ),
+                    TextButton(
+                      onPressed: _openDealRooms,
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.white,
+                      ),
+                      child: const Text('DEAL ROOMS'),
+                    ),
+                  ],
+                ),
+              ],
               const SizedBox(height: 70),
               const Text(
                 'DEALIQ / ACQUISITIONIQ · PLACEHOLDER',

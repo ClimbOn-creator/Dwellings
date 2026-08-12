@@ -386,7 +386,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       _introductionCentre(),
                       const SizedBox(height: 42),
                       const Text(
-                        'Your property team',
+                        'Your selected team',
                         style: TextStyle(
                           fontSize: 30,
                           fontWeight: FontWeight.w700,
@@ -395,7 +395,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                       const SizedBox(height: 8),
                       const Text(
-                        'Professionals you select in the Local Network stay attached to your account.',
+                        'PropertyIQ and DealIQ professionals you select in the Network stay attached to your account.',
                         style: TextStyle(color: Color(0xFF666674)),
                       ),
                       const SizedBox(height: 20),

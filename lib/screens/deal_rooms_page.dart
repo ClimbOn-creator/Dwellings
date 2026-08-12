@@ -2,9 +2,12 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../models/platform_side.dart';
 import '../services/deal_room_service.dart';
 import '../widgets/brand_logo.dart';
+import '../widgets/platform_switcher.dart';
 import '../widgets/profile_photo.dart';
+import 'business_acquisition_page.dart';
 
 const _ink = Color(0xFF050510);
 const _paper = Color(0xFFF5F5F7);
@@ -12,7 +15,9 @@ const _purple = Color(0xFF7657FF);
 const _lilac = Color(0xFFBCAEFF);
 
 class DealRoomsPage extends StatefulWidget {
-  const DealRoomsPage({super.key});
+  const DealRoomsPage({super.key, this.initialSide = PlatformSide.property});
+
+  final PlatformSide initialSide;
 
   @override
   State<DealRoomsPage> createState() => _DealRoomsPageState();
@@ -20,17 +25,28 @@ class DealRoomsPage extends StatefulWidget {
 
 class _DealRoomsPageState extends State<DealRoomsPage> {
   late Future<List<DealRoom>> _rooms;
+  late PlatformSide _side;
   bool _creating = false;
 
   @override
   void initState() {
     super.initState();
+    _side = widget.initialSide;
     _rooms = DealRoomService.loadRooms();
   }
 
   void _refresh() => setState(() => _rooms = DealRoomService.loadRooms());
 
   Future<void> _create() async {
+    if (_side == PlatformSide.business) {
+      await Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => const BusinessAcquisitionPage(),
+        ),
+      );
+      _refresh();
+      return;
+    }
     setState(() => _creating = true);
     try {
       final room = await DealRoomService.createFromLatestAnalysis();
@@ -71,7 +87,13 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                         child: Center(child: CircularProgressIndicator()),
                       );
                     }
-                    final rooms = snapshot.data!;
+                    final rooms = snapshot.data!
+                        .where(
+                          (room) => _side == PlatformSide.business
+                              ? room.isBusiness
+                              : !room.isBusiness,
+                        )
+                        .toList();
                     if (rooms.isEmpty) return _empty();
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -117,6 +139,12 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                     child: const DwellingIqLogo(size: 46),
                   ),
                   const Spacer(),
+                  PlatformSwitcher(
+                    selected: _side,
+                    onChanged: (side) => setState(() => _side = side),
+                    compact: true,
+                  ),
+                  const SizedBox(width: 10),
                   TextButton.icon(
                     onPressed: () => Navigator.pop(context),
                     style: TextButton.styleFrom(foregroundColor: Colors.white),
@@ -126,9 +154,11 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                 ],
               ),
               const SizedBox(height: 68),
-              const Text(
-                'DEAL ROOMS',
-                style: TextStyle(
+              Text(
+                _side == PlatformSide.business
+                    ? 'DEALIQ WORKSPACES'
+                    : 'PROPERTYIQ WORKSPACES',
+                style: const TextStyle(
                   color: _lilac,
                   fontSize: 10,
                   fontWeight: FontWeight.w900,
@@ -137,16 +167,18 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
               ),
               const SizedBox(height: 14),
               Text(
-                'Every property.\nOne working team.',
+                _side == PlatformSide.business
+                    ? 'Every acquisition.\nOne working team.'
+                    : 'Every property.\nOne working team.',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: MediaQuery.sizeOf(context).width < 700 ? 48 : 68,
-                  height: .95,
+                  height: 1,
                   fontWeight: FontWeight.w600,
                   letterSpacing: -3,
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 28),
               const SizedBox(
                 width: 650,
                 child: Text(
@@ -176,7 +208,11 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                       )
                     : const Icon(Icons.add),
                 label: Text(
-                  _creating ? 'CREATING…' : 'CREATE FROM LATEST ANALYSIS',
+                  _creating
+                      ? 'CREATING…'
+                      : _side == PlatformSide.business
+                      ? 'START BUSINESS ASSESSMENT'
+                      : 'CREATE FROM LATEST ANALYSIS',
                 ),
               ),
             ],
@@ -197,20 +233,28 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
       children: [
         const Icon(Icons.meeting_room_outlined, size: 44, color: _purple),
         const SizedBox(height: 15),
-        const Text(
-          'No Deal Rooms yet',
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
+        Text(
+          _side == PlatformSide.business
+              ? 'No business acquisition workspaces yet'
+              : 'No property Deal Rooms yet',
+          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 8),
-        const Text(
-          'Run and save a property analysis, then create its collaborative workspace here.',
+        Text(
+          _side == PlatformSide.business
+              ? 'Run a DealIQ viability assessment, then create its guided acquisition workspace.'
+              : 'Run and save a property analysis, then create its collaborative workspace here.',
           textAlign: TextAlign.center,
           style: TextStyle(color: Color(0xFF666674)),
         ),
         const SizedBox(height: 18),
         FilledButton(
           onPressed: _creating ? null : _create,
-          child: const Text('CREATE DEAL ROOM'),
+          child: Text(
+            _side == PlatformSide.business
+                ? 'OPEN BUSINESS ASSESSMENT'
+                : 'CREATE DEAL ROOM',
+          ),
         ),
       ],
     ),
@@ -793,7 +837,7 @@ class _DealRoomPageState extends State<DealRoomPage> {
   );
 
   Widget _team(List<DealRoomMember> members) => _card(
-    'Property team',
+    _room.isBusiness ? 'Acquisition team' : 'Property team',
     members.isEmpty
         ? const Text(
             'No professionals were attached when this room was created.',

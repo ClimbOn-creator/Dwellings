@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../models/platform_side.dart';
 import '../services/account_service.dart';
 import '../services/backend_service.dart';
 import '../services/marketplace_service.dart';
@@ -194,6 +195,7 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
     }
     final property = TextEditingController();
     final phone = TextEditingController();
+    final business = provider.category.side == PlatformSide.business;
     var sending = false;
     await showDialog<void>(
       context: context,
@@ -206,9 +208,11 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Your account name and email are attached automatically. Add only the property context this professional needs.',
-                  style: TextStyle(
+                Text(
+                  business
+                      ? 'Your account name and email are attached automatically. Share only a non-confidential summary of the acquisition help you need.'
+                      : 'Your account name and email are attached automatically. Add only the property context this professional needs.',
+                  style: const TextStyle(
                     color: Color(0xFF666674),
                     fontSize: 13,
                     height: 1.5,
@@ -220,10 +224,11 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
                   onChanged: (_) => setModalState(() {}),
                   minLines: 4,
                   maxLines: 7,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'What would you like help with?',
-                    hintText:
-                        'Property, city, budget, timeline and the advice you need.',
+                    hintText: business
+                        ? 'Industry, location, deal stage, approximate size and the advice you need. Do not include confidential seller data.'
+                        : 'Property, city, budget, timeline and the advice you need.',
                   ),
                 ),
                 const SizedBox(height: 12),

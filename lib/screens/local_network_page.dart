@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 
+import '../models/platform_side.dart';
 import '../services/marketplace_service.dart';
 import '../services/backend_service.dart';
 import '../widgets/brand_logo.dart';
 import '../widgets/auth_button.dart';
 import '../widgets/site_footer.dart';
 import '../widgets/profile_photo.dart';
+import '../widgets/platform_switcher.dart';
 import 'auth_page.dart';
+import 'business_acquisition_page.dart';
 import 'home_screen.dart';
 import 'marketing_pages.dart';
 import 'member_profile_page.dart';
@@ -19,8 +22,13 @@ const _lilac = brandLilac;
 const _muted = Color(0xFFA5A5B5);
 
 class LocalNetworkPage extends StatefulWidget {
-  const LocalNetworkPage({super.key, this.initialCity});
+  const LocalNetworkPage({
+    super.key,
+    this.initialCity,
+    this.side = PlatformSide.property,
+  });
   final MarketplaceCity? initialCity;
+  final PlatformSide side;
 
   @override
   State<LocalNetworkPage> createState() => _LocalNetworkPageState();
@@ -28,27 +36,43 @@ class LocalNetworkPage extends StatefulWidget {
 
 class _LocalNetworkPageState extends State<LocalNetworkPage> {
   late MarketplaceCity _city;
-  ProviderCategory _category = ProviderCategory.realtor;
+  late PlatformSide _side;
+  late ProviderCategory _category;
   late Future<MarketplaceDirectory> _directory;
 
   @override
   void initState() {
     super.initState();
+    _side = widget.side;
+    _category = providerCategoriesFor(_side).first;
     _city = widget.initialCity ?? MarketplaceService.cities.first;
-    _directory = MarketplaceService.load(_city);
+    _directory = MarketplaceService.load(_city, side: _side);
   }
 
   void _changeCity(MarketplaceCity city) {
     setState(() {
       _city = city;
-      _directory = MarketplaceService.load(city);
+      _directory = MarketplaceService.load(city, side: _side);
+    });
+  }
+
+  void _changeSide(PlatformSide side) {
+    if (side == _side) return;
+    setState(() {
+      _side = side;
+      _category = providerCategoriesFor(side).first;
+      _directory = MarketplaceService.load(_city, side: side);
     });
   }
 
   void _openModel() {
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute<void>(builder: (_) => const UnderwritingScreen()));
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => _side == PlatformSide.property
+            ? const UnderwritingScreen()
+            : const BusinessAcquisitionPage(),
+      ),
+    );
   }
 
   @override
@@ -59,7 +83,9 @@ class _LocalNetworkPageState extends State<LocalNetworkPage> {
         SliverToBoxAdapter(
           child: _NetworkHero(
             city: _city,
+            side: _side,
             onCity: _changeCity,
+            onSide: _changeSide,
             onModel: _openModel,
           ),
         ),
@@ -68,6 +94,7 @@ class _LocalNetworkPageState extends State<LocalNetworkPage> {
             directory: _directory,
             city: _city,
             category: _category,
+            side: _side,
             onCategory: (value) => setState(() => _category = value),
           ),
         ),
@@ -101,18 +128,22 @@ class _LocalNetworkPageState extends State<LocalNetworkPage> {
 class _NetworkHero extends StatelessWidget {
   const _NetworkHero({
     required this.city,
+    required this.side,
     required this.onCity,
+    required this.onSide,
     required this.onModel,
   });
   final MarketplaceCity city;
+  final PlatformSide side;
   final ValueChanged<MarketplaceCity> onCity;
+  final ValueChanged<PlatformSide> onSide;
   final VoidCallback onModel;
 
   @override
   Widget build(BuildContext context) {
     final desktop = MediaQuery.sizeOf(context).width >= 850;
     return Container(
-      height: desktop ? 680 : 790,
+      height: desktop ? 680 : 850,
       color: _ink,
       child: Stack(
         fit: StackFit.expand,
@@ -165,11 +196,21 @@ class _NetworkHero extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _NetworkNav(onModel: onModel),
+                _NetworkNav(side: side, onSide: onSide, onModel: onModel),
+                if (MediaQuery.sizeOf(context).width <= 820) ...[
+                  const SizedBox(height: 10),
+                  PlatformSwitcher(
+                    selected: side,
+                    onChanged: onSide,
+                    compact: true,
+                  ),
+                ],
                 const Spacer(),
-                const Text(
-                  'YOUR LOCAL PROPERTY TEAM',
-                  style: TextStyle(
+                Text(
+                  side == PlatformSide.property
+                      ? 'YOUR LOCAL PROPERTY TEAM'
+                      : 'YOUR BUSINESS ACQUISITION TEAM',
+                  style: const TextStyle(
                     color: _lilac,
                     fontSize: 10,
                     fontWeight: FontWeight.w900,
@@ -178,7 +219,9 @@ class _NetworkHero extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  'The right people.\nIn the right city.',
+                  side == PlatformSide.property
+                      ? 'The right people.\nIn the right city.'
+                      : 'Specialists for\nevery deal stage.',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: desktop ? 72 : 52,
@@ -188,11 +231,13 @@ class _NetworkHero extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 22),
-                const SizedBox(
+                SizedBox(
                   width: 560,
                   child: Text(
-                    'Find local realtors, mortgage brokers, property lawyers and lenders around the market you are analyzing.',
-                    style: TextStyle(
+                    side == PlatformSide.property
+                        ? 'Find local realtors, mortgage brokers, property lawyers, accountants and lenders around the market you are analyzing.'
+                        : 'Build a transaction team across search, legal, quality of earnings, financing, tax, insurance, people, cybersecurity and wealth planning.',
+                    style: const TextStyle(
                       color: Color(0xFFC5C5D0),
                       fontSize: 16,
                       height: 1.6,
@@ -211,7 +256,13 @@ class _NetworkHero extends StatelessWidget {
 }
 
 class _NetworkNav extends StatelessWidget {
-  const _NetworkNav({required this.onModel});
+  const _NetworkNav({
+    required this.side,
+    required this.onSide,
+    required this.onModel,
+  });
+  final PlatformSide side;
+  final ValueChanged<PlatformSide> onSide;
   final VoidCallback onModel;
   @override
   Widget build(BuildContext context) => Container(
@@ -229,6 +280,10 @@ class _NetworkNav extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           child: const DwellingIqLogo(size: 44),
         ),
+        if (MediaQuery.sizeOf(context).width > 820) ...[
+          const SizedBox(width: 12),
+          PlatformSwitcher(selected: side, onChanged: onSide, compact: true),
+        ],
         const Spacer(),
         if (MediaQuery.sizeOf(context).width > 620)
           const Padding(
@@ -259,8 +314,10 @@ class _NetworkNav extends StatelessWidget {
           icon: const Icon(Icons.arrow_outward, size: 16),
           label: Text(
             MediaQuery.sizeOf(context).width > 520
-                ? 'OPEN RISK MODEL'
-                : 'RISK MODEL',
+                ? (side == PlatformSide.property
+                      ? 'OPEN PROPERTY MODEL'
+                      : 'OPEN BUSINESS MODEL')
+                : 'MODEL',
             style: const TextStyle(
               fontSize: 9,
               fontWeight: FontWeight.w900,
@@ -404,11 +461,13 @@ class _DirectorySection extends StatelessWidget {
     required this.directory,
     required this.city,
     required this.category,
+    required this.side,
     required this.onCategory,
   });
   final Future<MarketplaceDirectory> directory;
   final MarketplaceCity city;
   final ProviderCategory category;
+  final PlatformSide side;
   final ValueChanged<ProviderCategory> onCategory;
 
   @override
@@ -431,9 +490,11 @@ class _DirectorySection extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            const Text(
-              'Build your property team.',
-              style: TextStyle(
+            Text(
+              side == PlatformSide.property
+                  ? 'Build your property team.'
+                  : 'Build your acquisition team.',
+              style: const TextStyle(
                 color: _ink,
                 fontSize: 52,
                 height: 1,
@@ -450,7 +511,7 @@ class _DirectorySection extends StatelessWidget {
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
-                children: ProviderCategory.values
+                children: providerCategoriesFor(side)
                     .map(
                       (value) => _CategoryTab(
                         value: value,
@@ -1048,9 +1109,11 @@ Future<void> _showConnectionDialog(
                       setModalState(() => consent = value ?? false),
                   contentPadding: EdgeInsets.zero,
                   controlAffinity: ListTileControlAffinity.leading,
-                  title: const Text(
-                    'I consent to this provider contacting me about my property request.',
-                    style: TextStyle(fontSize: 12),
+                  title: Text(
+                    provider.category.side == PlatformSide.business
+                        ? 'I consent to this provider contacting me about my business acquisition request.'
+                        : 'I consent to this provider contacting me about my property request.',
+                    style: const TextStyle(fontSize: 12),
                   ),
                 ),
               ],

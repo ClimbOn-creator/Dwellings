@@ -58,6 +58,12 @@ class _BecomeMemberPageState extends State<BecomeMemberPage> {
     'Construction',
     'Luxury',
     'Rural & land',
+    'Business acquisitions',
+    'Quality of earnings',
+    'Transaction tax',
+    'Employment & HR',
+    'Cybersecurity diligence',
+    'Business-owner wealth',
   ];
   static const _buyerPropertyTypes = [
     'Residential',
@@ -66,6 +72,16 @@ class _BecomeMemberPageState extends State<BecomeMemberPage> {
     'Commercial',
     'Land',
     'Development',
+  ];
+  static const _businessBuyerTypes = [
+    'Professional services',
+    'Trades & construction',
+    'Retail & hospitality',
+    'Manufacturing',
+    'Technology',
+    'Healthcare',
+    'Distribution',
+    'Open to opportunities',
   ];
 
   @override
@@ -208,7 +224,7 @@ class _BecomeMemberPageState extends State<BecomeMemberPage> {
         ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 650),
           child: const Text(
-            'Tell us whether you are buying, investing or helping Canadians complete property transactions. Your answers shape the experience we build for you.',
+            'Tell us whether you are buying property, acquiring a business or advising a Canadian transaction. Your answers shape the experience we build for you.',
             style: TextStyle(
               color: Color(0xFFC5C5D0),
               fontSize: 16,
@@ -253,6 +269,13 @@ class _BecomeMemberPageState extends State<BecomeMemberPage> {
                               onTap: () => setState(() {
                                 _type = type;
                                 _specialties.clear();
+                                _propertyTypes
+                                  ..clear()
+                                  ..add(
+                                    type == MemberType.businessBuyer
+                                        ? 'Open to opportunities'
+                                        : 'Residential',
+                                  );
                               }),
                             ),
                           ),
@@ -463,12 +486,19 @@ class _BecomeMemberPageState extends State<BecomeMemberPage> {
       ),
       _provincePicker('Province or territory'),
       const SizedBox(height: 20),
-      const Text(
-        'Property type',
-        style: TextStyle(fontWeight: FontWeight.w700),
+      Text(
+        _type == MemberType.businessBuyer
+            ? 'Industries of interest'
+            : 'Property type',
+        style: const TextStyle(fontWeight: FontWeight.w700),
       ),
       const SizedBox(height: 12),
-      _chips(_buyerPropertyTypes, _propertyTypes),
+      _chips(
+        _type == MemberType.businessBuyer
+            ? _businessBuyerTypes
+            : _buyerPropertyTypes,
+        _propertyTypes,
+      ),
       const SizedBox(height: 18),
       DropdownButtonFormField<String>(
         initialValue: _timeline,
@@ -493,9 +523,11 @@ class _BecomeMemberPageState extends State<BecomeMemberPage> {
         contentPadding: EdgeInsets.zero,
         activeColor: _purple,
         controlAffinity: ListTileControlAffinity.leading,
-        title: const Text(
-          'I would like help comparing mortgage or financing options.',
-          style: TextStyle(fontSize: 13),
+        title: Text(
+          _type == MemberType.businessBuyer
+              ? 'I would like help comparing acquisition financing options.'
+              : 'I would like help comparing mortgage or financing options.',
+          style: const TextStyle(fontSize: 13),
         ),
       ),
     ],
