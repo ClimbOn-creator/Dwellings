@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/platform_side.dart';
@@ -202,51 +205,232 @@ class MarketplaceService {
 
   static const cities = [
     MarketplaceCity('Vancouver', 'BC', 'CA'),
+    MarketplaceCity('Abbotsford', 'BC', 'CA'),
+    MarketplaceCity('Burnaby', 'BC', 'CA'),
+    MarketplaceCity('Campbell River', 'BC', 'CA'),
+    MarketplaceCity('Chilliwack', 'BC', 'CA'),
+    MarketplaceCity('Coquitlam', 'BC', 'CA'),
+    MarketplaceCity('Courtenay', 'BC', 'CA'),
+    MarketplaceCity('Cranbrook', 'BC', 'CA'),
+    MarketplaceCity('Dawson Creek', 'BC', 'CA'),
+    MarketplaceCity('Fort St. John', 'BC', 'CA'),
+    MarketplaceCity('Kamloops', 'BC', 'CA'),
     MarketplaceCity('Victoria', 'BC', 'CA'),
     MarketplaceCity('Kelowna', 'BC', 'CA'),
+    MarketplaceCity('Langley', 'BC', 'CA'),
+    MarketplaceCity('Nanaimo', 'BC', 'CA'),
+    MarketplaceCity('Nelson', 'BC', 'CA'),
+    MarketplaceCity('New Westminster', 'BC', 'CA'),
+    MarketplaceCity('North Vancouver', 'BC', 'CA'),
+    MarketplaceCity('Penticton', 'BC', 'CA'),
+    MarketplaceCity('Port Coquitlam', 'BC', 'CA'),
+    MarketplaceCity('Prince George', 'BC', 'CA'),
+    MarketplaceCity('Prince Rupert', 'BC', 'CA'),
+    MarketplaceCity('Richmond', 'BC', 'CA'),
+    MarketplaceCity('Squamish', 'BC', 'CA'),
     MarketplaceCity('Surrey', 'BC', 'CA'),
+    MarketplaceCity('Terrace', 'BC', 'CA'),
+    MarketplaceCity('Vernon', 'BC', 'CA'),
+    MarketplaceCity('Whistler', 'BC', 'CA'),
     MarketplaceCity('Calgary', 'AB', 'CA'),
+    MarketplaceCity('Airdrie', 'AB', 'CA'),
+    MarketplaceCity('Banff', 'AB', 'CA'),
+    MarketplaceCity('Canmore', 'AB', 'CA'),
     MarketplaceCity('Edmonton', 'AB', 'CA'),
+    MarketplaceCity('Fort McMurray', 'AB', 'CA'),
+    MarketplaceCity('Grande Prairie', 'AB', 'CA'),
+    MarketplaceCity('Lethbridge', 'AB', 'CA'),
+    MarketplaceCity('Medicine Hat', 'AB', 'CA'),
+    MarketplaceCity('Red Deer', 'AB', 'CA'),
     MarketplaceCity('Toronto', 'ON', 'CA'),
+    MarketplaceCity('Barrie', 'ON', 'CA'),
+    MarketplaceCity('Belleville', 'ON', 'CA'),
+    MarketplaceCity('Brampton', 'ON', 'CA'),
+    MarketplaceCity('Brantford', 'ON', 'CA'),
+    MarketplaceCity('Burlington', 'ON', 'CA'),
+    MarketplaceCity('Guelph', 'ON', 'CA'),
     MarketplaceCity('Ottawa', 'ON', 'CA'),
     MarketplaceCity('Hamilton', 'ON', 'CA'),
+    MarketplaceCity('Kingston', 'ON', 'CA'),
+    MarketplaceCity('Kitchener', 'ON', 'CA'),
+    MarketplaceCity('London', 'ON', 'CA'),
+    MarketplaceCity('Markham', 'ON', 'CA'),
+    MarketplaceCity('Mississauga', 'ON', 'CA'),
+    MarketplaceCity('Niagara Falls', 'ON', 'CA'),
+    MarketplaceCity('North Bay', 'ON', 'CA'),
+    MarketplaceCity('Oakville', 'ON', 'CA'),
+    MarketplaceCity('Oshawa', 'ON', 'CA'),
+    MarketplaceCity('Peterborough', 'ON', 'CA'),
+    MarketplaceCity('Richmond Hill', 'ON', 'CA'),
+    MarketplaceCity('St. Catharines', 'ON', 'CA'),
+    MarketplaceCity('Sudbury', 'ON', 'CA'),
+    MarketplaceCity('Thunder Bay', 'ON', 'CA'),
+    MarketplaceCity('Vaughan', 'ON', 'CA'),
+    MarketplaceCity('Waterloo', 'ON', 'CA'),
+    MarketplaceCity('Windsor', 'ON', 'CA'),
     MarketplaceCity('Montreal', 'QC', 'CA'),
+    MarketplaceCity('Gatineau', 'QC', 'CA'),
+    MarketplaceCity('Laval', 'QC', 'CA'),
+    MarketplaceCity('Longueuil', 'QC', 'CA'),
     MarketplaceCity('Quebec City', 'QC', 'CA'),
+    MarketplaceCity('Saguenay', 'QC', 'CA'),
+    MarketplaceCity('Sherbrooke', 'QC', 'CA'),
+    MarketplaceCity('Trois-Rivières', 'QC', 'CA'),
     MarketplaceCity('Winnipeg', 'MB', 'CA'),
+    MarketplaceCity('Brandon', 'MB', 'CA'),
     MarketplaceCity('Saskatoon', 'SK', 'CA'),
     MarketplaceCity('Regina', 'SK', 'CA'),
+    MarketplaceCity('Prince Albert', 'SK', 'CA'),
     MarketplaceCity('Halifax', 'NS', 'CA'),
+    MarketplaceCity('Cape Breton', 'NS', 'CA'),
+    MarketplaceCity('Truro', 'NS', 'CA'),
+    MarketplaceCity('Fredericton', 'NB', 'CA'),
     MarketplaceCity('Moncton', 'NB', 'CA'),
+    MarketplaceCity('Saint John', 'NB', 'CA'),
+    MarketplaceCity('Corner Brook', 'NL', 'CA'),
     MarketplaceCity('St. John’s', 'NL', 'CA'),
+    MarketplaceCity('Summerside', 'PE', 'CA'),
     MarketplaceCity('Charlottetown', 'PE', 'CA'),
     MarketplaceCity('Whitehorse', 'YT', 'CA'),
     MarketplaceCity('Yellowknife', 'NT', 'CA'),
     MarketplaceCity('Iqaluit', 'NU', 'CA'),
   ];
 
+  static String _normal(String value) =>
+      value.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+
+  static List<MarketplaceCity> citySuggestions(
+    String query, {
+    String? provinceCode,
+    int limit = 8,
+  }) {
+    final needle = _normal(query.split(',').first);
+    final pool = provinceCode == null
+        ? cities
+        : cities.where((city) => city.region == provinceCode).toList();
+    if (needle.isEmpty) return pool.take(limit).toList();
+    final ranked = <(MarketplaceCity, int)>[];
+    for (final city in pool) {
+      final name = _normal(city.city);
+      final score = name.startsWith(needle)
+          ? 0
+          : name.contains(needle)
+          ? 1
+          : 2 + _editDistance(needle, name);
+      if (score <= 5 || name.contains(needle)) ranked.add((city, score));
+    }
+    ranked.sort((a, b) {
+      final score = a.$2.compareTo(b.$2);
+      return score != 0 ? score : a.$1.city.compareTo(b.$1.city);
+    });
+    return ranked.take(limit).map((item) => item.$1).toList();
+  }
+
+  /// Searches Canada's official CGNDB place-name service, with the local
+  /// typo-tolerant catalogue retained as a fast and offline fallback.
+  static Future<List<MarketplaceCity>> searchCanadianCities(
+    String query, {
+    int limit = 8,
+  }) async {
+    final local = citySuggestions(query, limit: limit);
+    if (query.trim().length < 2) return local;
+    try {
+      final uri =
+          Uri.https('geogratis.gc.ca', '/services/geoname/en/geonames.json', {
+            'category': 'O',
+            'q': query.trim(),
+            'expand': 'items.province',
+            'select': 'items.province.description',
+          });
+      final response = await http.get(uri).timeout(const Duration(seconds: 4));
+      if (response.statusCode != 200) return local;
+      final payload = jsonDecode(response.body) as Map<String, dynamic>;
+      final remote = (payload['items'] as List<dynamic>? ?? const [])
+          .whereType<Map<String, dynamic>>()
+          .map((item) {
+            final province = item['province'] as Map<String, dynamic>?;
+            final provinceName = province?['description'] as String? ?? '';
+            final region = provinces
+                .where((entry) => entry.name == provinceName)
+                .map((entry) => entry.code)
+                .firstOrNull;
+            final name = item['name'] as String? ?? '';
+            return name.isEmpty || region == null
+                ? null
+                : MarketplaceCity(name, region, 'CA');
+          })
+          .whereType<MarketplaceCity>();
+      final merged = <String, MarketplaceCity>{
+        for (final city in [...local, ...remote])
+          '${_normal(city.city)}-${city.region}': city,
+      };
+      return merged.values.take(limit).toList();
+    } catch (_) {
+      return local;
+    }
+  }
+
+  static MarketplaceCity? resolveCanadianCity(
+    String value, {
+    String? provinceCode,
+  }) {
+    final suggestions = citySuggestions(
+      value,
+      provinceCode: provinceCode,
+      limit: 1,
+    );
+    if (suggestions.isEmpty) return null;
+    final typed = _normal(value.split(',').first);
+    final match = suggestions.first;
+    final distance = _editDistance(typed, _normal(match.city));
+    return distance <= (typed.length < 6 ? 1 : 3) ||
+            _normal(match.city).startsWith(typed)
+        ? match
+        : null;
+  }
+
+  static int _editDistance(String a, String b) {
+    var previous = List<int>.generate(b.length + 1, (index) => index);
+    for (var i = 1; i <= a.length; i++) {
+      final current = List<int>.filled(b.length + 1, 0)..[0] = i;
+      for (var j = 1; j <= b.length; j++) {
+        current[j] = [
+          current[j - 1] + 1,
+          previous[j] + 1,
+          previous[j - 1] + (a[i - 1] == b[j - 1] ? 0 : 1),
+        ].reduce((x, y) => x < y ? x : y);
+      }
+      previous = current;
+    }
+    return previous.last;
+  }
+
   static MarketplaceCity customCity(String city, String provinceCode) =>
       MarketplaceCity(city.trim(), provinceCode, 'CA');
 
   static MarketplaceCity inferCity(String value) {
     final normalized = value.toLowerCase();
-    return cities.firstWhere(
+    final named = cities.where(
       (city) => normalized.contains(city.city.toLowerCase()),
-      orElse: () {
-        final province = provinces.firstWhere(
-          (item) =>
-              normalized.contains(item.code.toLowerCase()) ||
-              normalized.contains(item.name.toLowerCase()),
-          orElse: () => provinces[1],
-        );
-        final parts = value.split(',');
-        final city = parts.first.trim();
-        return MarketplaceCity(
-          city.isEmpty ? 'Vancouver' : city,
-          province.code,
-          'CA',
-        );
-      },
     );
+    if (named.isNotEmpty) return named.first;
+    final corrected = resolveCanadianCity(value.split(',').first);
+    if (corrected != null) return corrected;
+    return (() {
+      final province = provinces.firstWhere(
+        (item) =>
+            normalized.contains(item.code.toLowerCase()) ||
+            normalized.contains(item.name.toLowerCase()),
+        orElse: () => provinces[1],
+      );
+      final parts = value.split(',');
+      final city = parts.first.trim();
+      return MarketplaceCity(
+        city.isEmpty ? 'Vancouver' : city,
+        province.code,
+        'CA',
+      );
+    })();
   }
 
   static Future<MarketplaceDirectory> load(

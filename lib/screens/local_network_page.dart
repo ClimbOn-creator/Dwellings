@@ -3,10 +3,13 @@ import 'package:flutter/material.dart';
 import '../models/platform_side.dart';
 import '../services/marketplace_service.dart';
 import '../services/backend_service.dart';
+import '../services/account_service.dart';
 import '../widgets/brand_logo.dart';
+import '../widgets/home_brand_button.dart';
 import '../widgets/site_footer.dart';
 import '../widgets/profile_photo.dart';
 import '../widgets/app_navigation_menu.dart';
+import '../widgets/canadian_city_field.dart';
 import 'auth_page.dart';
 import 'business_acquisition_page.dart';
 import 'home_screen.dart';
@@ -53,6 +56,7 @@ class _LocalNetworkPageState extends State<LocalNetworkPage> {
       _city = city;
       _directory = MarketplaceService.load(city, side: _side);
     });
+    AccountService.savePreferredLocation(city);
   }
 
   void _changeSide(PlatformSide side) {
@@ -266,11 +270,7 @@ class _NetworkNav extends StatelessWidget {
     ),
     child: Row(
       children: [
-        InkWell(
-          onTap: () => Navigator.of(context).pop(),
-          borderRadius: BorderRadius.circular(20),
-          child: const DwellingIqLogo(size: 44),
-        ),
+        const HomeBrandButton(size: 44),
         const Spacer(),
         AppNavigationMenu(side: side, onSideChanged: onSide),
       ],
@@ -351,13 +351,11 @@ Future<void> _showCanadianCityDialog(
                 style: TextStyle(color: Color(0xFF666674), fontSize: 13),
               ),
               const SizedBox(height: 18),
-              TextField(
+              CanadianCityField(
                 controller: cityController,
-                autofocus: true,
-                decoration: const InputDecoration(
-                  labelText: 'City or municipality',
-                  prefixIcon: Icon(Icons.location_city_outlined),
-                ),
+                label: 'City or municipality',
+                onSelected: (city) =>
+                    setModalState(() => provinceCode = city.region),
               ),
               const SizedBox(height: 14),
               DropdownButtonFormField<String>(
@@ -387,12 +385,12 @@ Future<void> _showCanadianCityDialog(
           ),
           FilledButton(
             onPressed: () {
-              final city = cityController.text.trim();
-              if (city.isEmpty) return;
-              Navigator.pop(
-                dialogContext,
-                MarketplaceService.customCity(city, provinceCode),
+              final city = MarketplaceService.resolveCanadianCity(
+                cityController.text,
+                provinceCode: provinceCode,
               );
+              if (city == null) return;
+              Navigator.pop(dialogContext, city);
             },
             child: const Text('Find professionals'),
           ),

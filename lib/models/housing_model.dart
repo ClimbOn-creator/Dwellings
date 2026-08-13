@@ -94,6 +94,36 @@ class MarketProfile {
   final double geo;
   final double nuisance;
 
+  MarketProfile withLocation(String city, String region) => MarketProfile(
+    city: city,
+    region: region,
+    appreciation: appreciation,
+    priceIncome: priceIncome,
+    population: population,
+    employment: employment,
+    inventory: inventory,
+    saleList: saleList,
+    infrastructure: infrastructure,
+    rezoning: rezoning,
+    mortgage: mortgage,
+    delinquency: delinquency,
+    mbs: mbs,
+    renewal: renewal,
+    debtService: debtService,
+    unemployment: unemployment,
+    investor: investor,
+    insurance: insurance,
+    regulatory: regulatory,
+    transit: transit,
+    walkability: walkability,
+    amenities: amenities,
+    school: school,
+    flood: flood,
+    wildfire: wildfire,
+    geo: geo,
+    nuisance: nuisance,
+  );
+
   Map<String, dynamic> toJson() => {
     'city': city,
     'region': region,

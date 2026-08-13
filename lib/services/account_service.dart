@@ -268,6 +268,23 @@ class AccountService {
     return row == null ? null : AccountProfile.fromJson(row);
   }
 
+  static Future<void> savePreferredLocation(MarketplaceCity city) async {
+    final user = BackendService.user;
+    if (user == null) return;
+    try {
+      await _client
+          .from('profiles')
+          .update({
+            'preferred_city': city.city,
+            'preferred_province': city.region,
+            'preferred_country_code': city.countryCode,
+          })
+          .eq('id', user.id);
+    } on PostgrestException {
+      // Keep city selection working while this migration reaches production.
+    }
+  }
+
   static Future<void> updateProfile({
     required String fullName,
     required String jobTitle,

@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../models/platform_side.dart';
 import '../services/backend_service.dart';
-import '../widgets/brand_logo.dart';
+import '../widgets/home_brand_button.dart';
+import '../widgets/topo_background.dart';
 import '../widgets/app_navigation_menu.dart';
 import '../widgets/site_footer.dart';
 import 'auth_page.dart';
@@ -84,69 +85,71 @@ class PlatformHubPage extends StatelessWidget {
 
   Widget _hero(BuildContext context) {
     final narrow = MediaQuery.sizeOf(context).width < 760;
-    return Container(
-      color: _ink,
-      padding: EdgeInsets.fromLTRB(narrow ? 22 : 54, 24, narrow ? 22 : 54, 80),
-      child: SafeArea(
-        bottom: false,
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 1180),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    InkWell(
-                      onTap: () => Navigator.of(
-                        context,
-                      ).popUntil((route) => route.isFirst),
-                      child: const DwellingIqLogo(size: 44),
-                    ),
-                    const Spacer(),
-                    AppNavigationMenu(side: side),
-                  ],
-                ),
-                const SizedBox(height: 86),
-                Text(
-                  _business
-                      ? 'DEALIQ · BUSINESS ACQUISITIONS'
-                      : 'PROPERTYIQ · REAL ESTATE',
-                  style: const TextStyle(
-                    color: _lilac,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 1.4,
+    return TopoBackground(
+      opacity: .055,
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(
+          narrow ? 22 : 54,
+          24,
+          narrow ? 22 : 54,
+          80,
+        ),
+        child: SafeArea(
+          bottom: false,
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1180),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const HomeBrandButton(size: 44),
+                      const Spacer(),
+                      AppNavigationMenu(side: side),
+                    ],
                   ),
-                ),
-                const SizedBox(height: 18),
-                Text(
-                  _business
-                      ? 'Buy a business\nwith a clear process.'
-                      : 'Make the property\ndecision with clarity.',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: narrow ? 50 : 72,
-                    height: .94,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: narrow ? -2.5 : -3.6,
-                  ),
-                ),
-                const SizedBox(height: 24),
-                ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 680),
-                  child: Text(
+                  const SizedBox(height: 86),
+                  Text(
                     _business
-                        ? 'Screen the economics, assemble specialist advisers and move through diligence, financing, closing and transition in one place.'
-                        : 'Assess affordability and investment risk, find the right local professionals and keep every active purchase on track.',
+                        ? 'DEALIQ · BUSINESS ACQUISITIONS'
+                        : 'PROPERTYIQ · REAL ESTATE',
                     style: const TextStyle(
-                      color: Color(0xFFC5C5D0),
-                      fontSize: 16,
-                      height: 1.6,
+                      color: _lilac,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1.4,
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 18),
+                  Text(
+                    _business
+                        ? 'Buy a business\nwith a clear process.'
+                        : 'Make the property\ndecision with clarity.',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: narrow ? 50 : 72,
+                      height: .94,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: narrow ? -2.5 : -3.6,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 680),
+                    child: Text(
+                      _business
+                          ? 'Screen the economics, assemble specialist advisers and move through diligence, financing, closing and transition in one place.'
+                          : 'Assess affordability and investment risk, find the right local professionals and keep every active purchase on track.',
+                      style: const TextStyle(
+                        color: Color(0xFFC5C5D0),
+                        fontSize: 16,
+                        height: 1.6,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 import '../services/marketplace_service.dart';
 import '../services/membership_service.dart';
 import '../services/backend_service.dart';
-import '../widgets/brand_logo.dart';
+import '../widgets/home_brand_button.dart';
 import '../widgets/site_footer.dart';
 import '../widgets/app_navigation_menu.dart';
+import '../widgets/canadian_city_field.dart';
+import '../widgets/topo_background.dart';
 import 'auth_page.dart';
 
 const _ink = Color(0xFF050510);
@@ -190,61 +192,60 @@ class _BecomeMemberPageState extends State<BecomeMemberPage> {
     ),
   );
 
-  Widget _hero() => Container(
-    color: _ink,
-    padding: EdgeInsets.fromLTRB(
-      MediaQuery.sizeOf(context).width < 700 ? 22 : 54,
-      24,
-      MediaQuery.sizeOf(context).width < 700 ? 22 : 54,
-      76,
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            InkWell(
-              onTap: widget.onHome,
-              child: const DwellingIqLogo(size: 48),
-            ),
-            const Spacer(),
-            const AppNavigationMenu(),
-          ],
-        ),
-        const SizedBox(height: 92),
-        const Text(
-          'BECOME A MEMBER',
-          style: TextStyle(
-            color: _lilac,
-            fontSize: 10,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 1.5,
+  Widget _hero() => TopoBackground(
+    opacity: .055,
+    child: Padding(
+      padding: EdgeInsets.fromLTRB(
+        MediaQuery.sizeOf(context).width < 700 ? 22 : 54,
+        24,
+        MediaQuery.sizeOf(context).width < 700 ? 22 : 54,
+        76,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const HomeBrandButton(size: 48),
+              const Spacer(),
+              const AppNavigationMenu(),
+            ],
           ),
-        ),
-        const SizedBox(height: 18),
-        Text(
-          'One network.\nEvery side of the deal.',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: MediaQuery.sizeOf(context).width < 700 ? 48 : 72,
-            height: .94,
-            fontWeight: FontWeight.w600,
-            letterSpacing: -3,
-          ),
-        ),
-        const SizedBox(height: 24),
-        ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 650),
-          child: const Text(
-            'Tell us whether you are buying property, acquiring a business or advising a Canadian transaction. Your answers shape the experience we build for you.',
+          const SizedBox(height: 92),
+          const Text(
+            'BECOME A MEMBER',
             style: TextStyle(
-              color: Color(0xFFC5C5D0),
-              fontSize: 16,
-              height: 1.6,
+              color: _lilac,
+              fontSize: 10,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1.5,
             ),
           ),
-        ),
-      ],
+          const SizedBox(height: 18),
+          Text(
+            'One network.\nEvery side of the deal.',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: MediaQuery.sizeOf(context).width < 700 ? 48 : 72,
+              height: .94,
+              fontWeight: FontWeight.w600,
+              letterSpacing: -3,
+            ),
+          ),
+          const SizedBox(height: 24),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 650),
+            child: const Text(
+              'Tell us whether you are buying property, acquiring a business or advising a Canadian transaction. Your answers shape the experience we build for you.',
+              style: TextStyle(
+                color: Color(0xFFC5C5D0),
+                fontSize: 16,
+                height: 1.6,
+              ),
+            ),
+          ),
+        ],
+      ),
     ),
   );
 
@@ -508,10 +509,9 @@ class _BecomeMemberPageState extends State<BecomeMemberPage> {
     children: [
       const _SectionTitle(number: '03', title: 'What are you looking for?'),
       const SizedBox(height: 22),
-      _Field(
+      CanadianCityField(
         controller: _city,
-        label: 'City, town or community in Canada',
-        validator: _required,
+        onSelected: (city) => setState(() => _province = city.region),
       ),
       _provincePicker('Province or territory'),
       const SizedBox(height: 20),

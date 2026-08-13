@@ -6,7 +6,7 @@ import '../models/platform_side.dart';
 import '../services/backend_service.dart';
 import '../services/business_service.dart';
 import '../services/marketplace_service.dart';
-import '../widgets/brand_logo.dart';
+import '../widgets/home_brand_button.dart';
 import '../widgets/app_navigation_menu.dart';
 import 'auth_page.dart';
 import 'deal_rooms_page.dart';
@@ -365,10 +365,7 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
             children: [
               Row(
                 children: [
-                  InkWell(
-                    onTap: _goBack,
-                    child: const DwellingIqLogo(size: 46),
-                  ),
+                  const HomeBrandButton(size: 46),
                   const Spacer(),
                   const AppNavigationMenu(side: PlatformSide.business),
                 ],

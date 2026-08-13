@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'brand_logo.dart';
 import 'auth_button.dart';
+import 'topo_background.dart';
 
 class SiteFooter extends StatelessWidget {
   const SiteFooter({
@@ -20,67 +21,69 @@ class SiteFooter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final compact = MediaQuery.sizeOf(context).width < 720;
-    return Container(
-      color: const Color(0xFF050510),
-      padding: EdgeInsets.fromLTRB(
-        compact ? 22 : 54,
-        58,
-        compact ? 22 : 54,
-        30,
-      ),
-      child: Column(
-        children: [
-          if (compact)
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    return TopoBackground(
+      opacity: .045,
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(
+          compact ? 22 : 54,
+          58,
+          compact ? 22 : 54,
+          30,
+        ),
+        child: Column(
+          children: [
+            if (compact)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _Identity(onTap: onHome),
+                  const SizedBox(height: 34),
+                  _FooterLinks(
+                    onAbout: onAbout,
+                    onTeam: onTeam,
+                    onMember: onMember,
+                  ),
+                ],
+              )
+            else
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(child: _Identity(onTap: onHome)),
+                  _FooterLinks(
+                    onAbout: onAbout,
+                    onTeam: onTeam,
+                    onMember: onMember,
+                  ),
+                ],
+              ),
+            const SizedBox(height: 48),
+            Container(height: 1, color: Colors.white.withValues(alpha: .1)),
+            const SizedBox(height: 22),
+            const Row(
               children: [
-                _Identity(onTap: onHome),
-                const SizedBox(height: 34),
-                _FooterLinks(
-                  onAbout: onAbout,
-                  onTeam: onTeam,
-                  onMember: onMember,
+                Expanded(
+                  child: Text(
+                    '© 2026 DWELLINGSIQ',
+                    style: TextStyle(
+                      color: Color(0xFF777787),
+                      fontSize: 9,
+                      letterSpacing: 1,
+                    ),
+                  ),
                 ),
-              ],
-            )
-          else
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(child: _Identity(onTap: onHome)),
-                _FooterLinks(
-                  onAbout: onAbout,
-                  onTeam: onTeam,
-                  onMember: onMember,
-                ),
-              ],
-            ),
-          const SizedBox(height: 48),
-          Container(height: 1, color: Colors.white.withValues(alpha: .1)),
-          const SizedBox(height: 22),
-          const Row(
-            children: [
-              Expanded(
-                child: Text(
-                  '© 2026 DWELLINGSIQ',
+                Text(
+                  'PROPERTY INTELLIGENCE · CANADA',
                   style: TextStyle(
                     color: Color(0xFF777787),
                     fontSize: 9,
                     letterSpacing: 1,
                   ),
                 ),
-              ),
-              Text(
-                'PROPERTY INTELLIGENCE · CANADA',
-                style: TextStyle(
-                  color: Color(0xFF777787),
-                  fontSize: 9,
-                  letterSpacing: 1,
-                ),
-              ),
-            ],
-          ),
-        ],
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

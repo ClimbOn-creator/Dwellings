@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/platform_side.dart';
 import '../widgets/brand_logo.dart';
+import '../widgets/home_brand_button.dart';
 import '../widgets/site_footer.dart';
 import '../widgets/app_navigation_menu.dart';
 import 'become_member_page.dart';
@@ -117,11 +118,7 @@ class MarketingNavigation extends StatelessWidget {
       ),
       child: Row(
         children: [
-          InkWell(
-            onTap: () => _home(context),
-            borderRadius: BorderRadius.circular(18),
-            child: const DwellingIqLogo(size: 44),
-          ),
+          const HomeBrandButton(size: 44),
           const Spacer(),
           AppNavigationMenu(side: side ?? PlatformSide.property),
         ],

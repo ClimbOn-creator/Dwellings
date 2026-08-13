@@ -8,8 +8,9 @@ import '../services/backend_service.dart';
 import '../services/account_service.dart';
 import '../services/marketplace_service.dart';
 import '../widgets/site_footer.dart';
-import '../widgets/brand_logo.dart';
 import '../widgets/app_navigation_menu.dart';
+import '../widgets/canadian_city_field.dart';
+import '../widgets/home_brand_button.dart';
 import 'platform_hub_page.dart';
 import 'local_network_page.dart';
 import 'deal_rooms_page.dart';
@@ -64,6 +65,8 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
   bool _scanning = false;
   bool _saved = false;
   final _address = TextEditingController(text: 'Kitsilano, Vancouver, BC');
+  final _city = TextEditingController(text: 'Vancouver');
+  MarketplaceCity _selectedCity = MarketplaceService.cities.first;
   final Map<String, TextEditingController> _fields = {
     'price': TextEditingController(text: '1200000'),
     'closingCosts': TextEditingController(text: '30000'),
@@ -127,6 +130,10 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
           : <String, dynamic>{};
       setState(() {
         _address.text = draft['address'] as String? ?? _address.text;
+        _selectedCity = MarketplaceService.inferCity(
+          draft['city'] as String? ?? _address.text,
+        );
+        _city.text = _selectedCity.city;
         _mode = DecisionMode.values.firstWhere(
           (value) => value.name == draft['decision_mode'],
           orElse: () => _mode,
@@ -135,7 +142,9 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
           (value) => value.name == draft['property_type'],
           orElse: () => _propertyType,
         );
-        _profile = profileForAddress(_address.text);
+        _profile = profileForAddress(
+          _selectedCity.city,
+        ).withLocation(_selectedCity.city, _selectedCity.region);
         for (final entry in values.entries) {
           if (_fields.containsKey(entry.key)) {
             _fields[entry.key]!.text = entry.value?.toString() ?? '';
@@ -166,6 +175,7 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
   void dispose() {
     _scroll.dispose();
     _address.dispose();
+    _city.dispose();
     for (final controller in _fields.values) {
       controller.dispose();
     }
@@ -177,7 +187,9 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
     await Future<void>.delayed(const Duration(milliseconds: 650));
     if (!mounted) return;
     setState(() {
-      _profile = profileForAddress(_address.text);
+      _profile = profileForAddress(
+        _selectedCity.city,
+      ).withLocation(_selectedCity.city, _selectedCity.region);
       _fields['interestRate']!.text = (_profile.mortgage * 100).toStringAsFixed(
         2,
       );
@@ -187,12 +199,23 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
     });
   }
 
+  void _selectCity(MarketplaceCity city) {
+    setState(() {
+      _selectedCity = city;
+      _city.text = city.city;
+      _profile = profileForAddress(
+        city.city,
+      ).withLocation(city.city, city.region);
+    });
+    AccountService.savePreferredLocation(city);
+  }
+
   void _openLocalNetwork() {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => LocalNetworkPage(
           side: PlatformSide.property,
-          initialCity: MarketplaceService.inferCity(_profile.city),
+          initialCity: _selectedCity,
         ),
       ),
     );
@@ -217,6 +240,7 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
     });
     await AccountService.saveDraft({
       'address': _address.text.trim(),
+      'city': _selectedCity.label,
       'decision_mode': _mode.name,
       'property_type': _propertyType.name,
       'values': {
@@ -509,6 +533,12 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
         ),
         const SizedBox(height: 28),
         const Text('02  ·  LOCATION', style: _eyebrow),
+        const SizedBox(height: 10),
+        CanadianCityField(
+          controller: _city,
+          onSelected: _selectCity,
+          label: 'Canadian city or community',
+        ),
         const SizedBox(height: 10),
         TextField(
           controller: _address,
@@ -1194,7 +1224,7 @@ class _Panel extends StatelessWidget {
 class _Brand extends StatelessWidget {
   const _Brand();
   @override
-  Widget build(BuildContext context) => const DwellingIqLogo(size: 38);
+  Widget build(BuildContext context) => const HomeBrandButton(size: 38);
 }
 
 class _Kicker extends StatelessWidget {

@@ -33,4 +33,21 @@ void main() {
         .toList();
     expect(values.toSet(), hasLength(values.length));
   });
+
+  test('Canadian city suggestions correct common misspellings', () {
+    final suggestions = MarketplaceService.citySuggestions('Vancuver');
+    expect(suggestions.first.city, 'Vancouver');
+    expect(suggestions.first.region, 'BC');
+    expect(
+      MarketplaceService.resolveCanadianCity('Tornto')?.label,
+      'Toronto, ON',
+    );
+  });
+
+  test('unrecognized locations are rejected instead of silently saved', () {
+    expect(
+      MarketplaceService.resolveCanadianCity('Definitely Not A City'),
+      isNull,
+    );
+  });
 }

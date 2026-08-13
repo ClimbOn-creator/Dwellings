@@ -5,7 +5,7 @@ import '../models/platform_side.dart';
 import '../services/account_service.dart';
 import '../services/backend_service.dart';
 import '../services/marketplace_service.dart';
-import '../widgets/brand_logo.dart';
+import '../widgets/home_brand_button.dart';
 import '../widgets/profile_photo.dart';
 import '../widgets/app_navigation_menu.dart';
 import 'auth_page.dart';
@@ -357,10 +357,7 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
             children: [
               Row(
                 children: [
-                  InkWell(
-                    onTap: () => Navigator.pop(context),
-                    child: const DwellingIqLogo(size: 46),
-                  ),
+                  const HomeBrandButton(size: 46),
                   const Spacer(),
                   AppNavigationMenu(side: provider.category.side),
                 ],

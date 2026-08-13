@@ -1,10 +1,9 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 
 import '../services/account_service.dart';
 import '../services/backend_service.dart';
-import '../widgets/brand_logo.dart';
+import '../widgets/home_brand_button.dart';
+import '../widgets/topo_background.dart';
 import '../widgets/app_navigation_menu.dart';
 
 const _ink = Color(0xFF050510);
@@ -128,6 +127,7 @@ class _AuthPageState extends State<AuthPage> {
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: const Color(0xFF0B0B16),
     body: Stack(
+      fit: StackFit.expand,
       children: [
         const Positioned.fill(
           child: DecoratedBox(
@@ -142,7 +142,7 @@ class _AuthPageState extends State<AuthPage> {
         ),
         const Positioned.fill(
           child: IgnorePointer(
-            child: CustomPaint(painter: _TopoLinesPainter()),
+            child: CustomPaint(painter: TopoLinesPainter(opacity: .11)),
           ),
         ),
         Positioned(
@@ -170,7 +170,7 @@ class _AuthPageState extends State<AuthPage> {
                   children: [
                     Row(
                       children: [
-                        const DwellingIqLogo(size: 48),
+                        const HomeBrandButton(size: 48),
                         const Spacer(),
                         const AppNavigationMenu(),
                       ],
@@ -446,47 +446,4 @@ class _AuthPageState extends State<AuthPage> {
       ],
     ),
   );
-}
-
-class _TopoLinesPainter extends CustomPainter {
-  const _TopoLinesPainter();
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = const Color(0xFFB8B8C4).withValues(alpha: .11)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1;
-    final centres = <Offset>[
-      Offset(size.width * .12, size.height * .24),
-      Offset(size.width * .84, size.height * .2),
-      Offset(size.width * .78, size.height * .76),
-      Offset(size.width * .2, size.height * .88),
-    ];
-    final scale = math.min(size.width, size.height);
-    for (var group = 0; group < centres.length; group++) {
-      final centre = centres[group];
-      for (var ring = 0; ring < 7; ring++) {
-        final path = Path();
-        for (var point = 0; point <= 72; point++) {
-          final angle = point / 72 * math.pi * 2;
-          final base = scale * (.065 + ring * .038);
-          final irregularity =
-              1 + .1 * math.sin(angle * 3 + group) + .06 * math.cos(angle * 5);
-          final x = centre.dx + math.cos(angle) * base * 1.7 * irregularity;
-          final y = centre.dy + math.sin(angle) * base * irregularity;
-          if (point == 0) {
-            path.moveTo(x, y);
-          } else {
-            path.lineTo(x, y);
-          }
-        }
-        path.close();
-        canvas.drawPath(path, paint);
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

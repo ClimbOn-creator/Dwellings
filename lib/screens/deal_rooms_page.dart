@@ -5,7 +5,8 @@ import 'package:intl/intl.dart';
 import '../models/platform_side.dart';
 import '../services/backend_service.dart';
 import '../services/deal_room_service.dart';
-import '../widgets/brand_logo.dart';
+import '../widgets/home_brand_button.dart';
+import '../widgets/topo_background.dart';
 import '../widgets/profile_photo.dart';
 import '../widgets/app_navigation_menu.dart';
 import 'business_acquisition_page.dart';
@@ -171,128 +172,129 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
     ),
   );
 
-  Widget _header() => Container(
-    color: _ink,
-    padding: const EdgeInsets.fromLTRB(28, 22, 28, 64),
-    child: SafeArea(
-      bottom: false,
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1160),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  InkWell(
-                    onTap: () => Navigator.pop(context),
-                    child: const DwellingIqLogo(size: 46),
-                  ),
-                  const Spacer(),
-                  AppNavigationMenu(side: _side),
-                ],
-              ),
-              const SizedBox(height: 68),
-              Text(
-                _showAll
-                    ? 'CURRENT DEALS'
-                    : _side == PlatformSide.business
-                    ? 'DEALIQ WORKSPACES'
-                    : 'PROPERTYIQ WORKSPACES',
-                style: const TextStyle(
-                  color: _lilac,
-                  fontSize: 10,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 1.4,
+  Widget _header() => TopoBackground(
+    opacity: .055,
+    child: Padding(
+      padding: const EdgeInsets.fromLTRB(28, 22, 28, 64),
+      child: SafeArea(
+        bottom: false,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1160),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const HomeBrandButton(size: 46),
+                    const Spacer(),
+                    AppNavigationMenu(side: _side),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 14),
-              Text(
-                _showAll
-                    ? 'Every acquisition.\nOne command centre.'
-                    : _side == PlatformSide.business
-                    ? 'Every acquisition.\nOne working team.'
-                    : 'Every property.\nOne working team.',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: MediaQuery.sizeOf(context).width < 700 ? 48 : 68,
-                  height: 1,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: -3,
-                ),
-              ),
-              const SizedBox(height: 28),
-              SizedBox(
-                width: 650,
-                child: Text(
+                const SizedBox(height: 68),
+                Text(
                   _showAll
-                      ? 'Start, organize and finish residential, commercial and business acquisitions with clear stages, owners, deadlines and blockers.'
-                      : 'Turn an assessment into a private workspace for decisions, diligence, financing, legal work and closing.',
-                  style: TextStyle(
-                    color: Color(0xFFC5C5D0),
-                    height: 1.55,
-                    fontSize: 15,
+                      ? 'CURRENT DEALS'
+                      : _side == PlatformSide.business
+                      ? 'DEALIQ WORKSPACES'
+                      : 'PROPERTYIQ WORKSPACES',
+                  style: const TextStyle(
+                    color: _lilac,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.4,
                   ),
                 ),
-              ),
-              const SizedBox(height: 26),
-              Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                children: [
-                  FilledButton.icon(
-                    onPressed: _creating ? null : _manualCreate,
-                    style: FilledButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: _ink,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 22,
-                        vertical: 18,
-                      ),
-                    ),
-                    icon: _creating
-                        ? const SizedBox.square(
-                            dimension: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.add),
-                    label: Text(_creating ? 'CREATING…' : 'START A NEW DEAL'),
+                const SizedBox(height: 14),
+                Text(
+                  _showAll
+                      ? 'Every acquisition.\nOne command centre.'
+                      : _side == PlatformSide.business
+                      ? 'Every acquisition.\nOne working team.'
+                      : 'Every property.\nOne working team.',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: MediaQuery.sizeOf(context).width < 700 ? 48 : 68,
+                    height: 1,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: -3,
                   ),
-                  if (_side == PlatformSide.property)
-                    OutlinedButton.icon(
-                      onPressed: _creating ? null : _create,
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.white,
-                        side: const BorderSide(color: Colors.white38),
+                ),
+                const SizedBox(height: 28),
+                SizedBox(
+                  width: 650,
+                  child: Text(
+                    _showAll
+                        ? 'Start, organize and finish residential, commercial and business acquisitions with clear stages, owners, deadlines and blockers.'
+                        : 'Turn an assessment into a private workspace for decisions, diligence, financing, legal work and closing.',
+                    style: TextStyle(
+                      color: Color(0xFFC5C5D0),
+                      height: 1.55,
+                      fontSize: 15,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 26),
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  children: [
+                    FilledButton.icon(
+                      onPressed: _creating ? null : _manualCreate,
+                      style: FilledButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: _ink,
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
+                          horizontal: 22,
                           vertical: 18,
                         ),
                       ),
-                      icon: const Icon(Icons.auto_graph, size: 18),
-                      label: const Text('USE LATEST ANALYSIS'),
+                      icon: _creating
+                          ? const SizedBox.square(
+                              dimension: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.add),
+                      label: Text(_creating ? 'CREATING…' : 'START A NEW DEAL'),
                     ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  ChoiceChip(
-                    label: const Text('ALL DEALS'),
-                    selected: _showAll,
-                    onSelected: (_) => setState(() => _showAll = true),
-                  ),
-                  ChoiceChip(
-                    label: Text(_showArchived ? 'PAST / ARCHIVED' : 'CURRENT'),
-                    selected: _showArchived,
-                    onSelected: (value) =>
-                        setState(() => _showArchived = value),
-                  ),
-                ],
-              ),
-            ],
+                    if (_side == PlatformSide.property)
+                      OutlinedButton.icon(
+                        onPressed: _creating ? null : _create,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.white,
+                          side: const BorderSide(color: Colors.white38),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 18,
+                          ),
+                        ),
+                        icon: const Icon(Icons.auto_graph, size: 18),
+                        label: const Text('USE LATEST ANALYSIS'),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    ChoiceChip(
+                      label: const Text('ALL DEALS'),
+                      selected: _showAll,
+                      onSelected: (_) => setState(() => _showAll = true),
+                    ),
+                    ChoiceChip(
+                      label: Text(
+                        _showArchived ? 'PAST / ARCHIVED' : 'CURRENT',
+                      ),
+                      selected: _showArchived,
+                      onSelected: (value) =>
+                          setState(() => _showArchived = value),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -1091,10 +1093,7 @@ class _DealRoomPageState extends State<DealRoomPage> {
             children: [
               Row(
                 children: [
-                  InkWell(
-                    onTap: () => Navigator.pop(context),
-                    child: const DwellingIqLogo(size: 44),
-                  ),
+                  const HomeBrandButton(size: 44),
                   const Spacer(),
                   AppNavigationMenu(
                     side: _room.isBusiness
