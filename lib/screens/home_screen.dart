@@ -8,10 +8,7 @@ import '../services/backend_service.dart';
 import '../services/account_service.dart';
 import '../services/marketplace_service.dart';
 import '../widgets/site_footer.dart';
-import '../widgets/auth_button.dart';
-import '../widgets/current_deals_button.dart';
 import '../widgets/brand_logo.dart';
-import '../widgets/platform_switcher.dart';
 import '../widgets/app_navigation_menu.dart';
 import 'platform_hub_page.dart';
 import 'local_network_page.dart';
@@ -273,55 +270,13 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
           slivers: [
             SliverAppBar(
               pinned: true,
+              automaticallyImplyLeading: false,
               backgroundColor: _ink.withValues(alpha: .97),
               surfaceTintColor: Colors.transparent,
               titleSpacing: 26,
               title: const _Brand(),
-              leading: Navigator.canPop(context)
-                  ? IconButton(
-                      onPressed: () => Navigator.pop(context),
-                      icon: const Icon(Icons.arrow_back, color: Colors.white),
-                      tooltip: 'Back to DwellingsIQ',
-                    )
-                  : null,
-              bottom: MediaQuery.sizeOf(context).width < 760
-                  ? PreferredSize(
-                      preferredSize: const Size.fromHeight(54),
-                      child: Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: PlatformSwitcher(
-                          selected: PlatformSide.property,
-                          onChanged: (side) {
-                            if (side == PlatformSide.business) _openBusiness();
-                          },
-                          compact: true,
-                        ),
-                      ),
-                    )
-                  : null,
               actions: [
-                if (MediaQuery.sizeOf(context).width >= 760)
-                  PlatformSwitcher(
-                    selected: PlatformSide.property,
-                    onChanged: (side) {
-                      if (side == PlatformSide.business) _openBusiness();
-                    },
-                    compact: true,
-                  )
-                else
-                  const SizedBox.shrink(),
-                const SizedBox(width: 8),
-                const AppNavigationMenu(
-                  side: PlatformSide.property,
-                  compact: true,
-                ),
-                const SizedBox(width: 8),
-                const CurrentDealsButton(
-                  side: PlatformSide.property,
-                  compact: true,
-                ),
-                const SizedBox(width: 8),
-                const AuthButton(dark: true),
+                const AppNavigationMenu(side: PlatformSide.property),
                 const SizedBox(width: 18),
               ],
             ),

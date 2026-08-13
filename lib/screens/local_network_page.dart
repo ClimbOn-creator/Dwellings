@@ -4,11 +4,9 @@ import '../models/platform_side.dart';
 import '../services/marketplace_service.dart';
 import '../services/backend_service.dart';
 import '../widgets/brand_logo.dart';
-import '../widgets/auth_button.dart';
 import '../widgets/site_footer.dart';
 import '../widgets/profile_photo.dart';
 import '../widgets/platform_switcher.dart';
-import '../widgets/current_deals_button.dart';
 import '../widgets/app_navigation_menu.dart';
 import 'auth_page.dart';
 import 'business_acquisition_page.dart';
@@ -199,20 +197,12 @@ class _NetworkHero extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _NetworkNav(side: side, onSide: onSide, onModel: onModel),
-                if (MediaQuery.sizeOf(context).width <= 820) ...[
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      PlatformSwitcher(
-                        selected: side,
-                        onChanged: onSide,
-                        compact: true,
-                      ),
-                      const Spacer(),
-                      AppNavigationMenu(side: side),
-                    ],
-                  ),
-                ],
+                const SizedBox(height: 14),
+                PlatformSwitcher(
+                  selected: side,
+                  onChanged: onSide,
+                  compact: true,
+                ),
                 const Spacer(),
                 Text(
                   side == PlatformSide.property
@@ -274,7 +264,7 @@ class _NetworkNav extends StatelessWidget {
   final VoidCallback onModel;
   @override
   Widget build(BuildContext context) => Container(
-    height: MediaQuery.sizeOf(context).width > 820 ? 98 : 68,
+    height: 68,
     padding: const EdgeInsets.symmetric(horizontal: 10),
     decoration: BoxDecoration(
       color: Colors.white.withValues(alpha: .055),
@@ -289,73 +279,7 @@ class _NetworkNav extends StatelessWidget {
           child: const DwellingIqLogo(size: 44),
         ),
         const Spacer(),
-        if (MediaQuery.sizeOf(context).width > 620)
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 18),
-            child: Text(
-              'LOCAL NETWORK',
-              style: TextStyle(
-                color: _lilac,
-                fontSize: 9,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 1,
-              ),
-            ),
-          ),
-        AuthButton(
-          dark: true,
-          compact: MediaQuery.sizeOf(context).width <= 720,
-        ),
-        const SizedBox(width: 4),
-        CurrentDealsButton(side: side, compact: true),
-        const SizedBox(width: 4),
-        if (MediaQuery.sizeOf(context).width > 820) ...[
-          PlatformSwitcher(selected: side, onChanged: onSide, compact: true),
-          const SizedBox(width: 6),
-        ],
-        Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            if (MediaQuery.sizeOf(context).width <= 520)
-              IconButton.filled(
-                onPressed: onModel,
-                tooltip: side == PlatformSide.property
-                    ? 'Open property model'
-                    : 'Open business model',
-                style: IconButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: _ink,
-                ),
-                icon: const Icon(Icons.arrow_outward, size: 17),
-              )
-            else
-              FilledButton.icon(
-                onPressed: onModel,
-                style: FilledButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: _ink,
-                  padding: const EdgeInsets.fromLTRB(18, 13, 14, 13),
-                ),
-                iconAlignment: IconAlignment.end,
-                icon: const Icon(Icons.arrow_outward, size: 16),
-                label: Text(
-                  side == PlatformSide.property
-                      ? 'OPEN PROPERTY MODEL'
-                      : 'OPEN BUSINESS MODEL',
-                  style: const TextStyle(
-                    fontSize: 9,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: .6,
-                  ),
-                ),
-              ),
-            if (MediaQuery.sizeOf(context).width > 820) ...[
-              const SizedBox(height: 4),
-              AppNavigationMenu(side: side, compact: true),
-            ],
-          ],
-        ),
+        AppNavigationMenu(side: side),
       ],
     ),
   );

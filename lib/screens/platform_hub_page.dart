@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/platform_side.dart';
 import '../services/backend_service.dart';
-import '../widgets/auth_button.dart';
 import '../widgets/brand_logo.dart';
-import '../widgets/current_deals_button.dart';
 import '../widgets/platform_switcher.dart';
 import '../widgets/app_navigation_menu.dart';
 import '../widgets/site_footer.dart';
@@ -107,36 +105,15 @@ class PlatformHubPage extends StatelessWidget {
                       child: const DwellingIqLogo(size: 44),
                     ),
                     const Spacer(),
-                    if (!narrow) ...[
-                      PlatformSwitcher(
-                        selected: side,
-                        onChanged: (next) => _replaceSide(context, next),
-                        compact: true,
-                      ),
-                      const SizedBox(width: 6),
-                      CurrentDealsButton(side: side),
-                      const SizedBox(width: 6),
-                      AppNavigationMenu(side: side, compact: true),
-                    ],
-                    const AuthButton(dark: true),
+                    AppNavigationMenu(side: side),
                   ],
                 ),
-                if (narrow) ...[
-                  const SizedBox(height: 14),
-                  Row(
-                    children: [
-                      PlatformSwitcher(
-                        selected: side,
-                        onChanged: (next) => _replaceSide(context, next),
-                        compact: true,
-                      ),
-                      const Spacer(),
-                      AppNavigationMenu(side: side, compact: true),
-                      const SizedBox(width: 6),
-                      CurrentDealsButton(side: side, compact: true),
-                    ],
-                  ),
-                ],
+                const SizedBox(height: 14),
+                PlatformSwitcher(
+                  selected: side,
+                  onChanged: (next) => _replaceSide(context, next),
+                  compact: true,
+                ),
                 const SizedBox(height: 86),
                 Text(
                   _business

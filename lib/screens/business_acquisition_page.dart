@@ -7,8 +7,6 @@ import '../services/backend_service.dart';
 import '../services/business_service.dart';
 import '../services/marketplace_service.dart';
 import '../widgets/brand_logo.dart';
-import '../widgets/platform_switcher.dart';
-import '../widgets/current_deals_button.dart';
 import '../widgets/app_navigation_menu.dart';
 import 'auth_page.dart';
 import 'deal_rooms_page.dart';
@@ -372,68 +370,9 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
                     child: const DwellingIqLogo(size: 46),
                   ),
                   const Spacer(),
-                  if (MediaQuery.sizeOf(context).width >= 820) ...[
-                    PlatformSwitcher(
-                      selected: PlatformSide.business,
-                      onChanged: _openSide,
-                      compact: true,
-                    ),
-                    const SizedBox(width: 8),
-                    TextButton(
-                      onPressed: _openNetwork,
-                      style: TextButton.styleFrom(
-                        foregroundColor: Colors.white,
-                      ),
-                      child: const Text('NETWORK'),
-                    ),
-                    const CurrentDealsButton(
-                      side: PlatformSide.business,
-                      compact: true,
-                    ),
-                    const SizedBox(width: 6),
-                    const AppNavigationMenu(
-                      side: PlatformSide.business,
-                      compact: true,
-                    ),
-                  ],
-                  TextButton.icon(
-                    onPressed: _goBack,
-                    style: TextButton.styleFrom(foregroundColor: Colors.white),
-                    icon: const Icon(Icons.arrow_back, size: 17),
-                    label: const Text('BACK'),
-                  ),
+                  const AppNavigationMenu(side: PlatformSide.business),
                 ],
               ),
-              if (MediaQuery.sizeOf(context).width < 820) ...[
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    PlatformSwitcher(
-                      selected: PlatformSide.business,
-                      onChanged: _openSide,
-                      compact: true,
-                    ),
-                    TextButton(
-                      onPressed: _openNetwork,
-                      style: TextButton.styleFrom(
-                        foregroundColor: Colors.white,
-                      ),
-                      child: const Text('NETWORK'),
-                    ),
-                    const CurrentDealsButton(
-                      side: PlatformSide.business,
-                      compact: true,
-                    ),
-                    const AppNavigationMenu(
-                      side: PlatformSide.business,
-                      compact: true,
-                    ),
-                  ],
-                ),
-              ],
               const SizedBox(height: 70),
               const Text(
                 'DEALIQ / ACQUISITIONIQ · PLACEHOLDER',

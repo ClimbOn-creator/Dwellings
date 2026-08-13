@@ -362,17 +362,7 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
                     child: const DwellingIqLogo(size: 46),
                   ),
                   const Spacer(),
-                  AppNavigationMenu(
-                    side: provider.category.side,
-                    compact: true,
-                  ),
-                  const SizedBox(width: 6),
-                  TextButton.icon(
-                    onPressed: () => Navigator.pop(context),
-                    style: TextButton.styleFrom(foregroundColor: Colors.white),
-                    icon: const Icon(Icons.arrow_back, size: 17),
-                    label: const Text('BACK'),
-                  ),
+                  AppNavigationMenu(side: provider.category.side),
                 ],
               ),
               const SizedBox(height: 52),

@@ -6,11 +6,9 @@ import '../models/platform_side.dart';
 import '../services/backend_service.dart';
 import '../services/deal_room_service.dart';
 import '../widgets/brand_logo.dart';
-import '../widgets/platform_switcher.dart';
 import '../widgets/profile_photo.dart';
 import '../widgets/app_navigation_menu.dart';
 import 'business_acquisition_page.dart';
-import 'platform_hub_page.dart';
 
 const _ink = Color(0xFF050510);
 const _paper = Color(0xFFF5F5F7);
@@ -191,42 +189,9 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                     child: const DwellingIqLogo(size: 46),
                   ),
                   const Spacer(),
-                  if (MediaQuery.sizeOf(context).width >= 700)
-                    PlatformSwitcher(
-                      selected: _showAll ? null : _side,
-                      onChanged: (side) => setState(() {
-                        _side = side;
-                        _showAll = false;
-                      }),
-                      compact: true,
-                    ),
-                  if (MediaQuery.sizeOf(context).width >= 700)
-                    const SizedBox(width: 10),
-                  AppNavigationMenu(side: _side, compact: true),
-                  const SizedBox(width: 6),
-                  TextButton.icon(
-                    onPressed: () => Navigator.pop(context),
-                    style: TextButton.styleFrom(foregroundColor: Colors.white),
-                    icon: const Icon(Icons.arrow_back, size: 17),
-                    label: Text(
-                      MediaQuery.sizeOf(context).width < 520
-                          ? 'BACK'
-                          : 'PROFILE',
-                    ),
-                  ),
+                  AppNavigationMenu(side: _side),
                 ],
               ),
-              if (MediaQuery.sizeOf(context).width < 700) ...[
-                const SizedBox(height: 12),
-                PlatformSwitcher(
-                  selected: _showAll ? null : _side,
-                  onChanged: (side) => setState(() {
-                    _side = side;
-                    _showAll = false;
-                  }),
-                  compact: true,
-                ),
-              ],
               const SizedBox(height: 68),
               Text(
                 _showAll
@@ -1131,50 +1096,13 @@ class _DealRoomPageState extends State<DealRoomPage> {
                     child: const DwellingIqLogo(size: 44),
                   ),
                   const Spacer(),
-                  if (MediaQuery.sizeOf(context).width >= 700) ...[
-                    PlatformSwitcher(
-                      selected: _room.isBusiness
-                          ? PlatformSide.business
-                          : PlatformSide.property,
-                      onChanged: (side) =>
-                          Navigator.of(context).pushReplacement(
-                            MaterialPageRoute<void>(
-                              builder: (_) => PlatformHubPage(side: side),
-                            ),
-                          ),
-                      compact: true,
-                    ),
-                    const SizedBox(width: 8),
-                  ],
                   AppNavigationMenu(
                     side: _room.isBusiness
                         ? PlatformSide.business
                         : PlatformSide.property,
-                    compact: true,
-                  ),
-                  const SizedBox(width: 6),
-                  TextButton.icon(
-                    onPressed: () => Navigator.pop(context),
-                    style: TextButton.styleFrom(foregroundColor: Colors.white),
-                    icon: const Icon(Icons.arrow_back, size: 17),
-                    label: const Text('ALL DEAL ROOMS'),
                   ),
                 ],
               ),
-              if (MediaQuery.sizeOf(context).width < 700) ...[
-                const SizedBox(height: 12),
-                PlatformSwitcher(
-                  selected: _room.isBusiness
-                      ? PlatformSide.business
-                      : PlatformSide.property,
-                  onChanged: (side) => Navigator.of(context).pushReplacement(
-                    MaterialPageRoute<void>(
-                      builder: (_) => PlatformHubPage(side: side),
-                    ),
-                  ),
-                  compact: true,
-                ),
-              ],
               const SizedBox(height: 52),
               Text(
                 _room.ownedByCurrentUser

@@ -144,13 +144,7 @@ class _AuthPageState extends State<AuthPage> {
                       children: [
                         const DwellingIqLogo(size: 48),
                         const Spacer(),
-                        const AppNavigationMenu(compact: true),
-                        const SizedBox(width: 6),
-                        IconButton(
-                          onPressed: () => Navigator.pop(context),
-                          icon: const Icon(Icons.close, color: Colors.white),
-                          tooltip: 'Close',
-                        ),
+                        const AppNavigationMenu(),
                       ],
                     ),
                     const SizedBox(height: 64),

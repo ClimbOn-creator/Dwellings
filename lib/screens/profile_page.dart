@@ -8,16 +8,12 @@ import '../services/account_service.dart';
 import '../services/backend_service.dart';
 import '../services/marketplace_service.dart';
 import '../services/deal_room_service.dart';
-import '../models/platform_side.dart';
 import '../widgets/brand_logo.dart';
-import '../widgets/current_deals_button.dart';
-import '../widgets/platform_switcher.dart';
 import '../widgets/profile_photo.dart';
 import '../widgets/app_navigation_menu.dart';
 import 'auth_page.dart';
 import 'deal_rooms_page.dart';
 import 'member_profile_page.dart';
-import 'platform_hub_page.dart';
 
 const _ink = Color(0xFF050510);
 const _paper = Color(0xFFF5F5F7);
@@ -455,51 +451,9 @@ class _ProfilePageState extends State<ProfilePage> {
                 child: const DwellingIqLogo(size: 46),
               ),
               const Spacer(),
-              if (MediaQuery.sizeOf(context).width >= 760) ...[
-                PlatformSwitcher(
-                  selected: null,
-                  onChanged: (side) => Navigator.of(context).pushReplacement(
-                    MaterialPageRoute<void>(
-                      builder: (_) => PlatformHubPage(side: side),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 6),
-              ],
-              CurrentDealsButton(
-                side: PlatformSide.property,
-                compact: MediaQuery.sizeOf(context).width < 700,
-              ),
-              const SizedBox(width: 6),
-              const AppNavigationMenu(compact: true),
-              const SizedBox(width: 8),
-              if (MediaQuery.sizeOf(context).width >= 700)
-                TextButton(
-                  onPressed: _signOut,
-                  style: TextButton.styleFrom(foregroundColor: Colors.white),
-                  child: const Text('SIGN OUT'),
-                )
-              else
-                IconButton(
-                  onPressed: _signOut,
-                  color: Colors.white,
-                  tooltip: 'Sign out',
-                  icon: const Icon(Icons.logout, size: 18),
-                ),
+              const AppNavigationMenu(),
             ],
           ),
-          if (MediaQuery.sizeOf(context).width < 760) ...[
-            const SizedBox(height: 12),
-            PlatformSwitcher(
-              selected: null,
-              onChanged: (side) => Navigator.of(context).pushReplacement(
-                MaterialPageRoute<void>(
-                  builder: (_) => PlatformHubPage(side: side),
-                ),
-              ),
-              compact: true,
-            ),
-          ],
           const SizedBox(height: 54),
           Row(
             crossAxisAlignment: CrossAxisAlignment.end,
@@ -1174,6 +1128,12 @@ class _ProfilePageState extends State<ProfilePage> {
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
           ),
           child: Text(_saving ? 'Saving…' : 'Save profile'),
+        ),
+        const SizedBox(height: 10),
+        TextButton.icon(
+          onPressed: _signOut,
+          icon: const Icon(Icons.logout, size: 17),
+          label: const Text('Sign out'),
         ),
       ],
     ),
