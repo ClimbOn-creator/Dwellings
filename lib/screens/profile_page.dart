@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 
 import '../services/account_service.dart';
 import '../services/backend_service.dart';
@@ -693,7 +694,9 @@ class _ProfilePageState extends State<ProfilePage> {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
-                stats.membershipTier.toUpperCase(),
+                stats.verified
+                    ? 'VERIFIED · ${stats.membershipTier.toUpperCase()}'
+                    : stats.onboardingStatus.toUpperCase().replaceAll('_', ' '),
                 style: const TextStyle(
                   color: Color(0xFFD8D0FF),
                   fontSize: 9,
@@ -704,9 +707,11 @@ class _ProfilePageState extends State<ProfilePage> {
           ],
         ),
         const SizedBox(height: 8),
-        const Text(
-          'Your marketplace reach and active client opportunities.',
-          style: TextStyle(color: Color(0xFFB8B8C5), fontSize: 12),
+        Text(
+          stats.verified
+              ? 'Your verified marketplace listing and client opportunity pipeline.'
+              : 'Your application is ${stats.onboardingStatus.replaceAll('_', ' ')}. Your listing stays private until DwellingsIQ verifies it.',
+          style: const TextStyle(color: Color(0xFFB8B8C5), fontSize: 12),
         ),
         const SizedBox(height: 18),
         Wrap(
@@ -716,8 +721,23 @@ class _ProfilePageState extends State<ProfilePage> {
             _professionalMetric('${stats.teamSaves}', 'TEAM SAVES'),
             _professionalMetric('${stats.introductions}', 'INTRODUCTIONS'),
             _professionalMetric('${stats.dealRooms}', 'DEAL ROOMS'),
+            _professionalMetric(
+              '${stats.profileCompleteness}%',
+              'PROFILE READY',
+            ),
           ],
         ),
+        if (!stats.verified) ...[
+          const SizedBox(height: 16),
+          const Text(
+            'Verification checklist · real name and company · direct contact details · service markets · specialties · licence details when applicable. Platform review is required before public placement.',
+            style: TextStyle(
+              color: Color(0xFFD5D5DE),
+              fontSize: 11,
+              height: 1.5,
+            ),
+          ),
+        ],
       ],
     ),
   );
@@ -749,8 +769,8 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget _introductionCentre() => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      const Text(
-        'Introductions',
+      Text(
+        _incomingIntroductions.isEmpty ? 'Introductions' : 'Lead inbox',
         style: TextStyle(
           fontSize: 30,
           fontWeight: FontWeight.w700,
@@ -759,12 +779,28 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
       const SizedBox(height: 8),
       const Text(
-        'Track warm introductions between clients and property professionals.',
+        'Track consented introductions from first response through consultation and outcome.',
         style: TextStyle(color: Color(0xFF666674)),
       ),
       const SizedBox(height: 18),
       if (_incomingIntroductions.isNotEmpty) ...[
-        const _SectionLabel('CLIENT REQUESTS'),
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: [
+            _leadCount('NEW', {'new'}),
+            _leadCount('ACTIVE', {
+              'accepted',
+              'qualified',
+              'contacted',
+              'consultation',
+            }),
+            _leadCount('WON', {'won'}),
+            _leadCount('CLOSED', {'lost', 'declined', 'closed'}),
+          ],
+        ),
+        const SizedBox(height: 18),
+        const _SectionLabel('CLIENT LEADS'),
         const SizedBox(height: 8),
         ..._incomingIntroductions.map(
           (request) => _introductionRow(request, incoming: true),
@@ -790,6 +826,19 @@ class _ProfilePageState extends State<ProfilePage> {
           (request) => _introductionRow(request, incoming: false),
         ),
     ],
+  );
+
+  Widget _leadCount(String label, Set<String> statuses) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(13),
+      border: Border.all(color: const Color(0xFFE3E3E9)),
+    ),
+    child: Text(
+      '${_incomingIntroductions.where((lead) => statuses.contains(lead.status)).length}  $label',
+      style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900),
+    ),
   );
 
   Widget _introductionRow(
@@ -840,6 +889,27 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         ],
         if (incoming) ...[
+          if (request.nextFollowUpAt != null ||
+              request.providerNotes.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                [
+                  if (request.nextFollowUpAt != null)
+                    'FOLLOW UP ${DateFormat.yMMMd().format(request.nextFollowUpAt!)}',
+                  if (request.providerNotes.isNotEmpty)
+                    'PRIVATE NOTE · ${request.providerNotes}',
+                ].join('\n'),
+                style: const TextStyle(
+                  color: Color(0xFF5E45D7),
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  height: 1.5,
+                ),
+              ),
+            ),
+          ],
           const SizedBox(height: 14),
           Align(
             alignment: Alignment.centerLeft,
@@ -860,23 +930,11 @@ class _ProfilePageState extends State<ProfilePage> {
             spacing: 9,
             runSpacing: 9,
             children: [
-              FilledButton(
-                onPressed: request.status == 'new'
-                    ? () => _respondToIntroduction(request, 'accepted')
-                    : null,
-                child: const Text('ACCEPT'),
+              FilledButton.icon(
+                onPressed: () => _respondToIntroduction(request),
+                icon: const Icon(Icons.account_tree_outlined, size: 16),
+                label: const Text('UPDATE LEAD'),
               ),
-              OutlinedButton(
-                onPressed: request.status == 'new'
-                    ? () => _respondToIntroduction(request, 'declined')
-                    : null,
-                child: const Text('DECLINE'),
-              ),
-              if (request.status == 'accepted')
-                OutlinedButton(
-                  onPressed: () => _respondToIntroduction(request, 'contacted'),
-                  child: const Text('MARK CONTACTED'),
-                ),
             ],
           ),
         ],
@@ -886,8 +944,13 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Widget _statusBadge(String status) {
     final color = switch (status) {
-      'accepted' || 'contacted' || 'closed' => const Color(0xFF16825D),
-      'declined' => const Color(0xFFB42318),
+      'accepted' ||
+      'qualified' ||
+      'contacted' ||
+      'consultation' ||
+      'won' => const Color(0xFF16825D),
+      'declined' || 'lost' => const Color(0xFFB42318),
+      'closed' => const Color(0xFF666674),
       _ => _purple,
     };
     return Container(
@@ -907,41 +970,113 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Future<void> _respondToIntroduction(
-    IntroductionRequest request,
-    String status,
-  ) async {
+  Future<void> _respondToIntroduction(IntroductionRequest request) async {
     final message = TextEditingController();
-    final action = switch (status) {
-      'accepted' => 'Accept',
-      'declined' => 'Decline',
-      _ => 'Update',
-    };
+    final notes = TextEditingController(text: request.providerNotes);
+    final reason = TextEditingController(text: request.closedReason);
+    var status = request.status == 'new' ? 'accepted' : request.status;
+    DateTime? followUp = request.nextFollowUpAt;
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text('$action introduction'),
-        content: SizedBox(
-          width: 440,
-          child: TextField(
-            controller: message,
-            minLines: 3,
-            maxLines: 5,
-            decoration: const InputDecoration(
-              labelText: 'Message to the client (optional)',
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setModalState) => AlertDialog(
+          title: const Text('Update lead'),
+          content: SizedBox(
+            width: 480,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  DropdownButtonFormField<String>(
+                    initialValue: status,
+                    decoration: const InputDecoration(
+                      labelText: 'Pipeline stage',
+                    ),
+                    items:
+                        const [
+                              'accepted',
+                              'qualified',
+                              'contacted',
+                              'consultation',
+                              'won',
+                              'lost',
+                              'declined',
+                              'closed',
+                            ]
+                            .map(
+                              (value) => DropdownMenuItem(
+                                value: value,
+                                child: Text(value.toUpperCase()),
+                              ),
+                            )
+                            .toList(),
+                    onChanged: (value) => value == null
+                        ? null
+                        : setModalState(() => status = value),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: message,
+                    minLines: 2,
+                    maxLines: 4,
+                    decoration: const InputDecoration(
+                      labelText: 'Message visible to client (optional)',
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: notes,
+                    minLines: 2,
+                    maxLines: 4,
+                    decoration: const InputDecoration(
+                      labelText: 'Private pipeline notes',
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    onPressed: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate:
+                            followUp ??
+                            DateTime.now().add(const Duration(days: 2)),
+                        firstDate: DateTime.now(),
+                        lastDate: DateTime.now().add(const Duration(days: 730)),
+                      );
+                      if (picked != null)
+                        setModalState(() => followUp = picked);
+                    },
+                    icon: const Icon(Icons.event_outlined),
+                    label: Text(
+                      followUp == null
+                          ? 'SET FOLLOW-UP'
+                          : 'FOLLOW UP ${DateFormat.yMMMd().format(followUp!)}',
+                    ),
+                  ),
+                  if ({'lost', 'declined', 'closed'}.contains(status)) ...[
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: reason,
+                      decoration: const InputDecoration(
+                        labelText: 'Close reason',
+                      ),
+                    ),
+                  ],
+                ],
+              ),
             ),
           ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('Save update'),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('Confirm'),
-          ),
-        ],
       ),
     );
     if (confirmed == true) {
@@ -949,10 +1084,15 @@ class _ProfilePageState extends State<ProfilePage> {
         introductionId: request.id,
         status: status,
         message: message.text,
+        followUpAt: followUp,
+        privateNotes: notes.text,
+        closedReason: reason.text,
       );
       await _refreshActivity();
     }
     message.dispose();
+    notes.dispose();
+    reason.dispose();
   }
 
   Widget _profileEditor(AccountProfile? profile) => Container(

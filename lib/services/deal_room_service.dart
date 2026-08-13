@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:file_picker/file_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -225,12 +223,20 @@ class DealRoomDocument {
     required this.fileSize,
     required this.contentType,
     required this.createdAt,
+    required this.sha256,
+    required this.securityStatus,
+    required this.category,
+    required this.uploadedBy,
   });
   final String id;
   final String fileName;
   final int fileSize;
   final String contentType;
   final DateTime createdAt;
+  final String sha256;
+  final String securityStatus;
+  final String category;
+  final String uploadedBy;
 
   factory DealRoomDocument.fromJson(Map<String, dynamic> row) =>
       DealRoomDocument(
@@ -240,6 +246,34 @@ class DealRoomDocument {
         contentType:
             row['content_type'] as String? ?? 'application/octet-stream',
         createdAt: DateTime.parse(row['created_at'] as String),
+        sha256: row['sha256'] as String? ?? '',
+        securityStatus: row['security_status'] as String? ?? 'validated',
+        category: row['category'] as String? ?? 'general',
+        uploadedBy: row['uploaded_by'] as String? ?? '',
+      );
+}
+
+class DealRoomDocumentEvent {
+  const DealRoomDocumentEvent({
+    required this.id,
+    required this.eventType,
+    required this.fileName,
+    required this.createdAt,
+    required this.mine,
+  });
+  final String id;
+  final String eventType;
+  final String fileName;
+  final DateTime createdAt;
+  final bool mine;
+
+  factory DealRoomDocumentEvent.fromJson(Map<String, dynamic> row) =>
+      DealRoomDocumentEvent(
+        id: row['id'] as String,
+        eventType: row['event_type'] as String? ?? 'viewed',
+        fileName: row['file_name'] as String? ?? '',
+        createdAt: DateTime.parse(row['created_at'] as String),
+        mine: row['actor_user_id'] == BackendService.user?.id,
       );
 }
 
@@ -250,12 +284,14 @@ class DealRoomBundle {
     required this.notes,
     required this.members,
     required this.documents,
+    required this.documentEvents,
   });
   final DealRoom room;
   final List<DealRoomTask> tasks;
   final List<DealRoomNote> notes;
   final List<DealRoomMember> members;
   final List<DealRoomDocument> documents;
+  final List<DealRoomDocumentEvent> documentEvents;
 }
 
 class DealTaskTemplate {
@@ -557,9 +593,18 @@ class DealRoomService {
           .order('created_at'),
       _client
           .from('deal_room_documents')
-          .select('id, file_name, file_size, content_type, created_at')
+          .select(
+            'id, file_name, file_size, content_type, created_at, uploaded_by, sha256, security_status, category',
+          )
           .eq('deal_room_id', room.id)
+          .isFilter('deleted_at', null)
           .order('created_at', ascending: false),
+      _client
+          .from('deal_room_document_events')
+          .select('id, actor_user_id, event_type, file_name, created_at')
+          .eq('deal_room_id', room.id)
+          .order('created_at', ascending: false)
+          .limit(50),
     ]);
     final tasks = (values[0] as List)
         .map(
@@ -593,12 +638,20 @@ class DealRoomService {
               DealRoomDocument.fromJson(Map<String, dynamic>.from(row as Map)),
         )
         .toList();
+    final documentEvents = (values[4] as List)
+        .map(
+          (row) => DealRoomDocumentEvent.fromJson(
+            Map<String, dynamic>.from(row as Map),
+          ),
+        )
+        .toList();
     return DealRoomBundle(
       room: room,
       tasks: tasks,
       notes: notes,
       members: members,
       documents: documents,
+      documentEvents: documentEvents,
     );
   }
 
@@ -694,26 +747,36 @@ class DealRoomService {
     if (response.statusCode != 201) {
       throw StateError('Upload failed: ${response.body}');
     }
-    final uploaded = jsonDecode(response.body) as Map<String, dynamic>;
-    await _client.from('deal_room_documents').insert({
-      'deal_room_id': roomId,
-      'uploaded_by': user.id,
-      'object_key': uploaded['key'],
-      'file_name': uploaded['name'] ?? file.name,
-      'file_size': uploaded['size'] ?? file.size,
-      'content_type': _contentTypeFor(file.extension),
-    });
   }
 
-  static String _contentTypeFor(String? extension) => switch (extension) {
-    'pdf' => 'application/pdf',
-    'png' => 'image/png',
-    'jpg' || 'jpeg' => 'image/jpeg',
-    'doc' => 'application/msword',
-    'docx' =>
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    _ => 'application/octet-stream',
-  };
+  static Future<void> downloadDocument(DealRoomDocument document) async {
+    final token = _client.auth.currentSession?.accessToken;
+    if (token == null) throw StateError('Sign in to download this document.');
+    final response = await http.get(
+      Uri.base.resolve('/api/property-files?documentId=${document.id}'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+    if (response.statusCode != 200) {
+      throw StateError('Download failed: ${response.body}');
+    }
+    await FilePicker.platform.saveFile(
+      dialogTitle: 'Save secure Deal Room document',
+      fileName: document.fileName,
+      bytes: response.bodyBytes,
+    );
+  }
+
+  static Future<void> deleteDocument(DealRoomDocument document) async {
+    final token = _client.auth.currentSession?.accessToken;
+    if (token == null) throw StateError('Sign in to delete this document.');
+    final response = await http.delete(
+      Uri.base.resolve('/api/property-files?documentId=${document.id}'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+    if (response.statusCode != 200) {
+      throw StateError('Delete failed: ${response.body}');
+    }
+  }
 
   static Future<void> updateRoom({
     required String roomId,

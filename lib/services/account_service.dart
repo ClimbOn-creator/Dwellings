@@ -132,6 +132,11 @@ class IntroductionRequest {
     required this.memberMessage,
     required this.createdAt,
     required this.respondedAt,
+    required this.nextFollowUpAt,
+    required this.providerNotes,
+    required this.closedReason,
+    required this.preferredContact,
+    required this.leadType,
   });
 
   final String id;
@@ -146,6 +151,11 @@ class IntroductionRequest {
   final String memberMessage;
   final DateTime createdAt;
   final DateTime? respondedAt;
+  final DateTime? nextFollowUpAt;
+  final String providerNotes;
+  final String closedReason;
+  final String preferredContact;
+  final String leadType;
 
   factory IntroductionRequest.fromJson(Map<String, dynamic> row) {
     final provider = row['provider_profiles'] is Map
@@ -166,6 +176,13 @@ class IntroductionRequest {
       respondedAt: row['responded_at'] == null
           ? null
           : DateTime.tryParse(row['responded_at'] as String),
+      nextFollowUpAt: row['next_follow_up_at'] == null
+          ? null
+          : DateTime.tryParse(row['next_follow_up_at'] as String),
+      providerNotes: row['provider_notes'] as String? ?? '',
+      closedReason: row['closed_reason'] as String? ?? '',
+      preferredContact: row['preferred_contact'] as String? ?? 'email',
+      leadType: row['lead_type'] as String? ?? 'general',
     );
   }
 }
@@ -176,11 +193,19 @@ class ProfessionalWorkspaceStats {
     required this.teamSaves,
     required this.introductions,
     required this.dealRooms,
+    required this.onboardingStatus,
+    required this.verified,
+    required this.acceptingLeads,
+    required this.profileCompleteness,
   });
   final String membershipTier;
   final int teamSaves;
   final int introductions;
   final int dealRooms;
+  final String onboardingStatus;
+  final bool verified;
+  final bool acceptingLeads;
+  final int profileCompleteness;
 }
 
 class AccountService {
@@ -188,6 +213,7 @@ class AccountService {
   static const _introductionSelect =
       'id, provider_id, status, requester_name, requester_email, requester_phone, '
       'property_summary, member_message, created_at, responded_at, '
+      'next_follow_up_at, provider_notes, closed_reason, preferred_contact, lead_type, '
       'provider_profiles(id, display_name, company_name, owner_user_id)';
 
   static Future<bool> usernameAvailable(String username) async {
@@ -371,6 +397,8 @@ class AccountService {
     required MarketplaceProvider provider,
     required String propertySummary,
     String? phone,
+    String preferredContact = 'email',
+    String leadType = 'general',
   }) async {
     final user = BackendService.user;
     if (user == null) throw StateError('Sign in to request an introduction.');
@@ -385,6 +413,8 @@ class AccountService {
       'requester_email': user.email ?? '',
       'requester_phone': phone?.trim().isEmpty == true ? null : phone?.trim(),
       'property_summary': propertySummary.trim(),
+      'preferred_contact': preferredContact,
+      'lead_type': leadType,
       'consent_to_contact': true,
     });
   }
@@ -413,6 +443,7 @@ class AccountService {
         .select(
           'id, provider_id, status, requester_name, requester_email, requester_phone, '
           'property_summary, member_message, created_at, responded_at, '
+          'next_follow_up_at, provider_notes, closed_reason, preferred_contact, lead_type, '
           'provider_profiles!inner(id, display_name, company_name, owner_user_id)',
         )
         .eq('provider_profiles.owner_user_id', user.id)
@@ -429,6 +460,9 @@ class AccountService {
     required String introductionId,
     required String status,
     String message = '',
+    DateTime? followUpAt,
+    String privateNotes = '',
+    String closedReason = '',
   }) async {
     await _client.rpc(
       'respond_to_introduction',
@@ -436,6 +470,9 @@ class AccountService {
         'introduction_id': introductionId,
         'response_status': status,
         'response_message': message,
+        'follow_up_at': followUpAt?.toIso8601String(),
+        'private_notes': privateNotes,
+        'loss_reason': closedReason,
       },
     );
   }
@@ -445,7 +482,10 @@ class AccountService {
     if (user == null) return null;
     final providers = await _client
         .from('provider_profiles')
-        .select('id, membership_tier')
+        .select(
+          'id, membership_tier, onboarding_status, verified, accepting_leads, '
+          'display_name, company_name, description, phone, email, license_number, specialties, service_markets',
+        )
         .eq('owner_user_id', user.id);
     if (providers.isEmpty) return null;
     final ids = providers.map((row) => row['id'] as String).toList();
@@ -464,11 +504,27 @@ class AccountService {
           .inFilter('provider_id', ids)
           .neq('status', 'removed'),
     ]);
+    final provider = Map<String, dynamic>.from(providers.first);
+    final requiredValues = [
+      provider['display_name'],
+      provider['company_name'],
+      provider['description'],
+      provider['phone'],
+      provider['email'],
+    ];
+    final completed =
+        requiredValues.where((value) => '$value'.trim().isNotEmpty).length +
+        ((provider['specialties'] as List?)?.isNotEmpty == true ? 1 : 0) +
+        ((provider['service_markets'] as List?)?.isNotEmpty == true ? 1 : 0);
     return ProfessionalWorkspaceStats(
       membershipTier: providers.first['membership_tier'] as String? ?? 'free',
       teamSaves: (values[0] as List).length,
       introductions: (values[1] as List).length,
       dealRooms: (values[2] as List).length,
+      onboardingStatus: provider['onboarding_status'] as String? ?? 'draft',
+      verified: provider['verified'] as bool? ?? false,
+      acceptingLeads: provider['accepting_leads'] as bool? ?? false,
+      profileCompleteness: ((completed / 7) * 100).round(),
     );
   }
 

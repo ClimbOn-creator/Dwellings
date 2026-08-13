@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../models/platform_side.dart';
+import '../services/backend_service.dart';
 import '../services/deal_room_service.dart';
 import '../widgets/brand_logo.dart';
 import '../widgets/platform_switcher.dart';
@@ -1015,7 +1016,7 @@ class _DealRoomPageState extends State<DealRoomPage> {
       withData: true,
       allowMultiple: false,
       type: FileType.custom,
-      allowedExtensions: const ['pdf', 'png', 'jpg', 'jpeg', 'doc', 'docx'],
+      allowedExtensions: const ['pdf', 'png', 'jpg', 'jpeg'],
     );
     if (result == null || result.files.isEmpty) return;
     setState(() => _uploading = true);
@@ -1091,11 +1092,9 @@ class _DealRoomPageState extends State<DealRoomPage> {
                         const SizedBox(height: 24),
                         _checklist(bundle.tasks, bundle.members),
                         const SizedBox(height: 24),
-                        if (!_room.isBusiness &&
-                            (_room.ownedByCurrentUser ||
-                                _room.sharingPreferences['documents'] ==
-                                    true)) ...[
-                          _documents(bundle.documents),
+                        if (_room.ownedByCurrentUser ||
+                            _room.sharingPreferences['documents'] == true) ...[
+                          _documents(bundle.documents, bundle.documentEvents),
                           const SizedBox(height: 24),
                         ],
                         _notes(bundle.notes),
@@ -1380,7 +1379,7 @@ class _DealRoomPageState extends State<DealRoomPage> {
         SizedBox(width: 11),
         Expanded(
           child: Text(
-            'CONFIDENTIAL DOCUMENT VAULT DISABLED · Use this workspace for summarized figures, tasks and non-sensitive notes only. Sensitive M&A uploads will remain blocked until mandatory MFA, malware scanning, audit logs, watermarks and expiring downloads are operational and independently tested.',
+            'PRIVATE DEAL VAULT · Access is restricted to this Deal Room, files are validated against an allowlist, downloads require a live signed-in session, and file activity is audited. Do not upload executable files, passwords, government IDs or banking credentials. Independent security testing and malware scanning remain required before storing the most sensitive M&A records.',
             style: TextStyle(
               color: Color(0xFF6D4805),
               fontSize: 11,
@@ -1963,8 +1962,11 @@ class _DealRoomPageState extends State<DealRoomPage> {
     ),
   );
 
-  Widget _documents(List<DealRoomDocument> documents) => _card(
-    'Documents',
+  Widget _documents(
+    List<DealRoomDocument> documents,
+    List<DealRoomDocumentEvent> events,
+  ) => _card(
+    'Private document vault',
     Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1979,9 +1981,14 @@ class _DealRoomPageState extends State<DealRoomPage> {
           label: Text(_uploading ? 'UPLOADING…' : 'UPLOAD DOCUMENT'),
         ),
         const SizedBox(height: 14),
+        const Text(
+          'PDF, JPG or PNG · 15 MB maximum · authenticated participants only',
+          style: TextStyle(color: Color(0xFF666674), fontSize: 11),
+        ),
+        const SizedBox(height: 14),
         if (documents.isEmpty)
           const Text(
-            'No shared documents yet. Upload PDFs, images or Word documents up to 15 MB.',
+            'No private documents have been added.',
             style: TextStyle(color: Color(0xFF666674), fontSize: 12),
           )
         else
@@ -1991,10 +1998,77 @@ class _DealRoomPageState extends State<DealRoomPage> {
               leading: const Icon(Icons.description_outlined, color: _purple),
               title: Text(document.fileName),
               subtitle: Text(
-                '${(document.fileSize / 1024).ceil()} KB · ${DateFormat.MMMd().format(document.createdAt)}',
+                '${(document.fileSize / 1024).ceil()} KB · ${document.securityStatus.toUpperCase()} · ${DateFormat.MMMd().format(document.createdAt)}',
+              ),
+              trailing: PopupMenuButton<String>(
+                tooltip: 'Document actions',
+                onSelected: (action) async {
+                  try {
+                    if (action == 'download') {
+                      await DealRoomService.downloadDocument(document);
+                    } else if (action == 'delete') {
+                      await DealRoomService.deleteDocument(document);
+                      _refresh();
+                    }
+                  } catch (error) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(
+                        context,
+                      ).showSnackBar(SnackBar(content: Text('$error')));
+                    }
+                  }
+                },
+                itemBuilder: (_) => [
+                  const PopupMenuItem(
+                    value: 'download',
+                    child: Text('Download securely'),
+                  ),
+                  if (_room.ownedByCurrentUser ||
+                      document.uploadedBy == BackendService.user?.id)
+                    const PopupMenuItem(
+                      value: 'delete',
+                      child: Text('Delete document'),
+                    ),
+                ],
               ),
             ),
           ),
+        if (events.isNotEmpty) ...[
+          const Divider(height: 32),
+          ExpansionTile(
+            tilePadding: EdgeInsets.zero,
+            title: const Text(
+              'File activity',
+              style: TextStyle(fontWeight: FontWeight.w700),
+            ),
+            subtitle: const Text('Recent downloads, uploads and deletions'),
+            children: events
+                .take(12)
+                .map(
+                  (event) => ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(
+                      event.eventType == 'downloaded'
+                          ? Icons.download_done_outlined
+                          : Icons.history,
+                      size: 18,
+                    ),
+                    title: Text(
+                      '${event.eventType.toUpperCase()} · ${event.fileName}',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    subtitle: Text(
+                      '${event.mine ? 'You' : 'Deal participant'} · ${DateFormat.MMMd().add_jm().format(event.createdAt)}',
+                    ),
+                  ),
+                )
+                .toList(),
+          ),
+        ],
       ],
     ),
   );

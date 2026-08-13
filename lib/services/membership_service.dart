@@ -99,9 +99,55 @@ class MembershipService {
     if (!BackendService.configured) {
       throw StateError('Membership applications are temporarily unavailable.');
     }
-    await Supabase.instance.client.from('membership_applications').insert({
+    final client = Supabase.instance.client;
+    final user = BackendService.user;
+    final type = application['applicant_type'] as String? ?? 'homebuyer';
+    final professional = !{
+      'homebuyer',
+      'investor',
+      'business_buyer',
+    }.contains(type);
+    if (professional && user == null) {
+      throw StateError('Sign in before submitting a professional application.');
+    }
+    await client.from('membership_applications').insert({
       ...application,
-      'user_id': BackendService.user?.id,
+      'user_id': user?.id,
     });
+    if (!professional || user == null) return;
+    final existing = await client
+        .from('provider_profiles')
+        .select('id')
+        .eq('owner_user_id', user.id)
+        .maybeSingle();
+    final profile = {
+      'owner_user_id': user.id,
+      'provider_type': type,
+      'display_name': application['full_name'],
+      'company_name': application['company_name'] ?? '',
+      'job_title': MemberType.values
+          .firstWhere((value) => value.databaseValue == type)
+          .label,
+      'description': application['notes'] ?? '',
+      'phone': application['phone'],
+      'email': application['email'],
+      'license_number': application['license_number'],
+      'license_region': application['license_region'],
+      'specialties': application['specialties'] ?? <String>[],
+      'service_markets': application['service_markets'] ?? <String>[],
+      'membership_tier': application['requested_tier'] ?? 'free',
+      'onboarding_status': 'submitted',
+      'onboarding_completed_at': DateTime.now().toIso8601String(),
+      'verified': false,
+      'is_example': false,
+    };
+    if (existing == null) {
+      await client.from('provider_profiles').insert(profile);
+    } else {
+      await client
+          .from('provider_profiles')
+          .update(profile)
+          .eq('id', existing['id']);
+    }
   }
 }

@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 
 import '../services/marketplace_service.dart';
 import '../services/membership_service.dart';
+import '../services/backend_service.dart';
 import '../widgets/brand_logo.dart';
 import '../widgets/auth_button.dart';
 import '../widgets/site_footer.dart';
+import 'auth_page.dart';
 
 const _ink = Color(0xFF050510);
 const _paper = Color(0xFFF5F5F7);
@@ -45,6 +47,7 @@ class _BecomeMemberPageState extends State<BecomeMemberPage> {
   bool _financing = false;
   bool _sponsorship = false;
   bool _consent = false;
+  bool _professionalAttestation = false;
   bool _submitting = false;
   bool _complete = false;
   String _requestedTier = 'free';
@@ -112,6 +115,20 @@ class _BecomeMemberPageState extends State<BecomeMemberPage> {
       );
       return;
     }
+    if (_type.isProfessional && !_professionalAttestation) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please confirm your professional information.'),
+        ),
+      );
+      return;
+    }
+    if (_type.isProfessional && BackendService.user == null) {
+      await Navigator.of(
+        context,
+      ).push(MaterialPageRoute<void>(builder: (_) => const AuthPage()));
+      if (!mounted || BackendService.user == null) return;
+    }
     setState(() => _submitting = true);
     try {
       await MembershipService.submit({
@@ -139,6 +156,8 @@ class _BecomeMemberPageState extends State<BecomeMemberPage> {
         'requested_tier': _type.isProfessional ? _requestedTier : 'free',
         'notes': _notes.text.trim().isEmpty ? null : _notes.text.trim(),
         'consent_to_contact': true,
+        'professional_attestation':
+            _type.isProfessional && _professionalAttestation,
       });
       if (mounted) setState(() => _complete = true);
     } catch (error) {
@@ -326,6 +345,23 @@ class _BecomeMemberPageState extends State<BecomeMemberPage> {
                 ),
                 controlAffinity: ListTileControlAffinity.leading,
               ),
+              if (_type.isProfessional)
+                CheckboxListTile(
+                  value: _professionalAttestation,
+                  onChanged: (value) =>
+                      setState(() => _professionalAttestation = value ?? false),
+                  contentPadding: EdgeInsets.zero,
+                  activeColor: _purple,
+                  controlAffinity: ListTileControlAffinity.leading,
+                  title: const Text(
+                    'I confirm this information is accurate and that I hold any licence required for the services I offer.',
+                    style: TextStyle(fontSize: 13),
+                  ),
+                  subtitle: const Text(
+                    'Applications are reviewed. Verification cannot be purchased and may be suspended if information becomes inaccurate.',
+                    style: TextStyle(fontSize: 11),
+                  ),
+                ),
               const SizedBox(height: 22),
               FilledButton.icon(
                 onPressed: _submitting ? null : _submit,
