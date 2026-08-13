@@ -8,14 +8,7 @@ import '../screens/local_network_page.dart';
 import '../screens/marketing_pages.dart';
 import '../screens/profile_page.dart';
 
-enum AppNavigationDestination {
-  network,
-  process,
-  membership,
-  deals,
-  profile,
-  model,
-}
+enum AppNavigationDestination { network, membership, deals, profile, model }
 
 class AppNavigationMenu extends StatelessWidget {
   const AppNavigationMenu({
@@ -29,7 +22,6 @@ class AppNavigationMenu extends StatelessWidget {
 
   String _label(AppNavigationDestination destination) => switch (destination) {
     AppNavigationDestination.network => 'Local network',
-    AppNavigationDestination.process => 'How it works',
     AppNavigationDestination.membership => 'Become a member',
     AppNavigationDestination.deals => 'Current deals',
     AppNavigationDestination.profile => 'Profile',
@@ -46,19 +38,13 @@ class AppNavigationMenu extends StatelessWidget {
         side == PlatformSide.business
             ? const BusinessAcquisitionPage()
             : const UnderwritingScreen(),
-      AppNavigationDestination.process ||
       AppNavigationDestination.membership => null,
     };
     if (page != null) {
       Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => page));
       return;
     }
-    openMarketingPage(
-      context,
-      destination == AppNavigationDestination.process
-          ? MarketingDestination.process
-          : MarketingDestination.membership,
-    );
+    openMarketingPage(context, MarketingDestination.membership);
   }
 
   @override

@@ -16,7 +16,7 @@ const _purple = brandPurple;
 const _lilac = brandLilac;
 const _muted = Color(0xFFA5A5B5);
 
-enum MarketingDestination { network, process, about, team, membership }
+enum MarketingDestination { network, about, team, membership }
 
 void openMarketingPage(
   BuildContext context,
@@ -25,7 +25,6 @@ void openMarketingPage(
 }) {
   final Widget page = switch (destination) {
     MarketingDestination.network => const LocalNetworkPage(),
-    MarketingDestination.process => const HowItWorksPage(),
     MarketingDestination.about => const AboutPage(),
     MarketingDestination.team => const TeamPage(),
     MarketingDestination.membership => BecomeMemberPage(
@@ -133,7 +132,6 @@ class MarketingNavigation extends StatelessWidget {
 
 String _destinationLabel(MarketingDestination value) => switch (value) {
   MarketingDestination.network => 'LOCAL NETWORK',
-  MarketingDestination.process => 'HOW IT WORKS',
   MarketingDestination.about => 'ABOUT',
   MarketingDestination.team => 'TEAM',
   MarketingDestination.membership => 'BECOME A MEMBER',
@@ -233,7 +231,7 @@ class CapabilitiesPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => _MarketingPage(
-    active: MarketingDestination.process,
+    active: MarketingDestination.about,
     eyebrow: 'CAPABILITIES',
     title: 'Everything that can change the deal.',
     body:
@@ -420,31 +418,6 @@ class _CapabilityState extends State<_Capability> {
           ),
         ],
       ),
-    ),
-  );
-}
-
-class HowItWorksPage extends StatelessWidget {
-  const HowItWorksPage({super.key});
-
-  @override
-  Widget build(BuildContext context) => _MarketingPage(
-    active: MarketingDestination.process,
-    eyebrow: 'HOW IT WORKS',
-    title: 'A complicated property. A clear sequence.',
-    body:
-        'Build the picture once, pressure-test it, then understand exactly what must be true for the decision to work.',
-    heroAsset: 'assets/images/hero-city.jpg',
-    child: Column(
-      children: [
-        const _Workflow(),
-        const _ScenarioSection(),
-        _PageCta(
-          title: 'Your first base case takes only minutes.',
-          button: 'BUILD THE MODEL',
-          onTap: () => openUnderwriting(context),
-        ),
-      ],
     ),
   );
 }
@@ -787,12 +760,8 @@ class AboutPage extends StatelessWidget {
         const _Principles(),
         _PageCta(
           title: 'Better questions create better properties.',
-          button: 'SEE HOW IT WORKS',
-          onTap: () => openMarketingPage(
-            context,
-            MarketingDestination.process,
-            replace: true,
-          ),
+          button: 'OPEN RISK MODEL',
+          onTap: () => openUnderwriting(context),
         ),
       ],
     ),
