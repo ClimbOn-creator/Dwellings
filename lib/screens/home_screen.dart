@@ -153,7 +153,6 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
           }
         }
       });
-      _message('Your last property draft was restored.');
     } catch (_) {
       // A missing draft should never block the calculator.
     }
