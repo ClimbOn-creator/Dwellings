@@ -7,10 +7,12 @@ import '../models/platform_side.dart';
 import '../services/backend_service.dart';
 import '../services/account_service.dart';
 import '../services/marketplace_service.dart';
+import '../services/device_location_service.dart';
 import '../widgets/site_footer.dart';
 import '../widgets/app_navigation_menu.dart';
 import '../widgets/canadian_city_field.dart';
 import '../widgets/home_brand_button.dart';
+import '../widgets/topo_background.dart';
 import 'platform_hub_page.dart';
 import 'local_network_page.dart';
 import 'deal_rooms_page.dart';
@@ -184,19 +186,25 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
 
   Future<void> _scanLocation() async {
     setState(() => _scanning = true);
-    await Future<void>.delayed(const Duration(milliseconds: 650));
-    if (!mounted) return;
-    setState(() {
-      _profile = profileForAddress(
-        _selectedCity.city,
-      ).withLocation(_selectedCity.city, _selectedCity.region);
-      _fields['interestRate']!.text = (_profile.mortgage * 100).toStringAsFixed(
-        2,
+    try {
+      final located = await DeviceLocationService.locateCanadianCity();
+      if (!mounted) return;
+      _selectCity(located.city);
+      setState(() {
+        _address.text = 'Current location · ${located.city.label}';
+        _fields['interestRate']!.text = (_profile.mortgage * 100)
+            .toStringAsFixed(2);
+        _fields['appreciation']!.text = (_profile.appreciation * 100)
+            .toStringAsFixed(1);
+      });
+      _message(
+        'Location matched to ${located.city.label}. Add the exact street address if needed.',
       );
-      _fields['appreciation']!.text = (_profile.appreciation * 100)
-          .toStringAsFixed(1);
-      _scanning = false;
-    });
+    } catch (error) {
+      _message(error.toString().replaceFirst('Bad state: ', ''));
+    } finally {
+      if (mounted) setState(() => _scanning = false);
+    }
   }
 
   void _selectCity(MarketplaceCity city) {
@@ -439,8 +447,9 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
     },
   );
 
-  Widget _workspace() => Container(
+  Widget _workspace() => TopoBackground(
     color: _ink,
+    opacity: .045,
     child: Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 1600),
@@ -455,10 +464,10 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
                 'Understand what could break the deal.',
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: 42,
+                  fontSize: 48,
                   height: 1.05,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: -1.8,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -2.4,
                 ),
               ),
               const SizedBox(height: 12),
@@ -467,6 +476,8 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
                 style: TextStyle(color: Color(0xFFAAAAAA), fontSize: 15),
               ),
               const SizedBox(height: 34),
+              const _ModelCommandBar(side: 'PROPERTYIQ'),
+              const SizedBox(height: 18),
               _inputPanel(),
               if (_result != null) ...[
                 const SizedBox(height: 20),
@@ -547,9 +558,13 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
             prefixIcon: const Icon(Icons.location_on_outlined),
             suffixIcon: Padding(
               padding: const EdgeInsets.all(6),
-              child: FilledButton(
+              child: FilledButton.icon(
                 onPressed: _scanning ? null : _scanLocation,
-                child: Text(_scanning ? 'Scanning…' : 'Scan'),
+                icon: Icon(
+                  _scanning ? Icons.radar_rounded : Icons.my_location_rounded,
+                  size: 17,
+                ),
+                label: Text(_scanning ? 'Locating…' : 'Use my location'),
               ),
             ),
           ),
@@ -1202,6 +1217,81 @@ class _FuturistManifesto extends StatelessWidget {
   );
 }
 
+class _ModelCommandBar extends StatelessWidget {
+  const _ModelCommandBar({required this.side});
+  final String side;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+    decoration: BoxDecoration(
+      color: Colors.white.withValues(alpha: .075),
+      borderRadius: BorderRadius.circular(18),
+      border: Border.all(color: Colors.white.withValues(alpha: .12)),
+    ),
+    child: Wrap(
+      spacing: 18,
+      runSpacing: 10,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 9,
+              height: 9,
+              decoration: const BoxDecoration(
+                color: Color(0xFF5EE0A0),
+                shape: BoxShape.circle,
+              ),
+            ),
+            const SizedBox(width: 9),
+            Text(
+              '$side MODEL LIVE',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 10,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.1,
+              ),
+            ),
+          ],
+        ),
+        const _CommandDatum(icon: Icons.location_city, label: 'CANADA-WIDE'),
+        const _CommandDatum(icon: Icons.shield_outlined, label: 'RISK-FIRST'),
+        const _CommandDatum(
+          icon: Icons.auto_graph_rounded,
+          label: 'LIVE SCENARIOS',
+        ),
+      ],
+    ),
+  );
+}
+
+class _CommandDatum extends StatelessWidget {
+  const _CommandDatum({required this.icon, required this.label});
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Icon(icon, color: _lime, size: 16),
+      const SizedBox(width: 7),
+      Text(
+        label,
+        style: const TextStyle(
+          color: Color(0xFFC8C8D4),
+          fontSize: 9,
+          fontWeight: FontWeight.w800,
+          letterSpacing: .7,
+        ),
+      ),
+    ],
+  );
+}
+
 class _Panel extends StatelessWidget {
   const _Panel({required this.child, this.padding = const EdgeInsets.all(26)});
   final Widget child;
@@ -1210,11 +1300,15 @@ class _Panel extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: padding,
     decoration: BoxDecoration(
-      color: _card,
-      borderRadius: BorderRadius.circular(12),
-      border: Border.all(color: _line),
+      color: const Color(0xFFFAF9FF),
+      borderRadius: BorderRadius.circular(28),
+      border: Border.all(color: const Color(0xFF7657FF).withValues(alpha: .28)),
       boxShadow: const [
-        BoxShadow(color: Color(0x12102218), blurRadius: 0, offset: Offset.zero),
+        BoxShadow(
+          color: Color(0x33000000),
+          blurRadius: 34,
+          offset: Offset(0, 18),
+        ),
       ],
     ),
     child: child,
@@ -1367,8 +1461,10 @@ class _InputSection extends StatelessWidget {
     child: Container(
       margin: const EdgeInsets.only(top: 10),
       decoration: BoxDecoration(
-        border: Border.all(color: _line),
-        borderRadius: BorderRadius.circular(8),
+        color: Colors.white,
+        border: Border.all(color: const Color(0xFFE5E1F2)),
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: const [BoxShadow(color: Color(0x0A050510), blurRadius: 18)],
       ),
       child: ExpansionTile(
         initiallyExpanded: initiallyExpanded,

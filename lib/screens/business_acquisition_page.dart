@@ -6,8 +6,12 @@ import '../models/platform_side.dart';
 import '../services/backend_service.dart';
 import '../services/business_service.dart';
 import '../services/marketplace_service.dart';
+import '../services/account_service.dart';
+import '../services/device_location_service.dart';
 import '../widgets/home_brand_button.dart';
 import '../widgets/app_navigation_menu.dart';
+import '../widgets/canadian_city_field.dart';
+import '../widgets/topo_background.dart';
 import 'auth_page.dart';
 import 'deal_rooms_page.dart';
 import 'platform_hub_page.dart';
@@ -32,10 +36,12 @@ class BusinessAcquisitionPage extends StatefulWidget {
 class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
   final _businessName = TextEditingController();
   final _industry = TextEditingController();
-  final _location = TextEditingController();
+  final _location = TextEditingController(text: 'Vancouver');
+  MarketplaceCity _selectedCity = MarketplaceService.cities.first;
   final Map<String, TextEditingController> _fields = {};
   BusinessResult? _result;
   bool _saving = false;
+  bool _locating = false;
   String? _assessmentId;
 
   static const _definitions = <_BusinessField>[
@@ -231,10 +237,40 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
     MaterialPageRoute<void>(
       builder: (_) => LocalNetworkPage(
         side: PlatformSide.business,
-        initialCity: MarketplaceService.inferCity(_location.text),
+        initialCity: _selectedCity,
       ),
     ),
   );
+
+  void _selectCity(MarketplaceCity city) {
+    setState(() {
+      _selectedCity = city;
+      _location.text = city.city;
+    });
+    AccountService.savePreferredLocation(city);
+  }
+
+  Future<void> _useDeviceLocation() async {
+    setState(() => _locating = true);
+    try {
+      final located = await DeviceLocationService.locateCanadianCity();
+      if (!mounted) return;
+      _selectCity(located.city);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Matched to ${located.city.label}.')),
+      );
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(error.toString().replaceFirst('Bad state: ', '')),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _locating = false);
+    }
+  }
 
   BusinessInputs get _inputs => BusinessInputs(
     businessName: _businessName.text,
@@ -308,41 +344,52 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
       slivers: [
         SliverToBoxAdapter(child: _hero()),
         SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 52),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 1180),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _securityBoundary(),
-                    const SizedBox(height: 22),
-                    _identity(),
-                    const SizedBox(height: 22),
-                    _financialForm(),
-                    const SizedBox(height: 22),
-                    _evidenceForm(),
-                    const SizedBox(height: 26),
-                    SizedBox(
-                      width: double.infinity,
-                      child: FilledButton.icon(
-                        onPressed: _analyze,
-                        style: FilledButton.styleFrom(
-                          backgroundColor: _purple,
-                          padding: const EdgeInsets.symmetric(vertical: 21),
+          child: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Color(0xFFEDE9FF), _paper, _paper],
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 52),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 1180),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _securityBoundary(),
+                      const SizedBox(height: 18),
+                      _dealCommandBar(),
+                      const SizedBox(height: 22),
+                      _identity(),
+                      const SizedBox(height: 22),
+                      _financialForm(),
+                      const SizedBox(height: 22),
+                      _evidenceForm(),
+                      const SizedBox(height: 26),
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton.icon(
+                          onPressed: _analyze,
+                          style: FilledButton.styleFrom(
+                            backgroundColor: _purple,
+                            padding: const EdgeInsets.symmetric(vertical: 21),
+                          ),
+                          icon: const Icon(Icons.analytics_outlined),
+                          label: const Text('RUN INITIAL VIABILITY ASSESSMENT'),
                         ),
-                        icon: const Icon(Icons.analytics_outlined),
-                        label: const Text('RUN INITIAL VIABILITY ASSESSMENT'),
                       ),
-                    ),
-                    if (_result != null) ...[
-                      const SizedBox(height: 42),
-                      _results(_result!),
+                      if (_result != null) ...[
+                        const SizedBox(height: 42),
+                        _results(_result!),
+                      ],
+                      const SizedBox(height: 54),
+                      _processGuide(),
                     ],
-                    const SizedBox(height: 54),
-                    _processGuide(),
-                  ],
+                  ),
                 ),
               ),
             ),
@@ -352,61 +399,92 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
     ),
   );
 
-  Widget _hero() => Container(
+  Widget _hero() => TopoBackground(
     color: _ink,
-    padding: const EdgeInsets.fromLTRB(26, 22, 26, 62),
-    child: SafeArea(
-      bottom: false,
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1180),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const HomeBrandButton(size: 46),
-                  const Spacer(),
-                  const AppNavigationMenu(side: PlatformSide.business),
-                ],
-              ),
-              const SizedBox(height: 70),
-              const Text(
-                'DEALIQ / ACQUISITIONIQ · PLACEHOLDER',
-                style: TextStyle(
-                  color: _lilac,
-                  fontSize: 10,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 1.4,
+    opacity: .06,
+    child: Padding(
+      padding: const EdgeInsets.fromLTRB(26, 22, 26, 62),
+      child: SafeArea(
+        bottom: false,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1180),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const HomeBrandButton(size: 46),
+                    const Spacer(),
+                    const AppNavigationMenu(side: PlatformSide.business),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Know whether the business\ncan support the buyer.',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: MediaQuery.sizeOf(context).width < 700 ? 46 : 68,
-                  height: .95,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: -3,
-                ),
-              ),
-              const SizedBox(height: 22),
-              const SizedBox(
-                width: 720,
-                child: Text(
-                  'Normalize earnings, finance the acquisition, pay a real owner salary, reserve working capital and expose the questions that must be answered before an offer.',
+                const SizedBox(height: 70),
+                const Text(
+                  'DEALIQ / ACQUISITIONIQ · PLACEHOLDER',
                   style: TextStyle(
-                    color: Color(0xFFC5C5D0),
-                    fontSize: 16,
-                    height: 1.55,
+                    color: _lilac,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.4,
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 16),
+                Text(
+                  'Know whether the business\ncan support the buyer.',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: MediaQuery.sizeOf(context).width < 700 ? 46 : 68,
+                    height: .95,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: -3,
+                  ),
+                ),
+                const SizedBox(height: 22),
+                const SizedBox(
+                  width: 720,
+                  child: Text(
+                    'Normalize earnings, finance the acquisition, pay a real owner salary, reserve working capital and expose the questions that must be answered before an offer.',
+                    style: TextStyle(
+                      color: Color(0xFFC5C5D0),
+                      fontSize: 16,
+                      height: 1.55,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
+    ),
+  );
+
+  Widget _dealCommandBar() => Container(
+    padding: const EdgeInsets.all(18),
+    decoration: BoxDecoration(
+      color: _ink,
+      borderRadius: BorderRadius.circular(22),
+      boxShadow: const [
+        BoxShadow(
+          color: Color(0x33050510),
+          blurRadius: 28,
+          offset: Offset(0, 12),
+        ),
+      ],
+    ),
+    child: const Wrap(
+      spacing: 24,
+      runSpacing: 12,
+      children: [
+        _DealStatus(
+          icon: Icons.radar_rounded,
+          label: 'VIABILITY ENGINE ACTIVE',
+        ),
+        _DealStatus(icon: Icons.payments_outlined, label: 'OWNER PAY TEST'),
+        _DealStatus(icon: Icons.shield_outlined, label: 'DOWNSIDE SCREEN'),
+        _DealStatus(icon: Icons.groups_outlined, label: 'ADVISER READY'),
+      ],
     ),
   );
 
@@ -468,9 +546,20 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
             ),
             SizedBox(
               width: width,
-              child: TextField(
+              child: CanadianCityField(
                 controller: _location,
-                decoration: const InputDecoration(labelText: 'City / province'),
+                label: 'Canadian city or community',
+                onSelected: _selectCity,
+              ),
+            ),
+            SizedBox(
+              width: width,
+              child: OutlinedButton.icon(
+                onPressed: _locating ? null : _useDeviceLocation,
+                icon: Icon(
+                  _locating ? Icons.radar_rounded : Icons.my_location_rounded,
+                ),
+                label: Text(_locating ? 'LOCATING…' : 'USE MY LOCATION'),
               ),
             ),
           ],
@@ -920,11 +1009,18 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
 
   Widget _card(String title, Widget child) => Container(
     width: double.infinity,
-    padding: const EdgeInsets.all(22),
+    padding: const EdgeInsets.all(26),
     decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(20),
-      border: Border.all(color: const Color(0xFFE2E2E8)),
+      color: const Color(0xFFFCFBFF),
+      borderRadius: BorderRadius.circular(28),
+      border: Border.all(color: const Color(0xFF7657FF).withValues(alpha: .2)),
+      boxShadow: const [
+        BoxShadow(
+          color: Color(0x16050510),
+          blurRadius: 34,
+          offset: Offset(0, 16),
+        ),
+      ],
     ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -997,6 +1093,30 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
 
   String _money(double value) =>
       NumberFormat.simpleCurrency(name: 'CAD', decimalDigits: 0).format(value);
+}
+
+class _DealStatus extends StatelessWidget {
+  const _DealStatus({required this.icon, required this.label});
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Icon(icon, color: _lilac, size: 17),
+      const SizedBox(width: 8),
+      Text(
+        label,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 9,
+          fontWeight: FontWeight.w900,
+          letterSpacing: .85,
+        ),
+      ),
+    ],
+  );
 }
 
 class _BusinessField {

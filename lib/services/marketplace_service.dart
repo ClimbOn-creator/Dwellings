@@ -370,6 +370,44 @@ class MarketplaceService {
     }
   }
 
+  static Future<MarketplaceCity?> cityNearCoordinates(
+    double latitude,
+    double longitude,
+  ) async {
+    try {
+      final uri =
+          Uri.https('geogratis.gc.ca', '/services/geoname/en/geonames.json', {
+            'lat': latitude.toStringAsFixed(6),
+            'lon': longitude.toStringAsFixed(6),
+            'radius': '50',
+            'theme': '985',
+            'category': 'O',
+            'sort-field': 'distance',
+            'expand': 'items.province',
+            'select': 'items.province.description',
+          });
+      final response = await http.get(uri).timeout(const Duration(seconds: 6));
+      if (response.statusCode != 200) return null;
+      final payload = jsonDecode(response.body) as Map<String, dynamic>;
+      for (final item in payload['items'] as List<dynamic>? ?? const []) {
+        if (item is! Map<String, dynamic>) continue;
+        final province = item['province'] as Map<String, dynamic>?;
+        final provinceName = province?['description'] as String? ?? '';
+        final region = provinces
+            .where((entry) => entry.name == provinceName)
+            .map((entry) => entry.code)
+            .firstOrNull;
+        final name = item['name'] as String? ?? '';
+        if (name.isNotEmpty && region != null) {
+          return MarketplaceCity(name, region, 'CA');
+        }
+      }
+    } catch (_) {
+      return null;
+    }
+    return null;
+  }
+
   static MarketplaceCity? resolveCanadianCity(
     String value, {
     String? provinceCode,

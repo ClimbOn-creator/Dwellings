@@ -27,7 +27,23 @@ class _CanadianCityFieldState extends State<CanadianCityField> {
   MarketplaceCity? _selected;
 
   @override
+  void initState() {
+    super.initState();
+    _focus.addListener(_handleFocus);
+  }
+
+  Future<void> _handleFocus() async {
+    if (_focus.hasFocus || widget.controller.text.trim().length < 2) return;
+    final options = await MarketplaceService.searchCanadianCities(
+      widget.controller.text,
+    );
+    if (!mounted || options.isEmpty) return;
+    _accept(options.first);
+  }
+
+  @override
   void dispose() {
+    _focus.removeListener(_handleFocus);
     _focus.dispose();
     super.dispose();
   }
@@ -78,12 +94,11 @@ class _CanadianCityFieldState extends State<CanadianCityField> {
                 ? 'Choose a recognized Canadian city from the list.'
                 : null;
           },
-          onFieldSubmitted: (value) {
-            final resolved = MarketplaceService.resolveCanadianCity(
+          onFieldSubmitted: (value) async {
+            final choices = await MarketplaceService.searchCanadianCities(
               value,
-              provinceCode: widget.provinceCode,
             );
-            if (resolved != null) _accept(resolved);
+            if (choices.isNotEmpty) _accept(choices.first);
             onSubmitted();
           },
         ),
@@ -99,12 +114,36 @@ class _CanadianCityFieldState extends State<CanadianCityField> {
             shrinkWrap: true,
             children: options
                 .map(
-                  (city) => ListTile(
-                    dense: true,
-                    leading: const Icon(Icons.location_city_outlined),
-                    title: Text(city.city),
-                    subtitle: Text('${city.region}, Canada'),
+                  (city) => InkWell(
                     onTap: () => onSelected(city),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 18,
+                        vertical: 13,
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.location_city_outlined),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  city.city,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                Text('${city.region}, Canada'),
+                              ],
+                            ),
+                          ),
+                          const Icon(Icons.arrow_outward_rounded, size: 18),
+                        ],
+                      ),
+                    ),
                   ),
                 )
                 .toList(),
