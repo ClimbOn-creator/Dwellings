@@ -8,6 +8,7 @@ import '../services/deal_room_service.dart';
 import '../widgets/brand_logo.dart';
 import '../widgets/platform_switcher.dart';
 import '../widgets/profile_photo.dart';
+import '../widgets/app_navigation_menu.dart';
 import 'business_acquisition_page.dart';
 import 'platform_hub_page.dart';
 
@@ -201,6 +202,8 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                     ),
                   if (MediaQuery.sizeOf(context).width >= 700)
                     const SizedBox(width: 10),
+                  AppNavigationMenu(side: _side, compact: true),
+                  const SizedBox(width: 6),
                   TextButton.icon(
                     onPressed: () => Navigator.pop(context),
                     style: TextButton.styleFrom(foregroundColor: Colors.white),
@@ -1143,6 +1146,13 @@ class _DealRoomPageState extends State<DealRoomPage> {
                     ),
                     const SizedBox(width: 8),
                   ],
+                  AppNavigationMenu(
+                    side: _room.isBusiness
+                        ? PlatformSide.business
+                        : PlatformSide.property,
+                    compact: true,
+                  ),
+                  const SizedBox(width: 6),
                   TextButton.icon(
                     onPressed: () => Navigator.pop(context),
                     style: TextButton.styleFrom(foregroundColor: Colors.white),

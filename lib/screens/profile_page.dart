@@ -13,6 +13,7 @@ import '../widgets/brand_logo.dart';
 import '../widgets/current_deals_button.dart';
 import '../widgets/platform_switcher.dart';
 import '../widgets/profile_photo.dart';
+import '../widgets/app_navigation_menu.dart';
 import 'auth_page.dart';
 import 'deal_rooms_page.dart';
 import 'member_profile_page.dart';
@@ -469,6 +470,8 @@ class _ProfilePageState extends State<ProfilePage> {
                 side: PlatformSide.property,
                 compact: MediaQuery.sizeOf(context).width < 700,
               ),
+              const SizedBox(width: 6),
+              const AppNavigationMenu(compact: true),
               const SizedBox(width: 8),
               if (MediaQuery.sizeOf(context).width >= 700)
                 TextButton(

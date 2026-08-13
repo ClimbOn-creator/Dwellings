@@ -6,6 +6,7 @@ import '../services/backend_service.dart';
 import '../widgets/brand_logo.dart';
 import '../widgets/auth_button.dart';
 import '../widgets/site_footer.dart';
+import '../widgets/app_navigation_menu.dart';
 import 'auth_page.dart';
 
 const _ink = Color(0xFF050510);
@@ -208,6 +209,8 @@ class _BecomeMemberPageState extends State<BecomeMemberPage> {
               child: const DwellingIqLogo(size: 48),
             ),
             const Spacer(),
+            const AppNavigationMenu(compact: true),
+            const SizedBox(width: 8),
             const AuthButton(dark: true),
             const SizedBox(width: 8),
             TextButton.icon(

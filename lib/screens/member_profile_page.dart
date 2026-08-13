@@ -7,6 +7,7 @@ import '../services/backend_service.dart';
 import '../services/marketplace_service.dart';
 import '../widgets/brand_logo.dart';
 import '../widgets/profile_photo.dart';
+import '../widgets/app_navigation_menu.dart';
 import 'auth_page.dart';
 
 const _ink = Color(0xFF050510);
@@ -361,6 +362,11 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
                     child: const DwellingIqLogo(size: 46),
                   ),
                   const Spacer(),
+                  AppNavigationMenu(
+                    side: provider.category.side,
+                    compact: true,
+                  ),
+                  const SizedBox(width: 6),
                   TextButton.icon(
                     onPressed: () => Navigator.pop(context),
                     style: TextButton.styleFrom(foregroundColor: Colors.white),

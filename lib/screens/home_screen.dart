@@ -12,6 +12,7 @@ import '../widgets/auth_button.dart';
 import '../widgets/current_deals_button.dart';
 import '../widgets/brand_logo.dart';
 import '../widgets/platform_switcher.dart';
+import '../widgets/app_navigation_menu.dart';
 import 'platform_hub_page.dart';
 import 'local_network_page.dart';
 import 'deal_rooms_page.dart';
@@ -309,6 +310,11 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
                   )
                 else
                   const SizedBox.shrink(),
+                const SizedBox(width: 8),
+                const AppNavigationMenu(
+                  side: PlatformSide.property,
+                  compact: true,
+                ),
                 const SizedBox(width: 8),
                 const CurrentDealsButton(
                   side: PlatformSide.property,

@@ -6,6 +6,7 @@ import '../widgets/auth_button.dart';
 import '../widgets/brand_logo.dart';
 import '../widgets/current_deals_button.dart';
 import '../widgets/platform_switcher.dart';
+import '../widgets/app_navigation_menu.dart';
 import '../widgets/site_footer.dart';
 import 'auth_page.dart';
 import 'business_acquisition_page.dart';
@@ -114,6 +115,8 @@ class PlatformHubPage extends StatelessWidget {
                       ),
                       const SizedBox(width: 6),
                       CurrentDealsButton(side: side),
+                      const SizedBox(width: 6),
+                      AppNavigationMenu(side: side, compact: true),
                     ],
                     const AuthButton(dark: true),
                   ],
@@ -128,6 +131,8 @@ class PlatformHubPage extends StatelessWidget {
                         compact: true,
                       ),
                       const Spacer(),
+                      AppNavigationMenu(side: side, compact: true),
+                      const SizedBox(width: 6),
                       CurrentDealsButton(side: side, compact: true),
                     ],
                   ),

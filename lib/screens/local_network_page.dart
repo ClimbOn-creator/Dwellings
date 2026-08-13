@@ -9,6 +9,7 @@ import '../widgets/site_footer.dart';
 import '../widgets/profile_photo.dart';
 import '../widgets/platform_switcher.dart';
 import '../widgets/current_deals_button.dart';
+import '../widgets/app_navigation_menu.dart';
 import 'auth_page.dart';
 import 'business_acquisition_page.dart';
 import 'home_screen.dart';
@@ -200,10 +201,16 @@ class _NetworkHero extends StatelessWidget {
                 _NetworkNav(side: side, onSide: onSide, onModel: onModel),
                 if (MediaQuery.sizeOf(context).width <= 820) ...[
                   const SizedBox(height: 10),
-                  PlatformSwitcher(
-                    selected: side,
-                    onChanged: onSide,
-                    compact: true,
+                  Row(
+                    children: [
+                      PlatformSwitcher(
+                        selected: side,
+                        onChanged: onSide,
+                        compact: true,
+                      ),
+                      const Spacer(),
+                      AppNavigationMenu(side: side),
+                    ],
                   ),
                 ],
                 const Spacer(),
@@ -267,7 +274,7 @@ class _NetworkNav extends StatelessWidget {
   final VoidCallback onModel;
   @override
   Widget build(BuildContext context) => Container(
-    height: 68,
+    height: MediaQuery.sizeOf(context).width > 820 ? 98 : 68,
     padding: const EdgeInsets.symmetric(horizontal: 10),
     decoration: BoxDecoration(
       color: Colors.white.withValues(alpha: .055),
@@ -281,10 +288,6 @@ class _NetworkNav extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           child: const DwellingIqLogo(size: 44),
         ),
-        if (MediaQuery.sizeOf(context).width > 820) ...[
-          const SizedBox(width: 12),
-          PlatformSwitcher(selected: side, onChanged: onSide, compact: true),
-        ],
         const Spacer(),
         if (MediaQuery.sizeOf(context).width > 620)
           const Padding(
@@ -306,27 +309,52 @@ class _NetworkNav extends StatelessWidget {
         const SizedBox(width: 4),
         CurrentDealsButton(side: side, compact: true),
         const SizedBox(width: 4),
-        FilledButton.icon(
-          onPressed: onModel,
-          style: FilledButton.styleFrom(
-            backgroundColor: Colors.white,
-            foregroundColor: _ink,
-            padding: const EdgeInsets.fromLTRB(18, 15, 14, 15),
-          ),
-          iconAlignment: IconAlignment.end,
-          icon: const Icon(Icons.arrow_outward, size: 16),
-          label: Text(
-            MediaQuery.sizeOf(context).width > 520
-                ? (side == PlatformSide.property
+        if (MediaQuery.sizeOf(context).width > 820) ...[
+          PlatformSwitcher(selected: side, onChanged: onSide, compact: true),
+          const SizedBox(width: 6),
+        ],
+        Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            if (MediaQuery.sizeOf(context).width <= 520)
+              IconButton.filled(
+                onPressed: onModel,
+                tooltip: side == PlatformSide.property
+                    ? 'Open property model'
+                    : 'Open business model',
+                style: IconButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: _ink,
+                ),
+                icon: const Icon(Icons.arrow_outward, size: 17),
+              )
+            else
+              FilledButton.icon(
+                onPressed: onModel,
+                style: FilledButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: _ink,
+                  padding: const EdgeInsets.fromLTRB(18, 13, 14, 13),
+                ),
+                iconAlignment: IconAlignment.end,
+                icon: const Icon(Icons.arrow_outward, size: 16),
+                label: Text(
+                  side == PlatformSide.property
                       ? 'OPEN PROPERTY MODEL'
-                      : 'OPEN BUSINESS MODEL')
-                : 'MODEL',
-            style: const TextStyle(
-              fontSize: 9,
-              fontWeight: FontWeight.w900,
-              letterSpacing: .6,
-            ),
-          ),
+                      : 'OPEN BUSINESS MODEL',
+                  style: const TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: .6,
+                  ),
+                ),
+              ),
+            if (MediaQuery.sizeOf(context).width > 820) ...[
+              const SizedBox(height: 4),
+              AppNavigationMenu(side: side, compact: true),
+            ],
+          ],
         ),
       ],
     ),

@@ -9,6 +9,7 @@ import '../services/marketplace_service.dart';
 import '../widgets/brand_logo.dart';
 import '../widgets/platform_switcher.dart';
 import '../widgets/current_deals_button.dart';
+import '../widgets/app_navigation_menu.dart';
 import 'auth_page.dart';
 import 'deal_rooms_page.dart';
 import 'platform_hub_page.dart';
@@ -389,6 +390,11 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
                       side: PlatformSide.business,
                       compact: true,
                     ),
+                    const SizedBox(width: 6),
+                    const AppNavigationMenu(
+                      side: PlatformSide.business,
+                      compact: true,
+                    ),
                   ],
                   TextButton.icon(
                     onPressed: _goBack,
@@ -418,6 +424,10 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
                       child: const Text('NETWORK'),
                     ),
                     const CurrentDealsButton(
+                      side: PlatformSide.business,
+                      compact: true,
+                    ),
+                    const AppNavigationMenu(
                       side: PlatformSide.business,
                       compact: true,
                     ),

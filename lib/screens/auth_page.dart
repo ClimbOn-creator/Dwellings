@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../services/account_service.dart';
 import '../services/backend_service.dart';
 import '../widgets/brand_logo.dart';
+import '../widgets/app_navigation_menu.dart';
 
 const _ink = Color(0xFF050510);
 const _paper = Color(0xFFF5F5F7);
@@ -143,6 +144,8 @@ class _AuthPageState extends State<AuthPage> {
                       children: [
                         const DwellingIqLogo(size: 48),
                         const Spacer(),
+                        const AppNavigationMenu(compact: true),
+                        const SizedBox(width: 6),
                         IconButton(
                           onPressed: () => Navigator.pop(context),
                           icon: const Icon(Icons.close, color: Colors.white),

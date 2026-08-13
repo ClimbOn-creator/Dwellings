@@ -6,6 +6,7 @@ import '../widgets/auth_button.dart';
 import '../widgets/site_footer.dart';
 import '../widgets/current_deals_button.dart';
 import '../widgets/platform_switcher.dart';
+import '../widgets/app_navigation_menu.dart';
 import 'become_member_page.dart';
 import 'home_screen.dart';
 import 'local_network_page.dart';
@@ -131,30 +132,9 @@ class MarketingNavigation extends StatelessWidget {
                   child: const DwellingIqLogo(size: 42),
                 ),
                 const Spacer(),
-                PopupMenuButton<MarketingDestination>(
-                  tooltip: 'Open navigation',
-                  color: const Color(0xFF171728),
-                  icon: const Icon(Icons.menu_rounded, color: Colors.white),
-                  onSelected: (value) => _go(context, value),
-                  itemBuilder: (_) =>
-                      [
-                            MarketingDestination.network,
-                            MarketingDestination.process,
-                            MarketingDestination.membership,
-                          ]
-                          .map(
-                            (value) => PopupMenuItem(
-                              value: value,
-                              child: Text(
-                                _destinationLabel(value),
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ),
-                          )
-                          .toList(),
+                AppNavigationMenu(
+                  side: side ?? PlatformSide.property,
+                  compact: true,
                 ),
                 CurrentDealsButton(
                   side: side ?? PlatformSide.property,
@@ -174,7 +154,7 @@ class MarketingNavigation extends StatelessWidget {
       );
     }
     return Container(
-      height: 68,
+      height: 98,
       padding: const EdgeInsets.symmetric(horizontal: 10),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: .055),
@@ -246,7 +226,18 @@ class MarketingNavigation extends StatelessWidget {
           ),
           AuthButton(dark: true, compact: compact),
           const SizedBox(width: 4),
-          _ModelButton(onTap: onModel ?? () => openUnderwriting(context)),
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              _ModelButton(onTap: onModel ?? () => openUnderwriting(context)),
+              const SizedBox(height: 5),
+              AppNavigationMenu(
+                side: side ?? PlatformSide.property,
+                compact: true,
+              ),
+            ],
+          ),
         ],
       ),
     );
