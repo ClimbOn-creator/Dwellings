@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../models/platform_side.dart';
+import '../services/backend_service.dart';
+import '../screens/auth_page.dart';
 import '../screens/business_acquisition_page.dart';
 import '../screens/deal_rooms_page.dart';
 import '../screens/home_screen.dart';
@@ -48,7 +50,14 @@ class AppNavigationMenu extends StatelessWidget {
     final Widget? page = switch (destination) {
       AppNavigationDestination.network => LocalNetworkPage(side: side),
       AppNavigationDestination.deals => DealRoomsPage(initialSide: side),
-      AppNavigationDestination.profile => const ProfilePage(),
+      AppNavigationDestination.profile =>
+        BackendService.user == null
+            ? AuthPage(
+                onAuthenticated: () => Navigator.of(context).pushReplacement(
+                  MaterialPageRoute<void>(builder: (_) => const ProfilePage()),
+                ),
+              )
+            : const ProfilePage(),
       AppNavigationDestination.model =>
         side == PlatformSide.business
             ? const BusinessAcquisitionPage()

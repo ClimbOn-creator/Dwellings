@@ -302,17 +302,7 @@ class _ProfilePageState extends State<ProfilePage> {
       );
     }
     if (BackendService.user == null) {
-      return Scaffold(
-        backgroundColor: _ink,
-        body: Center(
-          child: FilledButton(
-            onPressed: () => Navigator.of(context).pushReplacement(
-              MaterialPageRoute<void>(builder: (_) => const AuthPage()),
-            ),
-            child: const Text('Sign in to open your profile'),
-          ),
-        ),
-      );
+      return AuthPage(onAuthenticated: _load);
     }
     final profile = _profile;
     final stats =

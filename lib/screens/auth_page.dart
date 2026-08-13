@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../services/account_service.dart';
@@ -10,7 +12,9 @@ const _paper = Color(0xFFF5F5F7);
 const _purple = Color(0xFF7657FF);
 
 class AuthPage extends StatefulWidget {
-  const AuthPage({super.key});
+  const AuthPage({super.key, this.onAuthenticated});
+
+  final VoidCallback? onAuthenticated;
 
   @override
   State<AuthPage> createState() => _AuthPageState();
@@ -89,11 +93,11 @@ class _AuthPageState extends State<AuthPage> {
                 'Account created. Confirm your email, then sign in with your password.',
           );
         } else {
-          Navigator.pop(context);
+          _finishAuthentication();
         }
       } else {
         await AccountService.signIn(_email.text, _password.text);
-        if (mounted) Navigator.pop(context);
+        if (mounted) _finishAuthentication();
       }
     } catch (error) {
       if (mounted) {
@@ -112,11 +116,35 @@ class _AuthPageState extends State<AuthPage> {
   String? _required(String? value) =>
       value == null || value.trim().isEmpty ? 'Required' : null;
 
+  void _finishAuthentication() {
+    if (widget.onAuthenticated != null) {
+      widget.onAuthenticated!();
+    } else {
+      Navigator.pop(context);
+    }
+  }
+
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: _ink,
+    backgroundColor: const Color(0xFF0B0B16),
     body: Stack(
       children: [
+        const Positioned.fill(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF171722), Color(0xFF090914)],
+              ),
+            ),
+          ),
+        ),
+        const Positioned.fill(
+          child: IgnorePointer(
+            child: CustomPaint(painter: _TopoLinesPainter()),
+          ),
+        ),
         Positioned(
           right: -180,
           top: -220,
@@ -126,7 +154,7 @@ class _AuthPageState extends State<AuthPage> {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: RadialGradient(
-                colors: [_purple.withValues(alpha: .36), Colors.transparent],
+                colors: [_purple.withValues(alpha: .2), Colors.transparent],
               ),
             ),
           ),
@@ -418,4 +446,47 @@ class _AuthPageState extends State<AuthPage> {
       ],
     ),
   );
+}
+
+class _TopoLinesPainter extends CustomPainter {
+  const _TopoLinesPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xFFB8B8C4).withValues(alpha: .11)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
+    final centres = <Offset>[
+      Offset(size.width * .12, size.height * .24),
+      Offset(size.width * .84, size.height * .2),
+      Offset(size.width * .78, size.height * .76),
+      Offset(size.width * .2, size.height * .88),
+    ];
+    final scale = math.min(size.width, size.height);
+    for (var group = 0; group < centres.length; group++) {
+      final centre = centres[group];
+      for (var ring = 0; ring < 7; ring++) {
+        final path = Path();
+        for (var point = 0; point <= 72; point++) {
+          final angle = point / 72 * math.pi * 2;
+          final base = scale * (.065 + ring * .038);
+          final irregularity =
+              1 + .1 * math.sin(angle * 3 + group) + .06 * math.cos(angle * 5);
+          final x = centre.dx + math.cos(angle) * base * 1.7 * irregularity;
+          final y = centre.dy + math.sin(angle) * base * irregularity;
+          if (point == 0) {
+            path.moveTo(x, y);
+          } else {
+            path.lineTo(x, y);
+          }
+        }
+        path.close();
+        canvas.drawPath(path, paint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
