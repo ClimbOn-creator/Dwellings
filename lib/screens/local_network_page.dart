@@ -6,7 +6,6 @@ import '../services/backend_service.dart';
 import '../widgets/brand_logo.dart';
 import '../widgets/site_footer.dart';
 import '../widgets/profile_photo.dart';
-import '../widgets/platform_switcher.dart';
 import '../widgets/app_navigation_menu.dart';
 import 'auth_page.dart';
 import 'business_acquisition_page.dart';
@@ -197,12 +196,6 @@ class _NetworkHero extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _NetworkNav(side: side, onSide: onSide, onModel: onModel),
-                const SizedBox(height: 14),
-                PlatformSwitcher(
-                  selected: side,
-                  onChanged: onSide,
-                  compact: true,
-                ),
                 const Spacer(),
                 Text(
                   side == PlatformSide.property
@@ -279,7 +272,7 @@ class _NetworkNav extends StatelessWidget {
           child: const DwellingIqLogo(size: 44),
         ),
         const Spacer(),
-        AppNavigationMenu(side: side),
+        AppNavigationMenu(side: side, onSideChanged: onSide),
       ],
     ),
   );

@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../models/platform_side.dart';
 import '../services/backend_service.dart';
 import '../widgets/brand_logo.dart';
-import '../widgets/platform_switcher.dart';
 import '../widgets/app_navigation_menu.dart';
 import '../widgets/site_footer.dart';
 import 'auth_page.dart';
@@ -107,12 +106,6 @@ class PlatformHubPage extends StatelessWidget {
                     const Spacer(),
                     AppNavigationMenu(side: side),
                   ],
-                ),
-                const SizedBox(height: 14),
-                PlatformSwitcher(
-                  selected: side,
-                  onChanged: (next) => _replaceSide(context, next),
-                  compact: true,
                 ),
                 const SizedBox(height: 86),
                 Text(

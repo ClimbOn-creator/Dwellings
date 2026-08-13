@@ -8,15 +8,17 @@ class PlatformSwitcher extends StatelessWidget {
     required this.selected,
     required this.onChanged,
     this.compact = false,
+    this.micro = false,
   });
 
   final PlatformSide? selected;
   final ValueChanged<PlatformSide> onChanged;
   final bool compact;
+  final bool micro;
 
   @override
   Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.all(4),
+    padding: EdgeInsets.all(micro ? 3 : 4),
     decoration: BoxDecoration(
       color: Colors.white.withValues(alpha: .07),
       borderRadius: BorderRadius.circular(24),
@@ -32,8 +34,8 @@ class PlatformSwitcher extends StatelessWidget {
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 220),
                 padding: EdgeInsets.symmetric(
-                  horizontal: compact ? 12 : 16,
-                  vertical: 10,
+                  horizontal: micro ? 7 : (compact ? 12 : 16),
+                  vertical: micro ? 8 : 10,
                 ),
                 decoration: BoxDecoration(
                   color: selected == side ? Colors.white : Colors.transparent,
@@ -45,7 +47,7 @@ class PlatformSwitcher extends StatelessWidget {
                     color: selected == side
                         ? const Color(0xFF050510)
                         : Colors.white70,
-                    fontSize: 9,
+                    fontSize: micro ? 8 : 9,
                     fontWeight: FontWeight.w900,
                     letterSpacing: .7,
                   ),
