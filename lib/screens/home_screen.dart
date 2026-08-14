@@ -1424,7 +1424,7 @@ class _LocationStrip extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '${profile.city}, ${profile.region} · DEMO MARKET PROFILE',
+                '${profile.city}, ${profile.region} · ${profile.marketArea.toUpperCase()} PROFILE',
                 style: const TextStyle(
                   fontSize: 9,
                   letterSpacing: .8,
@@ -1432,8 +1432,12 @@ class _LocationStrip extends StatelessWidget {
                 ),
               ),
               Text(
-                '${profile.inventory} months inventory  ·  ${(profile.mortgage * 100).toStringAsFixed(2)}% debt rate  ·  ${profile.transit.round()}/100 transit',
+                '${profile.inventory.toStringAsFixed(1)} months inventory  ·  ${(profile.mortgage * 100).toStringAsFixed(2)}% model rate  ·  ${profile.transit.round()}/100 transit',
                 style: const TextStyle(color: _muted, fontSize: 9),
+              ),
+              Text(
+                '${profile.sourceName} · ${profile.dataAsOf} regional reference',
+                style: const TextStyle(color: Color(0xFF756A8C), fontSize: 8),
               ),
             ],
           ),

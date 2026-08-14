@@ -39,6 +39,9 @@ class MarketProfile {
   const MarketProfile({
     required this.city,
     required this.region,
+    required this.marketArea,
+    required this.dataAsOf,
+    required this.sourceName,
     required this.appreciation,
     required this.priceIncome,
     required this.population,
@@ -68,6 +71,9 @@ class MarketProfile {
 
   final String city;
   final String region;
+  final String marketArea;
+  final String dataAsOf;
+  final String sourceName;
   final double appreciation;
   final double priceIncome;
   final double population;
@@ -97,6 +103,9 @@ class MarketProfile {
   MarketProfile withLocation(String city, String region) => MarketProfile(
     city: city,
     region: region,
+    marketArea: marketArea,
+    dataAsOf: dataAsOf,
+    sourceName: sourceName,
     appreciation: appreciation,
     priceIncome: priceIncome,
     population: population,
@@ -127,6 +136,9 @@ class MarketProfile {
   Map<String, dynamic> toJson() => {
     'city': city,
     'region': region,
+    'marketArea': marketArea,
+    'dataAsOf': dataAsOf,
+    'sourceName': sourceName,
     'appreciation': appreciation,
     'priceIncome': priceIncome,
     'population': population,
@@ -147,11 +159,14 @@ const marketProfiles = <MarketProfile>[
   MarketProfile(
     city: 'Vancouver',
     region: 'BC',
+    marketArea: 'Metro Vancouver',
+    dataAsOf: 'June 2026',
+    sourceName: 'Greater Vancouver REALTORS®',
     appreciation: .039,
     priceIncome: 12.1,
     population: .014,
     employment: .012,
-    inventory: 3.1,
+    inventory: 7.1,
     saleList: 1,
     infrastructure: 78,
     rezoning: 74,
@@ -176,11 +191,14 @@ const marketProfiles = <MarketProfile>[
   MarketProfile(
     city: 'Victoria',
     region: 'BC',
+    marketArea: 'Greater Victoria',
+    dataAsOf: 'June 2026',
+    sourceName: 'Victoria Real Estate Board',
     appreciation: .037,
     priceIncome: 10.7,
     population: .013,
     employment: .011,
-    inventory: 3.4,
+    inventory: 5.6,
     saleList: .996,
     infrastructure: 68,
     rezoning: 70,
@@ -205,6 +223,9 @@ const marketProfiles = <MarketProfile>[
   MarketProfile(
     city: 'Kelowna',
     region: 'BC',
+    marketArea: 'Central Okanagan',
+    dataAsOf: 'June 2026',
+    sourceName: 'Association of Interior REALTORS®',
     appreciation: .034,
     priceIncome: 9.2,
     population: .022,
@@ -234,12 +255,15 @@ const marketProfiles = <MarketProfile>[
   MarketProfile(
     city: 'Calgary',
     region: 'AB',
+    marketArea: 'Calgary Region',
+    dataAsOf: 'May 2026',
+    sourceName: 'CREB®',
     appreciation: .042,
     priceIncome: 5.5,
     population: .029,
     employment: .021,
-    inventory: 2.3,
-    saleList: 1.01,
+    inventory: 3.12,
+    saleList: .982,
     infrastructure: 72,
     rezoning: 67,
     mortgage: .045,
@@ -263,11 +287,14 @@ const marketProfiles = <MarketProfile>[
   MarketProfile(
     city: 'Toronto',
     region: 'ON',
+    marketArea: 'Greater Toronto Area',
+    dataAsOf: 'June 2026',
+    sourceName: 'Toronto Regional Real Estate Board',
     appreciation: .032,
     priceIncome: 10.5,
     population: .018,
     employment: .013,
-    inventory: 4.8,
+    inventory: 4.7,
     saleList: .987,
     infrastructure: 82,
     rezoning: 69,
@@ -291,8 +318,106 @@ const marketProfiles = <MarketProfile>[
   ),
 ];
 
+const _greaterVictoriaCommunities = <String>{
+  'victoria',
+  'saanich',
+  'central saanich',
+  'north saanich',
+  'sidney',
+  'oak bay',
+  'esquimalt',
+  'view royal',
+  'colwood',
+  'langford',
+  'highlands',
+  'metchosin',
+  'sooke',
+};
+
+const _metroVancouverCommunities = <String>{
+  'vancouver',
+  'burnaby',
+  'coquitlam',
+  'delta',
+  'langley',
+  'maple ridge',
+  'new westminster',
+  'north vancouver',
+  'pitt meadows',
+  'port coquitlam',
+  'port moody',
+  'richmond',
+  'surrey',
+  'white rock',
+  'west vancouver',
+  'anmore',
+  'belcarra',
+  'bowen island',
+  'lions bay',
+  'ubc',
+};
+
+const _greaterTorontoCommunities = <String>{
+  'toronto',
+  'ajax',
+  'brock',
+  'clarington',
+  'oshawa',
+  'pickering',
+  'scugog',
+  'uxbridge',
+  'whitby',
+  'burlington',
+  'halton hills',
+  'milton',
+  'oakville',
+  'brampton',
+  'caledon',
+  'mississauga',
+  'aurora',
+  'east gwillimbury',
+  'georgina',
+  'king',
+  'markham',
+  'newmarket',
+  'richmond hill',
+  'vaughan',
+  'whitchurch-stouffville',
+  'stouffville',
+  'hamilton',
+};
+
+const _calgaryRegionCommunities = <String>{
+  'calgary',
+  'airdrie',
+  'chestermere',
+  'cochrane',
+  'crossfield',
+  'high river',
+  'okotoks',
+  'rocky view county',
+  'foothills county',
+  'strathmore',
+  'diamond valley',
+};
+
 MarketProfile profileForAddress(String address) {
   final lower = address.toLowerCase();
+  MarketProfile regional(String city) =>
+      marketProfiles.firstWhere((profile) => profile.city == city);
+  final matches =
+      <({String community, String profile})>[
+          for (final community in _greaterVictoriaCommunities)
+            (community: community, profile: 'Victoria'),
+          for (final community in _metroVancouverCommunities)
+            (community: community, profile: 'Vancouver'),
+          for (final community in _greaterTorontoCommunities)
+            (community: community, profile: 'Toronto'),
+          for (final community in _calgaryRegionCommunities)
+            (community: community, profile: 'Calgary'),
+        ].where((entry) => lower.contains(entry.community)).toList()
+        ..sort((a, b) => b.community.length.compareTo(a.community.length));
+  if (matches.isNotEmpty) return regional(matches.first.profile);
   return marketProfiles.firstWhere(
     (profile) => lower.contains(profile.city.toLowerCase()),
     orElse: () => marketProfiles.first,

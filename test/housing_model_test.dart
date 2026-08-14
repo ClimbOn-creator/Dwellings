@@ -54,6 +54,16 @@ PropertyInputs _inputs({
 );
 
 void main() {
+  test('headline metro municipalities use the correct regional profile', () {
+    expect(profileForAddress('Langford, BC').marketArea, 'Greater Victoria');
+    expect(profileForAddress('Burnaby, BC').marketArea, 'Metro Vancouver');
+    expect(
+      profileForAddress('Richmond Hill, ON').marketArea,
+      'Greater Toronto Area',
+    );
+    expect(profileForAddress('Okotoks, AB').marketArea, 'Calgary Region');
+  });
+
   test('commercial underwriting produces auditable finite metrics', () {
     final result = analyzeProperty(_inputs(), DecisionMode.invest);
     expect(result.noi, closeTo(119232, 1));

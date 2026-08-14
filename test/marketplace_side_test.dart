@@ -44,6 +44,21 @@ void main() {
     );
   });
 
+  test('headline metro municipalities are available in city search', () {
+    expect(
+      MarketplaceService.resolveCanadianCity('Langfrd')?.label,
+      'Langford, BC',
+    );
+    expect(
+      MarketplaceService.resolveCanadianCity('Richmond Hill')?.label,
+      'Richmond Hill, ON',
+    );
+    expect(
+      MarketplaceService.resolveCanadianCity('Okotoks')?.label,
+      'Okotoks, AB',
+    );
+  });
+
   test('unrecognized locations are rejected instead of silently saved', () {
     expect(
       MarketplaceService.resolveCanadianCity('Definitely Not A City'),
