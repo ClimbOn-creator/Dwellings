@@ -7,6 +7,7 @@ import 'screens/home_screen.dart';
 import 'screens/landing_screen.dart';
 import 'screens/business_acquisition_page.dart';
 import 'screens/local_network_page.dart';
+import 'screens/member_workspace_pages.dart';
 import 'screens/platform_hub_page.dart';
 import 'services/backend_service.dart';
 
@@ -91,6 +92,9 @@ class DwellingIqApp extends StatelessWidget {
       'property-calculator' => const UnderwritingScreen(),
       'network' => LocalNetworkPage(side: side),
       'deal-rooms' => DealRoomsPage(initialSide: side),
+      'member-leads' => const MemberLeadInboxPage(),
+      'email-composer' => const MemberEmailComposerPage(),
+      'newsletter-builder' => const MemberNewsletterBuilderPage(),
       _ => const LandingScreen(),
     };
   }

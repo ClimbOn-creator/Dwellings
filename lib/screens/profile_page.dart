@@ -13,6 +13,7 @@ import '../widgets/profile_photo.dart';
 import '../widgets/app_navigation_menu.dart';
 import 'auth_page.dart';
 import 'deal_rooms_page.dart';
+import 'member_workspace_pages.dart';
 import 'member_profile_page.dart';
 
 const _ink = Color(0xFF050510);
@@ -329,6 +330,10 @@ class _ProfilePageState extends State<ProfilePage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      if (_professionalStats != null) ...[
+                        _professionalWorkspace(_professionalStats!),
+                        const SizedBox(height: 24),
+                      ],
                       LayoutBuilder(
                         builder: (context, constraints) {
                           final width = constraints.maxWidth >= 980
@@ -378,10 +383,6 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                       const SizedBox(height: 24),
                       _currentDeals(),
-                      if (_professionalStats != null) ...[
-                        const SizedBox(height: 24),
-                        _professionalWorkspace(_professionalStats!),
-                      ],
                       const SizedBox(height: 42),
                       _introductionCentre(),
                       const SizedBox(height: 42),
@@ -623,7 +624,7 @@ class _ProfilePageState extends State<ProfilePage> {
           children: [
             const Expanded(
               child: Text(
-                'Professional workspace',
+                'Member performance',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 24,
@@ -671,6 +672,57 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
           ],
         ),
+        const SizedBox(height: 22),
+        const Divider(color: Color(0xFF2A2A3A), height: 1),
+        const SizedBox(height: 18),
+        const Text(
+          'WORKSPACE TOOLS',
+          style: TextStyle(
+            color: _lilac,
+            fontSize: 9,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 1.2,
+          ),
+        ),
+        const SizedBox(height: 12),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final width = constraints.maxWidth >= 760
+                ? (constraints.maxWidth - 20) / 3
+                : constraints.maxWidth;
+            return Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                _workspaceLaunchButton(
+                  width: width,
+                  icon: Icons.inbox_outlined,
+                  title: 'Lead inbox',
+                  detail: 'Review and move introductions forward.',
+                  page: const MemberLeadInboxPage(),
+                ),
+                _workspaceLaunchButton(
+                  width: width,
+                  icon: Icons.auto_awesome_outlined,
+                  title: 'AI email composer',
+                  detail: 'Create a reviewable client email draft.',
+                  page: MemberEmailComposerPage(
+                    senderName: _profile?.fullName ?? '',
+                  ),
+                ),
+                _workspaceLaunchButton(
+                  width: width,
+                  icon: Icons.newspaper_outlined,
+                  title: 'Newsletter builder',
+                  detail: 'Build your monthly client update.',
+                  page: MemberNewsletterBuilderPage(
+                    memberName: _profile?.fullName ?? '',
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
         if (!stats.verified) ...[
           const SizedBox(height: 16),
           const Text(
@@ -683,6 +735,64 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         ],
       ],
+    ),
+  );
+
+  Widget _workspaceLaunchButton({
+    required double width,
+    required IconData icon,
+    required String title,
+    required String detail,
+    required Widget page,
+  }) => SizedBox(
+    width: width,
+    child: Material(
+      color: Colors.white.withValues(alpha: .07),
+      borderRadius: BorderRadius.circular(15),
+      child: InkWell(
+        onTap: () => Navigator.of(
+          context,
+        ).push(MaterialPageRoute<void>(builder: (_) => page)),
+        borderRadius: BorderRadius.circular(15),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Icon(icon, color: _lilac, size: 21),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      detail,
+                      style: const TextStyle(
+                        color: Color(0xFFAAAAB8),
+                        fontSize: 10,
+                        height: 1.35,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(
+                Icons.arrow_forward_rounded,
+                color: Colors.white,
+                size: 17,
+              ),
+            ],
+          ),
+        ),
+      ),
     ),
   );
 
