@@ -763,73 +763,73 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Container(
-            padding: const EdgeInsets.all(28),
-            decoration: const BoxDecoration(
-              color: _ink,
-              borderRadius: BorderRadius.zero,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            verdict,
-                            style: TextStyle(
-                              color: verdictColor,
-                              fontSize: 11,
-                              letterSpacing: 1.4,
-                              fontWeight: FontWeight.w900,
+          TopoBackground(
+            color: _ink,
+            opacity: .05,
+            child: Padding(
+              padding: const EdgeInsets.all(28),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              verdict,
+                              style: TextStyle(
+                                color: verdictColor,
+                                fontSize: 11,
+                                letterSpacing: 1.4,
+                                fontWeight: FontWeight.w900,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 9),
-                          Text(
-                            _inputs.address,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 22,
-                              fontWeight: FontWeight.w900,
+                            const SizedBox(height: 9),
+                            Text(
+                              _inputs.address,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 22,
+                                fontWeight: FontWeight.w900,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '${_propertyType.label} · ${_profile.city}, ${_profile.region}',
-                            style: const TextStyle(
-                              color: Color(0xFFB7B7B7),
-                              fontSize: 11,
+                            const SizedBox(height: 4),
+                            Text(
+                              '${_propertyType.label} · ${_profile.city}, ${_profile.region}',
+                              style: const TextStyle(
+                                color: Color(0xFFB7B7B7),
+                                fontSize: 11,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
+                      _Score(result.risk, risk: true),
+                    ],
+                  ),
+                  const SizedBox(height: 22),
+                  Text(
+                    'Overall risk is ${result.risk.round()}/100. The separate decision score is ${result.net.round()}/100, with ${(result.dataCompleteness * 100).round()}% of core property and underwriting evidence populated.',
+                    style: const TextStyle(
+                      color: Color(0xFFD6D6D6),
+                      height: 1.45,
                     ),
-                    _Score(result.risk, risk: true),
-                  ],
-                ),
-                const SizedBox(height: 22),
-                Text(
-                  'Overall risk is ${result.risk.round()}/100. The separate decision score is ${result.net.round()}/100, with ${(result.dataCompleteness * 100).round()}% of core property and underwriting evidence populated.',
-                  style: const TextStyle(
-                    color: Color(0xFFD6D6D6),
-                    height: 1.45,
                   ),
-                ),
-                const SizedBox(height: 18),
-                OutlinedButton.icon(
-                  onPressed: _save,
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.white,
-                    side: const BorderSide(color: Color(0xFF777777)),
+                  const SizedBox(height: 18),
+                  OutlinedButton.icon(
+                    onPressed: _save,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      side: const BorderSide(color: Color(0xFF777777)),
+                    ),
+                    icon: Icon(_saved ? Icons.bookmark : Icons.bookmark_border),
+                    label: Text(_saved ? 'SAVED' : 'SAVE ANALYSIS'),
                   ),
-                  icon: Icon(_saved ? Icons.bookmark : Icons.bookmark_border),
-                  label: Text(_saved ? 'SAVED' : 'SAVE ANALYSIS'),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
           Padding(

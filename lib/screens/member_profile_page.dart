@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../models/platform_side.dart';
-import '../services/account_service.dart';
 import '../services/backend_service.dart';
 import '../services/marketplace_service.dart';
 import '../widgets/home_brand_button.dart';
 import '../widgets/profile_photo.dart';
 import '../widgets/app_navigation_menu.dart';
+import '../widgets/topo_background.dart';
 import 'auth_page.dart';
+import 'connection_brief_page.dart';
 
 const _ink = Color(0xFF050510);
 const _paper = Color(0xFFF5F5F7);
@@ -194,104 +194,11 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
       ).push(MaterialPageRoute<void>(builder: (_) => const AuthPage()));
       if (!mounted || BackendService.user == null) return;
     }
-    final property = TextEditingController();
-    final phone = TextEditingController();
-    final business = provider.category.side == PlatformSide.business;
-    var sending = false;
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setModalState) => AlertDialog(
-          title: Text('Warm introduction to ${provider.name}'),
-          content: SizedBox(
-            width: 470,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  business
-                      ? 'Your account name and email are attached automatically. Share only a non-confidential summary of the acquisition help you need.'
-                      : 'Your account name and email are attached automatically. Add only the property context this professional needs.',
-                  style: const TextStyle(
-                    color: Color(0xFF666674),
-                    fontSize: 13,
-                    height: 1.5,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: property,
-                  onChanged: (_) => setModalState(() {}),
-                  minLines: 4,
-                  maxLines: 7,
-                  decoration: InputDecoration(
-                    labelText: 'What would you like help with?',
-                    hintText: business
-                        ? 'Industry, location, deal stage, approximate size and the advice you need. Do not include confidential seller data.'
-                        : 'Property, city, budget, timeline and the advice you need.',
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: phone,
-                  keyboardType: TextInputType.phone,
-                  decoration: const InputDecoration(
-                    labelText: 'Phone number (optional)',
-                  ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: sending ? null : () => Navigator.pop(dialogContext),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: sending || property.text.trim().isEmpty
-                  ? null
-                  : () async {
-                      setModalState(() => sending = true);
-                      try {
-                        await AccountService.requestIntroduction(
-                          provider: provider,
-                          propertySummary: property.text,
-                          phone: phone.text,
-                        );
-                        if (!dialogContext.mounted) return;
-                        Navigator.pop(dialogContext);
-                        if (!mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              provider.isExample
-                                  ? 'Introduction preview complete. Nothing was sent.'
-                                  : 'Introduction sent. Track its status from your Profile.',
-                            ),
-                          ),
-                        );
-                      } catch (error) {
-                        setModalState(() => sending = false);
-                        if (dialogContext.mounted) {
-                          ScaffoldMessenger.of(dialogContext).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Could not send introduction: $error',
-                              ),
-                            ),
-                          );
-                        }
-                      }
-                    },
-              child: Text(sending ? 'Sending…' : 'Send introduction'),
-            ),
-          ],
-        ),
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => ConnectionBriefPage(provider: provider),
       ),
     );
-    property.dispose();
-    phone.dispose();
   }
 
   @override
@@ -345,87 +252,88 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
     ),
   );
 
-  Widget _hero() => Container(
-    color: _ink,
-    padding: const EdgeInsets.fromLTRB(26, 22, 26, 58),
-    child: SafeArea(
-      bottom: false,
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1120),
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  const HomeBrandButton(size: 46),
-                  const Spacer(),
-                  AppNavigationMenu(side: provider.category.side),
-                ],
-              ),
-              const SizedBox(height: 52),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  ProfilePhoto(
-                    size: 124,
-                    photoUrl: provider.photoUrl,
-                    exampleIndex: provider.photoIndex,
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                  const SizedBox(width: 24),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Wrap(
-                          spacing: 8,
-                          children: [
-                            if (provider.verified) _badge('VERIFIED'),
-                            if (provider.sponsored) _badge('SPONSORED'),
-                            if (provider.isExample) _badge('EXAMPLE'),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-                        Text(
-                          provider.name,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 46,
-                            height: 1,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: -2,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        Text(
-                          '${provider.jobTitle} · ${provider.company}',
-                          style: const TextStyle(
-                            color: Color(0xFFBCAEFF),
-                            fontSize: 15,
-                          ),
-                        ),
-                      ],
+  Widget _hero() => TopoBackground(
+    child: Padding(
+      padding: const EdgeInsets.fromLTRB(26, 22, 26, 58),
+      child: SafeArea(
+        bottom: false,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1120),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    const HomeBrandButton(size: 46),
+                    const Spacer(),
+                    AppNavigationMenu(side: provider.category.side),
+                  ],
+                ),
+                const SizedBox(height: 52),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    ProfilePhoto(
+                      size: 124,
+                      photoUrl: provider.photoUrl,
+                      exampleIndex: provider.photoIndex,
+                      borderRadius: BorderRadius.circular(30),
                     ),
-                  ),
-                  if (MediaQuery.sizeOf(context).width >= 700)
-                    FilledButton.icon(
-                      onPressed: _changingTeam ? null : _toggleTeam,
-                      style: FilledButton.styleFrom(
-                        backgroundColor: _added
-                            ? const Color(0xFF16825D)
-                            : Colors.white,
-                        foregroundColor: _added ? Colors.white : _ink,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 22,
-                          vertical: 18,
-                        ),
+                    const SizedBox(width: 24),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Wrap(
+                            spacing: 8,
+                            children: [
+                              if (provider.verified) _badge('VERIFIED'),
+                              if (provider.sponsored) _badge('SPONSORED'),
+                              if (provider.isExample) _badge('EXAMPLE'),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            provider.name,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 46,
+                              height: 1,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: -2,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            '${provider.jobTitle} · ${provider.company}',
+                            style: const TextStyle(
+                              color: Color(0xFFBCAEFF),
+                              fontSize: 15,
+                            ),
+                          ),
+                        ],
                       ),
-                      icon: Icon(_added ? Icons.check_circle : Icons.add),
-                      label: Text(_added ? 'ADDED!' : 'ADD TO TEAM'),
                     ),
-                ],
-              ),
-            ],
+                    if (MediaQuery.sizeOf(context).width >= 700)
+                      FilledButton.icon(
+                        onPressed: _changingTeam ? null : _toggleTeam,
+                        style: FilledButton.styleFrom(
+                          backgroundColor: _added
+                              ? const Color(0xFF16825D)
+                              : Colors.white,
+                          foregroundColor: _added ? Colors.white : _ink,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 22,
+                            vertical: 18,
+                          ),
+                        ),
+                        icon: Icon(_added ? Icons.check_circle : Icons.add),
+                        label: Text(_added ? 'ADDED!' : 'ADD TO TEAM'),
+                      ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -493,7 +401,7 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
         FilledButton.icon(
           onPressed: _requestIntroduction,
           icon: const Icon(Icons.handshake_outlined, size: 18),
-          label: const Text('REQUEST A WARM INTRODUCTION'),
+          label: const Text('BUILD A CONNECTION BRIEF'),
         ),
         const SizedBox(height: 10),
         if (provider.phone.isNotEmpty)

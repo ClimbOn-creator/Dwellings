@@ -8,7 +8,6 @@ import '../widgets/app_navigation_menu.dart';
 import '../widgets/home_brand_button.dart';
 import '../widgets/topo_background.dart';
 
-const _ink = Color(0xFF050510);
 const _paper = Color(0xFFF5F5F7);
 const _purple = Color(0xFF7657FF);
 
@@ -46,7 +45,7 @@ class _MemberLeadInboxPageState extends State<MemberLeadInboxPage> {
     eyebrow: 'MEMBER WORKSPACE',
     title: 'Lead inbox',
     description:
-        'Every consented introduction in one place, from first response to a won client.',
+        'Every consented connection brief in one place, from first response to a won client.',
     child: FutureBuilder<List<IntroductionRequest>>(
       future: _leads,
       builder: (context, snapshot) {
@@ -96,7 +95,7 @@ class _MemberLeadInboxPageState extends State<MemberLeadInboxPage> {
                 icon: Icons.inbox_outlined,
                 title: 'No leads in this view',
                 message:
-                    'When a buyer requests an introduction from your public profile, it will appear here with their consented contact details and context.',
+                    'When a buyer sends a connection brief from your public profile, it appears here with their consented contact details and decision context.',
               )
             else
               ...filtered.map(
@@ -548,13 +547,9 @@ class _DraftCard extends StatelessWidget {
   final String copyText;
 
   @override
-  Widget build(BuildContext context) => Container(
+  Widget build(BuildContext context) => TopoCard(
     width: double.infinity,
     padding: const EdgeInsets.all(26),
-    decoration: BoxDecoration(
-      color: _ink,
-      borderRadius: BorderRadius.circular(20),
-    ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

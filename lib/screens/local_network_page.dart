@@ -10,6 +10,7 @@ import '../widgets/site_footer.dart';
 import '../widgets/profile_photo.dart';
 import '../widgets/app_navigation_menu.dart';
 import '../widgets/canadian_city_field.dart';
+import '../widgets/topo_background.dart';
 import 'auth_page.dart';
 import 'business_acquisition_page.dart';
 import 'home_screen.dart';
@@ -173,6 +174,11 @@ class _NetworkHero extends StatelessWidget {
                     : const [_ink, Color(0xE9050510), Color(0xA0050510)],
                 stops: desktop ? const [0, .58, 1] : const [0, .7, 1],
               ),
+            ),
+          ),
+          const Positioned.fill(
+            child: IgnorePointer(
+              child: CustomPaint(painter: TopoLinesPainter(opacity: .06)),
             ),
           ),
           Positioned(

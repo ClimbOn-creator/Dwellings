@@ -1080,59 +1080,63 @@ class _DealRoomPageState extends State<DealRoomPage> {
     ),
   );
 
-  Widget _roomHeader(DealRoomBundle bundle) => Container(
-    color: _ink,
-    padding: const EdgeInsets.fromLTRB(26, 22, 26, 52),
-    child: SafeArea(
-      bottom: false,
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1160),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const HomeBrandButton(size: 44),
-                  const Spacer(),
-                  AppNavigationMenu(
-                    side: _room.isBusiness
-                        ? PlatformSide.business
-                        : PlatformSide.property,
+  Widget _roomHeader(DealRoomBundle bundle) => TopoBackground(
+    child: Padding(
+      padding: const EdgeInsets.fromLTRB(26, 22, 26, 52),
+      child: SafeArea(
+        bottom: false,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1160),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const HomeBrandButton(size: 44),
+                    const Spacer(),
+                    AppNavigationMenu(
+                      side: _room.isBusiness
+                          ? PlatformSide.business
+                          : PlatformSide.property,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 52),
+                Text(
+                  _room.ownedByCurrentUser
+                      ? (_room.isBusiness
+                            ? 'PRIVATE ACQUISITION WORKSPACE'
+                            : 'PRIVATE PROPERTY WORKSPACE')
+                      : 'SHARED PROFESSIONAL WORKSPACE',
+                  style: const TextStyle(
+                    color: _lilac,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.3,
                   ),
-                ],
-              ),
-              const SizedBox(height: 52),
-              Text(
-                _room.ownedByCurrentUser
-                    ? (_room.isBusiness
-                          ? 'PRIVATE ACQUISITION WORKSPACE'
-                          : 'PRIVATE PROPERTY WORKSPACE')
-                    : 'SHARED PROFESSIONAL WORKSPACE',
-                style: const TextStyle(
-                  color: _lilac,
-                  fontSize: 10,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 1.3,
                 ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                _room.title,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 45,
-                  height: 1,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: -2,
+                const SizedBox(height: 12),
+                Text(
+                  _room.title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 45,
+                    height: 1,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: -2,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 14),
-              Text(
-                '${_room.dealKind.toUpperCase()} · ${_room.currentStage.toUpperCase().replaceAll('_', ' ')} · ${bundle.members.length} TEAM MEMBER${bundle.members.length == 1 ? '' : 'S'}',
-                style: const TextStyle(color: Color(0xFFBCAEFF), fontSize: 12),
-              ),
-            ],
+                const SizedBox(height: 14),
+                Text(
+                  '${_room.dealKind.toUpperCase()} · ${_room.currentStage.toUpperCase().replaceAll('_', ' ')} · ${bundle.members.length} TEAM MEMBER${bundle.members.length == 1 ? '' : 'S'}',
+                  style: const TextStyle(
+                    color: Color(0xFFBCAEFF),
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -1149,13 +1153,10 @@ class _DealRoomPageState extends State<DealRoomPage> {
       ),
     );
     final blockers = tasks.where((task) => task.blocked).length;
-    return Container(
+    return TopoCard(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: _ink,
-        borderRadius: BorderRadius.circular(19),
-      ),
+      borderRadius: BorderRadius.circular(19),
       child: Wrap(
         spacing: 26,
         runSpacing: 16,

@@ -5,6 +5,7 @@ import '../widgets/brand_logo.dart';
 import '../widgets/home_brand_button.dart';
 import '../widgets/site_footer.dart';
 import '../widgets/app_navigation_menu.dart';
+import '../widgets/topo_background.dart';
 import 'become_member_page.dart';
 import 'home_screen.dart';
 import 'local_network_page.dart';
@@ -841,81 +842,50 @@ class _Principles extends StatelessWidget {
         'AI should widen understanding and expose trade-offs—not make a life-changing choice for you.',
       ),
     ];
-    return Container(
-      color: _ink,
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 110),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1120),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'WHAT WE BELIEVE',
-                style: TextStyle(
-                  color: _lilac,
-                  fontSize: 10,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 1.3,
-                ),
-              ),
-              const SizedBox(height: 18),
-              const Text(
-                'Four principles. No fine print.',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 52,
-                  height: 1,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: -2.5,
-                ),
-              ),
-              const SizedBox(height: 50),
-              ...List.generate(principles.length, (index) {
-                final item = principles[index];
-                return Container(
-                  padding: const EdgeInsets.symmetric(vertical: 30),
-                  decoration: const BoxDecoration(
-                    border: Border(bottom: BorderSide(color: Colors.white12)),
+    return TopoBackground(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 110),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1120),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'WHAT WE BELIEVE',
+                  style: TextStyle(
+                    color: _lilac,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.3,
                   ),
-                  child: LayoutBuilder(
-                    builder: (context, constraints) =>
-                        constraints.maxWidth < 700
-                        ? Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                item.$1,
-                                style: const TextStyle(
-                                  color: _purple,
-                                  fontSize: 9,
-                                  fontWeight: FontWeight.w900,
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              Text(
-                                item.$2,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 26,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              const SizedBox(height: 10),
-                              Text(
-                                item.$3,
-                                style: const TextStyle(
-                                  color: _muted,
-                                  height: 1.55,
-                                ),
-                              ),
-                            ],
-                          )
-                        : Row(
-                            children: [
-                              SizedBox(
-                                width: 150,
-                                child: Text(
+                ),
+                const SizedBox(height: 18),
+                const Text(
+                  'Four principles. No fine print.',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 52,
+                    height: 1,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: -2.5,
+                  ),
+                ),
+                const SizedBox(height: 50),
+                ...List.generate(principles.length, (index) {
+                  final item = principles[index];
+                  return Container(
+                    padding: const EdgeInsets.symmetric(vertical: 30),
+                    decoration: const BoxDecoration(
+                      border: Border(bottom: BorderSide(color: Colors.white12)),
+                    ),
+                    child: LayoutBuilder(
+                      builder: (context, constraints) =>
+                          constraints.maxWidth < 700
+                          ? Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
                                   item.$1,
                                   style: const TextStyle(
                                     color: _purple,
@@ -923,10 +893,8 @@ class _Principles extends StatelessWidget {
                                     fontWeight: FontWeight.w900,
                                   ),
                                 ),
-                              ),
-                              Expanded(
-                                flex: 4,
-                                child: Text(
+                                const SizedBox(height: 12),
+                                Text(
                                   item.$2,
                                   style: const TextStyle(
                                     color: Colors.white,
@@ -934,23 +902,57 @@ class _Principles extends StatelessWidget {
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
-                              ),
-                              Expanded(
-                                flex: 5,
-                                child: Text(
+                                const SizedBox(height: 10),
+                                Text(
                                   item.$3,
                                   style: const TextStyle(
                                     color: _muted,
                                     height: 1.55,
                                   ),
                                 ),
-                              ),
-                            ],
-                          ),
-                  ),
-                );
-              }),
-            ],
+                              ],
+                            )
+                          : Row(
+                              children: [
+                                SizedBox(
+                                  width: 150,
+                                  child: Text(
+                                    item.$1,
+                                    style: const TextStyle(
+                                      color: _purple,
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  flex: 4,
+                                  child: Text(
+                                    item.$2,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 26,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  flex: 5,
+                                  child: Text(
+                                    item.$3,
+                                    style: const TextStyle(
+                                      color: _muted,
+                                      height: 1.55,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                    ),
+                  );
+                }),
+              ],
+            ),
           ),
         ),
       ),
@@ -1184,40 +1186,42 @@ class _MarketingPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: _ink,
-    body: CustomScrollView(
-      slivers: [
-        SliverToBoxAdapter(
-          child: _PageHero(
-            active: active,
-            eyebrow: eyebrow,
-            title: title,
-            body: body,
-            asset: heroAsset,
-          ),
-        ),
-        SliverToBoxAdapter(child: child),
-        SliverToBoxAdapter(
-          child: SiteFooter(
-            onHome: () =>
-                Navigator.of(context).popUntil((route) => route.isFirst),
-            onAbout: () => openMarketingPage(
-              context,
-              MarketingDestination.about,
-              replace: true,
-            ),
-            onTeam: () => openMarketingPage(
-              context,
-              MarketingDestination.team,
-              replace: true,
-            ),
-            onMember: () => openMarketingPage(
-              context,
-              MarketingDestination.membership,
-              replace: true,
+    body: TopoBackground(
+      child: CustomScrollView(
+        slivers: [
+          SliverToBoxAdapter(
+            child: _PageHero(
+              active: active,
+              eyebrow: eyebrow,
+              title: title,
+              body: body,
+              asset: heroAsset,
             ),
           ),
-        ),
-      ],
+          SliverToBoxAdapter(child: child),
+          SliverToBoxAdapter(
+            child: SiteFooter(
+              onHome: () =>
+                  Navigator.of(context).popUntil((route) => route.isFirst),
+              onAbout: () => openMarketingPage(
+                context,
+                MarketingDestination.about,
+                replace: true,
+              ),
+              onTeam: () => openMarketingPage(
+                context,
+                MarketingDestination.team,
+                replace: true,
+              ),
+              onMember: () => openMarketingPage(
+                context,
+                MarketingDestination.membership,
+                replace: true,
+              ),
+            ),
+          ),
+        ],
+      ),
     ),
   );
 }
@@ -1264,6 +1268,11 @@ class _PageHero extends StatelessWidget {
                     : const [_ink, Color(0xE8050510), Color(0x99050510)],
                 stops: desktop ? const [0, .55, 1] : const [0, .72, 1],
               ),
+            ),
+          ),
+          const Positioned.fill(
+            child: IgnorePointer(
+              child: CustomPaint(painter: TopoLinesPainter(opacity: .06)),
             ),
           ),
           Positioned(
@@ -1459,43 +1468,44 @@ class _PageCta extends StatelessWidget {
   final String button;
   final VoidCallback onTap;
   @override
-  Widget build(BuildContext context) => Container(
-    color: _ink,
-    padding: const EdgeInsets.all(24),
-    child: Container(
-      constraints: const BoxConstraints(minHeight: 430),
-      padding: const EdgeInsets.all(36),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(32),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF4B31BB), Color(0xFF1D1449), Color(0xFF0B0B18)],
+  Widget build(BuildContext context) => TopoBackground(
+    child: Padding(
+      padding: const EdgeInsets.all(24),
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 430),
+        padding: const EdgeInsets.all(36),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(32),
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF4B31BB), Color(0xFF1D1449), Color(0xFF0B0B18)],
+          ),
         ),
-      ),
-      child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const DwellingIqLogo(size: 54, showWordmark: false),
-            const SizedBox(height: 24),
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 780),
-              child: Text(
-                title,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: MediaQuery.sizeOf(context).width < 650 ? 42 : 62,
-                  height: .98,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: -2.8,
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const DwellingIqLogo(size: 54, showWordmark: false),
+              const SizedBox(height: 24),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 780),
+                child: Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: MediaQuery.sizeOf(context).width < 650 ? 42 : 62,
+                    height: .98,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: -2.8,
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 30),
-            _ModelButton(onTap: onTap),
-          ],
+              const SizedBox(height: 30),
+              _ModelButton(onTap: onTap),
+            ],
+          ),
         ),
       ),
     ),

@@ -460,19 +460,9 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
     ),
   );
 
-  Widget _dealCommandBar() => Container(
+  Widget _dealCommandBar() => TopoCard(
     padding: const EdgeInsets.all(18),
-    decoration: BoxDecoration(
-      color: _ink,
-      borderRadius: BorderRadius.circular(22),
-      boxShadow: const [
-        BoxShadow(
-          color: Color(0x33050510),
-          blurRadius: 28,
-          offset: Offset(0, 12),
-        ),
-      ],
-    ),
+    borderRadius: BorderRadius.circular(22),
     child: const Wrap(
       spacing: 24,
       runSpacing: 12,
@@ -647,13 +637,10 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
   Widget _results(BusinessResult result) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Container(
+      TopoCard(
         width: double.infinity,
         padding: const EdgeInsets.all(28),
-        decoration: BoxDecoration(
-          color: _ink,
-          borderRadius: BorderRadius.circular(22),
-        ),
+        borderRadius: BorderRadius.circular(22),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

@@ -11,7 +11,9 @@ import '../services/deal_room_service.dart';
 import '../widgets/home_brand_button.dart';
 import '../widgets/profile_photo.dart';
 import '../widgets/app_navigation_menu.dart';
+import '../widgets/topo_background.dart';
 import 'auth_page.dart';
+import 'connection_brief_page.dart';
 import 'deal_rooms_page.dart';
 import 'member_workspace_pages.dart';
 import 'member_profile_page.dart';
@@ -184,109 +186,17 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _showIntroductionDialog(MarketplaceProvider provider) async {
-    final messenger = ScaffoldMessenger.of(context);
-    final phone = TextEditingController();
-    final property = TextEditingController(
-      text: _stats?.lastAddress.isNotEmpty == true
-          ? 'I would like help with ${_stats!.lastAddress}.'
-          : '',
-    );
-    var sending = false;
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setModalState) => AlertDialog(
-          title: Text('Introduction to ${provider.name}'),
-          content: SizedBox(
-            width: 460,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  provider.isExample
-                      ? 'This is an example professional. You can preview the introduction flow, but no message will be sent.'
-                      : 'We will securely share your account name, email and property note with ${provider.name}.',
-                  style: const TextStyle(
-                    color: Color(0xFF666674),
-                    fontSize: 13,
-                    height: 1.5,
-                  ),
-                ),
-                const SizedBox(height: 18),
-                TextField(
-                  controller: property,
-                  onChanged: (_) => setModalState(() {}),
-                  minLines: 3,
-                  maxLines: 5,
-                  decoration: const InputDecoration(
-                    labelText: 'Property or financing details',
-                    hintText:
-                        'Tell them what you are buying and what help you need.',
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: phone,
-                  keyboardType: TextInputType.phone,
-                  decoration: const InputDecoration(
-                    labelText: 'Phone number (optional)',
-                  ),
-                ),
-                const SizedBox(height: 12),
-                const Text(
-                  'By requesting the introduction, you consent to this professional contacting you about this request.',
-                  style: TextStyle(color: Color(0xFF777785), fontSize: 11),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: sending ? null : () => Navigator.pop(dialogContext),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: sending || property.text.trim().isEmpty
-                  ? null
-                  : () async {
-                      setModalState(() => sending = true);
-                      try {
-                        await AccountService.requestIntroduction(
-                          provider: provider,
-                          propertySummary: property.text,
-                          phone: phone.text,
-                        );
-                        if (!dialogContext.mounted) return;
-                        Navigator.pop(dialogContext);
-                        await _refreshActivity();
-                        if (!mounted) return;
-                        messenger.showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              provider.isExample
-                                  ? 'Introduction preview complete. Nothing was sent.'
-                                  : 'Introduction requested. ${provider.name} can now contact you.',
-                            ),
-                          ),
-                        );
-                      } catch (error) {
-                        setModalState(() => sending = false);
-                        if (mounted) {
-                          messenger.showSnackBar(
-                            SnackBar(content: Text('Could not send: $error')),
-                          );
-                        }
-                      }
-                    },
-              child: Text(sending ? 'Sending…' : 'Request introduction'),
-            ),
-          ],
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => ConnectionBriefPage(
+          provider: provider,
+          initialContext: _stats?.lastAddress.isNotEmpty == true
+              ? 'I would like help with ${_stats!.lastAddress}.'
+              : '',
         ),
       ),
     );
-    phone.dispose();
-    property.dispose();
+    await _refreshActivity();
   }
 
   Future<void> _signOut() async {
@@ -299,7 +209,9 @@ class _ProfilePageState extends State<ProfilePage> {
     if (_loading) {
       return const Scaffold(
         backgroundColor: _ink,
-        body: Center(child: CircularProgressIndicator(color: _purple)),
+        body: TopoBackground(
+          child: Center(child: CircularProgressIndicator(color: _purple)),
+        ),
       );
     }
     if (BackendService.user == null) {
@@ -356,7 +268,7 @@ class _ProfilePageState extends State<ProfilePage> {
                               _StatCard(
                                 width: width,
                                 value: '${stats.introductionCount}',
-                                label: 'Introductions requested',
+                                label: 'Connections started',
                               ),
                               _StatCard(
                                 width: width,
@@ -427,74 +339,75 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _header(AccountProfile? profile) => Container(
-    color: _ink,
-    padding: const EdgeInsets.fromLTRB(28, 22, 28, 54),
-    child: SafeArea(
-      bottom: false,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const HomeBrandButton(size: 46),
-              const Spacer(),
-              const AppNavigationMenu(),
-            ],
-          ),
-          const SizedBox(height: 54),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Stack(
-                children: [
-                  ProfilePhoto(
-                    size: 112,
-                    photoUrl: profile?.photoUrl ?? '',
-                    borderRadius: BorderRadius.circular(28),
-                  ),
-                  Positioned(
-                    right: 4,
-                    bottom: 4,
-                    child: IconButton.filled(
-                      onPressed: _photo,
-                      icon: const Icon(Icons.camera_alt_outlined, size: 17),
-                      tooltip: 'Upload profile photo',
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(width: 24),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _header(AccountProfile? profile) => TopoBackground(
+    child: Padding(
+      padding: const EdgeInsets.fromLTRB(28, 22, 28, 54),
+      child: SafeArea(
+        bottom: false,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const HomeBrandButton(size: 46),
+                const Spacer(),
+                const AppNavigationMenu(),
+              ],
+            ),
+            const SizedBox(height: 54),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Stack(
                   children: [
-                    Text(
-                      profile?.fullName.isNotEmpty == true
-                          ? profile!.fullName
-                          : 'Complete your profile',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 42,
-                        height: 1,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: -1.8,
-                      ),
+                    ProfilePhoto(
+                      size: 112,
+                      photoUrl: profile?.photoUrl ?? '',
+                      borderRadius: BorderRadius.circular(28),
                     ),
-                    const SizedBox(height: 10),
-                    Text(
-                      _publicIdentity(profile),
-                      style: const TextStyle(
-                        color: Color(0xFFBCAEFF),
-                        fontSize: 14,
+                    Positioned(
+                      right: 4,
+                      bottom: 4,
+                      child: IconButton.filled(
+                        onPressed: _photo,
+                        icon: const Icon(Icons.camera_alt_outlined, size: 17),
+                        tooltip: 'Upload profile photo',
                       ),
                     ),
                   ],
                 ),
-              ),
-            ],
-          ),
-        ],
+                const SizedBox(width: 24),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        profile?.fullName.isNotEmpty == true
+                            ? profile!.fullName
+                            : 'Complete your profile',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 42,
+                          height: 1,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: -1.8,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        _publicIdentity(profile),
+                        style: const TextStyle(
+                          color: Color(0xFFBCAEFF),
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     ),
   );
@@ -610,13 +523,9 @@ class _ProfilePageState extends State<ProfilePage> {
     return parts.isEmpty ? _roleLabel(profile.role) : parts.join(' · ');
   }
 
-  Widget _professionalWorkspace(ProfessionalWorkspaceStats stats) => Container(
+  Widget _professionalWorkspace(ProfessionalWorkspaceStats stats) => TopoCard(
     width: double.infinity,
     padding: const EdgeInsets.all(24),
-    decoration: BoxDecoration(
-      color: _ink,
-      borderRadius: BorderRadius.circular(20),
-    ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -664,7 +573,7 @@ class _ProfilePageState extends State<ProfilePage> {
           runSpacing: 10,
           children: [
             _professionalMetric('${stats.teamSaves}', 'TEAM SAVES'),
-            _professionalMetric('${stats.introductions}', 'INTRODUCTIONS'),
+            _professionalMetric('${stats.introductions}', 'CONNECTIONS'),
             _professionalMetric('${stats.dealRooms}', 'DEAL ROOMS'),
             _professionalMetric(
               '${stats.profileCompleteness}%',
@@ -698,7 +607,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   width: width,
                   icon: Icons.inbox_outlined,
                   title: 'Lead inbox',
-                  detail: 'Review and move introductions forward.',
+                  detail: 'Review and move new client connections forward.',
                   page: const MemberLeadInboxPage(),
                 ),
                 _workspaceLaunchButton(
@@ -824,7 +733,7 @@ class _ProfilePageState extends State<ProfilePage> {
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       Text(
-        _incomingIntroductions.isEmpty ? 'Introductions' : 'Lead inbox',
+        _incomingIntroductions.isEmpty ? 'Connections' : 'Lead inbox',
         style: TextStyle(
           fontSize: 30,
           fontWeight: FontWeight.w700,
@@ -833,7 +742,7 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
       const SizedBox(height: 8),
       const Text(
-        'Track consented introductions from first response through consultation and outcome.',
+        'Track consented connection briefs from first response through consultation and outcome.',
         style: TextStyle(color: Color(0xFF666674)),
       ),
       const SizedBox(height: 18),
@@ -872,7 +781,7 @@ class _ProfilePageState extends State<ProfilePage> {
             borderRadius: BorderRadius.circular(16),
           ),
           child: const Text(
-            'No introductions yet. Open a professional profile to request one with your property context attached.',
+            'No connections yet. Open a professional profile and build a private brief with the context they need.',
           ),
         )
       else
@@ -1329,8 +1238,8 @@ class _ProfilePageState extends State<ProfilePage> {
                 icon: const Icon(Icons.mark_email_unread_outlined, size: 18),
                 label: Text(
                   provider.isExample
-                      ? 'PREVIEW INTRODUCTION'
-                      : 'REQUEST INTRODUCTION',
+                      ? 'PREVIEW CONNECTION'
+                      : 'BUILD CONNECTION BRIEF',
                   style: const TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w800,

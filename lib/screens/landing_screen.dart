@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../widgets/site_footer.dart';
+import '../widgets/topo_background.dart';
 import '../models/platform_side.dart';
 import 'home_screen.dart';
 import 'marketing_pages.dart';
@@ -89,39 +90,42 @@ class _LandingScreenState extends State<LandingScreen> {
   @override
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: _ink,
-    body: CustomScrollView(
-      controller: _scrollController,
-      slivers: [
-        SliverToBoxAdapter(
-          child: _Hero(
-            onOpen: _openModel,
-            onProperty: _openPropertyHub,
-            onBusiness: _openBusiness,
-            onExplore: _scrollToCapabilities,
-          ),
-        ),
-        const SliverToBoxAdapter(child: _ProofStrip()),
-        SliverToBoxAdapter(
-          child: _AssetGrid(onOpen: _openModel, onBusiness: _openBusiness),
-        ),
-        SliverToBoxAdapter(child: _IntelligenceSection(onOpen: _openModel)),
-        SliverToBoxAdapter(child: _ProcessSection(onOpen: _openModel)),
-        SliverToBoxAdapter(child: _ClosingSection(onOpen: _openModel)),
-        SliverToBoxAdapter(
-          child: SiteFooter(
-            onHome: () => _scrollController.animateTo(
-              0,
-              duration: const Duration(milliseconds: 700),
-              curve: Curves.easeOutCubic,
+    body: TopoBackground(
+      child: CustomScrollView(
+        controller: _scrollController,
+        slivers: [
+          SliverToBoxAdapter(
+            child: _Hero(
+              onOpen: _openModel,
+              onProperty: _openPropertyHub,
+              onBusiness: _openBusiness,
+              onExplore: _scrollToCapabilities,
             ),
-            onAbout: () =>
-                openMarketingPage(context, MarketingDestination.about),
-            onTeam: () => openMarketingPage(context, MarketingDestination.team),
-            onMember: () =>
-                openMarketingPage(context, MarketingDestination.membership),
           ),
-        ),
-      ],
+          const SliverToBoxAdapter(child: _ProofStrip()),
+          SliverToBoxAdapter(
+            child: _AssetGrid(onOpen: _openModel, onBusiness: _openBusiness),
+          ),
+          SliverToBoxAdapter(child: _IntelligenceSection(onOpen: _openModel)),
+          SliverToBoxAdapter(child: _ProcessSection(onOpen: _openModel)),
+          SliverToBoxAdapter(child: _ClosingSection(onOpen: _openModel)),
+          SliverToBoxAdapter(
+            child: SiteFooter(
+              onHome: () => _scrollController.animateTo(
+                0,
+                duration: const Duration(milliseconds: 700),
+                curve: Curves.easeOutCubic,
+              ),
+              onAbout: () =>
+                  openMarketingPage(context, MarketingDestination.about),
+              onTeam: () =>
+                  openMarketingPage(context, MarketingDestination.team),
+              onMember: () =>
+                  openMarketingPage(context, MarketingDestination.membership),
+            ),
+          ),
+        ],
+      ),
     ),
   );
 }
@@ -223,7 +227,9 @@ class _Atmosphere extends StatelessWidget {
             ),
           ),
         ),
-        Positioned.fill(child: CustomPaint(painter: _GridPainter())),
+        const Positioned.fill(
+          child: CustomPaint(painter: TopoLinesPainter(opacity: .055)),
+        ),
       ],
     ),
   );
@@ -1377,84 +1383,88 @@ class _ClosingSection extends StatelessWidget {
   final VoidCallback onOpen;
 
   @override
-  Widget build(BuildContext context) => Container(
-    color: _ink,
-    padding: const EdgeInsets.all(24),
-    child: Container(
-      constraints: const BoxConstraints(minHeight: 560),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(34),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF4A2BC3), Color(0xFF1C124D), Color(0xFF080812)],
+  Widget build(BuildContext context) => TopoBackground(
+    child: Padding(
+      padding: const EdgeInsets.all(24),
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 560),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(34),
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF4A2BC3), Color(0xFF1C124D), Color(0xFF080812)],
+          ),
         ),
-      ),
-      child: Stack(
-        children: [
-          Positioned.fill(child: CustomPaint(painter: _GridPainter())),
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 72),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text(
-                    'YOUR NEXT PROPERTY DESERVES A BETTER QUESTION.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: _lilac,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 1.4,
+        child: Stack(
+          children: [
+            Positioned.fill(child: CustomPaint(painter: _GridPainter())),
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 72,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'YOUR NEXT PROPERTY DESERVES A BETTER QUESTION.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: _lilac,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.4,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 22),
-                  Text(
-                    'What if you could know\nbefore you commit?',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: MediaQuery.sizeOf(context).width < 650
-                          ? 46
-                          : 72,
-                      height: .95,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: -3.5,
+                    const SizedBox(height: 22),
+                    Text(
+                      'What if you could know\nbefore you commit?',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: MediaQuery.sizeOf(context).width < 650
+                            ? 46
+                            : 72,
+                        height: .95,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: -3.5,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 34),
-                  _PillButton(label: 'OPEN DWELLINGSIQ', onTap: onOpen),
-                ],
+                    const SizedBox(height: 34),
+                    _PillButton(label: 'OPEN DWELLINGSIQ', onTap: onOpen),
+                  ],
+                ),
               ),
             ),
-          ),
-          const Positioned(
-            left: 28,
-            bottom: 25,
-            child: Text(
-              'DWELLINGSIQ',
-              style: TextStyle(
-                color: Colors.white70,
-                fontSize: 10,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 1.3,
+            const Positioned(
+              left: 28,
+              bottom: 25,
+              child: Text(
+                'DWELLINGSIQ',
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.3,
+                ),
               ),
             ),
-          ),
-          const Positioned(
-            right: 28,
-            bottom: 25,
-            child: Text(
-              'PROPERTY DECISION INTELLIGENCE',
-              style: TextStyle(
-                color: Colors.white38,
-                fontSize: 8,
-                letterSpacing: 1.1,
+            const Positioned(
+              right: 28,
+              bottom: 25,
+              child: Text(
+                'PROPERTY DECISION INTELLIGENCE',
+                style: TextStyle(
+                  color: Colors.white38,
+                  fontSize: 8,
+                  letterSpacing: 1.1,
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     ),
   );
