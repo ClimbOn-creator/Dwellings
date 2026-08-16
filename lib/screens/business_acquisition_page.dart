@@ -12,6 +12,8 @@ import '../widgets/home_brand_button.dart';
 import '../widgets/app_navigation_menu.dart';
 import '../widgets/canadian_city_field.dart';
 import '../widgets/topo_background.dart';
+import '../widgets/acquisition_step_bar.dart';
+import 'acquisition_support_page.dart';
 import 'auth_page.dart';
 import 'deal_rooms_page.dart';
 import 'platform_hub_page.dart';
@@ -36,7 +38,7 @@ class BusinessAcquisitionPage extends StatefulWidget {
 class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
   final _businessName = TextEditingController();
   final _industry = TextEditingController();
-  final _location = TextEditingController(text: 'Vancouver');
+  final _location = TextEditingController();
   MarketplaceCity _selectedCity = MarketplaceService.cities.first;
   final Map<String, TextEditingController> _fields = {};
   BusinessResult? _result;
@@ -182,11 +184,7 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
   void initState() {
     super.initState();
     for (final definition in _definitions) {
-      _fields[definition.key] = TextEditingController(
-        text: definition.example.toStringAsFixed(
-          definition.example == definition.example.roundToDouble() ? 0 : 1,
-        ),
-      );
+      _fields[definition.key] = TextEditingController();
     }
     for (final key in [
       'threeYearRevenueProvided',
@@ -248,6 +246,18 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
       _location.text = city.city;
     });
     AccountService.savePreferredLocation(city);
+  }
+
+  void _goStep(int step) {
+    if (step == 2) return;
+    final page = switch (step) {
+      0 => const AcquisitionBlueprintPage(),
+      1 => const BuyerReadinessPage(),
+      _ => const DealRoomsPage(initialSide: PlatformSide.business),
+    };
+    Navigator.of(
+      context,
+    ).pushReplacement(MaterialPageRoute<void>(builder: (_) => page));
   }
 
   Future<void> _useDeviceLocation() async {
@@ -344,14 +354,9 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
       slivers: [
         SliverToBoxAdapter(child: _hero()),
         SliverToBoxAdapter(
-          child: Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [Color(0xFFEDE9FF), _paper, _paper],
-              ),
-            ),
+          child: TopoBackground(
+            color: _paper,
+            opacity: .045,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 52),
               child: Center(
@@ -360,6 +365,8 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      AcquisitionStepBar(currentStep: 2, onSelected: _goStep),
+                      const SizedBox(height: 18),
                       _securityBoundary(),
                       const SizedBox(height: 18),
                       _dealCommandBar(),
@@ -519,20 +526,15 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
           children: [
             SizedBox(
               width: width,
-              child: TextField(
-                controller: _businessName,
-                decoration: const InputDecoration(
-                  labelText: 'Business or project name',
-                  hintText: 'Use an alias if confidential',
-                ),
+              child: _plainInput(
+                'Business or project name',
+                _businessName,
+                'Use an alias if confidential',
               ),
             ),
             SizedBox(
               width: width,
-              child: TextField(
-                controller: _industry,
-                decoration: const InputDecoration(labelText: 'Industry'),
-              ),
+              child: _plainInput('Industry', _industry, 'e.g. HVAC services'),
             ),
             SizedBox(
               width: width,
@@ -558,6 +560,25 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
     ),
   );
 
+  Widget _plainInput(
+    String label,
+    TextEditingController controller,
+    String hint,
+  ) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        label,
+        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
+      ),
+      const SizedBox(height: 8),
+      TextField(
+        controller: controller,
+        decoration: InputDecoration(hintText: hint),
+      ),
+    ],
+  );
+
   Widget _financialForm() => _card(
     'Financial and operational inputs',
     LayoutBuilder(
@@ -571,40 +592,88 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
           spacing: 10,
           runSpacing: 12,
           children: _definitions
-              .map(
-                (definition) => SizedBox(
-                  width: width,
-                  child: TextField(
-                    controller: _fields[definition.key],
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                      signed: true,
-                    ),
-                    decoration: InputDecoration(
-                      labelText: definition.label,
-                      helperText: definition.help,
-                      helperMaxLines: 3,
-                      prefixText:
-                          definition.percent ||
-                              definition.key == 'amortizationYears' ||
-                              definition.key == 'leaseYearsRemaining'
-                          ? null
-                          : r'$ ',
-                      suffixText: definition.percent
-                          ? '%'
-                          : definition.key == 'amortizationYears' ||
-                                definition.key == 'leaseYearsRemaining'
-                          ? ' years'
-                          : null,
-                    ),
-                  ),
-                ),
-              )
+              .map((definition) => _businessInput(definition, width))
               .toList(),
         );
       },
     ),
   );
+
+  Widget _businessInput(_BusinessField definition, double width) {
+    final years =
+        definition.key == 'amortizationYears' ||
+        definition.key == 'leaseYearsRemaining';
+    final unit = definition.percent
+        ? '%'
+        : years
+        ? 'YEARS'
+        : r'$ CAD';
+    final example = definition.example.toStringAsFixed(
+      definition.example == definition.example.roundToDouble() ? 0 : 1,
+    );
+    return SizedBox(
+      width: width,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  definition.label,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEDE9FF),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  unit,
+                  style: const TextStyle(
+                    color: _purple,
+                    fontSize: 9,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 5),
+          Text(
+            definition.help,
+            style: const TextStyle(
+              color: Color(0xFF666674),
+              fontSize: 10,
+              height: 1.35,
+            ),
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _fields[definition.key],
+            keyboardType: const TextInputType.numberWithOptions(
+              decimal: true,
+              signed: true,
+            ),
+            decoration: InputDecoration(
+              hintText: 'Enter value · example $example',
+              prefixText: definition.percent || years ? null : r'$ ',
+              suffixText: definition.percent
+                  ? '%'
+                  : years
+                  ? ' years'
+                  : null,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _evidenceForm() => _card(
     'Evidence available',

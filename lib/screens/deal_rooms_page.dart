@@ -9,6 +9,8 @@ import '../widgets/home_brand_button.dart';
 import '../widgets/topo_background.dart';
 import '../widgets/profile_photo.dart';
 import '../widgets/app_navigation_menu.dart';
+import '../widgets/acquisition_step_bar.dart';
+import 'acquisition_support_page.dart';
 import 'business_acquisition_page.dart';
 
 const _ink = Color(0xFF050510);
@@ -40,6 +42,18 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
   }
 
   void _refresh() => setState(() => _rooms = DealRoomService.loadRooms());
+
+  void _goStep(int step) {
+    if (step == 3) return;
+    final page = switch (step) {
+      0 => const AcquisitionBlueprintPage(),
+      1 => const BuyerReadinessPage(),
+      _ => const BusinessAcquisitionPage(),
+    };
+    Navigator.of(
+      context,
+    ).pushReplacement(MaterialPageRoute<void>(builder: (_) => page));
+  }
 
   Future<void> _manualCreate() async {
     final result = await showDialog<_NewDealDetails>(
@@ -113,56 +127,66 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
       slivers: [
         SliverToBoxAdapter(child: _header()),
         SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 52),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 1120),
-                child: FutureBuilder<List<DealRoom>>(
-                  future: _rooms,
-                  builder: (context, snapshot) {
-                    if (!snapshot.hasData) {
-                      return const SizedBox(
-                        height: 260,
-                        child: Center(child: CircularProgressIndicator()),
-                      );
-                    }
-                    final allRooms = snapshot.data!;
-                    final rooms = allRooms.where((room) {
-                      final lifecycleMatch = _showArchived
-                          ? room.status == 'archived' ||
-                                room.status == 'completed' ||
-                                room.status == 'cancelled'
-                          : room.status != 'archived' &&
-                                room.status != 'completed' &&
-                                room.status != 'cancelled';
-                      final sideMatch = _showAll
-                          ? true
-                          : _side == PlatformSide.business
-                          ? room.isBusiness
-                          : !room.isBusiness;
-                      return lifecycleMatch && sideMatch;
-                    }).toList();
-                    if (rooms.isEmpty) return _empty();
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _summary(allRooms),
-                        const SizedBox(height: 26),
-                        Text(
-                          '${rooms.length} ${_showArchived ? 'PAST' : 'CURRENT'} DEAL${rooms.length == 1 ? '' : 'S'}',
-                          style: const TextStyle(
-                            color: _purple,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 1.1,
-                          ),
-                        ),
-                        const SizedBox(height: 18),
-                        ...rooms.map(_roomCard),
-                      ],
-                    );
-                  },
+          child: TopoBackground(
+            color: _paper,
+            opacity: .045,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 38),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 1120),
+                  child: Column(
+                    children: [
+                      AcquisitionStepBar(currentStep: 3, onSelected: _goStep),
+                      const SizedBox(height: 32),
+                      FutureBuilder<List<DealRoom>>(
+                        future: _rooms,
+                        builder: (context, snapshot) {
+                          if (!snapshot.hasData) {
+                            return const SizedBox(
+                              height: 260,
+                              child: Center(child: CircularProgressIndicator()),
+                            );
+                          }
+                          final allRooms = snapshot.data!;
+                          final rooms = allRooms.where((room) {
+                            final lifecycleMatch = _showArchived
+                                ? room.status == 'archived' ||
+                                      room.status == 'completed' ||
+                                      room.status == 'cancelled'
+                                : room.status != 'archived' &&
+                                      room.status != 'completed' &&
+                                      room.status != 'cancelled';
+                            final sideMatch = _showAll
+                                ? true
+                                : _side == PlatformSide.business
+                                ? room.isBusiness
+                                : !room.isBusiness;
+                            return lifecycleMatch && sideMatch;
+                          }).toList();
+                          if (rooms.isEmpty) return _empty();
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _summary(allRooms),
+                              const SizedBox(height: 26),
+                              Text(
+                                '${rooms.length} ${_showArchived ? 'PAST' : 'CURRENT'} DEAL${rooms.length == 1 ? '' : 'S'}',
+                                style: const TextStyle(
+                                  color: _purple,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 1.1,
+                                ),
+                              ),
+                              const SizedBox(height: 18),
+                              ...rooms.map(_roomCard),
+                            ],
+                          );
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

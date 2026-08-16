@@ -94,12 +94,17 @@ class _CanadianCityFieldState extends State<CanadianCityField> {
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
+      Text(
+        widget.label,
+        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+      ),
+      const SizedBox(height: 8),
       TextFormField(
         controller: widget.controller,
         focusNode: _focus,
         textCapitalization: TextCapitalization.words,
         decoration: InputDecoration(
-          labelText: widget.label,
+          hintText: 'Start typing a Canadian city',
           prefixIcon: const Icon(Icons.location_on_outlined),
           helperText: 'Choose a suggestion or press Enter to autofill.',
         ),

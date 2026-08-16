@@ -6,6 +6,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/platform_side.dart';
 import '../services/backend_service.dart';
 import '../widgets/home_brand_button.dart';
+import '../widgets/acquisition_step_bar.dart';
+import '../widgets/topo_background.dart';
 import 'auth_page.dart';
 import 'business_acquisition_page.dart';
 import 'deal_rooms_page.dart';
@@ -370,12 +372,34 @@ class _AcquisitionBlueprintPageState extends State<AcquisitionBlueprintPage> {
     }
   }
 
+  Future<void> _goStep(int step) async {
+    if (step == 0) return;
+    await _save();
+    if (!mounted) return;
+    final page = switch (step) {
+      1 => const BuyerReadinessPage(),
+      2 => const BusinessAcquisitionPage(),
+      _ => const DealRoomsPage(initialSide: PlatformSide.business),
+    };
+    Navigator.of(
+      context,
+    ).pushReplacement(MaterialPageRoute<void>(builder: (_) => page));
+  }
+
+  void _clear() => setState(() {
+    for (final controller in controllers.values) {
+      controller.clear();
+    }
+  });
+
   @override
   Widget build(BuildContext context) => _ModuleScaffold(
     kicker: 'MODULE 01',
     title: 'Acquisition Blueprint',
     subtitle:
         'Define the acquisition you want before a compelling deal changes the rules.',
+    currentStep: 0,
+    onStepSelected: _goStep,
     child: value == null
         ? const Center(child: CircularProgressIndicator())
         : Column(
@@ -384,12 +408,41 @@ class _AcquisitionBlueprintPageState extends State<AcquisitionBlueprintPage> {
                 number: '01',
                 title: 'Target acquisition',
                 children: [
-                  _input('type', 'Acquisition type'),
-                  _input('geography', 'Target geography'),
-                  _input('minPrice', 'Minimum purchase price'),
-                  _input('maxPrice', 'Maximum purchase price'),
-                  _input('minReturn', 'Minimum return / earnings yield (%)'),
-                  _input('involvement', 'Desired operating role'),
+                  _dropdown('type', 'Acquisition type', const [
+                    'Business acquisition',
+                    'Asset purchase',
+                    'Share purchase',
+                    'Undecided',
+                  ]),
+                  _input(
+                    'geography',
+                    'Target geography',
+                    hint: 'City, province, or region',
+                  ),
+                  _input(
+                    'minPrice',
+                    'Minimum purchase price',
+                    unit: r'$ CAD',
+                    hint: 'e.g. 500,000',
+                  ),
+                  _input(
+                    'maxPrice',
+                    'Maximum purchase price',
+                    unit: r'$ CAD',
+                    hint: 'e.g. 2,000,000',
+                  ),
+                  _input(
+                    'minReturn',
+                    'Minimum return or earnings yield',
+                    unit: '%',
+                    hint: 'e.g. 18',
+                  ),
+                  _dropdown('involvement', 'Desired operating role', const [
+                    'Owner-operator',
+                    'Strategic owner',
+                    'Investor with manager',
+                    'Undecided',
+                  ]),
                 ],
               ),
               const SizedBox(height: 18),
@@ -397,32 +450,81 @@ class _AcquisitionBlueprintPageState extends State<AcquisitionBlueprintPage> {
                 number: '02',
                 title: 'Fit and boundaries',
                 children: [
-                  _input('industries', 'Preferred industries / asset types'),
-                  _input('limits', 'Hard limits'),
-                  _input('stretch', 'Acceptable stretch criteria'),
+                  _input(
+                    'industries',
+                    'Preferred industries or asset types',
+                    hint: 'Industries you understand or want to explore',
+                  ),
+                  _input(
+                    'limits',
+                    'Hard limits',
+                    hint: 'Conditions that immediately rule out a deal',
+                    maxLines: 3,
+                  ),
+                  _input(
+                    'stretch',
+                    'Acceptable stretch criteria',
+                    hint: 'Where you could be flexible',
+                    maxLines: 3,
+                  ),
                 ],
               ),
               const SizedBox(height: 22),
-              Align(
-                alignment: Alignment.centerRight,
-                child: FilledButton.icon(
-                  onPressed: _save,
-                  icon: const Icon(Icons.check_rounded),
-                  label: const Text('Save Blueprint'),
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: _clear,
+                    icon: const Icon(Icons.cleaning_services_outlined),
+                    label: const Text('Clear form'),
+                  ),
+                  const SizedBox(width: 10),
+                  FilledButton.icon(
+                    onPressed: _save,
+                    icon: const Icon(Icons.check_rounded),
+                    label: const Text('Save Blueprint'),
+                  ),
+                ],
               ),
             ],
           ),
   );
 
-  Widget _input(String key, String label) => TextField(
-    controller: controllers[key],
-    keyboardType: ['minPrice', 'maxPrice', 'minReturn'].contains(key)
-        ? TextInputType.number
-        : TextInputType.text,
-    maxLines: ['limits', 'stretch'].contains(key) ? 2 : 1,
-    decoration: InputDecoration(labelText: label),
+  Widget _input(
+    String key,
+    String label, {
+    String? unit,
+    String? hint,
+    int maxLines = 1,
+  }) => _LabeledField(
+    label: label,
+    unit: unit,
+    child: TextField(
+      controller: controllers[key],
+      keyboardType: ['minPrice', 'maxPrice', 'minReturn'].contains(key)
+          ? TextInputType.number
+          : TextInputType.text,
+      maxLines: maxLines,
+      decoration: InputDecoration(hintText: hint),
+    ),
   );
+
+  Widget _dropdown(String key, String label, List<String> options) {
+    final current = controllers[key]?.text.trim() ?? '';
+    return _LabeledField(
+      label: label,
+      child: DropdownButtonFormField<String>(
+        initialValue: options.contains(current) ? current : null,
+        hint: const Text('Select an option'),
+        items: options
+            .map(
+              (option) => DropdownMenuItem(value: option, child: Text(option)),
+            )
+            .toList(),
+        onChanged: (selected) => controllers[key]?.text = selected ?? '',
+      ),
+    );
+  }
 }
 
 class BuyerReadinessPage extends StatefulWidget {
@@ -457,6 +559,19 @@ class _BuyerReadinessPageState extends State<BuyerReadinessPage> {
     if (mounted) setState(() {});
   }
 
+  Future<void> _goStep(int step) async {
+    await _save();
+    if (!mounted || step == 1) return;
+    final page = switch (step) {
+      0 => const AcquisitionBlueprintPage(),
+      2 => const BusinessAcquisitionPage(),
+      _ => const DealRoomsPage(initialSide: PlatformSide.business),
+    };
+    Navigator.of(
+      context,
+    ).pushReplacement(MaterialPageRoute<void>(builder: (_) => page));
+  }
+
   @override
   Widget build(BuildContext context) {
     final current = value;
@@ -465,6 +580,8 @@ class _BuyerReadinessPageState extends State<BuyerReadinessPage> {
       title: 'Buyer Readiness',
       subtitle:
           'Understand what you can execute now and your path to becoming transaction-ready.',
+      currentStep: 1,
+      onStepSelected: _goStep,
       child: current == null
           ? const Center(child: CircularProgressIndicator())
           : Column(
@@ -476,18 +593,46 @@ class _BuyerReadinessPageState extends State<BuyerReadinessPage> {
                   title: 'Financial capacity',
                   children: [
                     for (final item in const {
-                      'equity': 'Available equity / cash',
+                      'equity': 'Available equity or cash',
                       'reserves': 'Post-close reserves',
                       'income': 'Annual supporting income',
-                      'credit': 'Credit profile (Excellent / Good / Fair)',
                     }.entries)
-                      TextField(
-                        controller: controllers[item.key],
-                        keyboardType: item.key == 'credit'
-                            ? TextInputType.text
-                            : TextInputType.number,
-                        decoration: InputDecoration(labelText: item.value),
+                      _LabeledField(
+                        label: item.value,
+                        unit: r'$ CAD',
+                        child: TextField(
+                          controller: controllers[item.key],
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(
+                            hintText: 'Enter amount',
+                          ),
+                        ),
                       ),
+                    _LabeledField(
+                      label: 'Credit profile',
+                      child: DropdownButtonFormField<String>(
+                        initialValue:
+                            const [
+                              'Excellent',
+                              'Good',
+                              'Fair',
+                              'Needs work',
+                            ].contains(controllers['credit']?.text)
+                            ? controllers['credit']!.text
+                            : null,
+                        hint: const Text('Select a profile'),
+                        items: const ['Excellent', 'Good', 'Fair', 'Needs work']
+                            .map(
+                              (option) => DropdownMenuItem(
+                                value: option,
+                                child: Text(option),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (selected) =>
+                            controllers['credit']?.text = selected ?? '',
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 18),
@@ -762,21 +907,21 @@ class AcquisitionFoundation {
   static const _key = 'acquisition_foundation_v1';
   static final _defaults = {
     'blueprint': {
-      'type': 'Business Acquisition',
-      'geography': 'British Columbia',
-      'minPrice': '500000',
-      'maxPrice': '2000000',
-      'minReturn': '18',
-      'involvement': 'Owner-operator',
-      'industries': 'Home services, recurring revenue',
-      'limits': 'No turnarounds; no single customer over 25%',
-      'stretch': 'Adjacent industries with an experienced GM',
+      'type': '',
+      'geography': '',
+      'minPrice': '',
+      'maxPrice': '',
+      'minReturn': '',
+      'involvement': '',
+      'industries': '',
+      'limits': '',
+      'stretch': '',
     },
     'readiness': {
-      'equity': '250000',
-      'reserves': '75000',
-      'income': '150000',
-      'credit': 'Good',
+      'equity': '',
+      'reserves': '',
+      'income': '',
+      'credit': '',
       'proof': false,
       'tax': true,
       'resume': false,
@@ -788,9 +933,28 @@ class AcquisitionFoundation {
   static Future<AcquisitionFoundation> load() async {
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getString(_key);
-    final data = raw == null
+    var data = raw == null
         ? jsonDecode(jsonEncode(_defaults)) as Map<String, dynamic>
         : jsonDecode(raw) as Map<String, dynamic>;
+    const legacyBlueprint = {
+      'type': 'Business Acquisition',
+      'geography': 'British Columbia',
+      'minPrice': '500000',
+      'maxPrice': '2000000',
+      'minReturn': '18',
+      'involvement': 'Owner-operator',
+      'industries': 'Home services, recurring revenue',
+      'limits': 'No turnarounds; no single customer over 25%',
+      'stretch': 'Adjacent industries with an experienced GM',
+    };
+    final blueprint = Map<String, dynamic>.from(data['blueprint'] as Map);
+    final isLegacySeed = legacyBlueprint.entries.every(
+      (entry) => '${blueprint[entry.key]}' == entry.value,
+    );
+    if (isLegacySeed) {
+      data = jsonDecode(jsonEncode(_defaults)) as Map<String, dynamic>;
+      await prefs.setString(_key, jsonEncode(data));
+    }
     return AcquisitionFoundation(
       blueprint: Map<String, dynamic>.from(data['blueprint'] as Map),
       readiness: Map<String, dynamic>.from(data['readiness'] as Map),
@@ -840,9 +1004,13 @@ class _ModuleScaffold extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.child,
+    required this.currentStep,
+    required this.onStepSelected,
   });
   final String kicker, title, subtitle;
   final Widget child;
+  final int currentStep;
+  final ValueChanged<int> onStepSelected;
   @override
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: _paper,
@@ -851,45 +1019,100 @@ class _ModuleScaffold extends StatelessWidget {
       foregroundColor: Colors.white,
       title: const HomeBrandButton(size: 38, dark: true),
     ),
-    body: SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(22, 46, 22, 80),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 900),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                kicker,
-                style: const TextStyle(
-                  color: _green,
-                  fontSize: 10,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 1.4,
+    body: TopoBackground(
+      color: _paper,
+      opacity: .055,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(22, 28, 22, 80),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 900),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                AcquisitionStepBar(
+                  currentStep: currentStep,
+                  onSelected: onStepSelected,
                 ),
-              ),
-              const SizedBox(height: 9),
-              Text(
-                title,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 44,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: -2,
+                const SizedBox(height: 34),
+                Text(
+                  kicker,
+                  style: const TextStyle(
+                    color: _green,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.4,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                subtitle,
-                style: const TextStyle(color: _muted, height: 1.5),
-              ),
-              const SizedBox(height: 30),
-              child,
-            ],
+                const SizedBox(height: 9),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 44,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -2,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  subtitle,
+                  style: const TextStyle(color: _muted, height: 1.5),
+                ),
+                const SizedBox(height: 30),
+                child,
+              ],
+            ),
           ),
         ),
       ),
     ),
+  );
+}
+
+class _LabeledField extends StatelessWidget {
+  const _LabeledField({required this.label, required this.child, this.unit});
+  final String label;
+  final String? unit;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: const TextStyle(
+                color: Color(0xFFE2E2EA),
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          if (unit != null)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: const Color(0xFF292944),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                unit!,
+                style: const TextStyle(
+                  color: _lilac,
+                  fontSize: 9,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+        ],
+      ),
+      const SizedBox(height: 8),
+      child,
+    ],
   );
 }
 
