@@ -58,9 +58,6 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
         : const ProfilePage(),
   );
 
-  void _guide(AcquisitionFoundation value) =>
-      _open(GuideWorkspacePage(foundationSummary: value.guideSummary));
-
   @override
   Widget build(BuildContext context) {
     final value = _foundation;
@@ -73,13 +70,6 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
     final readiness = value.readinessScore;
     return Scaffold(
       backgroundColor: _paper,
-      floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: _green,
-        foregroundColor: Colors.white,
-        onPressed: () => _guide(value),
-        icon: const Icon(Icons.auto_awesome_rounded),
-        label: const Text('Ask your Guide'),
-      ),
       body: CustomScrollView(
         slivers: [
           SliverToBoxAdapter(child: _mobileHeader(value)),
@@ -210,11 +200,6 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 22),
-                      _GuideBanner(
-                        summary: value.guideSummary,
-                        onTap: () => _guide(value),
-                      ),
                     ],
                   ),
                 ),
@@ -236,11 +221,6 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
           children: [
             const HomeBrandButton(size: 42, dark: true),
             const Spacer(),
-            IconButton(
-              tooltip: 'Acquisition Guide',
-              onPressed: () => _guide(value),
-              icon: const Icon(Icons.auto_awesome_rounded, color: _lilac),
-            ),
             PopupMenuButton<String>(
               color: _ink,
               icon: const Icon(Icons.menu_rounded, color: Colors.white),

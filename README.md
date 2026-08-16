@@ -54,17 +54,6 @@ The consulting form verifies the signed-in Supabase user and sends the request t
 
 Requests include the authenticated user's name/email plus their supplied phone, consulting focus, desired outcome and current challenge.
 
-### Secure AI generation
-
-The Acquisition Intelligence workspace calls a Cloudflare Pages Function, which verifies the Supabase session before calling OpenAI's Responses API. The API key is never included in the Flutter bundle. Configure these encrypted Pages variables:
-
-- `OPENAI_API_KEY`
-- `OPENAI_MODEL` — defaults to `gpt-5-mini`
-- `SUPABASE_URL`
-- `SUPABASE_PUBLISHABLE_KEY`
-
-AI responses are structured as a message plus reviewable Blueprint and calendar proposals. The same protected AI connection generates Member Studio emails and newsletters from member-supplied facts. The app stores its working memory locally and sends a bounded copy of that workspace with each request. It does not expose hidden model reasoning or perform an external action without the user choosing it.
-
 ### Google and Outlook calendar sync
 
 Apply `supabase/migrations/202608150013_calendar_connections.sql`, then configure these encrypted Cloudflare Pages variables:

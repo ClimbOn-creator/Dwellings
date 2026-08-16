@@ -612,8 +612,8 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
                 _workspaceLaunchButton(
                   width: width,
-                  icon: Icons.auto_awesome_outlined,
-                  title: 'AI email composer',
+                  icon: Icons.mail_outline,
+                  title: 'Email composer',
                   detail: 'Create a reviewable client email draft.',
                   page: MemberEmailComposerPage(
                     senderName: _profile?.fullName ?? '',

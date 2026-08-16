@@ -7,7 +7,6 @@ import '../widgets/home_brand_button.dart';
 import 'local_network_page.dart';
 import 'member_workspace_pages.dart';
 import '../services/backend_service.dart';
-import '../services/ai_guide_service.dart';
 import '../services/calendar_sync_service.dart';
 import '../services/consulting_service.dart';
 import 'business_acquisition_page.dart';
@@ -72,109 +71,17 @@ class _GuideWorkspacePageState extends State<GuideWorkspacePage> {
       thinking = 'Reading your saved goals and readiness profile';
     });
     await _save();
-    try {
-      await Future<void>.delayed(const Duration(milliseconds: 350));
-      if (mounted)
-        setState(
-          () => thinking = 'Connecting your Blueprint, deals, and calendar',
-        );
-      final prefs = await SharedPreferences.getInstance();
-      final foundationRaw = prefs.getString('acquisition_foundation_v1');
-      final calendarRaw = prefs.getString('acquisition_calendar_v1');
-      final foundationData = foundationRaw == null
-          ? <String, dynamic>{
-              'blueprint': <String, dynamic>{
-                'type': 'Business Acquisition',
-                'geography': 'British Columbia',
-                'minPrice': '500000',
-                'maxPrice': '2000000',
-                'minReturn': '18',
-                'involvement': 'Owner-operator',
-                'industries': 'Home services, recurring revenue',
-                'limits': 'No turnarounds; no single customer over 25%',
-                'stretch': 'Adjacent industries with an experienced GM',
-              },
-              'readiness': <String, dynamic>{
-                'equity': '250000',
-                'reserves': '75000',
-                'income': '150000',
-                'credit': 'Good',
-                'proof': false,
-                'tax': true,
-                'resume': false,
-                'entity': false,
-                'lender': false,
-              },
-            }
-          : Map<String, dynamic>.from(jsonDecode(foundationRaw) as Map);
-      final result = await AiGuideService.generate(
-        messages: messages,
-        workspace: {
-          'foundation_summary': widget.foundationSummary,
-          'foundation': foundationData,
-          'calendar': calendarRaw == null ? const [] : jsonDecode(calendarRaw),
-        },
-      );
-      if (!mounted) return;
-      setState(() => thinking = 'Preparing reviewable updates');
-      final changes = <String>[];
-      if (result.blueprintPatch.values.any(
-        (value) => value.trim().isNotEmpty,
-      )) {
-        final blueprint = Map<String, dynamic>.from(
-          foundationData['blueprint'] as Map,
-        );
-        result.blueprintPatch.forEach((key, value) {
-          if (value.trim().isNotEmpty && blueprint.containsKey(key))
-            blueprint[key] = value.trim();
-        });
-        foundationData['blueprint'] = blueprint;
-        await prefs.setString(
-          'acquisition_foundation_v1',
-          jsonEncode(foundationData),
-        );
-        changes.add('Blueprint updated');
-      }
-      if (result.calendarEvents.isNotEmpty) {
-        final existing = calendarRaw == null
-            ? <dynamic>[]
-            : List<dynamic>.from(jsonDecode(calendarRaw) as List);
-        existing.addAll(
-          result.calendarEvents.where(
-            (event) => DateTime.tryParse(event['date'] ?? '') != null,
-          ),
-        );
-        await prefs.setString('acquisition_calendar_v1', jsonEncode(existing));
-        changes.add(
-          '${result.calendarEvents.length} calendar item${result.calendarEvents.length == 1 ? '' : 's'} prepared',
-        );
-      }
-      final note = changes.isEmpty
-          ? ''
-          : '\n\n${changes.join(' · ')}. You can review these in their workspace before syncing or sharing.';
-      final next = result.suggestedAction.trim().isEmpty
-          ? ''
-          : '\n\nNext: ${result.suggestedAction.trim()}';
-      setState(() {
-        messages.add({
-          'role': 'assistant',
-          'text': '${result.message}$note$next',
-        });
-        thinking = null;
+    await Future<void>.delayed(const Duration(milliseconds: 500));
+    if (!mounted) return;
+    setState(() {
+      messages.add({
+        'role': 'assistant',
+        'text':
+            'For the MVP, use the structured Blueprint, Readiness, Deal Screen, calendar, and consulting tools. Your saved foundation is: ${widget.foundationSummary}',
       });
-      await _save();
-    } catch (error) {
-      if (!mounted) return;
-      setState(() {
-        messages.add({
-          'role': 'assistant',
-          'text':
-              'Secure AI generation is unavailable right now. ${error.toString().replaceFirst('Bad state: ', '')}',
-        });
-        thinking = null;
-      });
-      await _save();
-    }
+      thinking = null;
+    });
+    await _save();
   }
 
   void _open(Widget page) =>
@@ -285,7 +192,7 @@ class _GuideWorkspacePageState extends State<GuideWorkspacePage> {
                             ),
                             const SizedBox(height: 10),
                             const Text(
-                              'Acquisition Intelligence',
+                              'Acquisition workspace',
                               style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 25,
@@ -294,7 +201,7 @@ class _GuideWorkspacePageState extends State<GuideWorkspacePage> {
                             ),
                             const SizedBox(height: 5),
                             const Text(
-                              'One memory across your Blueprint, deals, calendar, and member workspace.',
+                              'Structured tools for your Blueprint, deals, calendar, and member workspace.',
                               textAlign: TextAlign.center,
                               style: TextStyle(color: muted),
                             ),
@@ -631,7 +538,7 @@ class _CalendarState extends State<PersonalizedCalendarPage> {
       ],
     ),
     child: events.isEmpty
-        ? const _Empty('No plan yet. Ask the Guide to build one.')
+        ? const _Empty('No plan yet. Build a 90-day plan to get started.')
         : Column(
             children: [
               for (var i = 0; i < events.length; i++)
@@ -888,7 +795,7 @@ class MemberStudioPage extends StatelessWidget {
         children: [
           _studio(
             box,
-            'AI email composer',
+            'Email composer',
             'Create a reviewable client or acquisition email.',
             Icons.mail_outline,
             () => _open(context, const MemberEmailComposerPage()),

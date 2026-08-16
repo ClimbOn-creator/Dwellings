@@ -839,7 +839,7 @@ class _Principles extends StatelessWidget {
       (
         'AGENCY',
         'The decision stays yours',
-        'AI should widen understanding and expose trade-offs—not make a life-changing choice for you.',
+        'Decision tools should widen understanding and expose trade-offs—not make a life-changing choice for you.',
       ),
     ];
     return TopoBackground(
@@ -969,7 +969,7 @@ class TeamPage extends StatelessWidget {
     eyebrow: 'TEAM',
     title: 'Built at the intersection of property and technology.',
     body:
-        'DwellingsIQ is an early-stage product bringing real estate thinking, financial modelling and responsible AI into one focused team.',
+        'DwellingsIQ is an early-stage product bringing real estate thinking, financial modelling and practical decision support into one focused team.',
     heroAsset: 'assets/images/commercial-atrium.jpg',
     child: Column(
       children: [
