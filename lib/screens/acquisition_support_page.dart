@@ -10,6 +10,10 @@ import 'auth_page.dart';
 import 'business_acquisition_page.dart';
 import 'deal_rooms_page.dart';
 import 'profile_page.dart';
+import 'assistant_workspace_page.dart';
+import 'local_network_page.dart';
+import 'marketing_pages.dart';
+import 'member_workspace_pages.dart';
 
 const _ink = Color(0xFF050510);
 const _green = Color(0xFF7657FF);
@@ -55,12 +59,8 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
         : const ProfilePage(),
   );
 
-  void _guide(AcquisitionFoundation value) => showModalBottomSheet<void>(
-    context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.transparent,
-    builder: (_) => AcquisitionGuideSheet(foundation: value),
-  );
+  void _guide(AcquisitionFoundation value) =>
+      _open(GuideWorkspacePage(foundationSummary: value.guideSummary));
 
   @override
   Widget build(BuildContext context) {
@@ -258,6 +258,18 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
                   );
                 } else if (item == 'profile') {
                   _profile();
+                } else if (item == 'members') {
+                  _open(const LocalNetworkPage(side: PlatformSide.business));
+                } else if (item == 'team') {
+                  openMarketingPage(context, MarketingDestination.team);
+                } else if (item == 'consulting') {
+                  _open(const PersonalizedConsultingPage());
+                } else if (item == 'calendar') {
+                  _open(const PersonalizedCalendarPage());
+                } else if (item == 'email') {
+                  _open(const MemberEmailComposerPage());
+                } else if (item == 'newsletter') {
+                  _open(const MemberNewsletterBuilderPage());
                 }
               },
               itemBuilder: (_) => const [
@@ -292,6 +304,46 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
                 PopupMenuItem(
                   value: 'profile',
                   child: Text('Profile', style: TextStyle(color: Colors.white)),
+                ),
+                PopupMenuDivider(),
+                PopupMenuItem(
+                  value: 'members',
+                  child: Text(
+                    'Members & experts',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'team',
+                  child: Text('My team', style: TextStyle(color: Colors.white)),
+                ),
+                PopupMenuItem(
+                  value: 'consulting',
+                  child: Text(
+                    'Personal consulting',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'calendar',
+                  child: Text(
+                    'Acquisition calendar',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'email',
+                  child: Text(
+                    'Marketing email studio',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'newsletter',
+                  child: Text(
+                    'Member newsletter studio',
+                    style: TextStyle(color: Colors.white),
+                  ),
                 ),
               ],
             ),
@@ -510,6 +562,8 @@ class _BuyerReadinessPageState extends State<BuyerReadinessPage> {
   }
 }
 
+// Retained temporarily for migration of earlier local Guide sessions.
+// ignore: unused_element
 class AcquisitionGuideSheet extends StatefulWidget {
   const AcquisitionGuideSheet({super.key, required this.foundation});
   final AcquisitionFoundation foundation;
