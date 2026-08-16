@@ -54,6 +54,39 @@ The consulting form verifies the signed-in Supabase user and sends the request t
 
 Requests include the authenticated user's name/email plus their supplied phone, consulting focus, desired outcome and current challenge.
 
+### Secure AI generation
+
+The Acquisition Intelligence workspace calls a Cloudflare Pages Function, which verifies the Supabase session before calling OpenAI's Responses API. The API key is never included in the Flutter bundle. Configure these encrypted Pages variables:
+
+- `OPENAI_API_KEY`
+- `OPENAI_MODEL` — defaults to `gpt-5-mini`
+- `SUPABASE_URL`
+- `SUPABASE_PUBLISHABLE_KEY`
+
+AI responses are structured as a message plus reviewable Blueprint and calendar proposals. The same protected AI connection generates Member Studio emails and newsletters from member-supplied facts. The app stores its working memory locally and sends a bounded copy of that workspace with each request. It does not expose hidden model reasoning or perform an external action without the user choosing it.
+
+### Google and Outlook calendar sync
+
+Apply `supabase/migrations/202608150013_calendar_connections.sql`, then configure these encrypted Cloudflare Pages variables:
+
+- `SUPABASE_SERVICE_ROLE_KEY` — server-side only
+- `APP_BASE_URL` — for example `https://dwellings-iq.pages.dev`
+- `OAUTH_STATE_SECRET` — a long random value
+- `CALENDAR_TOKEN_KEY` — a base64url-encoded random 32-byte key
+- `GOOGLE_CALENDAR_CLIENT_ID` and `GOOGLE_CALENDAR_CLIENT_SECRET`
+- `MICROSOFT_CALENDAR_CLIENT_ID` and `MICROSOFT_CALENDAR_CLIENT_SECRET`
+- `MICROSOFT_TENANT_ID` — use `common` for multi-tenant Microsoft accounts
+
+Register this exact redirect URI with both providers:
+
+```text
+https://YOUR_APP_DOMAIN/api/calendar/callback
+```
+
+In Google Cloud, enable the Google Calendar API, configure the OAuth consent screen, and add the Calendar scope. In Microsoft Entra, add delegated `Calendars.ReadWrite` permission and allow public users only if that matches the intended membership model. Provider refresh and access tokens are AES-GCM encrypted before being written to the server-only table; no client table policy is created.
+
+For local Pages testing, use the local callback URL and copy `.dev.vars.example` to the ignored `.dev.vars` file. Generate a token-encryption key with a cryptographically secure 32-byte random source and base64url encode it.
+
 ## Supabase
 
 Run `supabase/migrations/202608080001_initial_schema.sql` in the new project's SQL Editor. The migration creates profiles and property analyses with Row Level Security so each user can only access their own records.

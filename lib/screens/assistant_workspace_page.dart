@@ -7,6 +7,8 @@ import '../widgets/home_brand_button.dart';
 import 'local_network_page.dart';
 import 'member_workspace_pages.dart';
 import '../services/backend_service.dart';
+import '../services/ai_guide_service.dart';
+import '../services/calendar_sync_service.dart';
 import '../services/consulting_service.dart';
 import 'business_acquisition_page.dart';
 
@@ -56,29 +58,9 @@ class _GuideWorkspacePageState extends State<GuideWorkspacePage> {
       .setString('guide_conversation_v2', jsonEncode(messages));
 
   Future<void> _applyToBlueprint() async {
-    final userNotes = messages
-        .where((m) => m['role'] == 'user')
-        .map((m) => m['text'])
-        .join(' · ');
-    final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString('acquisition_foundation_v1');
-    if (raw == null || userNotes.isEmpty) {
-      await _send('Help me fill out my business acquisition Blueprint.');
-      return;
-    }
-    final data = jsonDecode(raw) as Map<String, dynamic>;
-    final blueprint = Map<String, dynamic>.from(data['blueprint'] as Map);
-    blueprint['stretch'] = 'AI working context: $userNotes';
-    data['blueprint'] = blueprint;
-    await prefs.setString('acquisition_foundation_v1', jsonEncode(data));
-    setState(
-      () => messages.add({
-        'role': 'assistant',
-        'text':
-            'I applied your remembered goals and constraints to the Blueprint working context. Open Blueprint to review and approve the exact fields before screening deals.',
-      }),
+    await _send(
+      'Use everything you remember about me to help complete my business acquisition Blueprint. Only propose fields supported by what I have told you, and ask me for the most important missing fact.',
     );
-    await _save();
   }
 
   Future<void> _send([String? value]) async {
@@ -90,43 +72,109 @@ class _GuideWorkspacePageState extends State<GuideWorkspacePage> {
       thinking = 'Reading your saved goals and readiness profile';
     });
     await _save();
-    for (final step in [
-      'Connecting this to your deal history',
-      'Building a useful next action',
-    ]) {
-      await Future<void>.delayed(const Duration(milliseconds: 700));
+    try {
+      await Future<void>.delayed(const Duration(milliseconds: 350));
+      if (mounted)
+        setState(
+          () => thinking = 'Connecting your Blueprint, deals, and calendar',
+        );
+      final prefs = await SharedPreferences.getInstance();
+      final foundationRaw = prefs.getString('acquisition_foundation_v1');
+      final calendarRaw = prefs.getString('acquisition_calendar_v1');
+      final foundationData = foundationRaw == null
+          ? <String, dynamic>{
+              'blueprint': <String, dynamic>{
+                'type': 'Business Acquisition',
+                'geography': 'British Columbia',
+                'minPrice': '500000',
+                'maxPrice': '2000000',
+                'minReturn': '18',
+                'involvement': 'Owner-operator',
+                'industries': 'Home services, recurring revenue',
+                'limits': 'No turnarounds; no single customer over 25%',
+                'stretch': 'Adjacent industries with an experienced GM',
+              },
+              'readiness': <String, dynamic>{
+                'equity': '250000',
+                'reserves': '75000',
+                'income': '150000',
+                'credit': 'Good',
+                'proof': false,
+                'tax': true,
+                'resume': false,
+                'entity': false,
+                'lender': false,
+              },
+            }
+          : Map<String, dynamic>.from(jsonDecode(foundationRaw) as Map);
+      final result = await AiGuideService.generate(
+        messages: messages,
+        workspace: {
+          'foundation_summary': widget.foundationSummary,
+          'foundation': foundationData,
+          'calendar': calendarRaw == null ? const [] : jsonDecode(calendarRaw),
+        },
+      );
       if (!mounted) return;
-      setState(() => thinking = step);
+      setState(() => thinking = 'Preparing reviewable updates');
+      final changes = <String>[];
+      if (result.blueprintPatch.values.any(
+        (value) => value.trim().isNotEmpty,
+      )) {
+        final blueprint = Map<String, dynamic>.from(
+          foundationData['blueprint'] as Map,
+        );
+        result.blueprintPatch.forEach((key, value) {
+          if (value.trim().isNotEmpty && blueprint.containsKey(key))
+            blueprint[key] = value.trim();
+        });
+        foundationData['blueprint'] = blueprint;
+        await prefs.setString(
+          'acquisition_foundation_v1',
+          jsonEncode(foundationData),
+        );
+        changes.add('Blueprint updated');
+      }
+      if (result.calendarEvents.isNotEmpty) {
+        final existing = calendarRaw == null
+            ? <dynamic>[]
+            : List<dynamic>.from(jsonDecode(calendarRaw) as List);
+        existing.addAll(
+          result.calendarEvents.where(
+            (event) => DateTime.tryParse(event['date'] ?? '') != null,
+          ),
+        );
+        await prefs.setString('acquisition_calendar_v1', jsonEncode(existing));
+        changes.add(
+          '${result.calendarEvents.length} calendar item${result.calendarEvents.length == 1 ? '' : 's'} prepared',
+        );
+      }
+      final note = changes.isEmpty
+          ? ''
+          : '\n\n${changes.join(' · ')}. You can review these in their workspace before syncing or sharing.';
+      final next = result.suggestedAction.trim().isEmpty
+          ? ''
+          : '\n\nNext: ${result.suggestedAction.trim()}';
+      setState(() {
+        messages.add({
+          'role': 'assistant',
+          'text': '${result.message}$note$next',
+        });
+        thinking = null;
+      });
+      await _save();
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        messages.add({
+          'role': 'assistant',
+          'text':
+              'Secure AI generation is unavailable right now. ${error.toString().replaceFirst('Bad state: ', '')}',
+        });
+        thinking = null;
+      });
+      await _save();
     }
-    await Future<void>.delayed(const Duration(milliseconds: 700));
-    if (!mounted) return;
-    final count = messages.where((m) => m['role'] == 'user').length,
-        low = text.toLowerCase();
-    String answer;
-    if (count == 1) {
-      answer =
-          'I saved that as your primary outcome. What must remain protected while you pursue it—cash reserves, family time, current income, or reputation?';
-    } else if (count == 2) {
-      answer =
-          'Understood. I’ll treat that as a hard constraint. Which role fits you after close: daily operator, strategic owner, or investor with a hired manager?';
-    } else if (low.contains('calendar') || low.contains('plan')) {
-      answer =
-          'I can build a 90-day plan in your acquisition calendar. Open Calendar from the tool panel and generate the staged plan.';
-    } else if (low.contains('newsletter')) {
-      answer =
-          'Open Newsletter Studio below. It uses the member workflow to generate a reviewable local update; nothing is sent automatically.';
-    } else if (low.contains('email') || low.contains('marketing')) {
-      answer =
-          'Open Email Studio below. It turns acquisition or client context into a polished draft that you approve before use.';
-    } else {
-      answer =
-          'I remember what you told me and I’m connecting it to your foundation: ${widget.foundationSummary} I’ll use those constraints in future answers instead of restarting the interview.';
-    }
-    setState(() {
-      messages.add({'role': 'assistant', 'text': answer});
-      thinking = null;
-    });
-    await _save();
   }
 
   void _open(Widget page) =>
@@ -390,10 +438,13 @@ class PersonalizedCalendarPage extends StatefulWidget {
 
 class _CalendarState extends State<PersonalizedCalendarPage> {
   List<Map<String, String>> events = [];
+  Set<String> connections = {};
+  bool loadingConnections = false;
   @override
   void initState() {
     super.initState();
     _load();
+    _refreshConnections();
   }
 
   Future<void> _load() async {
@@ -409,6 +460,102 @@ class _CalendarState extends State<PersonalizedCalendarPage> {
 
   Future<void> _save() async => (await SharedPreferences.getInstance())
       .setString('acquisition_calendar_v1', jsonEncode(events));
+
+  Future<void> _refreshConnections() async {
+    if (BackendService.user == null) return;
+    setState(() => loadingConnections = true);
+    try {
+      connections = await CalendarSyncService.connections();
+    } catch (_) {
+      connections = {};
+    } finally {
+      if (mounted) setState(() => loadingConnections = false);
+    }
+  }
+
+  Future<void> _connect(String provider) async {
+    try {
+      await CalendarSyncService.connect(provider);
+    } catch (error) {
+      _notice('$error');
+    }
+  }
+
+  Future<void> _sync(int index, String provider) async {
+    try {
+      final event = events[index];
+      final result = await CalendarSyncService.syncEvent(
+        provider: provider,
+        title: event['title']!,
+        start: DateTime.parse(event['date']!),
+        externalId: event['${provider}Id'],
+      );
+      event['${provider}Id'] = result['external_id']!;
+      await _save();
+      if (mounted) setState(() {});
+      _notice(
+        '${provider == 'google' ? 'Google Calendar' : 'Outlook'} synced.',
+      );
+    } catch (error) {
+      _notice('$error');
+    }
+  }
+
+  void _notice(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message.replaceFirst('Bad state: ', ''))),
+    );
+  }
+
+  Future<void> _edit(int index) async {
+    final title = TextEditingController(text: events[index]['title']);
+    final current = DateTime.parse(events[index]['date']!);
+    final newTitle = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: surface,
+        title: const Text(
+          'Edit calendar item',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: TextField(
+          controller: title,
+          style: const TextStyle(color: Colors.white),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, title.text.trim()),
+            child: const Text('Choose date'),
+          ),
+        ],
+      ),
+    );
+    title.dispose();
+    if (newTitle == null || newTitle.isEmpty || !mounted) return;
+    final newDate = await showDatePicker(
+      context: context,
+      initialDate: current,
+      firstDate: DateTime.now().subtract(const Duration(days: 365)),
+      lastDate: DateTime.now().add(const Duration(days: 3650)),
+    );
+    if (newDate == null) return;
+    events[index]['title'] = newTitle;
+    events[index]['date'] = DateTime(
+      newDate.year,
+      newDate.month,
+      newDate.day,
+      current.hour,
+      current.minute,
+    ).toIso8601String();
+    await _save();
+    setState(() {});
+  }
+
   Future<void> _plan() async {
     final n = DateTime.now();
     events =
@@ -435,10 +582,53 @@ class _CalendarState extends State<PersonalizedCalendarPage> {
     title: 'Acquisition calendar',
     subtitle:
         'A personalized working plan. Google or Outlook sync requires a connected account.',
-    action: FilledButton.icon(
-      onPressed: _plan,
-      icon: const Icon(Icons.auto_awesome),
-      label: const Text('Build my 90-day plan'),
+    action: Wrap(
+      spacing: 10,
+      runSpacing: 10,
+      children: [
+        FilledButton.icon(
+          onPressed: _plan,
+          icon: const Icon(Icons.auto_awesome),
+          label: const Text('Build my 90-day plan'),
+        ),
+        OutlinedButton.icon(
+          onPressed: () => _connect('google'),
+          icon: Icon(
+            connections.contains('google')
+                ? Icons.check_circle
+                : Icons.add_link,
+          ),
+          label: Text(
+            connections.contains('google')
+                ? 'Google connected'
+                : 'Connect Google',
+          ),
+        ),
+        OutlinedButton.icon(
+          onPressed: () => _connect('outlook'),
+          icon: Icon(
+            connections.contains('outlook')
+                ? Icons.check_circle
+                : Icons.add_link,
+          ),
+          label: Text(
+            connections.contains('outlook')
+                ? 'Outlook connected'
+                : 'Connect Outlook',
+          ),
+        ),
+        IconButton(
+          tooltip: 'Refresh connections',
+          onPressed: loadingConnections ? null : _refreshConnections,
+          icon: loadingConnections
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.refresh),
+        ),
+      ],
     ),
     child: events.isEmpty
         ? const _Empty('No plan yet. Ask the Guide to build one.')
@@ -461,13 +651,38 @@ class _CalendarState extends State<PersonalizedCalendarPage> {
                     ),
                     style: const TextStyle(color: muted),
                   ),
-                  trailing: IconButton(
-                    onPressed: () async {
-                      events.removeAt(i);
-                      await _save();
-                      setState(() {});
-                    },
-                    icon: const Icon(Icons.delete_outline, color: muted),
+                  trailing: Wrap(
+                    children: [
+                      PopupMenuButton<String>(
+                        tooltip: 'Sync calendar item',
+                        icon: const Icon(Icons.sync, color: lilac),
+                        onSelected: (provider) => _sync(i, provider),
+                        itemBuilder: (_) => [
+                          for (final provider in ['google', 'outlook'])
+                            PopupMenuItem(
+                              value: provider,
+                              enabled: connections.contains(provider),
+                              child: Text(
+                                '${events[i]['${provider}Id']?.isNotEmpty == true ? 'Update' : 'Add to'} ${provider == 'google' ? 'Google Calendar' : 'Outlook'}',
+                              ),
+                            ),
+                        ],
+                      ),
+                      IconButton(
+                        tooltip: 'Edit',
+                        onPressed: () => _edit(i),
+                        icon: const Icon(Icons.edit_outlined, color: muted),
+                      ),
+                      IconButton(
+                        tooltip: 'Delete local item',
+                        onPressed: () async {
+                          events.removeAt(i);
+                          await _save();
+                          setState(() {});
+                        },
+                        icon: const Icon(Icons.delete_outline, color: muted),
+                      ),
+                    ],
                   ),
                 ),
             ],

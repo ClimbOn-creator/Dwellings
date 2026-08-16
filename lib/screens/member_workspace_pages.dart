@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../services/account_service.dart';
 import '../services/member_content_service.dart';
+import '../services/member_ai_service.dart';
 import '../widgets/app_navigation_menu.dart';
 import '../widgets/home_brand_button.dart';
 import '../widgets/topo_background.dart';
@@ -201,6 +202,7 @@ class _MemberEmailComposerPageState extends State<MemberEmailComposerPage> {
   String _purpose = 'Client update';
   String _tone = 'Professional';
   MemberEmailDraft? _draft;
+  bool _generating = false;
 
   @override
   void dispose() {
@@ -209,15 +211,26 @@ class _MemberEmailComposerPageState extends State<MemberEmailComposerPage> {
     super.dispose();
   }
 
-  void _generate() => setState(() {
-    _draft = MemberContentService.composeEmail(
-      recipientName: _recipient.text,
-      senderName: widget.senderName,
-      purpose: _purpose,
-      context: _context.text,
-      tone: _tone,
-    );
-  });
+  Future<void> _generate() async {
+    setState(() => _generating = true);
+    try {
+      _draft = await MemberAiService.composeEmail(
+        recipientName: _recipient.text,
+        senderName: widget.senderName,
+        purpose: _purpose,
+        context: _context.text,
+        tone: _tone,
+      );
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('$error'.replaceFirst('Bad state: ', ''))),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _generating = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) => _MemberWorkspaceShell(
@@ -273,9 +286,9 @@ class _MemberEmailComposerPageState extends State<MemberEmailComposerPage> {
               ),
             ),
             FilledButton.icon(
-              onPressed: _generate,
+              onPressed: _generating ? null : _generate,
               icon: const Icon(Icons.auto_awesome_outlined),
-              label: const Text('Create draft'),
+              label: Text(_generating ? 'Generating…' : 'Create draft'),
             ),
           ],
         ),
@@ -310,6 +323,7 @@ class _MemberNewsletterBuilderPageState
   final _cta = TextEditingController();
   String _audience = 'Property buyers';
   MemberNewsletterDraft? _draft;
+  bool _generating = false;
 
   @override
   void dispose() {
@@ -320,16 +334,27 @@ class _MemberNewsletterBuilderPageState
     super.dispose();
   }
 
-  void _generate() => setState(() {
-    _draft = MemberContentService.composeNewsletter(
-      memberName: widget.memberName,
-      city: _city.text,
-      audience: _audience,
-      theme: _theme.text,
-      insight: _insight.text,
-      callToAction: _cta.text,
-    );
-  });
+  Future<void> _generate() async {
+    setState(() => _generating = true);
+    try {
+      _draft = await MemberAiService.composeNewsletter(
+        memberName: widget.memberName,
+        city: _city.text,
+        audience: _audience,
+        theme: _theme.text,
+        insight: _insight.text,
+        callToAction: _cta.text,
+      );
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('$error'.replaceFirst('Bad state: ', ''))),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _generating = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) => _MemberWorkspaceShell(
@@ -387,9 +412,9 @@ class _MemberNewsletterBuilderPageState
               decoration: const InputDecoration(labelText: 'Call to action'),
             ),
             FilledButton.icon(
-              onPressed: _generate,
+              onPressed: _generating ? null : _generate,
               icon: const Icon(Icons.auto_awesome_outlined),
-              label: const Text('Build newsletter'),
+              label: Text(_generating ? 'Generating…' : 'Build newsletter'),
             ),
           ],
         ),
