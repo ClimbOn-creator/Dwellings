@@ -11,12 +11,14 @@ import 'business_acquisition_page.dart';
 import 'deal_rooms_page.dart';
 import 'profile_page.dart';
 
-const _ink = Color(0xFF071D17);
-const _green = Color(0xFF175D46);
-const _lime = Color(0xFFD7F36C);
-const _paper = Color(0xFFF5F3EC);
-const _line = Color(0xFFDCE2DA);
-const _muted = Color(0xFF697A72);
+const _ink = Color(0xFF050510);
+const _green = Color(0xFF7657FF);
+const _lime = Color(0xFFBCAEFF);
+const _paper = Color(0xFF09091B);
+const _line = Color(0xFF292944);
+const _muted = Color(0xFFA5A5B5);
+const _surface = Color(0xFF121225);
+const _lilac = Color(0xFFBCAEFF);
 
 class AcquisitionSupportPage extends StatefulWidget {
   const AcquisitionSupportPage({super.key});
@@ -73,173 +75,151 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
     return Scaffold(
       backgroundColor: _paper,
       floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: _ink,
-        foregroundColor: _lime,
+        backgroundColor: _green,
+        foregroundColor: Colors.white,
         onPressed: () => _guide(value),
         icon: const Icon(Icons.auto_awesome_rounded),
         label: const Text('Ask your Guide'),
       ),
-      body: Row(
-        children: [
-          if (MediaQuery.sizeOf(context).width >= 920)
-            _Sidebar(
-              onBlueprint: () => _open(const AcquisitionBlueprintPage()),
-              onReadiness: () => _open(const BuyerReadinessPage()),
-              onDeal: () => _open(const BusinessAcquisitionPage()),
-              onPipeline: () => _open(
-                const DealRoomsPage(initialSide: PlatformSide.business),
-              ),
-              onProfile: _profile,
-              onGuide: () => _guide(value),
-            ),
-          Expanded(
-            child: CustomScrollView(
-              slivers: [
-                SliverToBoxAdapter(child: _mobileHeader(value)),
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(24, 44, 24, 110),
-                  sliver: SliverToBoxAdapter(
-                    child: Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 1080),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'ACQUISITION SUPPORT',
-                              style: TextStyle(
-                                color: _green,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 1.5,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              'Define. Prepare.\nScreen with confidence.',
-                              style: TextStyle(
-                                fontSize: MediaQuery.sizeOf(context).width < 650
-                                    ? 42
-                                    : 64,
-                                height: .98,
-                                letterSpacing: -3,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            const SizedBox(height: 18),
-                            const Text(
-                              'Start with the buyer—not the deal. Your Blueprint and Readiness profile become the benchmark for every opportunity.',
-                              style: TextStyle(
-                                color: _muted,
-                                fontSize: 16,
-                                height: 1.6,
-                              ),
-                            ),
-                            const SizedBox(height: 34),
-                            _NorthStar(value: value),
-                            const SizedBox(height: 18),
-                            LayoutBuilder(
-                              builder: (_, box) {
-                                final width = box.maxWidth >= 760
-                                    ? (box.maxWidth - 24) / 3
-                                    : box.maxWidth;
-                                return Wrap(
-                                  spacing: 12,
-                                  runSpacing: 12,
-                                  children: [
-                                    _MetricCard(
-                                      width: width,
-                                      label: 'BLUEPRINT CLARITY',
-                                      value: '${value.blueprintScore}',
-                                      note:
-                                          'Your mandate is the deal benchmark.',
-                                      onTap: () => _open(
-                                        const AcquisitionBlueprintPage(),
-                                      ),
-                                    ),
-                                    _MetricCard(
-                                      width: width,
-                                      label: 'BUYER READINESS',
-                                      value: '$readiness',
-                                      note: readiness >= 70
-                                          ? 'A solid base for the right deal.'
-                                          : 'Priority actions remain.',
-                                      onTap: () =>
-                                          _open(const BuyerReadinessPage()),
-                                    ),
-                                    _MetricCard(
-                                      width: width,
-                                      label: 'INDICATIVE CAPACITY',
-                                      value: _compactMoney(value.capacity),
-                                      note: 'Directional—not lending approval.',
-                                      onTap: () =>
-                                          _open(const BuyerReadinessPage()),
-                                    ),
-                                  ],
-                                );
-                              },
-                            ),
-                            const SizedBox(height: 42),
-                            const Text(
-                              'YOUR ACQUISITION PATH',
-                              style: TextStyle(
-                                color: _green,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 1.5,
-                              ),
-                            ),
-                            const SizedBox(height: 14),
-                            _ActionTile(
-                              number: '01',
-                              title: 'Acquisition Blueprint',
-                              copy:
-                                  'Define target type, geography, economics, involvement, hard limits, and stretch criteria.',
-                              action: 'Refine mandate',
-                              onTap: () =>
-                                  _open(const AcquisitionBlueprintPage()),
-                            ),
-                            _ActionTile(
-                              number: '02',
-                              title: 'Buyer Readiness',
-                              copy:
-                                  'Measure financial capacity, documentation, experience, and lender preparation.',
-                              action: 'Build readiness',
-                              onTap: () => _open(const BuyerReadinessPage()),
-                            ),
-                            _ActionTile(
-                              number: '03',
-                              title: 'Initial Deal Screen',
-                              copy:
-                                  'Test a live opportunity without confusing deal fit with your ability to execute.',
-                              action: 'Screen a deal',
-                              onTap: () =>
-                                  _open(const BusinessAcquisitionPage()),
-                            ),
-                            _ActionTile(
-                              number: '04',
-                              title: 'My Deal Pipeline',
-                              copy:
-                                  'Compare active opportunities, preserve decisions, and move serious deals into support.',
-                              action: 'View pipeline',
-                              onTap: () => _open(
-                                const DealRoomsPage(
-                                  initialSide: PlatformSide.business,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 22),
-                            _GuideBanner(
-                              summary: value.guideSummary,
-                              onTap: () => _guide(value),
-                            ),
-                          ],
+      body: CustomScrollView(
+        slivers: [
+          SliverToBoxAdapter(child: _mobileHeader(value)),
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(24, 44, 24, 110),
+            sliver: SliverToBoxAdapter(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 1080),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'ACQUISITION SUPPORT',
+                        style: TextStyle(
+                          color: _green,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1.5,
                         ),
                       ),
-                    ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Define. Prepare.\nScreen with confidence.',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: MediaQuery.sizeOf(context).width < 650
+                              ? 42
+                              : 64,
+                          height: .98,
+                          letterSpacing: -3,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+                      const Text(
+                        'Start with the buyer—not the deal. Your Blueprint and Readiness profile become the benchmark for every opportunity.',
+                        style: TextStyle(
+                          color: _muted,
+                          fontSize: 16,
+                          height: 1.6,
+                        ),
+                      ),
+                      const SizedBox(height: 34),
+                      _NorthStar(value: value),
+                      const SizedBox(height: 18),
+                      LayoutBuilder(
+                        builder: (_, box) {
+                          final width = box.maxWidth >= 760
+                              ? (box.maxWidth - 24) / 3
+                              : box.maxWidth;
+                          return Wrap(
+                            spacing: 12,
+                            runSpacing: 12,
+                            children: [
+                              _MetricCard(
+                                width: width,
+                                label: 'BLUEPRINT CLARITY',
+                                value: '${value.blueprintScore}',
+                                note: 'Your mandate is the deal benchmark.',
+                                onTap: () =>
+                                    _open(const AcquisitionBlueprintPage()),
+                              ),
+                              _MetricCard(
+                                width: width,
+                                label: 'BUYER READINESS',
+                                value: '$readiness',
+                                note: readiness >= 70
+                                    ? 'A solid base for the right deal.'
+                                    : 'Priority actions remain.',
+                                onTap: () => _open(const BuyerReadinessPage()),
+                              ),
+                              _MetricCard(
+                                width: width,
+                                label: 'INDICATIVE CAPACITY',
+                                value: _compactMoney(value.capacity),
+                                note: 'Directional—not lending approval.',
+                                onTap: () => _open(const BuyerReadinessPage()),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 42),
+                      const Text(
+                        'YOUR ACQUISITION PATH',
+                        style: TextStyle(
+                          color: _green,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1.5,
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      _ActionTile(
+                        number: '01',
+                        title: 'Acquisition Blueprint',
+                        copy:
+                            'Define target type, geography, economics, involvement, hard limits, and stretch criteria.',
+                        action: 'Refine mandate',
+                        onTap: () => _open(const AcquisitionBlueprintPage()),
+                      ),
+                      _ActionTile(
+                        number: '02',
+                        title: 'Buyer Readiness',
+                        copy:
+                            'Measure financial capacity, documentation, experience, and lender preparation.',
+                        action: 'Build readiness',
+                        onTap: () => _open(const BuyerReadinessPage()),
+                      ),
+                      _ActionTile(
+                        number: '03',
+                        title: 'Initial Deal Screen',
+                        copy:
+                            'Test a live opportunity without confusing deal fit with your ability to execute.',
+                        action: 'Screen a deal',
+                        onTap: () => _open(const BusinessAcquisitionPage()),
+                      ),
+                      _ActionTile(
+                        number: '04',
+                        title: 'My Deal Pipeline',
+                        copy:
+                            'Compare active opportunities, preserve decisions, and move serious deals into support.',
+                        action: 'View pipeline',
+                        onTap: () => _open(
+                          const DealRoomsPage(
+                            initialSide: PlatformSide.business,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 22),
+                      _GuideBanner(
+                        summary: value.guideSummary,
+                        onTap: () => _guide(value),
+                      ),
+                    ],
                   ),
                 ),
-              ],
+              ),
             ),
           ),
         ],
@@ -252,11 +232,16 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
     child: SafeArea(
       bottom: false,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         child: Row(
           children: [
-            const HomeBrandButton(size: 40),
+            const HomeBrandButton(size: 42, dark: true),
             const Spacer(),
+            IconButton(
+              tooltip: 'Acquisition Guide',
+              onPressed: () => _guide(value),
+              icon: const Icon(Icons.auto_awesome_rounded, color: _lilac),
+            ),
             PopupMenuButton<String>(
               color: _ink,
               icon: const Icon(Icons.menu_rounded, color: Colors.white),
@@ -276,11 +261,38 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
                 }
               },
               itemBuilder: (_) => const [
-                PopupMenuItem(value: 'blueprint', child: Text('Blueprint')),
-                PopupMenuItem(value: 'readiness', child: Text('Readiness')),
-                PopupMenuItem(value: 'deal', child: Text('Deal screen')),
-                PopupMenuItem(value: 'pipeline', child: Text('Pipeline')),
-                PopupMenuItem(value: 'profile', child: Text('Profile')),
+                PopupMenuItem(
+                  value: 'blueprint',
+                  child: Text(
+                    'Blueprint',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'readiness',
+                  child: Text(
+                    'Readiness',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'deal',
+                  child: Text(
+                    'Deal screen',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'pipeline',
+                  child: Text(
+                    'Deal pipeline',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'profile',
+                  child: Text('Profile', style: TextStyle(color: Colors.white)),
+                ),
               ],
             ),
           ],
@@ -507,14 +519,48 @@ class AcquisitionGuideSheet extends StatefulWidget {
 
 class _AcquisitionGuideSheetState extends State<AcquisitionGuideSheet> {
   final input = TextEditingController();
-  final messages = <({bool user, String text})>[];
+  bool thinking = false;
+  late final List<({bool user, String text})> messages;
 
-  void _ask([String? prompt]) {
+  @override
+  void initState() {
+    super.initState();
+    messages = [
+      (
+        user: false,
+        text:
+            'I want to understand you before I recommend anything. What outcome would make this acquisition successful three years after close?',
+      ),
+    ];
+  }
+
+  Future<void> _ask([String? prompt]) async {
     final question = (prompt ?? input.text).trim();
-    if (question.isEmpty) return;
+    if (question.isEmpty || thinking) return;
+    final memory = List<String>.from(
+      widget.foundation.readiness['guideMemory'] as List? ?? const [],
+    )..add(question);
+    widget.foundation.readiness['guideMemory'] = memory;
+    await widget.foundation.save();
+    setState(() {
+      messages.add((user: true, text: question));
+      input.clear();
+      thinking = true;
+    });
+    await Future<void>.delayed(const Duration(milliseconds: 1300));
+    if (!mounted) return;
     final lower = question.toLowerCase();
     String answer;
-    if (lower.contains('next')) {
+    if (memory.length == 1) {
+      answer =
+          'Got it. Now help me understand the constraint: how much capital must remain untouched after closing, and how involved do you want to be day to day?';
+    } else if (memory.length == 2) {
+      answer =
+          'That changes the shape of a viable deal. One more thing before I form a view: which risk would you regret most—overpaying, operational complexity, unreliable earnings, or missing growth?';
+    } else if (memory.length == 3) {
+      answer =
+          'I have enough context to start being useful. I’ll carry these priorities into your Blueprint, readiness actions, and future deal screens. Ask me about a target or opportunity and I’ll explain my reasoning—not just give a verdict.';
+    } else if (lower.contains('next')) {
       answer = widget.foundation.readiness['proof'] != true
           ? 'Prepare proof of funds first, then validate debt capacity with a lender. Those two actions remove the biggest execution uncertainty.'
           : 'Your documentation is progressing. Screen a live opportunity and compare its price, economics, risk, and fit separately.';
@@ -526,9 +572,8 @@ class _AcquisitionGuideSheetState extends State<AcquisitionGuideSheet> {
           'A viable deal for you should fit ${_money(widget.foundation.minPrice)}–${_money(widget.foundation.maxPrice)}, meet at least ${widget.foundation.blueprint['minReturn']}% headline return, and respect this hard limit: ${widget.foundation.blueprint['limits']}.';
     }
     setState(() {
-      messages.add((user: true, text: question));
       messages.add((user: false, text: answer));
-      input.clear();
+      thinking = false;
     });
   }
 
@@ -536,7 +581,7 @@ class _AcquisitionGuideSheetState extends State<AcquisitionGuideSheet> {
   Widget build(BuildContext context) => FractionallySizedBox(
     heightFactor: .88,
     child: Material(
-      color: _paper,
+      color: _ink,
       borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
       child: Padding(
         padding: const EdgeInsets.all(22),
@@ -546,8 +591,8 @@ class _AcquisitionGuideSheetState extends State<AcquisitionGuideSheet> {
             Row(
               children: [
                 const CircleAvatar(
-                  backgroundColor: _lime,
-                  foregroundColor: _green,
+                  backgroundColor: _green,
+                  foregroundColor: Colors.white,
                   child: Icon(Icons.auto_awesome_rounded),
                 ),
                 const SizedBox(width: 12),
@@ -557,7 +602,10 @@ class _AcquisitionGuideSheetState extends State<AcquisitionGuideSheet> {
                     children: [
                       Text(
                         'Acquisition Guide',
-                        style: TextStyle(fontWeight: FontWeight.w800),
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
                       Text(
                         'Personalized from your saved foundation',
@@ -568,7 +616,7 @@ class _AcquisitionGuideSheetState extends State<AcquisitionGuideSheet> {
                 ),
                 IconButton(
                   onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.close_rounded),
+                  icon: const Icon(Icons.close_rounded, color: Colors.white),
                 ),
               ],
             ),
@@ -577,22 +625,29 @@ class _AcquisitionGuideSheetState extends State<AcquisitionGuideSheet> {
               width: double.infinity,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: const Color(0xFFE7F1E8),
+                color: _surface,
+                border: Border.all(color: _line),
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: Text(widget.foundation.guideSummary),
+              child: Text(
+                widget.foundation.guideSummary,
+                style: const TextStyle(color: _muted, height: 1.45),
+              ),
             ),
             const SizedBox(height: 12),
             Wrap(
               spacing: 8,
               children: [
                 ActionChip(
-                  label: const Text('What should I do next?'),
-                  onPressed: () => _ask('What should I do next?'),
-                ),
-                ActionChip(
-                  label: const Text('Is my target realistic?'),
-                  onPressed: () => _ask('Is my target realistic?'),
+                  backgroundColor: _surface,
+                  side: const BorderSide(color: _line),
+                  label: const Text(
+                    'Teach the Guide about me',
+                    style: TextStyle(color: _lilac),
+                  ),
+                  onPressed: () => _ask(
+                    'My main acquisition goal is long-term independence and durable cash flow.',
+                  ),
                 ),
               ],
             ),
@@ -610,22 +665,40 @@ class _AcquisitionGuideSheetState extends State<AcquisitionGuideSheet> {
                         margin: const EdgeInsets.symmetric(vertical: 5),
                         padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
-                          color: message.user ? _ink : Colors.white,
+                          color: message.user ? _green : _surface,
                           border: Border.all(color: _line),
                           borderRadius: BorderRadius.circular(14),
                         ),
                         child: Text(
                           message.text,
-                          style: TextStyle(
-                            color: message.user ? Colors.white : _ink,
-                            height: 1.45,
-                          ),
+                          style: TextStyle(color: Colors.white, height: 1.45),
                         ),
                       ),
                     ),
                 ],
               ),
             ),
+            if (thinking)
+              const Padding(
+                padding: EdgeInsets.only(bottom: 10),
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: _lilac,
+                      ),
+                    ),
+                    SizedBox(width: 9),
+                    Text(
+                      'Connecting this to your acquisition profile…',
+                      style: TextStyle(color: _muted, fontSize: 11),
+                    ),
+                  ],
+                ),
+              ),
             Row(
               children: [
                 Expanded(
@@ -634,12 +707,17 @@ class _AcquisitionGuideSheetState extends State<AcquisitionGuideSheet> {
                     onSubmitted: _ask,
                     decoration: const InputDecoration(
                       hintText: 'Ask about your acquisition…',
+                      hintStyle: TextStyle(color: _muted),
+                      filled: true,
+                      fillColor: _surface,
                     ),
+                    style: const TextStyle(color: Colors.white),
                   ),
                 ),
                 const SizedBox(width: 8),
                 IconButton.filled(
-                  onPressed: _ask,
+                  style: IconButton.styleFrom(backgroundColor: _green),
+                  onPressed: thinking ? null : _ask,
                   icon: const Icon(Icons.arrow_upward_rounded),
                 ),
               ],
@@ -746,7 +824,7 @@ class _ModuleScaffold extends StatelessWidget {
     appBar: AppBar(
       backgroundColor: _ink,
       foregroundColor: Colors.white,
-      title: const Text('DwellingIQ'),
+      title: const HomeBrandButton(size: 38, dark: true),
     ),
     body: SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(22, 46, 22, 80),
@@ -769,6 +847,7 @@ class _ModuleScaffold extends StatelessWidget {
               Text(
                 title,
                 style: const TextStyle(
+                  color: Colors.white,
                   fontSize: 44,
                   fontWeight: FontWeight.w700,
                   letterSpacing: -2,
@@ -801,7 +880,7 @@ class _FormSection extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.all(22),
     decoration: BoxDecoration(
-      color: Colors.white,
+      color: _surface,
       border: Border.all(color: _line),
       borderRadius: BorderRadius.circular(18),
     ),
@@ -811,18 +890,22 @@ class _FormSection extends StatelessWidget {
         Row(
           children: [
             CircleAvatar(
-              backgroundColor: const Color(0xFFE7F1E8),
-              foregroundColor: _green,
+              backgroundColor: _green,
+              foregroundColor: Colors.white,
               child: Text(number),
             ),
             const SizedBox(width: 12),
             Text(
               title,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+              ),
             ),
           ],
         ),
-        const Divider(height: 32),
+        const Divider(height: 32, color: _line),
         LayoutBuilder(
           builder: (_, box) => Wrap(
             spacing: 14,
@@ -843,77 +926,6 @@ class _FormSection extends StatelessWidget {
   );
 }
 
-class _Sidebar extends StatelessWidget {
-  const _Sidebar({
-    required this.onBlueprint,
-    required this.onReadiness,
-    required this.onDeal,
-    required this.onPipeline,
-    required this.onProfile,
-    required this.onGuide,
-  });
-  final VoidCallback onBlueprint,
-      onReadiness,
-      onDeal,
-      onPipeline,
-      onProfile,
-      onGuide;
-  @override
-  Widget build(BuildContext context) => Container(
-    width: 242,
-    color: _ink,
-    padding: const EdgeInsets.fromLTRB(18, 25, 18, 22),
-    child: SafeArea(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const Row(
-            children: [
-              HomeBrandButton(size: 40),
-              SizedBox(width: 10),
-              Text(
-                'DwellingIQ',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 30),
-          _nav(Icons.dashboard_outlined, 'Overview', null),
-          _nav(Icons.adjust_rounded, 'Blueprint', onBlueprint),
-          _nav(Icons.verified_user_outlined, 'Readiness', onReadiness),
-          _nav(Icons.analytics_outlined, 'Deal screen', onDeal),
-          _nav(Icons.view_kanban_outlined, 'Pipeline', onPipeline),
-          _nav(Icons.person_outline_rounded, 'Profile', onProfile),
-          const Spacer(),
-          FilledButton.icon(
-            style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFF194534),
-              foregroundColor: _lime,
-              padding: const EdgeInsets.all(16),
-            ),
-            onPressed: onGuide,
-            icon: const Icon(Icons.auto_awesome_rounded),
-            label: const Text('Ask your Guide'),
-          ),
-        ],
-      ),
-    ),
-  );
-  Widget _nav(IconData icon, String label, VoidCallback? tap) => ListTile(
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-    leading: Icon(icon, color: tap == null ? _lime : const Color(0xFF91AA9F)),
-    title: Text(
-      label,
-      style: const TextStyle(color: Colors.white, fontSize: 13),
-    ),
-    tileColor: tap == null ? const Color(0xFF194534) : null,
-    onTap: tap,
-  );
-}
-
 class _NorthStar extends StatelessWidget {
   const _NorthStar({required this.value});
   final AcquisitionFoundation value;
@@ -922,7 +934,10 @@ class _NorthStar extends StatelessWidget {
     width: double.infinity,
     padding: const EdgeInsets.all(24),
     decoration: BoxDecoration(
-      color: _ink,
+      gradient: const LinearGradient(
+        colors: [Color(0xFF181033), Color(0xFF0D0D20)],
+      ),
+      border: Border.all(color: Color(0xFF392A78)),
       borderRadius: BorderRadius.circular(18),
     ),
     child: Column(
@@ -971,7 +986,7 @@ class _MetricCard extends StatelessWidget {
       height: 155,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: _surface,
         border: Border.all(color: _line),
         borderRadius: BorderRadius.circular(16),
       ),
@@ -990,7 +1005,11 @@ class _MetricCard extends StatelessWidget {
           const SizedBox(height: 10),
           Text(
             value,
-            style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w800),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 32,
+              fontWeight: FontWeight.w800,
+            ),
           ),
           const Spacer(),
           Text(note, style: const TextStyle(color: _muted, fontSize: 10)),
@@ -1014,7 +1033,7 @@ class _ActionTile extends StatelessWidget {
   Widget build(BuildContext context) => Card(
     margin: const EdgeInsets.only(bottom: 10),
     elevation: 0,
-    color: Colors.white,
+    color: _surface,
     shape: RoundedRectangleBorder(
       side: const BorderSide(color: _line),
       borderRadius: BorderRadius.circular(14),
@@ -1027,8 +1046,8 @@ class _ActionTile extends StatelessWidget {
         child: Row(
           children: [
             CircleAvatar(
-              backgroundColor: const Color(0xFFE7F1E8),
-              foregroundColor: _green,
+              backgroundColor: const Color(0xFF241A4E),
+              foregroundColor: _lilac,
               child: Text(number),
             ),
             const SizedBox(width: 15),
@@ -1038,7 +1057,10 @@ class _ActionTile extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(fontWeight: FontWeight.w800),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -1077,15 +1099,16 @@ class _GuideBanner extends StatelessWidget {
     padding: const EdgeInsets.all(22),
     decoration: BoxDecoration(
       gradient: const LinearGradient(
-        colors: [Color(0xFFDFF0D7), Color(0xFFF4F4DD)],
+        colors: [Color(0xFF211648), Color(0xFF101024)],
       ),
+      border: Border.all(color: Color(0xFF3A2B79)),
       borderRadius: BorderRadius.circular(16),
     ),
     child: Row(
       children: [
         const CircleAvatar(
-          backgroundColor: _lime,
-          foregroundColor: _green,
+          backgroundColor: _green,
+          foregroundColor: Colors.white,
           child: Icon(Icons.auto_awesome_rounded),
         ),
         const SizedBox(width: 14),
