@@ -5,17 +5,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/platform_side.dart';
 import '../services/backend_service.dart';
+import '../services/account_service.dart';
+import '../widgets/app_navigation_menu.dart';
 import '../widgets/home_brand_button.dart';
 import '../widgets/acquisition_step_bar.dart';
 import '../widgets/topo_background.dart';
 import 'auth_page.dart';
 import 'business_acquisition_page.dart';
 import 'deal_rooms_page.dart';
-import 'profile_page.dart';
-import 'assistant_workspace_page.dart';
-import 'local_network_page.dart';
-import 'marketing_pages.dart';
-import 'marketing_studio_page.dart';
 
 const _ink = Color(0xFF050510);
 const _green = Color(0xFF7657FF);
@@ -51,16 +48,6 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
         if (mounted) setState(() => _foundation = value);
       });
 
-  void _profile() => _open(
-    BackendService.user == null
-        ? AuthPage(
-            onAuthenticated: () => Navigator.of(context).pushReplacement(
-              MaterialPageRoute<void>(builder: (_) => const ProfilePage()),
-            ),
-          )
-        : const ProfilePage(),
-  );
-
   @override
   Widget build(BuildContext context) {
     final value = _foundation;
@@ -73,143 +60,149 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
     final readiness = value.readinessScore;
     return Scaffold(
       backgroundColor: _paper,
-      body: CustomScrollView(
-        slivers: [
-          SliverToBoxAdapter(child: _mobileHeader(value)),
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(24, 44, 24, 110),
-            sliver: SliverToBoxAdapter(
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 1080),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'ACQUISITION SUPPORT',
-                        style: TextStyle(
-                          color: _green,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 1.5,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Define. Prepare.\nScreen with confidence.',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: MediaQuery.sizeOf(context).width < 650
-                              ? 42
-                              : 64,
-                          height: .98,
-                          letterSpacing: -3,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 18),
-                      const Text(
-                        'Start with the buyer—not the deal. Your Blueprint and Readiness profile become the benchmark for every opportunity.',
-                        style: TextStyle(
-                          color: _muted,
-                          fontSize: 16,
-                          height: 1.6,
-                        ),
-                      ),
-                      const SizedBox(height: 34),
-                      _NorthStar(value: value),
-                      const SizedBox(height: 18),
-                      LayoutBuilder(
-                        builder: (_, box) {
-                          final width = box.maxWidth >= 760
-                              ? (box.maxWidth - 24) / 3
-                              : box.maxWidth;
-                          return Wrap(
-                            spacing: 12,
-                            runSpacing: 12,
-                            children: [
-                              _MetricCard(
-                                width: width,
-                                label: 'BLUEPRINT CLARITY',
-                                value: '${value.blueprintScore}',
-                                note: 'Your mandate is the deal benchmark.',
-                                onTap: () =>
-                                    _open(const AcquisitionBlueprintPage()),
-                              ),
-                              _MetricCard(
-                                width: width,
-                                label: 'BUYER READINESS',
-                                value: '$readiness',
-                                note: readiness >= 70
-                                    ? 'A solid base for the right deal.'
-                                    : 'Priority actions remain.',
-                                onTap: () => _open(const BuyerReadinessPage()),
-                              ),
-                              _MetricCard(
-                                width: width,
-                                label: 'INDICATIVE CAPACITY',
-                                value: _compactMoney(value.capacity),
-                                note: 'Directional—not lending approval.',
-                                onTap: () => _open(const BuyerReadinessPage()),
-                              ),
-                            ],
-                          );
-                        },
-                      ),
-                      const SizedBox(height: 42),
-                      const Text(
-                        'YOUR ACQUISITION PATH',
-                        style: TextStyle(
-                          color: _green,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 1.5,
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                      _ActionTile(
-                        number: '01',
-                        title: 'Acquisition Blueprint',
-                        copy:
-                            'Define target type, geography, economics, involvement, hard limits, and stretch criteria.',
-                        action: 'Refine mandate',
-                        onTap: () => _open(const AcquisitionBlueprintPage()),
-                      ),
-                      _ActionTile(
-                        number: '02',
-                        title: 'Buyer Readiness',
-                        copy:
-                            'Measure financial capacity, documentation, experience, and lender preparation.',
-                        action: 'Build readiness',
-                        onTap: () => _open(const BuyerReadinessPage()),
-                      ),
-                      _ActionTile(
-                        number: '03',
-                        title: 'Initial Deal Screen',
-                        copy:
-                            'Test a live opportunity without confusing deal fit with your ability to execute.',
-                        action: 'Screen a deal',
-                        onTap: () => _open(const BusinessAcquisitionPage()),
-                      ),
-                      _ActionTile(
-                        number: '04',
-                        title: 'My Deal Pipeline',
-                        copy:
-                            'Compare active opportunities, preserve decisions, and move serious deals into support.',
-                        action: 'View pipeline',
-                        onTap: () => _open(
-                          const DealRoomsPage(
-                            initialSide: PlatformSide.business,
+      body: TopoBackground(
+        color: _paper,
+        opacity: .11,
+        child: CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(child: _mobileHeader(value)),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(24, 44, 24, 110),
+              sliver: SliverToBoxAdapter(
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 1080),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'ACQUISITION SUPPORT',
+                          style: TextStyle(
+                            color: _green,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1.5,
                           ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 12),
+                        Text(
+                          'Define. Prepare.\nScreen with confidence.',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: MediaQuery.sizeOf(context).width < 650
+                                ? 42
+                                : 64,
+                            height: .98,
+                            letterSpacing: -3,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 18),
+                        const Text(
+                          'Start with the buyer—not the deal. Your Blueprint and Readiness profile become the benchmark for every opportunity.',
+                          style: TextStyle(
+                            color: _muted,
+                            fontSize: 16,
+                            height: 1.6,
+                          ),
+                        ),
+                        const SizedBox(height: 34),
+                        _NorthStar(value: value),
+                        const SizedBox(height: 18),
+                        LayoutBuilder(
+                          builder: (_, box) {
+                            final width = box.maxWidth >= 760
+                                ? (box.maxWidth - 24) / 3
+                                : box.maxWidth;
+                            return Wrap(
+                              spacing: 12,
+                              runSpacing: 12,
+                              children: [
+                                _MetricCard(
+                                  width: width,
+                                  label: 'BLUEPRINT CLARITY',
+                                  value: '${value.blueprintScore}',
+                                  note: 'Your mandate is the deal benchmark.',
+                                  onTap: () =>
+                                      _open(const AcquisitionBlueprintPage()),
+                                ),
+                                _MetricCard(
+                                  width: width,
+                                  label: 'BUYER READINESS',
+                                  value: '$readiness',
+                                  note: readiness >= 70
+                                      ? 'A solid base for the right deal.'
+                                      : 'Priority actions remain.',
+                                  onTap: () =>
+                                      _open(const BuyerReadinessPage()),
+                                ),
+                                _MetricCard(
+                                  width: width,
+                                  label: 'INDICATIVE CAPACITY',
+                                  value: _compactMoney(value.capacity),
+                                  note: 'Directional—not lending approval.',
+                                  onTap: () =>
+                                      _open(const BuyerReadinessPage()),
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 42),
+                        const Text(
+                          'YOUR ACQUISITION PATH',
+                          style: TextStyle(
+                            color: _green,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1.5,
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        _ActionTile(
+                          number: '01',
+                          title: 'Acquisition Blueprint',
+                          copy:
+                              'Define target type, geography, economics, involvement, hard limits, and stretch criteria.',
+                          action: 'Refine mandate',
+                          onTap: () => _open(const AcquisitionBlueprintPage()),
+                        ),
+                        _ActionTile(
+                          number: '02',
+                          title: 'Buyer Readiness',
+                          copy:
+                              'Measure financial capacity, documentation, experience, and lender preparation.',
+                          action: 'Build readiness',
+                          onTap: () => _open(const BuyerReadinessPage()),
+                        ),
+                        _ActionTile(
+                          number: '03',
+                          title: 'Initial Deal Screen',
+                          copy:
+                              'Test a live opportunity without confusing deal fit with your ability to execute.',
+                          action: 'Screen a deal',
+                          onTap: () => _open(const BusinessAcquisitionPage()),
+                        ),
+                        _ActionTile(
+                          number: '04',
+                          title: 'My Deal Pipeline',
+                          copy:
+                              'Compare active opportunities, preserve decisions, and move serious deals into support.',
+                          action: 'View pipeline',
+                          onTap: () => _open(
+                            const DealRoomsPage(
+                              initialSide: PlatformSide.business,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -224,102 +217,7 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
           children: [
             const HomeBrandButton(size: 42, dark: true),
             const Spacer(),
-            PopupMenuButton<String>(
-              color: _ink,
-              icon: const Icon(Icons.menu_rounded, color: Colors.white),
-              onSelected: (item) {
-                if (item == 'blueprint') {
-                  _open(const AcquisitionBlueprintPage());
-                } else if (item == 'readiness') {
-                  _open(const BuyerReadinessPage());
-                } else if (item == 'deal') {
-                  _open(const BusinessAcquisitionPage());
-                } else if (item == 'pipeline') {
-                  _open(
-                    const DealRoomsPage(initialSide: PlatformSide.business),
-                  );
-                } else if (item == 'profile') {
-                  _profile();
-                } else if (item == 'members') {
-                  _open(const LocalNetworkPage(side: PlatformSide.business));
-                } else if (item == 'team') {
-                  openMarketingPage(context, MarketingDestination.team);
-                } else if (item == 'consulting') {
-                  _open(const PersonalizedConsultingPage());
-                } else if (item == 'calendar') {
-                  _open(const PersonalizedCalendarPage());
-                } else if (item == 'studio') {
-                  _open(const MarketingStudioPage());
-                }
-              },
-              itemBuilder: (_) => const [
-                PopupMenuItem(
-                  value: 'blueprint',
-                  child: Text(
-                    'Blueprint',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-                PopupMenuItem(
-                  value: 'readiness',
-                  child: Text(
-                    'Readiness',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-                PopupMenuItem(
-                  value: 'deal',
-                  child: Text(
-                    'Deal screen',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-                PopupMenuItem(
-                  value: 'pipeline',
-                  child: Text(
-                    'Deal pipeline',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-                PopupMenuItem(
-                  value: 'profile',
-                  child: Text('Profile', style: TextStyle(color: Colors.white)),
-                ),
-                PopupMenuDivider(),
-                PopupMenuItem(
-                  value: 'members',
-                  child: Text(
-                    'Members & experts',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-                PopupMenuItem(
-                  value: 'team',
-                  child: Text('My team', style: TextStyle(color: Colors.white)),
-                ),
-                PopupMenuItem(
-                  value: 'consulting',
-                  child: Text(
-                    'Personal consulting',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-                PopupMenuItem(
-                  value: 'calendar',
-                  child: Text(
-                    'Acquisition calendar',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-                PopupMenuItem(
-                  value: 'studio',
-                  child: Text(
-                    'Marketing Studio',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-              ],
-            ),
+            const AppNavigationMenu(side: PlatformSide.business),
           ],
         ),
       ),
@@ -357,24 +255,44 @@ class _AcquisitionBlueprintPageState extends State<AcquisitionBlueprintPage> {
     super.dispose();
   }
 
-  Future<void> _save() async {
+  Future<void> _updateDraft() async {
     final current = value!;
     current.blueprint.addAll({
       for (final entry in controllers.entries) entry.key: entry.value.text,
     });
     await current.save();
+  }
+
+  Future<void> _save() async {
+    await _updateDraft();
+    if (!mounted) return;
+    if (BackendService.user == null) {
+      await Navigator.of(
+        context,
+      ).push(MaterialPageRoute<void>(builder: (_) => const AuthPage()));
+      if (!mounted || BackendService.user == null) return;
+    }
+    try {
+      await value!.saveForAccount('blueprint');
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Draft kept on this device. Cloud save failed: $error'),
+        ),
+      );
+      return;
+    }
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Blueprint saved. Deal benchmarks updated.'),
-        ),
+        const SnackBar(content: Text('Step 1 saved to your profile.')),
       );
     }
   }
 
   Future<void> _goStep(int step) async {
     if (step == 0) return;
-    await _save();
+    await _updateDraft();
     if (!mounted) return;
     final page = switch (step) {
       1 => const BuyerReadinessPage(),
@@ -394,7 +312,7 @@ class _AcquisitionBlueprintPageState extends State<AcquisitionBlueprintPage> {
 
   @override
   Widget build(BuildContext context) => _ModuleScaffold(
-    kicker: 'MODULE 01',
+    kicker: 'PAGE 1 OF 4 · BLUEPRINT',
     title: 'Acquisition Blueprint',
     subtitle:
         'Define the acquisition you want before a compelling deal changes the rules.',
@@ -482,7 +400,7 @@ class _AcquisitionBlueprintPageState extends State<AcquisitionBlueprintPage> {
                   FilledButton.icon(
                     onPressed: _save,
                     icon: const Icon(Icons.check_rounded),
-                    label: const Text('Save Blueprint'),
+                    label: const Text('Save Step 1 to profile'),
                   ),
                 ],
               ),
@@ -550,7 +468,7 @@ class _BuyerReadinessPageState extends State<BuyerReadinessPage> {
     });
   }
 
-  Future<void> _save() async {
+  Future<void> _updateDraft() async {
     final current = value!;
     for (final entry in controllers.entries) {
       current.readiness[entry.key] = entry.value.text;
@@ -559,8 +477,37 @@ class _BuyerReadinessPageState extends State<BuyerReadinessPage> {
     if (mounted) setState(() {});
   }
 
+  Future<void> _save() async {
+    await _updateDraft();
+    if (!mounted) return;
+    if (BackendService.user == null) {
+      await Navigator.of(
+        context,
+      ).push(MaterialPageRoute<void>(builder: (_) => const AuthPage()));
+      if (!mounted || BackendService.user == null) return;
+    }
+    try {
+      await value!.saveForAccount('readiness');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Step 2 saved to your profile.')),
+        );
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Draft kept on this device. Cloud save failed: $error',
+            ),
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> _goStep(int step) async {
-    await _save();
+    await _updateDraft();
     if (!mounted || step == 1) return;
     final page = switch (step) {
       0 => const AcquisitionBlueprintPage(),
@@ -576,7 +523,7 @@ class _BuyerReadinessPageState extends State<BuyerReadinessPage> {
   Widget build(BuildContext context) {
     final current = value;
     return _ModuleScaffold(
-      kicker: 'MODULE 02',
+      kicker: 'PAGE 2 OF 4 · READINESS',
       title: 'Buyer Readiness',
       subtitle:
           'Understand what you can execute now and your path to becoming transaction-ready.',
@@ -669,7 +616,7 @@ class _BuyerReadinessPageState extends State<BuyerReadinessPage> {
                   child: FilledButton.icon(
                     onPressed: _save,
                     icon: const Icon(Icons.check_rounded),
-                    label: const Text('Update readiness'),
+                    label: const Text('Save Step 2 to profile'),
                   ),
                 ),
               ],
@@ -900,11 +847,18 @@ class _AcquisitionGuideSheetState extends State<AcquisitionGuideSheet> {
 }
 
 class AcquisitionFoundation {
-  AcquisitionFoundation({required this.blueprint, required this.readiness});
+  AcquisitionFoundation({
+    required this.blueprint,
+    required this.readiness,
+    required this.dealScreen,
+  });
   final Map<String, dynamic> blueprint;
   final Map<String, dynamic> readiness;
+  final Map<String, dynamic> dealScreen;
 
   static const _key = 'acquisition_foundation_v1';
+  static const _pendingKey = 'acquisition_foundation_pending_sync';
+  static const _completedKey = 'acquisition_completed_modules';
   static final _defaults = {
     'blueprint': {
       'type': '',
@@ -928,6 +882,7 @@ class AcquisitionFoundation {
       'entity': false,
       'lender': false,
     },
+    'dealScreen': <String, dynamic>{},
   };
 
   static Future<AcquisitionFoundation> load() async {
@@ -955,18 +910,68 @@ class AcquisitionFoundation {
       data = jsonDecode(jsonEncode(_defaults)) as Map<String, dynamic>;
       await prefs.setString(_key, jsonEncode(data));
     }
-    return AcquisitionFoundation(
-      blueprint: Map<String, dynamic>.from(data['blueprint'] as Map),
-      readiness: Map<String, dynamic>.from(data['readiness'] as Map),
+    if (BackendService.user != null && prefs.getBool(_pendingKey) != true) {
+      try {
+        final cloud = await AccountService.loadAcquisitionFoundation();
+        if (cloud != null && cloud.isNotEmpty) {
+          data = cloud;
+          await prefs.setString(_key, jsonEncode(data));
+        }
+      } catch (_) {
+        // The local draft remains available if the profile migration is pending.
+      }
+    }
+    final blueprintData = data['blueprint'] is Map
+        ? Map<String, dynamic>.from(data['blueprint'] as Map)
+        : Map<String, dynamic>.from(_defaults['blueprint']! as Map);
+    final readinessData = data['readiness'] is Map
+        ? Map<String, dynamic>.from(data['readiness'] as Map)
+        : Map<String, dynamic>.from(_defaults['readiness']! as Map);
+    final dealData = data['dealScreen'] is Map
+        ? Map<String, dynamic>.from(data['dealScreen'] as Map)
+        : <String, dynamic>{};
+    final foundation = AcquisitionFoundation(
+      blueprint: blueprintData,
+      readiness: readinessData,
+      dealScreen: dealData,
     );
+    if (BackendService.user != null && prefs.getBool(_pendingKey) == true) {
+      try {
+        await foundation.syncPendingToAccount();
+      } catch (_) {}
+    }
+    return foundation;
   }
 
   Future<void> save() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(
-      _key,
-      jsonEncode({'blueprint': blueprint, 'readiness': readiness}),
+    await prefs.setString(_key, jsonEncode(toJson()));
+    await prefs.setBool(_pendingKey, true);
+  }
+
+  Map<String, dynamic> toJson() => {
+    'blueprint': blueprint,
+    'readiness': readiness,
+    'dealScreen': dealScreen,
+  };
+
+  Future<void> saveForAccount(String module) async {
+    await save();
+    final prefs = await SharedPreferences.getInstance();
+    final completed = prefs.getStringList(_completedKey) ?? <String>[];
+    if (!completed.contains(module)) completed.add(module);
+    await prefs.setStringList(_completedKey, completed);
+    await syncPendingToAccount();
+  }
+
+  Future<void> syncPendingToAccount() async {
+    if (BackendService.user == null) throw StateError('Sign in required.');
+    final prefs = await SharedPreferences.getInstance();
+    await AccountService.saveAcquisitionFoundation(
+      toJson(),
+      completedModules: prefs.getStringList(_completedKey) ?? const [],
     );
+    await prefs.setBool(_pendingKey, false);
   }
 
   double get minPrice => double.tryParse('${blueprint['minPrice']}') ?? 0;
@@ -1018,6 +1023,10 @@ class _ModuleScaffold extends StatelessWidget {
       backgroundColor: _ink,
       foregroundColor: Colors.white,
       title: const HomeBrandButton(size: 38, dark: true),
+      actions: const [
+        AppNavigationMenu(side: PlatformSide.business),
+        SizedBox(width: 12),
+      ],
     ),
     body: TopoBackground(
       color: _paper,

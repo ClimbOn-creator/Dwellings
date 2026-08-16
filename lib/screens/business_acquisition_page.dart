@@ -21,7 +21,9 @@ import 'landing_screen.dart';
 import 'local_network_page.dart';
 
 const _ink = Color(0xFF050510);
-const _paper = Color(0xFFF5F5F7);
+const _paper = Color(0xFF09091B);
+const _surface = Color(0xFF121225);
+const _line = Color(0xFF292944);
 const _purple = Color(0xFF7657FF);
 const _lilac = Color(0xFFBCAEFF);
 const _red = Color(0xFFB42318);
@@ -194,6 +196,24 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
     ]) {
       _fields[key] = TextEditingController(text: '0');
     }
+    _restoreDraft();
+  }
+
+  Future<void> _restoreDraft() async {
+    final foundation = await AcquisitionFoundation.load();
+    final draft = foundation.dealScreen;
+    if (draft.isEmpty || !mounted) return;
+    _businessName.text = '${draft['businessName'] ?? ''}';
+    _industry.text = '${draft['industry'] ?? ''}';
+    _location.text = '${draft['location'] ?? ''}';
+    final values = draft['values'];
+    if (values is Map) {
+      for (final entry in values.entries) {
+        final controller = _fields['${entry.key}'];
+        if (controller != null) controller.text = '${entry.value}';
+      }
+    }
+    setState(() {});
   }
 
   @override
@@ -309,6 +329,12 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
   Future<void> _save({bool openRoom = false}) async {
     final result = _result;
     if (result == null) return;
+    final foundation = await AcquisitionFoundation.load();
+    foundation.dealScreen
+      ..clear()
+      ..addAll(_inputs.toJson());
+    await foundation.save();
+    if (!mounted) return;
     if (BackendService.user == null) {
       await Navigator.of(
         context,
@@ -317,6 +343,7 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
     }
     setState(() => _saving = true);
     try {
+      await foundation.saveForAccount('deal_screen');
       final id =
           _assessmentId ??
           await BusinessService.saveAssessment(_inputs, result);
@@ -333,7 +360,7 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
         );
       } else if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Business assessment saved.')),
+          const SnackBar(content: Text('Step 3 saved to your profile.')),
         );
       }
     } catch (error) {
@@ -348,63 +375,118 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    backgroundColor: _paper,
-    body: CustomScrollView(
-      slivers: [
-        SliverToBoxAdapter(child: _hero()),
-        SliverToBoxAdapter(
-          child: TopoBackground(
-            color: _paper,
-            opacity: .045,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 52),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 1180),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      AcquisitionStepBar(currentStep: 2, onSelected: _goStep),
-                      const SizedBox(height: 18),
-                      _securityBoundary(),
-                      const SizedBox(height: 18),
-                      _dealCommandBar(),
-                      const SizedBox(height: 22),
-                      _identity(),
-                      const SizedBox(height: 22),
-                      _financialForm(),
-                      const SizedBox(height: 22),
-                      _evidenceForm(),
-                      const SizedBox(height: 26),
-                      SizedBox(
-                        width: double.infinity,
-                        child: FilledButton.icon(
-                          onPressed: _analyze,
-                          style: FilledButton.styleFrom(
-                            backgroundColor: _purple,
-                            padding: const EdgeInsets.symmetric(vertical: 21),
-                          ),
-                          icon: const Icon(Icons.analytics_outlined),
-                          label: const Text('RUN INITIAL VIABILITY ASSESSMENT'),
-                        ),
+  Widget build(BuildContext context) {
+    final base = Theme.of(context);
+    return Theme(
+      data: base.copyWith(
+        colorScheme: const ColorScheme.dark(
+          primary: _purple,
+          surface: _surface,
+        ),
+        textTheme: base.textTheme.apply(
+          bodyColor: Colors.white,
+          displayColor: Colors.white,
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: const Color(0xFF1A1A2E),
+          hintStyle: const TextStyle(color: Color(0xFF858596)),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: _line),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: _line),
+          ),
+        ),
+      ),
+      child: Scaffold(
+        backgroundColor: _paper,
+        appBar: AppBar(
+          backgroundColor: _ink,
+          foregroundColor: Colors.white,
+          title: const HomeBrandButton(size: 38, dark: true),
+          actions: const [
+            AppNavigationMenu(side: PlatformSide.business),
+            SizedBox(width: 12),
+          ],
+        ),
+        body: TopoBackground(
+          color: _paper,
+          opacity: .11,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(22, 28, 22, 90),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 900),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    AcquisitionStepBar(currentStep: 2, onSelected: _goStep),
+                    const SizedBox(height: 34),
+                    const Text(
+                      'PAGE 3 OF 4 · DEAL SCREEN',
+                      style: TextStyle(
+                        color: _lilac,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.4,
                       ),
-                      if (_result != null) ...[
-                        const SizedBox(height: 42),
-                        _results(_result!),
-                      ],
-                      const SizedBox(height: 54),
-                      _processGuide(),
+                    ),
+                    const SizedBox(height: 9),
+                    const Text(
+                      'Initial Deal Screen',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 44,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -2,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Test whether a specific business fits your Blueprint and whether its cash flow can support you.',
+                      style: TextStyle(color: Color(0xFFA5A5B5), height: 1.5),
+                    ),
+                    const SizedBox(height: 30),
+                    _securityBoundary(),
+                    const SizedBox(height: 18),
+                    _dealCommandBar(),
+                    const SizedBox(height: 22),
+                    _identity(),
+                    const SizedBox(height: 22),
+                    _financialForm(),
+                    const SizedBox(height: 22),
+                    _evidenceForm(),
+                    const SizedBox(height: 26),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton.icon(
+                        onPressed: _analyze,
+                        style: FilledButton.styleFrom(
+                          backgroundColor: _purple,
+                          padding: const EdgeInsets.symmetric(vertical: 21),
+                        ),
+                        icon: const Icon(Icons.analytics_outlined),
+                        label: const Text('RUN INITIAL VIABILITY ASSESSMENT'),
+                      ),
+                    ),
+                    if (_result != null) ...[
+                      const SizedBox(height: 42),
+                      _results(_result!),
                     ],
-                  ),
+                    const SizedBox(height: 54),
+                    _processGuide(),
+                  ],
                 ),
               ),
             ),
           ),
         ),
-      ],
-    ),
-  );
+      ),
+    );
+  }
 
   Widget _hero() => TopoBackground(
     color: _ink,
@@ -630,7 +712,7 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEDE9FF),
+                  color: _purple.withValues(alpha: .14),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -648,7 +730,7 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
           Text(
             definition.help,
             style: const TextStyle(
-              color: Color(0xFF666674),
+              color: Color(0xFFA5A5B5),
               fontSize: 10,
               height: 1.35,
             ),
@@ -1016,7 +1098,7 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
     width: double.infinity,
     padding: const EdgeInsets.all(22),
     decoration: BoxDecoration(
-      color: Colors.white,
+      color: _surface,
       borderRadius: BorderRadius.circular(18),
       border: Border.all(color: color.withValues(alpha: .25)),
     ),
@@ -1067,12 +1149,12 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
     width: double.infinity,
     padding: const EdgeInsets.all(26),
     decoration: BoxDecoration(
-      color: const Color(0xFFFCFBFF),
+      color: _surface,
       borderRadius: BorderRadius.circular(28),
-      border: Border.all(color: const Color(0xFF7657FF).withValues(alpha: .2)),
+      border: Border.all(color: _line),
       boxShadow: const [
         BoxShadow(
-          color: Color(0x16050510),
+          color: Color(0x30000000),
           blurRadius: 34,
           offset: Offset(0, 16),
         ),
@@ -1128,7 +1210,7 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
     width: 205,
     padding: const EdgeInsets.all(15),
     decoration: BoxDecoration(
-      color: _paper,
+      color: const Color(0xFF1A1A2E),
       borderRadius: BorderRadius.circular(14),
     ),
     child: Column(
@@ -1141,7 +1223,7 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
         const SizedBox(height: 5),
         Text(
           label,
-          style: const TextStyle(color: Color(0xFF666674), fontSize: 9),
+          style: const TextStyle(color: Color(0xFFA5A5B5), fontSize: 9),
         ),
       ],
     ),

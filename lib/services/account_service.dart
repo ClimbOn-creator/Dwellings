@@ -268,6 +268,34 @@ class AccountService {
     return row == null ? null : AccountProfile.fromJson(row);
   }
 
+  static Future<Map<String, dynamic>?> loadAcquisitionFoundation() async {
+    final user = BackendService.user;
+    if (user == null) return null;
+    final row = await _client
+        .from('profiles')
+        .select('acquisition_foundation')
+        .eq('id', user.id)
+        .maybeSingle();
+    final value = row?['acquisition_foundation'];
+    return value is Map ? Map<String, dynamic>.from(value) : null;
+  }
+
+  static Future<void> saveAcquisitionFoundation(
+    Map<String, dynamic> foundation, {
+    required List<String> completedModules,
+  }) async {
+    final user = BackendService.user;
+    if (user == null) throw StateError('Sign in required.');
+    await _client
+        .from('profiles')
+        .update({
+          'acquisition_foundation': foundation,
+          'acquisition_completed_modules': completedModules,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('id', user.id);
+  }
+
   static Future<void> savePreferredLocation(MarketplaceCity city) async {
     final user = BackendService.user;
     if (user == null) return;

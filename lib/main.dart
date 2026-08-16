@@ -3,18 +3,16 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'models/platform_side.dart';
 import 'screens/deal_rooms_page.dart';
-import 'screens/home_screen.dart';
-import 'screens/landing_screen.dart';
 import 'screens/business_acquisition_page.dart';
 import 'screens/local_network_page.dart';
 import 'screens/member_workspace_pages.dart';
-import 'screens/platform_hub_page.dart';
 import 'screens/acquisition_support_page.dart';
 import 'services/backend_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await BackendService.initialize();
+  await AcquisitionFoundation.load();
   runApp(const DwellingIqApp());
 }
 
@@ -87,16 +85,16 @@ class DwellingIqApp extends StatelessWidget {
         ? PlatformSide.business
         : PlatformSide.property;
     return switch (module) {
-      'business' => const PlatformHubPage(side: PlatformSide.business),
-      'property' => const PlatformHubPage(side: PlatformSide.property),
+      'business' => const AcquisitionSupportPage(),
+      'property' => const AcquisitionSupportPage(),
       'business-calculator' => const BusinessAcquisitionPage(),
-      'property-calculator' => const UnderwritingScreen(),
+      'property-calculator' => const AcquisitionSupportPage(),
       'network' => LocalNetworkPage(side: side),
-      'deal-rooms' => DealRoomsPage(initialSide: side),
+      'deal-rooms' => const DealRoomsPage(initialSide: PlatformSide.business),
       'member-leads' => const MemberLeadInboxPage(),
       'email-composer' => const MemberEmailComposerPage(),
       'newsletter-builder' => const MemberNewsletterBuilderPage(),
-      'landing' => const LandingScreen(),
+      'landing' => const AcquisitionSupportPage(),
       'acquisition-support' => const AcquisitionSupportPage(),
       _ => const AcquisitionSupportPage(),
     };

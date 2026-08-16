@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
+import '../models/platform_side.dart';
 import '../services/account_service.dart';
 import '../services/backend_service.dart';
 import '../services/marketplace_service.dart';
@@ -17,6 +18,8 @@ import 'connection_brief_page.dart';
 import 'deal_rooms_page.dart';
 import 'member_workspace_pages.dart';
 import 'member_profile_page.dart';
+import 'acquisition_support_page.dart';
+import 'business_acquisition_page.dart';
 
 const _ink = Color(0xFF050510);
 const _paper = Color(0xFFF5F5F7);
@@ -38,6 +41,7 @@ class _ProfilePageState extends State<ProfilePage> {
   List<IntroductionRequest> _incomingIntroductions = [];
   List<DealRoom> _deals = [];
   ProfessionalWorkspaceStats? _professionalStats;
+  Map<String, dynamic>? _acquisition;
   bool _loading = true;
   bool _saving = false;
   Timer? _refreshTimer;
@@ -51,10 +55,20 @@ class _ProfilePageState extends State<ProfilePage> {
   void initState() {
     super.initState();
     _load();
+    _loadAcquisition();
     _refreshTimer = Timer.periodic(
       const Duration(seconds: 20),
       (_) => _refreshActivity(),
     );
+  }
+
+  Future<void> _loadAcquisition() async {
+    try {
+      final value = await AccountService.loadAcquisitionFoundation();
+      if (mounted) setState(() => _acquisition = value);
+    } catch (_) {
+      // The rest of the profile remains usable while the migration rolls out.
+    }
   }
 
   @override
@@ -294,6 +308,8 @@ class _ProfilePageState extends State<ProfilePage> {
                         },
                       ),
                       const SizedBox(height: 24),
+                      _acquisitionPath(),
+                      const SizedBox(height: 24),
                       _currentDeals(),
                       const SizedBox(height: 42),
                       _introductionCentre(),
@@ -333,6 +349,87 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _acquisitionPath() {
+    final foundation = _acquisition ?? const <String, dynamic>{};
+    final blueprint = foundation['blueprint'] is Map
+        ? Map<String, dynamic>.from(foundation['blueprint'] as Map)
+        : const <String, dynamic>{};
+    final readiness = foundation['readiness'] is Map
+        ? Map<String, dynamic>.from(foundation['readiness'] as Map)
+        : const <String, dynamic>{};
+    final deal = foundation['dealScreen'] is Map
+        ? Map<String, dynamic>.from(foundation['dealScreen'] as Map)
+        : const <String, dynamic>{};
+    final steps = <(String, bool, Widget)>[
+      (
+        '1. Blueprint',
+        blueprint.values.any((value) => '$value'.trim().isNotEmpty),
+        const AcquisitionBlueprintPage(),
+      ),
+      (
+        '2. Readiness',
+        readiness.values.any(
+          (value) => value is bool ? value : '$value'.trim().isNotEmpty,
+        ),
+        const BuyerReadinessPage(),
+      ),
+      ('3. Deal screen', deal.isNotEmpty, const BusinessAcquisitionPage()),
+      (
+        '4. Pipeline',
+        _deals.any((room) => room.isBusiness),
+        const DealRoomsPage(initialSide: PlatformSide.business),
+      ),
+    ];
+    return TopoCard(
+      width: double.infinity,
+      opacity: .11,
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'YOUR ACQUISITION PATH',
+            style: TextStyle(
+              color: _lilac,
+              fontSize: 10,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1.2,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Saved to your account',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 24,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: steps
+                .map(
+                  (step) => ActionChip(
+                    avatar: Icon(
+                      step.$2 ? Icons.check_circle : Icons.circle_outlined,
+                      size: 18,
+                      color: step.$2 ? const Color(0xFF7DE2C1) : _lilac,
+                    ),
+                    label: Text(step.$1),
+                    onPressed: () => Navigator.of(
+                      context,
+                    ).push(MaterialPageRoute<void>(builder: (_) => step.$3)),
+                  ),
+                )
+                .toList(),
           ),
         ],
       ),

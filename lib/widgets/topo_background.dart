@@ -8,7 +8,7 @@ class TopoBackground extends StatelessWidget {
     super.key,
     required this.child,
     this.color = const Color(0xFF050510),
-    this.opacity = .07,
+    this.opacity = .10,
   });
 
   final Widget child;
@@ -23,7 +23,9 @@ class TopoBackground extends StatelessWidget {
       children: [
         Positioned.fill(
           child: IgnorePointer(
-            child: CustomPaint(painter: TopoLinesPainter(opacity: opacity)),
+            child: CustomPaint(
+              painter: TopoLinesPainter(opacity: math.max(opacity, .09)),
+            ),
           ),
         ),
         child,
@@ -42,7 +44,7 @@ class TopoCard extends StatelessWidget {
     this.width,
     this.borderRadius = const BorderRadius.all(Radius.circular(20)),
     this.color = const Color(0xFF050510),
-    this.opacity = .055,
+    this.opacity = .08,
   });
 
   final Widget child;
@@ -68,7 +70,7 @@ class TopoCard extends StatelessWidget {
 }
 
 class TopoLinesPainter extends CustomPainter {
-  const TopoLinesPainter({this.opacity = .07});
+  const TopoLinesPainter({this.opacity = .10});
 
   final double opacity;
 
@@ -78,7 +80,7 @@ class TopoLinesPainter extends CustomPainter {
     final paint = Paint()
       ..color = const Color(0xFFB8B8C4).withValues(alpha: opacity)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1;
+      ..strokeWidth = 1.15;
     final centres = <Offset>[
       Offset(size.width * .12, size.height * .24),
       Offset(size.width * .84, size.height * .2),

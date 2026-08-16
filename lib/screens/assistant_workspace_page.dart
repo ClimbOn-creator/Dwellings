@@ -4,6 +4,8 @@ import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/platform_side.dart';
 import '../widgets/home_brand_button.dart';
+import '../widgets/app_navigation_menu.dart';
+import '../widgets/topo_background.dart';
 import 'local_network_page.dart';
 import 'member_workspace_pages.dart';
 import '../services/backend_service.dart';
@@ -105,6 +107,8 @@ class _GuideWorkspacePageState extends State<GuideWorkspacePage> {
           },
           icon: const Icon(Icons.edit_square),
         ),
+        const AppNavigationMenu(side: PlatformSide.business),
+        const SizedBox(width: 12),
       ],
     ),
     body: Row(
@@ -886,30 +890,41 @@ class _Page extends StatelessWidget {
       backgroundColor: ink,
       foregroundColor: Colors.white,
       title: const HomeBrandButton(size: 38, dark: true),
+      actions: const [
+        AppNavigationMenu(side: PlatformSide.business),
+        SizedBox(width: 12),
+      ],
     ),
-    body: SingleChildScrollView(
-      padding: const EdgeInsets.all(28),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 900),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 44,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: -2,
+    body: TopoBackground(
+      color: ink,
+      opacity: .11,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(28),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 900),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 44,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -2,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              Text(subtitle, style: const TextStyle(color: muted, height: 1.5)),
-              if (action != null) ...[const SizedBox(height: 18), action!],
-              const SizedBox(height: 28),
-              child,
-            ],
+                const SizedBox(height: 8),
+                Text(
+                  subtitle,
+                  style: const TextStyle(color: muted, height: 1.5),
+                ),
+                if (action != null) ...[const SizedBox(height: 18), action!],
+                const SizedBox(height: 28),
+                child,
+              ],
+            ),
           ),
         ),
       ),

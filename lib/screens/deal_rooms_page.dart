@@ -12,11 +12,14 @@ import '../widgets/app_navigation_menu.dart';
 import '../widgets/acquisition_step_bar.dart';
 import 'acquisition_support_page.dart';
 import 'business_acquisition_page.dart';
+import 'auth_page.dart';
 
 const _ink = Color(0xFF050510);
-const _paper = Color(0xFFF5F5F7);
+const _paper = Color(0xFF09091B);
 const _purple = Color(0xFF7657FF);
 const _lilac = Color(0xFFBCAEFF);
+const _surface = Color(0xFF121225);
+const _line = Color(0xFF292944);
 
 class DealRoomsPage extends StatefulWidget {
   const DealRoomsPage({super.key, this.initialSide = PlatformSide.property});
@@ -65,6 +68,13 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
       ),
     );
     if (result == null) return;
+    if (!mounted) return;
+    if (BackendService.user == null) {
+      await Navigator.of(
+        context,
+      ).push(MaterialPageRoute<void>(builder: (_) => const AuthPage()));
+      if (!mounted || BackendService.user == null) return;
+    }
     setState(() => _creating = true);
     try {
       final room = await DealRoomService.createManualRoom(
@@ -79,6 +89,8 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
       await Navigator.of(
         context,
       ).push(MaterialPageRoute<void>(builder: (_) => DealRoomPage(room: room)));
+      final foundation = await AcquisitionFoundation.load();
+      await foundation.saveForAccount('pipeline');
       _refresh();
     } catch (error) {
       if (mounted) {
@@ -121,80 +133,143 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    backgroundColor: _paper,
-    body: CustomScrollView(
-      slivers: [
-        SliverToBoxAdapter(child: _header()),
-        SliverToBoxAdapter(
-          child: TopoBackground(
-            color: _paper,
-            opacity: .045,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 38),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 1120),
-                  child: Column(
-                    children: [
-                      AcquisitionStepBar(currentStep: 3, onSelected: _goStep),
-                      const SizedBox(height: 32),
-                      FutureBuilder<List<DealRoom>>(
-                        future: _rooms,
-                        builder: (context, snapshot) {
-                          if (!snapshot.hasData) {
-                            return const SizedBox(
-                              height: 260,
-                              child: Center(child: CircularProgressIndicator()),
-                            );
-                          }
-                          final allRooms = snapshot.data!;
-                          final rooms = allRooms.where((room) {
-                            final lifecycleMatch = _showArchived
-                                ? room.status == 'archived' ||
-                                      room.status == 'completed' ||
-                                      room.status == 'cancelled'
-                                : room.status != 'archived' &&
-                                      room.status != 'completed' &&
-                                      room.status != 'cancelled';
-                            final sideMatch = _showAll
-                                ? true
-                                : _side == PlatformSide.business
-                                ? room.isBusiness
-                                : !room.isBusiness;
-                            return lifecycleMatch && sideMatch;
-                          }).toList();
-                          if (rooms.isEmpty) return _empty();
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _summary(allRooms),
-                              const SizedBox(height: 26),
-                              Text(
-                                '${rooms.length} ${_showArchived ? 'PAST' : 'CURRENT'} DEAL${rooms.length == 1 ? '' : 'S'}',
-                                style: const TextStyle(
-                                  color: _purple,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w900,
-                                  letterSpacing: 1.1,
-                                ),
-                              ),
-                              const SizedBox(height: 18),
-                              ...rooms.map(_roomCard),
-                            ],
-                          );
-                        },
+  Widget build(BuildContext context) {
+    final base = Theme.of(context);
+    return Theme(
+      data: base.copyWith(
+        colorScheme: const ColorScheme.dark(
+          primary: _purple,
+          surface: _surface,
+        ),
+        textTheme: base.textTheme.apply(
+          bodyColor: Colors.white,
+          displayColor: Colors.white,
+        ),
+      ),
+      child: Scaffold(
+        backgroundColor: _paper,
+        appBar: AppBar(
+          backgroundColor: _ink,
+          foregroundColor: Colors.white,
+          title: const HomeBrandButton(size: 38, dark: true),
+          actions: const [
+            AppNavigationMenu(side: PlatformSide.business),
+            SizedBox(width: 12),
+          ],
+        ),
+        body: TopoBackground(
+          color: _paper,
+          opacity: .11,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(22, 28, 22, 90),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 900),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    AcquisitionStepBar(currentStep: 3, onSelected: _goStep),
+                    const SizedBox(height: 34),
+                    const Text(
+                      'PAGE 4 OF 4 · PIPELINE',
+                      style: TextStyle(
+                        color: _lilac,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.4,
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 9),
+                    const Text(
+                      'My Deal Pipeline',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 44,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -2,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Keep every opportunity, decision, deadline, and blocker in one focused acquisition workspace.',
+                      style: TextStyle(color: Color(0xFFA5A5B5), height: 1.5),
+                    ),
+                    const SizedBox(height: 24),
+                    Wrap(
+                      spacing: 10,
+                      runSpacing: 10,
+                      children: [
+                        FilledButton.icon(
+                          onPressed: _creating ? null : _manualCreate,
+                          icon: const Icon(Icons.add),
+                          label: const Text('START A NEW DEAL'),
+                        ),
+                        FilterChip(
+                          label: Text(
+                            _showArchived ? 'PAST / ARCHIVED' : 'CURRENT',
+                          ),
+                          selected: _showArchived,
+                          backgroundColor: _surface,
+                          selectedColor: _purple,
+                          checkmarkColor: Colors.white,
+                          labelStyle: const TextStyle(color: Colors.white),
+                          onSelected: (value) =>
+                              setState(() => _showArchived = value),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 30),
+                    FutureBuilder<List<DealRoom>>(
+                      future: _rooms,
+                      builder: (context, snapshot) {
+                        if (!snapshot.hasData) {
+                          return const SizedBox(
+                            height: 260,
+                            child: Center(child: CircularProgressIndicator()),
+                          );
+                        }
+                        final allRooms = snapshot.data!;
+                        final rooms = allRooms.where((room) {
+                          final lifecycleMatch = _showArchived
+                              ? room.status == 'archived' ||
+                                    room.status == 'completed' ||
+                                    room.status == 'cancelled'
+                              : room.status != 'archived' &&
+                                    room.status != 'completed' &&
+                                    room.status != 'cancelled';
+                          final sideMatch = room.isBusiness;
+                          return lifecycleMatch && sideMatch;
+                        }).toList();
+                        if (rooms.isEmpty) return _empty();
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _summary(allRooms),
+                            const SizedBox(height: 26),
+                            Text(
+                              '${rooms.length} ${_showArchived ? 'PAST' : 'CURRENT'} DEAL${rooms.length == 1 ? '' : 'S'}',
+                              style: const TextStyle(
+                                color: _lilac,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 1.1,
+                              ),
+                            ),
+                            const SizedBox(height: 18),
+                            ...rooms.map(_roomCard),
+                          ],
+                        );
+                      },
+                    ),
+                  ],
                 ),
               ),
             ),
           ),
         ),
-      ],
-    ),
-  );
+      ),
+    );
+  }
 
   Widget _header() => TopoBackground(
     opacity: .055,
@@ -329,7 +404,8 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
     width: double.infinity,
     padding: const EdgeInsets.all(34),
     decoration: BoxDecoration(
-      color: Colors.white,
+      color: _surface,
+      border: Border.all(color: _line),
       borderRadius: BorderRadius.circular(20),
     ),
     child: Column(
@@ -344,9 +420,9 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
         Text(
           _showArchived
               ? 'Completed, cancelled and archived transactions will remain available here.'
-              : 'Start a residential, commercial or business transaction and the guided checklist will be created automatically.',
+              : 'Start a business acquisition and its guided checklist will be created automatically.',
           textAlign: TextAlign.center,
-          style: TextStyle(color: Color(0xFF666674)),
+          style: TextStyle(color: Color(0xFFA5A5B5)),
         ),
         const SizedBox(height: 18),
         FilledButton(
@@ -390,9 +466,9 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
     width: 210,
     padding: const EdgeInsets.all(18),
     decoration: BoxDecoration(
-      color: Colors.white,
+      color: _surface,
       borderRadius: BorderRadius.circular(17),
-      border: Border.all(color: const Color(0xFFE2E2E9)),
+      border: Border.all(color: _line),
     ),
     child: Row(
       children: [
@@ -432,9 +508,9 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: _surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE2E2E9)),
+        border: Border.all(color: _line),
       ),
       child: Row(
         children: [
@@ -442,7 +518,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
             width: 58,
             height: 58,
             decoration: BoxDecoration(
-              color: const Color(0xFFEDE9FE),
+              color: _purple.withValues(alpha: .14),
               borderRadius: BorderRadius.circular(17),
             ),
             child: Icon(
@@ -486,7 +562,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                       'Target ${DateFormat.MMMd().format(room.targetCloseDate!)}',
                   ].join(' · '),
                   style: const TextStyle(
-                    color: Color(0xFF666674),
+                    color: Color(0xFFA5A5B5),
                     fontSize: 12,
                   ),
                 ),
@@ -499,7 +575,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                         child: LinearProgressIndicator(
                           minHeight: 5,
                           value: room.progress,
-                          backgroundColor: const Color(0xFFE8E8EF),
+                          backgroundColor: _line,
                           valueColor: const AlwaysStoppedAnimation(_purple),
                         ),
                       ),
@@ -521,7 +597,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    color: _ink,
+                    color: Colors.white,
                     fontSize: 9,
                     fontWeight: FontWeight.w800,
                     letterSpacing: .45,
@@ -640,33 +716,21 @@ class _NewDealDialogState extends State<_NewDealDialog> {
 
   @override
   Widget build(BuildContext context) => AlertDialog(
-    backgroundColor: Colors.white,
+    backgroundColor: _surface,
     surfaceTintColor: Colors.transparent,
-    title: const Text('Start a new deal'),
+    title: const Text(
+      'Start a new acquisition',
+      style: TextStyle(color: Colors.white),
+    ),
     content: SizedBox(
       width: 560,
       child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            DropdownButtonFormField<String>(
-              initialValue: _kind,
-              decoration: const InputDecoration(labelText: 'Transaction type'),
-              items: const [
-                DropdownMenuItem(
-                  value: 'residential',
-                  child: Text('Residential property'),
-                ),
-                DropdownMenuItem(
-                  value: 'commercial',
-                  child: Text('Commercial property'),
-                ),
-                DropdownMenuItem(
-                  value: 'business',
-                  child: Text('Business acquisition'),
-                ),
-              ],
-              onChanged: (value) => setState(() => _kind = value ?? _kind),
+            const Align(
+              alignment: Alignment.centerLeft,
+              child: Chip(label: Text('Business acquisition')),
             ),
             const SizedBox(height: 13),
             TextField(
@@ -1029,78 +1093,107 @@ class _DealRoomPageState extends State<DealRoomPage> {
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    backgroundColor: _paper,
-    body: FutureBuilder<DealRoomBundle>(
-      future: _bundle,
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        final bundle = snapshot.data!;
-        return CustomScrollView(
-          slivers: [
-            SliverToBoxAdapter(child: _roomHeader(bundle)),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 22,
-                  vertical: 42,
-                ),
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 1120),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (_room.isBusiness) _businessSecurityBoundary(),
-                        if (_room.isBusiness) const SizedBox(height: 18),
-                        _commandBar(bundle.tasks),
-                        const SizedBox(height: 18),
-                        _metrics(),
-                        const SizedBox(height: 24),
-                        LayoutBuilder(
-                          builder: (context, constraints) {
-                            final desktop = constraints.maxWidth >= 820;
-                            final overview = _overview();
-                            final team = _team(bundle.members);
-                            return desktop
-                                ? Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Expanded(flex: 3, child: overview),
-                                      const SizedBox(width: 18),
-                                      Expanded(flex: 2, child: team),
-                                    ],
-                                  )
-                                : Column(
-                                    children: [
-                                      overview,
-                                      const SizedBox(height: 18),
-                                      team,
-                                    ],
-                                  );
-                          },
+  Widget build(BuildContext context) => Theme(
+    data: Theme.of(context).copyWith(
+      colorScheme: const ColorScheme.dark(primary: _purple, surface: _surface),
+      textTheme: Theme.of(
+        context,
+      ).textTheme.apply(bodyColor: Colors.white, displayColor: Colors.white),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: const Color(0xFF1A1A2E),
+        hintStyle: const TextStyle(color: Color(0xFF858596)),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: _line),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: _line),
+        ),
+      ),
+    ),
+    child: Scaffold(
+      backgroundColor: _paper,
+      body: TopoBackground(
+        color: _paper,
+        opacity: .11,
+        child: FutureBuilder<DealRoomBundle>(
+          future: _bundle,
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            final bundle = snapshot.data!;
+            return CustomScrollView(
+              slivers: [
+                SliverToBoxAdapter(child: _roomHeader(bundle)),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 22,
+                      vertical: 42,
+                    ),
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 1120),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (_room.isBusiness) _businessSecurityBoundary(),
+                            if (_room.isBusiness) const SizedBox(height: 18),
+                            _commandBar(bundle.tasks),
+                            const SizedBox(height: 18),
+                            _metrics(),
+                            const SizedBox(height: 24),
+                            LayoutBuilder(
+                              builder: (context, constraints) {
+                                final desktop = constraints.maxWidth >= 820;
+                                final overview = _overview();
+                                final team = _team(bundle.members);
+                                return desktop
+                                    ? Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Expanded(flex: 3, child: overview),
+                                          const SizedBox(width: 18),
+                                          Expanded(flex: 2, child: team),
+                                        ],
+                                      )
+                                    : Column(
+                                        children: [
+                                          overview,
+                                          const SizedBox(height: 18),
+                                          team,
+                                        ],
+                                      );
+                              },
+                            ),
+                            const SizedBox(height: 24),
+                            _checklist(bundle.tasks, bundle.members),
+                            const SizedBox(height: 24),
+                            if (_room.ownedByCurrentUser ||
+                                _room.sharingPreferences['documents'] ==
+                                    true) ...[
+                              _documents(
+                                bundle.documents,
+                                bundle.documentEvents,
+                              ),
+                              const SizedBox(height: 24),
+                            ],
+                            _notes(bundle.notes),
+                          ],
                         ),
-                        const SizedBox(height: 24),
-                        _checklist(bundle.tasks, bundle.members),
-                        const SizedBox(height: 24),
-                        if (_room.ownedByCurrentUser ||
-                            _room.sharingPreferences['documents'] == true) ...[
-                          _documents(bundle.documents, bundle.documentEvents),
-                          const SizedBox(height: 24),
-                        ],
-                        _notes(bundle.notes),
-                      ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ),
-          ],
-        );
-      },
+              ],
+            );
+          },
+        ),
+      ),
     ),
   );
 
@@ -1359,7 +1452,8 @@ class _DealRoomPageState extends State<DealRoomPage> {
     constraints: const BoxConstraints(minHeight: 104),
     padding: const EdgeInsets.all(17),
     decoration: BoxDecoration(
-      color: Colors.white,
+      color: _surface,
+      border: Border.all(color: _line),
       borderRadius: BorderRadius.circular(16),
     ),
     child: Column(
@@ -1722,7 +1816,7 @@ class _DealRoomPageState extends State<DealRoomPage> {
           width: 31,
           height: 31,
           decoration: BoxDecoration(
-            color: current ? _purple : const Color(0xFFEDE9FE),
+            color: current ? _purple : _purple.withValues(alpha: .14),
             shape: BoxShape.circle,
           ),
           child: Icon(
@@ -1756,7 +1850,7 @@ class _DealRoomPageState extends State<DealRoomPage> {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.fromLTRB(10, 8, 8, 8),
       decoration: BoxDecoration(
-        color: task.blocked ? const Color(0xFFFFF0EE) : const Color(0xFFF7F7FA),
+        color: task.blocked ? const Color(0xFF321C26) : const Color(0xFF1A1A2E),
         borderRadius: BorderRadius.circular(13),
         border: Border.all(
           color: task.blocked
@@ -1844,7 +1938,7 @@ class _DealRoomPageState extends State<DealRoomPage> {
   Widget _taskTag(String label, bool alert) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
     decoration: BoxDecoration(
-      color: alert ? const Color(0xFFFFDAD6) : const Color(0xFFEDE9FE),
+      color: alert ? const Color(0xFF4A2027) : _purple.withValues(alpha: .14),
       borderRadius: BorderRadius.circular(8),
     ),
     child: Text(
@@ -1900,7 +1994,9 @@ class _DealRoomPageState extends State<DealRoomPage> {
               margin: const EdgeInsets.only(bottom: 8),
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: note.mine ? const Color(0xFFEDE9FE) : _paper,
+                color: note.mine
+                    ? _purple.withValues(alpha: .14)
+                    : const Color(0xFF1A1A2E),
                 borderRadius: BorderRadius.circular(13),
               ),
               child: Column(
@@ -2039,9 +2135,9 @@ class _DealRoomPageState extends State<DealRoomPage> {
     width: double.infinity,
     padding: const EdgeInsets.all(22),
     decoration: BoxDecoration(
-      color: Colors.white,
+      color: _surface,
       borderRadius: BorderRadius.circular(20),
-      border: Border.all(color: const Color(0xFFE3E3E9)),
+      border: Border.all(color: _line),
     ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,

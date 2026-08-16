@@ -2,132 +2,124 @@ import 'package:flutter/material.dart';
 
 import '../models/platform_side.dart';
 import '../services/backend_service.dart';
+import '../screens/acquisition_support_page.dart';
+import '../screens/assistant_workspace_page.dart';
 import '../screens/auth_page.dart';
+import '../screens/become_member_page.dart';
 import '../screens/business_acquisition_page.dart';
 import '../screens/deal_rooms_page.dart';
-import '../screens/home_screen.dart';
 import '../screens/local_network_page.dart';
 import '../screens/marketing_pages.dart';
-import '../screens/platform_hub_page.dart';
-import '../screens/profile_page.dart';
-import '../screens/acquisition_support_page.dart';
 import '../screens/marketing_studio_page.dart';
-import 'platform_switcher.dart';
+import '../screens/profile_page.dart';
 
 enum AppNavigationDestination {
-  acquisition,
-  network,
-  membership,
-  deals,
-  profile,
+  overview,
+  blueprint,
+  readiness,
+  dealScreen,
+  pipeline,
   marketing,
-  model,
+  memberStudio,
+  network,
+  consulting,
+  membership,
+  profile,
 }
 
 class AppNavigationMenu extends StatelessWidget {
   const AppNavigationMenu({
     super.key,
-    this.side = PlatformSide.property,
+    this.side = PlatformSide.business,
     this.dark = true,
     this.onSideChanged,
   });
 
+  // Kept while older callers are migrated to the single acquisition app.
   final PlatformSide side;
   final bool dark;
   final ValueChanged<PlatformSide>? onSideChanged;
 
-  void _changeSide(BuildContext context, PlatformSide next) {
-    if (next == side) return;
-    if (onSideChanged != null) {
-      onSideChanged!(next);
-      return;
-    }
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute<void>(builder: (_) => PlatformHubPage(side: next)),
-    );
-  }
-
   String _label(AppNavigationDestination destination) => switch (destination) {
-    AppNavigationDestination.acquisition => 'Acquisition support',
-    AppNavigationDestination.network => 'Local network',
-    AppNavigationDestination.membership => 'Become a member',
-    AppNavigationDestination.deals => 'Current deals',
-    AppNavigationDestination.profile => 'Profile',
+    AppNavigationDestination.overview => 'Acquisition path overview',
+    AppNavigationDestination.blueprint => 'Step 1 · Blueprint',
+    AppNavigationDestination.readiness => 'Step 2 · Readiness',
+    AppNavigationDestination.dealScreen => 'Step 3 · Deal screen',
+    AppNavigationDestination.pipeline => 'Step 4 · Pipeline',
     AppNavigationDestination.marketing => 'Marketing Studio',
-    AppNavigationDestination.model =>
-      side == PlatformSide.business ? 'Open business model' : 'Open risk model',
+    AppNavigationDestination.memberStudio => 'Member Studio',
+    AppNavigationDestination.network => 'Members & experts',
+    AppNavigationDestination.consulting => 'Personal consulting',
+    AppNavigationDestination.membership => 'Become a member',
+    AppNavigationDestination.profile => 'My profile',
+  };
+
+  Widget _page(
+    BuildContext context,
+    AppNavigationDestination destination,
+  ) => switch (destination) {
+    AppNavigationDestination.overview => const AcquisitionSupportPage(),
+    AppNavigationDestination.blueprint => const AcquisitionBlueprintPage(),
+    AppNavigationDestination.readiness => const BuyerReadinessPage(),
+    AppNavigationDestination.dealScreen => const BusinessAcquisitionPage(),
+    AppNavigationDestination.pipeline => const DealRoomsPage(
+      initialSide: PlatformSide.business,
+    ),
+    AppNavigationDestination.marketing => const MarketingStudioPage(),
+    AppNavigationDestination.memberStudio => const MemberStudioPage(),
+    AppNavigationDestination.network => const LocalNetworkPage(
+      side: PlatformSide.business,
+    ),
+    AppNavigationDestination.consulting => const PersonalizedConsultingPage(),
+    AppNavigationDestination.membership => BecomeMemberPage(
+      onHome: () => Navigator.of(context).popUntil((route) => route.isFirst),
+      onAbout: () => openMarketingPage(context, MarketingDestination.about),
+      onTeam: () => openMarketingPage(context, MarketingDestination.team),
+    ),
+    AppNavigationDestination.profile =>
+      BackendService.user == null
+          ? AuthPage(
+              onAuthenticated: () => Navigator.of(context).pushReplacement(
+                MaterialPageRoute<void>(builder: (_) => const ProfilePage()),
+              ),
+            )
+          : const ProfilePage(),
   };
 
   void _open(BuildContext context, AppNavigationDestination destination) {
-    final Widget? page = switch (destination) {
-      AppNavigationDestination.acquisition => const AcquisitionSupportPage(),
-      AppNavigationDestination.network => LocalNetworkPage(side: side),
-      AppNavigationDestination.deals => DealRoomsPage(initialSide: side),
-      AppNavigationDestination.profile =>
-        BackendService.user == null
-            ? AuthPage(
-                onAuthenticated: () => Navigator.of(context).pushReplacement(
-                  MaterialPageRoute<void>(builder: (_) => const ProfilePage()),
-                ),
-              )
-            : const ProfilePage(),
-      AppNavigationDestination.marketing => const MarketingStudioPage(),
-      AppNavigationDestination.model =>
-        side == PlatformSide.business
-            ? const BusinessAcquisitionPage()
-            : const UnderwritingScreen(),
-      AppNavigationDestination.membership => null,
-    };
-    if (page != null) {
-      Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => page));
-      return;
-    }
-    openMarketingPage(context, MarketingDestination.membership);
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => _page(context, destination)),
+    );
   }
 
   @override
-  Widget build(BuildContext context) {
-    final narrow = MediaQuery.sizeOf(context).width < 600;
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        PlatformSwitcher(
-          selected: side,
-          onChanged: (next) => _changeSide(context, next),
-          compact: true,
-          micro: narrow,
-        ),
-        SizedBox(width: narrow ? 3 : 7),
-        PopupMenuButton<AppNavigationDestination>(
-          tooltip: 'Open navigation',
-          color: dark ? const Color(0xFF171728) : Colors.white,
-          offset: const Offset(0, 42),
-          onSelected: (destination) => _open(context, destination),
-          itemBuilder: (_) => [
-            for (final destination in AppNavigationDestination.values)
-              PopupMenuItem(
-                value: destination,
-                height: 44,
-                child: Text(
-                  _label(destination),
-                  style: TextStyle(
-                    color: dark ? Colors.white : const Color(0xFF050510),
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  ),
+  Widget build(BuildContext context) =>
+      PopupMenuButton<AppNavigationDestination>(
+        tooltip: 'Open navigation',
+        color: const Color(0xFF171728),
+        offset: const Offset(0, 44),
+        onSelected: (destination) => _open(context, destination),
+        itemBuilder: (_) => [
+          for (final destination in AppNavigationDestination.values) ...[
+            if (destination == AppNavigationDestination.marketing)
+              const PopupMenuDivider(),
+            PopupMenuItem(
+              value: destination,
+              height: 43,
+              child: Text(
+                _label(destination),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
-          ],
-          child: SizedBox.square(
-            dimension: narrow ? 38 : 44,
-            child: Icon(
-              Icons.menu_rounded,
-              color: dark ? Colors.white : const Color(0xFF050510),
-              size: narrow ? 25 : 28,
             ),
-          ),
+          ],
+        ],
+        child: const SizedBox.square(
+          dimension: 44,
+          child: Icon(Icons.menu_rounded, color: Colors.white, size: 28),
         ),
-      ],
-    );
-  }
+      );
 }
