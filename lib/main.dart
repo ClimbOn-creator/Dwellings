@@ -9,6 +9,7 @@ import 'screens/business_acquisition_page.dart';
 import 'screens/local_network_page.dart';
 import 'screens/member_workspace_pages.dart';
 import 'screens/platform_hub_page.dart';
+import 'screens/acquisition_support_page.dart';
 import 'services/backend_service.dart';
 
 Future<void> main() async {
@@ -95,7 +96,9 @@ class DwellingIqApp extends StatelessWidget {
       'member-leads' => const MemberLeadInboxPage(),
       'email-composer' => const MemberEmailComposerPage(),
       'newsletter-builder' => const MemberNewsletterBuilderPage(),
-      _ => const LandingScreen(),
+      'landing' => const LandingScreen(),
+      'acquisition-support' => const AcquisitionSupportPage(),
+      _ => const AcquisitionSupportPage(),
     };
   }
 }

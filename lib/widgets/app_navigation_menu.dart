@@ -10,9 +10,17 @@ import '../screens/local_network_page.dart';
 import '../screens/marketing_pages.dart';
 import '../screens/platform_hub_page.dart';
 import '../screens/profile_page.dart';
+import '../screens/acquisition_support_page.dart';
 import 'platform_switcher.dart';
 
-enum AppNavigationDestination { network, membership, deals, profile, model }
+enum AppNavigationDestination {
+  acquisition,
+  network,
+  membership,
+  deals,
+  profile,
+  model,
+}
 
 class AppNavigationMenu extends StatelessWidget {
   const AppNavigationMenu({
@@ -38,6 +46,7 @@ class AppNavigationMenu extends StatelessWidget {
   }
 
   String _label(AppNavigationDestination destination) => switch (destination) {
+    AppNavigationDestination.acquisition => 'Acquisition support',
     AppNavigationDestination.network => 'Local network',
     AppNavigationDestination.membership => 'Become a member',
     AppNavigationDestination.deals => 'Current deals',
@@ -48,6 +57,7 @@ class AppNavigationMenu extends StatelessWidget {
 
   void _open(BuildContext context, AppNavigationDestination destination) {
     final Widget? page = switch (destination) {
+      AppNavigationDestination.acquisition => const AcquisitionSupportPage(),
       AppNavigationDestination.network => LocalNetworkPage(side: side),
       AppNavigationDestination.deals => DealRoomsPage(initialSide: side),
       AppNavigationDestination.profile =>
