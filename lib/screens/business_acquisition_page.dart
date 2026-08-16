@@ -477,8 +477,6 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
                       const SizedBox(height: 42),
                       _results(_result!),
                     ],
-                    const SizedBox(height: 54),
-                    _processGuide(),
                     const SizedBox(height: 42),
                     const MembershipFooter(),
                   ],
@@ -977,120 +975,6 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
       ),
     ),
   );
-
-  Widget _processGuide() {
-    const steps = [
-      (
-        '01',
-        'Buyer criteria',
-        'Define industry, geography, size, skills, capital and risk tolerance.',
-      ),
-      (
-        '02',
-        'Confidentiality',
-        'Use an NDA and controlled information sharing before receiving seller records.',
-      ),
-      (
-        '03',
-        'Initial screening',
-        'Normalize earnings, test price, debt, salary, working capital and downside.',
-      ),
-      (
-        '04',
-        'Seller meeting',
-        'Understand operations, owner role, customers, suppliers and reason for sale.',
-      ),
-      (
-        '05',
-        'Letter of intent',
-        'Set price, structure, exclusivity, conditions and diligence access.',
-      ),
-      (
-        '06',
-        'Financial diligence',
-        'Reconcile statements, tax returns, bank activity, add-backs and working capital.',
-      ),
-      (
-        '07',
-        'Commercial diligence',
-        'Validate customers, market, competition, pricing and supplier dependencies.',
-      ),
-      (
-        '08',
-        'Legal and people',
-        'Review corporate records, contracts, employment, disputes, licences and compliance.',
-      ),
-      (
-        '09',
-        'Technology and cyber',
-        'Assess systems, data protection, intellectual property and operational resilience.',
-      ),
-      (
-        '10',
-        'Financing and tax',
-        'Confirm lending, buyer equity, tax structure and post-closing liquidity.',
-      ),
-      (
-        '11',
-        'Definitive agreement',
-        'Negotiate representations, indemnities, adjustments and closing conditions.',
-      ),
-      (
-        '12',
-        'Transition',
-        'Plan communication, knowledge transfer, leadership and the first 100 days.',
-      ),
-    ];
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'The acquisition path',
-          style: TextStyle(fontSize: 34, fontWeight: FontWeight.w700),
-        ),
-        const SizedBox(height: 8),
-        const Text(
-          'A guided map of what happens, why it matters and who should help.',
-          style: TextStyle(color: Color(0xFF666674)),
-        ),
-        const SizedBox(height: 18),
-        ...steps.map(
-          (step) => ExpansionTile(
-            tilePadding: const EdgeInsets.symmetric(
-              horizontal: 18,
-              vertical: 5,
-            ),
-            backgroundColor: Colors.white,
-            collapsedBackgroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
-            ),
-            collapsedShape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
-            ),
-            leading: Text(
-              step.$1,
-              style: const TextStyle(
-                color: _purple,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-            title: Text(
-              step.$2,
-              style: const TextStyle(fontWeight: FontWeight.w700),
-            ),
-            childrenPadding: const EdgeInsets.fromLTRB(62, 0, 22, 18),
-            children: [
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(step.$3, style: const TextStyle(height: 1.5)),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
 
   Widget _findingCard(
     String title,
