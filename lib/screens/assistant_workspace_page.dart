@@ -6,6 +6,9 @@ import '../models/platform_side.dart';
 import '../widgets/home_brand_button.dart';
 import 'local_network_page.dart';
 import 'member_workspace_pages.dart';
+import '../services/backend_service.dart';
+import '../services/consulting_service.dart';
+import 'business_acquisition_page.dart';
 
 const ink = Color(0xFF050510),
     surface = Color(0xFF121225),
@@ -51,6 +54,33 @@ class _GuideWorkspacePageState extends State<GuideWorkspacePage> {
 
   Future<void> _save() async => (await SharedPreferences.getInstance())
       .setString('guide_conversation_v2', jsonEncode(messages));
+
+  Future<void> _applyToBlueprint() async {
+    final userNotes = messages
+        .where((m) => m['role'] == 'user')
+        .map((m) => m['text'])
+        .join(' · ');
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString('acquisition_foundation_v1');
+    if (raw == null || userNotes.isEmpty) {
+      await _send('Help me fill out my business acquisition Blueprint.');
+      return;
+    }
+    final data = jsonDecode(raw) as Map<String, dynamic>;
+    final blueprint = Map<String, dynamic>.from(data['blueprint'] as Map);
+    blueprint['stretch'] = 'AI working context: $userNotes';
+    data['blueprint'] = blueprint;
+    await prefs.setString('acquisition_foundation_v1', jsonEncode(data));
+    setState(
+      () => messages.add({
+        'role': 'assistant',
+        'text':
+            'I applied your remembered goals and constraints to the Blueprint working context. Open Blueprint to review and approve the exact fields before screening deals.',
+      }),
+    );
+    await _save();
+  }
+
   Future<void> _send([String? value]) async {
     final text = (value ?? input.text).trim();
     if (text.isEmpty || thinking != null) return;
@@ -148,19 +178,24 @@ class _GuideWorkspacePageState extends State<GuideWorkspacePage> {
                 ),
                 const SizedBox(height: 12),
                 _tool(
+                  Icons.fact_check_outlined,
+                  'Fill my Blueprint',
+                  _applyToBlueprint,
+                ),
+                _tool(
                   Icons.calendar_month_outlined,
                   'Acquisition calendar',
                   () => _open(const PersonalizedCalendarPage()),
                 ),
                 _tool(
-                  Icons.mail_outline,
-                  'Marketing email',
-                  () => _open(const MemberEmailComposerPage()),
+                  Icons.workspace_premium_outlined,
+                  'Member Studio',
+                  () => _open(const MemberStudioPage()),
                 ),
                 _tool(
-                  Icons.newspaper_outlined,
-                  'Member newsletter',
-                  () => _open(const MemberNewsletterBuilderPage()),
+                  Icons.auto_fix_high_outlined,
+                  'Business acquisition tool',
+                  () => _open(const BusinessAcquisitionPage()),
                 ),
                 _tool(
                   Icons.groups_outlined,
@@ -440,68 +475,273 @@ class _CalendarState extends State<PersonalizedCalendarPage> {
   );
 }
 
-class PersonalizedConsultingPage extends StatelessWidget {
+class PersonalizedConsultingPage extends StatefulWidget {
   const PersonalizedConsultingPage({super.key});
   @override
+  State<PersonalizedConsultingPage> createState() => _ConsultingState();
+}
+
+class _ConsultingState extends State<PersonalizedConsultingPage> {
+  final phone = TextEditingController(),
+      outcome = TextEditingController(),
+      challenge = TextEditingController();
+  String format = 'Acquisition strategy session';
+  bool sending = false, sent = false;
+  Future<void> _submit() async {
+    if (outcome.text.trim().isEmpty) return;
+    setState(() => sending = true);
+    try {
+      await ConsultingService.request(
+        format: format,
+        phone: phone.text,
+        outcome: outcome.text,
+        challenge: challenge.text,
+      );
+      if (mounted) setState(() => sent = true);
+    } catch (error) {
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$error')));
+    } finally {
+      if (mounted) setState(() => sending = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) => _Page(
-    title: 'Personalized consulting',
+    title: 'Founder-led acquisition consulting',
     subtitle:
-        'Bring the decision that software alone should not make. Your saved acquisition context comes with you.',
-    child: Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: surface,
-        border: Border.all(color: line),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(
-        children: [
-          const DropdownMenu<String>(
-            width: 420,
-            label: Text('Consulting format'),
-            initialSelection: 'Strategy session',
-            dropdownMenuEntries: [
-              DropdownMenuEntry(
-                value: 'Strategy session',
-                label: 'Acquisition strategy session',
+        'Focused support for buyers who need judgment, structure, and an accountable next step—not another generic report.',
+    child: Column(
+      children: [
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(28),
+          decoration: BoxDecoration(
+            color: surface,
+            border: Border.all(color: line),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: const Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'FOUNDER PROFILE',
+                style: TextStyle(
+                  color: lilac,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1.3,
+                ),
               ),
-              DropdownMenuEntry(
-                value: 'Readiness review',
-                label: 'Readiness and financing review',
+              SizedBox(height: 12),
+              Text(
+                'Product, decision systems & acquisition support',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 25,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
-              DropdownMenuEntry(
-                value: 'Deal review',
-                label: 'Live deal decision review',
+              SizedBox(height: 12),
+              Text(
+                'The founder of DwellingIQ combines product development, transparent financial modelling, buyer-first acquisition frameworks, and AI-assisted decision tools. Consulting is designed for business buyers who need help defining a mandate, preparing for financing, screening a live deal, or organizing diligence.',
+                style: TextStyle(color: muted, height: 1.6),
+              ),
+              SizedBox(height: 16),
+              Wrap(
+                spacing: 9,
+                runSpacing: 9,
+                children: [
+                  Chip(label: Text('Acquisition Blueprint')),
+                  Chip(label: Text('Buyer readiness')),
+                  Chip(label: Text('Deal screening')),
+                  Chip(label: Text('Diligence planning')),
+                ],
               ),
             ],
           ),
-          const SizedBox(height: 14),
-          const TextField(
-            maxLines: 3,
-            decoration: InputDecoration(labelText: 'What outcome do you need?'),
-          ),
-          const SizedBox(height: 14),
-          const TextField(
-            maxLines: 4,
-            decoration: InputDecoration(
-              labelText: 'What is making the decision difficult?',
+        ),
+        const SizedBox(height: 30),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(28),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF251950), Color(0xFF121225)],
             ),
+            border: Border.all(color: purple),
+            borderRadius: BorderRadius.circular(20),
           ),
-          const SizedBox(height: 18),
-          Align(
-            alignment: Alignment.centerRight,
-            child: FilledButton(
-              onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text(
-                    'Consulting brief prepared. Scheduling connection comes next.',
-                  ),
+          child: Column(
+            children: [
+              const Text(
+                'Tell us where you need support',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-              child: const Text('Prepare consulting brief'),
+              const SizedBox(height: 18),
+              DropdownButtonFormField<String>(
+                initialValue: format,
+                dropdownColor: surface,
+                items:
+                    [
+                          'Acquisition strategy session',
+                          'Readiness and financing review',
+                          'Live deal decision review',
+                          'Diligence planning',
+                        ]
+                        .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                        .toList(),
+                onChanged: (v) => format = v!,
+                decoration: const InputDecoration(
+                  labelText: 'Consulting focus',
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: phone,
+                decoration: const InputDecoration(labelText: 'Phone number'),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: outcome,
+                maxLines: 3,
+                decoration: const InputDecoration(
+                  labelText: 'What outcome do you need?',
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: challenge,
+                maxLines: 3,
+                decoration: const InputDecoration(
+                  labelText: 'What is making the decision difficult?',
+                ),
+              ),
+              const SizedBox(height: 22),
+              FilledButton.icon(
+                style: FilledButton.styleFrom(
+                  backgroundColor: sent ? const Color(0xFF2E9D71) : purple,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 30,
+                    vertical: 18,
+                  ),
+                ),
+                onPressed: sent || sending ? null : _submit,
+                icon: Icon(sent ? Icons.check : Icons.support_agent),
+                label: Text(
+                  sent
+                      ? 'Sent!'
+                      : sending
+                      ? 'Sending…'
+                      : 'I Want Support!',
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                BackendService.user == null
+                    ? 'Sign in first so your verified email can be included.'
+                    : 'Your signed-in email and the details above will be sent securely to the founder.',
+                style: const TextStyle(color: muted, fontSize: 11),
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+class MemberStudioPage extends StatelessWidget {
+  const MemberStudioPage({super.key});
+  void _open(BuildContext c, Widget p) =>
+      Navigator.push(c, MaterialPageRoute<void>(builder: (_) => p));
+  @override
+  Widget build(BuildContext context) => _Page(
+    title: 'Member Studio',
+    subtitle:
+        'The umbrella workspace for member growth, client service, content, leads, and professional connections.',
+    child: LayoutBuilder(
+      builder: (context, box) => Wrap(
+        spacing: 14,
+        runSpacing: 14,
+        children: [
+          _studio(
+            box,
+            'AI email composer',
+            'Create a reviewable client or acquisition email.',
+            Icons.mail_outline,
+            () => _open(context, const MemberEmailComposerPage()),
+          ),
+          _studio(
+            box,
+            'Newsletter builder',
+            'Generate a useful local update for your audience.',
+            Icons.newspaper_outlined,
+            () => _open(context, const MemberNewsletterBuilderPage()),
+          ),
+          _studio(
+            box,
+            'Lead inbox',
+            'Manage consented introductions and opportunities.',
+            Icons.inbox_outlined,
+            () => _open(context, const MemberLeadInboxPage()),
+          ),
+          _studio(
+            box,
+            'Members & experts',
+            'Find realtors, lenders, lawyers, accountants and advisors.',
+            Icons.groups_outlined,
+            () => _open(
+              context,
+              const LocalNetworkPage(side: PlatformSide.business),
             ),
           ),
         ],
+      ),
+    ),
+  );
+  Widget _studio(
+    BoxConstraints b,
+    String t,
+    String d,
+    IconData i,
+    VoidCallback f,
+  ) => SizedBox(
+    width: b.maxWidth > 700 ? (b.maxWidth - 14) / 2 : b.maxWidth,
+    child: InkWell(
+      onTap: f,
+      borderRadius: BorderRadius.circular(18),
+      child: Container(
+        height: 190,
+        padding: const EdgeInsets.all(22),
+        decoration: BoxDecoration(
+          color: surface,
+          border: Border.all(color: line),
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(i, color: lilac, size: 30),
+            const Spacer(),
+            Text(
+              t,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 19,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(d, style: const TextStyle(color: muted, height: 1.4)),
+          ],
+        ),
       ),
     ),
   );

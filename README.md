@@ -44,6 +44,16 @@ Flutter is built locally and the static `dist/` bundle is committed for Cloudfla
 
 The Cloudflare build command verifies the committed Flutter bundle. Before pushing a Flutter source change, run `npm run build:flutter` so `dist/` stays synchronized.
 
+### Consulting request email
+
+The consulting form verifies the signed-in Supabase user and sends the request through Resend. Add these encrypted Cloudflare Pages variables:
+
+- `RESEND_API_KEY`
+- `CONSULTING_EMAIL` — the founder inbox
+- `CONSULTING_FROM_EMAIL` — a sender on a Resend-verified domain
+
+Requests include the authenticated user's name/email plus their supplied phone, consulting focus, desired outcome and current challenge.
+
 ## Supabase
 
 Run `supabase/migrations/202608080001_initial_schema.sql` in the new project's SQL Editor. The migration creates profiles and property analyses with Row Level Security so each user can only access their own records.

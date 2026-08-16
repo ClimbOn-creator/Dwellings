@@ -1,3 +1,6 @@
 # Copy to .dev.vars for local Pages Functions. Never commit .dev.vars.
 SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
 SUPABASE_PUBLISHABLE_KEY=sb_publishable_REPLACE_ME
+RESEND_API_KEY=re_REPLACE_ME
+CONSULTING_EMAIL=founder@example.com
+CONSULTING_FROM_EMAIL=DwellingIQ <consulting@your-verified-domain.com>
