@@ -12,6 +12,8 @@ DwellingIQ converts the Housing Moneyball workbook into an explainable, cross-pl
 - Explainable factor contributions and decision-specific diligence questions.
 - Supabase magic-link authentication and user-owned saved analyses when configured.
 - Safe device-local saving when Supabase is not configured.
+- Free, template-based acquisition email and member newsletter tools in a dedicated Marketing Studio.
+- A public membership overview and application for buyers, professionals and featured partners.
 - Cloudflare Pages Functions and authenticated R2 upload endpoint.
 - Supabase SQL migration with Row Level Security.
 

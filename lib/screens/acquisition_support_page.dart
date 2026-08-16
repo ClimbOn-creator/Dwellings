@@ -13,6 +13,7 @@ import 'profile_page.dart';
 import 'assistant_workspace_page.dart';
 import 'local_network_page.dart';
 import 'marketing_pages.dart';
+import 'marketing_studio_page.dart';
 
 const _ink = Color(0xFF050510);
 const _green = Color(0xFF7657FF);
@@ -246,7 +247,7 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
                 } else if (item == 'calendar') {
                   _open(const PersonalizedCalendarPage());
                 } else if (item == 'studio') {
-                  _open(const MemberStudioPage());
+                  _open(const MarketingStudioPage());
                 }
               },
               itemBuilder: (_) => const [
@@ -311,7 +312,7 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
                 PopupMenuItem(
                   value: 'studio',
                   child: Text(
-                    'Member Studio',
+                    'Marketing Studio',
                     style: TextStyle(color: Colors.white),
                   ),
                 ),

@@ -11,6 +11,7 @@ import '../screens/marketing_pages.dart';
 import '../screens/platform_hub_page.dart';
 import '../screens/profile_page.dart';
 import '../screens/acquisition_support_page.dart';
+import '../screens/marketing_studio_page.dart';
 import 'platform_switcher.dart';
 
 enum AppNavigationDestination {
@@ -19,6 +20,7 @@ enum AppNavigationDestination {
   membership,
   deals,
   profile,
+  marketing,
   model,
 }
 
@@ -51,6 +53,7 @@ class AppNavigationMenu extends StatelessWidget {
     AppNavigationDestination.membership => 'Become a member',
     AppNavigationDestination.deals => 'Current deals',
     AppNavigationDestination.profile => 'Profile',
+    AppNavigationDestination.marketing => 'Marketing Studio',
     AppNavigationDestination.model =>
       side == PlatformSide.business ? 'Open business model' : 'Open risk model',
   };
@@ -68,6 +71,7 @@ class AppNavigationMenu extends StatelessWidget {
                 ),
               )
             : const ProfilePage(),
+      AppNavigationDestination.marketing => const MarketingStudioPage(),
       AppNavigationDestination.model =>
         side == PlatformSide.business
             ? const BusinessAcquisitionPage()

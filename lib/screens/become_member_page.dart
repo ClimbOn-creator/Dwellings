@@ -179,6 +179,7 @@ class _BecomeMemberPageState extends State<BecomeMemberPage> {
     body: CustomScrollView(
       slivers: [
         SliverToBoxAdapter(child: _hero()),
+        SliverToBoxAdapter(child: _membershipOverview()),
         SliverToBoxAdapter(child: _complete ? _success() : _form()),
         SliverToBoxAdapter(
           child: SiteFooter(
@@ -246,6 +247,145 @@ class _BecomeMemberPageState extends State<BecomeMemberPage> {
           ),
         ],
       ),
+    ),
+  );
+
+  Widget _membershipOverview() => Container(
+    color: _ink,
+    padding: const EdgeInsets.fromLTRB(22, 0, 22, 80),
+    child: Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 1080),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'CHOOSE YOUR PLACE IN THE NETWORK',
+              style: TextStyle(
+                color: _lilac,
+                fontSize: 10,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.4,
+              ),
+            ),
+            const SizedBox(height: 14),
+            const Text(
+              'Membership built around useful participation.',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 34,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -1.2,
+              ),
+            ),
+            const SizedBox(height: 10),
+            const Text(
+              'Apply for the role that fits today. The MVP does not collect payment during this application.',
+              style: TextStyle(color: Color(0xFFB8B8C5), height: 1.5),
+            ),
+            const SizedBox(height: 28),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final width = constraints.maxWidth >= 850
+                    ? (constraints.maxWidth - 24) / 3
+                    : constraints.maxWidth;
+                return Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  children: [
+                    _membershipCard(
+                      width,
+                      'Community member',
+                      'For property buyers and business-acquisition seekers.',
+                      const [
+                        'Acquisition Blueprint and readiness tools',
+                        'Deal screening and saved pipeline',
+                        'Access to the professional network',
+                      ],
+                    ),
+                    _membershipCard(
+                      width,
+                      'Professional member',
+                      'For realtors, lenders, lawyers, accountants, consultants, and other transaction professionals.',
+                      const [
+                        'Reviewed professional profile',
+                        'Consented introductions and lead inbox',
+                        'Marketing Studio and client templates',
+                      ],
+                    ),
+                    _membershipCard(
+                      width,
+                      'Featured partner',
+                      'For verified professionals seeking additional, clearly disclosed visibility.',
+                      const [
+                        'Professional member workspace',
+                        'Clearly labelled promotional placement',
+                        'No purchased verification or guaranteed ranking',
+                      ],
+                    ),
+                  ],
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+
+  Widget _membershipCard(
+    double width,
+    String title,
+    String description,
+    List<String> benefits,
+  ) => Container(
+    width: width,
+    constraints: const BoxConstraints(minHeight: 265),
+    padding: const EdgeInsets.all(24),
+    decoration: BoxDecoration(
+      color: const Color(0xFF121225),
+      border: Border.all(color: const Color(0xFF2B2B49)),
+      borderRadius: BorderRadius.circular(18),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 21,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 9),
+        Text(
+          description,
+          style: const TextStyle(color: Color(0xFFA5A5B5), height: 1.45),
+        ),
+        const SizedBox(height: 18),
+        for (final benefit in benefits)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 9),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(Icons.check_rounded, color: _lilac, size: 17),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    benefit,
+                    style: const TextStyle(
+                      color: Color(0xFFD8D8E0),
+                      fontSize: 12,
+                      height: 1.4,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
     ),
   );
 
