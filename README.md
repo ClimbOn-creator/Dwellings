@@ -69,7 +69,7 @@ AI responses are structured as a message plus reviewable Blueprint and calendar 
 
 Apply `supabase/migrations/202608150013_calendar_connections.sql`, then configure these encrypted Cloudflare Pages variables:
 
-- `SUPABASE_SERVICE_ROLE_KEY` — server-side only
+- `SUPABASE_SERVICE_ROLE_KEY` — server-side only; may contain Supabase's recommended `sb_secret_…` key or the legacy `service_role` key
 - `APP_BASE_URL` — for example `https://dwellings-iq.pages.dev`
 - `OAUTH_STATE_SECRET` — a long random value
 - `CALENDAR_TOKEN_KEY` — a base64url-encoded random 32-byte key

@@ -76,11 +76,12 @@ export async function decryptSecret(value, secret) {
 
 export async function serviceRequest(env, path, options = {}) {
   if (!env.SUPABASE_SERVICE_ROLE_KEY) throw new Error("Supabase service access is not configured.");
+  const serverKey = env.SUPABASE_SERVICE_ROLE_KEY;
   return fetch(`${env.SUPABASE_URL}/rest/v1/${path}`, {
     ...options,
     headers: {
-      apikey: env.SUPABASE_SERVICE_ROLE_KEY,
-      authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
+      apikey: serverKey,
+      ...(serverKey.startsWith("sb_secret_") ? {} : { authorization: `Bearer ${serverKey}` }),
       "content-type": "application/json",
       ...(options.headers || {}),
     },
