@@ -10,6 +10,7 @@ import '../widgets/app_navigation_menu.dart';
 import '../widgets/home_brand_button.dart';
 import '../widgets/acquisition_step_bar.dart';
 import '../widgets/topo_background.dart';
+import '../widgets/membership_footer.dart';
 import 'auth_page.dart';
 import 'business_acquisition_page.dart';
 import 'deal_rooms_page.dart';
@@ -195,6 +196,8 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
                             ),
                           ),
                         ),
+                        const SizedBox(height: 36),
+                        const MembershipFooter(),
                       ],
                     ),
                   ),
@@ -1070,6 +1073,8 @@ class _ModuleScaffold extends StatelessWidget {
                 ),
                 const SizedBox(height: 30),
                 child,
+                const SizedBox(height: 42),
+                const MembershipFooter(),
               ],
             ),
           ),

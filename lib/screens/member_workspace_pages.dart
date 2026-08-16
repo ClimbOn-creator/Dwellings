@@ -7,6 +7,7 @@ import '../services/member_content_service.dart';
 import '../widgets/app_navigation_menu.dart';
 import '../widgets/home_brand_button.dart';
 import '../widgets/topo_background.dart';
+import '../widgets/membership_footer.dart';
 
 const _paper = Color(0xFFF5F5F7);
 const _purple = Color(0xFF7657FF);
@@ -491,7 +492,13 @@ class _MemberWorkspaceShell extends StatelessWidget {
             child: Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 1080),
-                child: child,
+                child: Column(
+                  children: [
+                    child,
+                    const SizedBox(height: 42),
+                    const MembershipFooter(),
+                  ],
+                ),
               ),
             ),
           ),

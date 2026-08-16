@@ -6,6 +6,7 @@ import '../models/platform_side.dart';
 import '../widgets/home_brand_button.dart';
 import '../widgets/app_navigation_menu.dart';
 import '../widgets/topo_background.dart';
+import '../widgets/membership_footer.dart';
 import 'local_network_page.dart';
 import 'member_workspace_pages.dart';
 import '../services/backend_service.dart';
@@ -789,47 +790,51 @@ class MemberStudioPage extends StatelessWidget {
       Navigator.push(c, MaterialPageRoute<void>(builder: (_) => p));
   @override
   Widget build(BuildContext context) => _Page(
-    title: 'Member Studio',
+    title: 'Member Studio & Marketing',
     subtitle:
-        'The umbrella workspace for member growth, client service, content, leads, and professional connections.',
-    child: LayoutBuilder(
-      builder: (context, box) => Wrap(
-        spacing: 14,
-        runSpacing: 14,
-        children: [
-          _studio(
-            box,
-            'Email composer',
-            'Create a reviewable client or acquisition email.',
-            Icons.mail_outline,
-            () => _open(context, const MemberEmailComposerPage()),
+        'One umbrella workspace for acquisition marketing, newsletters, client service, leads, and professional connections.',
+    child: Column(
+      children: [
+        LayoutBuilder(
+          builder: (context, box) => Wrap(
+            spacing: 14,
+            runSpacing: 14,
+            children: [
+              _studio(
+                box,
+                'Email composer',
+                'Create a reviewable client or acquisition email.',
+                Icons.mail_outline,
+                () => _open(context, const MemberEmailComposerPage()),
+              ),
+              _studio(
+                box,
+                'Newsletter builder',
+                'Generate a useful local update for your audience.',
+                Icons.newspaper_outlined,
+                () => _open(context, const MemberNewsletterBuilderPage()),
+              ),
+              _studio(
+                box,
+                'Lead inbox',
+                'Manage consented introductions and opportunities.',
+                Icons.inbox_outlined,
+                () => _open(context, const MemberLeadInboxPage()),
+              ),
+              _studio(
+                box,
+                'Members & experts',
+                'Find realtors, lenders, lawyers, accountants and advisors.',
+                Icons.groups_outlined,
+                () => _open(
+                  context,
+                  const LocalNetworkPage(side: PlatformSide.business),
+                ),
+              ),
+            ],
           ),
-          _studio(
-            box,
-            'Newsletter builder',
-            'Generate a useful local update for your audience.',
-            Icons.newspaper_outlined,
-            () => _open(context, const MemberNewsletterBuilderPage()),
-          ),
-          _studio(
-            box,
-            'Lead inbox',
-            'Manage consented introductions and opportunities.',
-            Icons.inbox_outlined,
-            () => _open(context, const MemberLeadInboxPage()),
-          ),
-          _studio(
-            box,
-            'Members & experts',
-            'Find realtors, lenders, lawyers, accountants and advisors.',
-            Icons.groups_outlined,
-            () => _open(
-              context,
-              const LocalNetworkPage(side: PlatformSide.business),
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     ),
   );
   Widget _studio(
@@ -923,6 +928,8 @@ class _Page extends StatelessWidget {
                 if (action != null) ...[const SizedBox(height: 18), action!],
                 const SizedBox(height: 28),
                 child,
+                const SizedBox(height: 42),
+                const MembershipFooter(),
               ],
             ),
           ),

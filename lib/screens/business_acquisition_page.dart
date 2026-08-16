@@ -13,6 +13,7 @@ import '../widgets/app_navigation_menu.dart';
 import '../widgets/canadian_city_field.dart';
 import '../widgets/topo_background.dart';
 import '../widgets/acquisition_step_bar.dart';
+import '../widgets/membership_footer.dart';
 import 'acquisition_support_page.dart';
 import 'auth_page.dart';
 import 'deal_rooms_page.dart';
@@ -478,6 +479,8 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
                     ],
                     const SizedBox(height: 54),
                     _processGuide(),
+                    const SizedBox(height: 42),
+                    const MembershipFooter(),
                   ],
                 ),
               ),

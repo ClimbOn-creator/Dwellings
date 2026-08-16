@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../screens/landing_screen.dart';
+import '../screens/acquisition_support_page.dart';
 import 'brand_logo.dart';
 
 class HomeBrandButton extends StatelessWidget {
@@ -17,7 +17,7 @@ class HomeBrandButton extends StatelessWidget {
 
   static void open(BuildContext context) =>
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute<void>(builder: (_) => const LandingScreen()),
+        MaterialPageRoute<void>(builder: (_) => const AcquisitionSupportPage()),
         (_) => false,
       );
 

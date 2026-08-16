@@ -5,12 +5,9 @@ import '../services/backend_service.dart';
 import '../screens/acquisition_support_page.dart';
 import '../screens/assistant_workspace_page.dart';
 import '../screens/auth_page.dart';
-import '../screens/become_member_page.dart';
 import '../screens/business_acquisition_page.dart';
 import '../screens/deal_rooms_page.dart';
 import '../screens/local_network_page.dart';
-import '../screens/marketing_pages.dart';
-import '../screens/marketing_studio_page.dart';
 import '../screens/profile_page.dart';
 
 enum AppNavigationDestination {
@@ -19,11 +16,9 @@ enum AppNavigationDestination {
   readiness,
   dealScreen,
   pipeline,
-  marketing,
   memberStudio,
   network,
   consulting,
-  membership,
   profile,
 }
 
@@ -46,11 +41,9 @@ class AppNavigationMenu extends StatelessWidget {
     AppNavigationDestination.readiness => 'Step 2 · Readiness',
     AppNavigationDestination.dealScreen => 'Step 3 · Deal screen',
     AppNavigationDestination.pipeline => 'Step 4 · Pipeline',
-    AppNavigationDestination.marketing => 'Marketing Studio',
-    AppNavigationDestination.memberStudio => 'Member Studio',
+    AppNavigationDestination.memberStudio => 'Member Studio & Marketing',
     AppNavigationDestination.network => 'Members & experts',
     AppNavigationDestination.consulting => 'Personal consulting',
-    AppNavigationDestination.membership => 'Become a member',
     AppNavigationDestination.profile => 'My profile',
   };
 
@@ -65,17 +58,11 @@ class AppNavigationMenu extends StatelessWidget {
     AppNavigationDestination.pipeline => const DealRoomsPage(
       initialSide: PlatformSide.business,
     ),
-    AppNavigationDestination.marketing => const MarketingStudioPage(),
     AppNavigationDestination.memberStudio => const MemberStudioPage(),
     AppNavigationDestination.network => const LocalNetworkPage(
       side: PlatformSide.business,
     ),
     AppNavigationDestination.consulting => const PersonalizedConsultingPage(),
-    AppNavigationDestination.membership => BecomeMemberPage(
-      onHome: () => Navigator.of(context).popUntil((route) => route.isFirst),
-      onAbout: () => openMarketingPage(context, MarketingDestination.about),
-      onTeam: () => openMarketingPage(context, MarketingDestination.team),
-    ),
     AppNavigationDestination.profile =>
       BackendService.user == null
           ? AuthPage(
@@ -101,7 +88,7 @@ class AppNavigationMenu extends StatelessWidget {
         onSelected: (destination) => _open(context, destination),
         itemBuilder: (_) => [
           for (final destination in AppNavigationDestination.values) ...[
-            if (destination == AppNavigationDestination.marketing)
+            if (destination == AppNavigationDestination.memberStudio)
               const PopupMenuDivider(),
             PopupMenuItem(
               value: destination,

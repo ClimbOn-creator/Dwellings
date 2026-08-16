@@ -10,6 +10,7 @@ import '../widgets/topo_background.dart';
 import '../widgets/profile_photo.dart';
 import '../widgets/app_navigation_menu.dart';
 import '../widgets/acquisition_step_bar.dart';
+import '../widgets/membership_footer.dart';
 import 'acquisition_support_page.dart';
 import 'business_acquisition_page.dart';
 import 'auth_page.dart';
@@ -261,6 +262,8 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                         );
                       },
                     ),
+                    const SizedBox(height: 42),
+                    const MembershipFooter(),
                   ],
                 ),
               ),
@@ -1183,6 +1186,8 @@ class _DealRoomPageState extends State<DealRoomPage> {
                               const SizedBox(height: 24),
                             ],
                             _notes(bundle.notes),
+                            const SizedBox(height: 42),
+                            const MembershipFooter(),
                           ],
                         ),
                       ),

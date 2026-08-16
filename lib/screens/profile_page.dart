@@ -13,6 +13,7 @@ import '../widgets/home_brand_button.dart';
 import '../widgets/profile_photo.dart';
 import '../widgets/app_navigation_menu.dart';
 import '../widgets/topo_background.dart';
+import '../widgets/membership_footer.dart';
 import 'auth_page.dart';
 import 'connection_brief_page.dart';
 import 'deal_rooms_page.dart';
@@ -344,6 +345,8 @@ class _ProfilePageState extends State<ProfilePage> {
                         ..._team.map(_teamRow),
                       const SizedBox(height: 32),
                       _profileEditor(profile),
+                      const SizedBox(height: 42),
+                      const MembershipFooter(),
                     ],
                   ),
                 ),
