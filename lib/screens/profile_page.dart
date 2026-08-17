@@ -22,10 +22,10 @@ import 'member_profile_page.dart';
 import 'acquisition_support_page.dart';
 import 'business_acquisition_page.dart';
 
-const _ink = Color(0xFF050510);
-const _paper = Color(0xFFF5F5F7);
-const _purple = Color(0xFF1677FF);
-const _lilac = Color(0xFF8FC5FF);
+const _ink = Color(0xFF171717);
+const _paper = Color(0xFFF4F1EB);
+const _purple = Color(0xFF252525);
+const _lilac = Color(0xFF9B9B98);
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -245,6 +245,14 @@ class _ProfilePageState extends State<ProfilePage> {
         );
     return Scaffold(
       backgroundColor: _paper,
+      appBar: AppBar(
+        toolbarHeight: 78,
+        backgroundColor: const Color(0xFFF7F5F0),
+        surfaceTintColor: Colors.transparent,
+        foregroundColor: _ink,
+        title: const HomeBrandButton(size: 58, dark: false),
+        actions: const [AppNavigationMenu(dark: false), SizedBox(width: 12)],
+      ),
       body: CustomScrollView(
         slivers: [
           SliverToBoxAdapter(child: _header(profile)),
@@ -439,7 +447,18 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _header(AccountProfile? profile) => TopoBackground(
+  Widget _header(AccountProfile? profile) => Container(
+    decoration: BoxDecoration(
+      color: _paper,
+      image: DecorationImage(
+        image: const AssetImage('assets/images/affinity-reflection-facade.png'),
+        fit: BoxFit.cover,
+        colorFilter: ColorFilter.mode(
+          _paper.withValues(alpha: .86),
+          BlendMode.srcOver,
+        ),
+      ),
+    ),
     child: Padding(
       padding: const EdgeInsets.fromLTRB(28, 22, 28, 54),
       child: SafeArea(
@@ -447,14 +466,7 @@ class _ProfilePageState extends State<ProfilePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                const HomeBrandButton(size: 46),
-                const Spacer(),
-                const AppNavigationMenu(),
-              ],
-            ),
-            const SizedBox(height: 54),
+            const SizedBox(height: 28),
             Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
@@ -486,7 +498,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             ? profile!.fullName
                             : 'Complete your profile',
                         style: const TextStyle(
-                          color: Colors.white,
+                          color: _ink,
                           fontSize: 42,
                           height: 1,
                           fontWeight: FontWeight.w600,
@@ -497,7 +509,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       Text(
                         _publicIdentity(profile),
                         style: const TextStyle(
-                          color: Color(0xFF8FC5FF),
+                          color: Color(0xFF9B9B98),
                           fontSize: 14,
                         ),
                       ),

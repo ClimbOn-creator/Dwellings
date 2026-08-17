@@ -21,12 +21,12 @@ import 'platform_hub_page.dart';
 import 'landing_screen.dart';
 import 'local_network_page.dart';
 
-const _ink = Color(0xFF050510);
-const _paper = Color(0xFF09091B);
-const _surface = Color(0xFF121225);
-const _line = Color(0xFF292944);
-const _purple = Color(0xFF1677FF);
-const _lilac = Color(0xFF8FC5FF);
+const _ink = Color(0xFF171717);
+const _paper = Color(0xFFF4F1EB);
+const _surface = Color(0xFFFCFBF8);
+const _line = Color(0xFFD6D1C9);
+const _purple = Color(0xFF252525);
+const _lilac = Color(0xFF9B9B98);
 const _red = Color(0xFFB42318);
 const _green = Color(0xFF16825D);
 
@@ -381,18 +381,15 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
     final base = Theme.of(context);
     return Theme(
       data: base.copyWith(
-        colorScheme: const ColorScheme.dark(
+        colorScheme: const ColorScheme.light(
           primary: _purple,
           surface: _surface,
         ),
-        textTheme: base.textTheme.apply(
-          bodyColor: Colors.white,
-          displayColor: Colors.white,
-        ),
+        textTheme: base.textTheme.apply(bodyColor: _ink, displayColor: _ink),
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
-          fillColor: const Color(0xFF1A1A2E),
-          hintStyle: const TextStyle(color: Color(0xFF858596)),
+          fillColor: Colors.white,
+          hintStyle: const TextStyle(color: Color(0xFF85817A)),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14),
             borderSide: const BorderSide(color: _line),
@@ -406,17 +403,30 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
       child: Scaffold(
         backgroundColor: _paper,
         appBar: AppBar(
-          backgroundColor: _ink,
-          foregroundColor: Colors.white,
-          title: const HomeBrandButton(size: 38, dark: true),
+          toolbarHeight: 78,
+          backgroundColor: const Color(0xFFF7F5F0),
+          surfaceTintColor: Colors.transparent,
+          foregroundColor: _ink,
+          title: const HomeBrandButton(size: 58, dark: false),
           actions: const [
-            AppNavigationMenu(side: PlatformSide.business),
+            AppNavigationMenu(side: PlatformSide.business, dark: false),
             SizedBox(width: 12),
           ],
         ),
-        body: TopoBackground(
-          color: _paper,
-          opacity: .11,
+        body: Container(
+          decoration: BoxDecoration(
+            color: _paper,
+            image: DecorationImage(
+              image: const AssetImage(
+                'assets/images/affinity-reflection-facade.png',
+              ),
+              fit: BoxFit.cover,
+              colorFilter: ColorFilter.mode(
+                _paper.withValues(alpha: .91),
+                BlendMode.srcOver,
+              ),
+            ),
+          ),
           child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(22, 28, 22, 90),
             child: Center(
@@ -430,7 +440,7 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
                     const Text(
                       'PAGE 3 OF 4 · DEAL SCREEN',
                       style: TextStyle(
-                        color: _lilac,
+                        color: Color(0xFF68635D),
                         fontSize: 10,
                         fontWeight: FontWeight.w900,
                         letterSpacing: 1.4,
@@ -440,7 +450,7 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
                     const Text(
                       'Initial Deal Screen',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: _ink,
                         fontSize: 44,
                         fontWeight: FontWeight.w700,
                         letterSpacing: -2,
@@ -449,7 +459,7 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
                     const SizedBox(height: 8),
                     const Text(
                       'Test whether a specific business fits your Blueprint and whether its cash flow can support you.',
-                      style: TextStyle(color: Color(0xFFA5A5B5), height: 1.5),
+                      style: TextStyle(color: Color(0xFF65615B), height: 1.5),
                     ),
                     const SizedBox(height: 30),
                     _securityBoundary(),
@@ -554,6 +564,7 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
   );
 
   Widget _dealCommandBar() => TopoCard(
+    color: Colors.white,
     padding: const EdgeInsets.all(18),
     borderRadius: BorderRadius.circular(22),
     child: const Wrap(
@@ -1185,7 +1196,7 @@ class _DealStatus extends StatelessWidget {
       Text(
         label,
         style: const TextStyle(
-          color: Colors.white,
+          color: _ink,
           fontSize: 9,
           fontWeight: FontWeight.w900,
           letterSpacing: .85,

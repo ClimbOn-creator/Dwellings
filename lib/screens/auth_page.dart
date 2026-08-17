@@ -6,9 +6,9 @@ import '../widgets/home_brand_button.dart';
 import '../widgets/topo_background.dart';
 import '../widgets/app_navigation_menu.dart';
 
-const _ink = Color(0xFF050510);
-const _paper = Color(0xFFF5F5F7);
-const _purple = Color(0xFF1677FF);
+const _ink = Color(0xFF171717);
+const _paper = Color(0xFFF4F1EB);
+const _purple = Color(0xFF252525);
 
 class AuthPage extends StatefulWidget {
   const AuthPage({super.key, this.onAuthenticated});
@@ -125,7 +125,15 @@ class _AuthPageState extends State<AuthPage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: const Color(0xFF0B0B16),
+    backgroundColor: _paper,
+    appBar: AppBar(
+      toolbarHeight: 78,
+      automaticallyImplyLeading: false,
+      backgroundColor: const Color(0xFFF7F5F0),
+      surfaceTintColor: Colors.transparent,
+      title: const HomeBrandButton(size: 58, dark: false),
+      actions: const [AppNavigationMenu(dark: false), SizedBox(width: 12)],
+    ),
     body: Stack(
       fit: StackFit.expand,
       children: [
@@ -135,7 +143,7 @@ class _AuthPageState extends State<AuthPage> {
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [Color(0xFF171722), Color(0xFF090914)],
+                colors: [Color(0xFFF4F1EB), Color(0xFFE7E3DC)],
               ),
             ),
           ),
@@ -168,20 +176,13 @@ class _AuthPageState extends State<AuthPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Row(
-                      children: [
-                        const HomeBrandButton(size: 48),
-                        const Spacer(),
-                        const AppNavigationMenu(),
-                      ],
-                    ),
-                    const SizedBox(height: 64),
+                    const SizedBox(height: 36),
                     Text(
                       _creating
                           ? 'Create your Affinity account.'
                           : 'Welcome back.',
                       style: const TextStyle(
-                        color: Colors.white,
+                        color: _ink,
                         fontSize: 48,
                         height: .98,
                         fontWeight: FontWeight.w600,
@@ -194,7 +195,7 @@ class _AuthPageState extends State<AuthPage> {
                           ? 'One account works for buyers, investors and every professional on the property team.'
                           : 'Sign in to restore your calculator, saved analyses and selected team.',
                       style: const TextStyle(
-                        color: Color(0xFFAAAAB8),
+                        color: Color(0xFF68635D),
                         fontSize: 15,
                         height: 1.6,
                       ),

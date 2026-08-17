@@ -176,7 +176,7 @@ class _CanadianCityFieldState extends State<CanadianCityField> {
                         const Text(
                           'USE',
                           style: TextStyle(
-                            color: Color(0xFF1677FF),
+                            color: Color(0xFF252525),
                             fontSize: 10,
                             fontWeight: FontWeight.w900,
                             letterSpacing: .8,

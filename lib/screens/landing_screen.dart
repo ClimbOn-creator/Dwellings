@@ -12,8 +12,8 @@ import 'platform_hub_page.dart';
 const _ink = Color(0xFF050510);
 const _navy = Color(0xFF09091B);
 const _paper = Color(0xFFF5F5F7);
-const _purple = Color(0xFF1677FF);
-const _lilac = Color(0xFF8FC5FF);
+const _purple = Color(0xFF252525);
+const _lilac = Color(0xFF9B9B98);
 const _blue = Color(0xFF526DFF);
 const _muted = Color(0xFFA5A5B5);
 

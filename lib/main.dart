@@ -22,12 +22,16 @@ class AffinityApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const ink = Color(0xFF090909);
-    const blue = Color(0xFF1677FF);
+    const blue = Color(0xFF252525);
     const paper = Color(0xFFF7F7F7);
     final base = ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
-      colorScheme: ColorScheme.fromSeed(seedColor: blue, surface: paper),
+      colorScheme: ColorScheme.fromSeed(seedColor: blue, surface: paper)
+          .copyWith(
+            primary: const Color(0xFF252525),
+            secondary: const Color(0xFF6C6A66),
+          ),
       scaffoldBackgroundColor: paper,
       textTheme: GoogleFonts.spaceGroteskTextTheme(),
     );

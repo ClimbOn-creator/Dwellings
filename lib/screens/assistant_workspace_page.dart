@@ -16,12 +16,12 @@ import 'business_acquisition_page.dart';
 import 'deal_rooms_page.dart';
 import 'profile_page.dart';
 
-const ink = Color(0xFF050510),
-    surface = Color(0xFF121225),
-    purple = Color(0xFF1677FF),
-    lilac = Color(0xFF8FC5FF),
-    line = Color(0xFF2B2B49),
-    muted = Color(0xFFA5A5B5);
+const ink = Color(0xFF171717),
+    surface = Color(0xFFFCFBF8),
+    purple = Color(0xFF252525),
+    lilac = Color(0xFF9B9B98),
+    line = Color(0xFFD6D1C9),
+    muted = Color(0xFF68635D);
 
 class GuideWorkspacePage extends StatefulWidget {
   const GuideWorkspacePage({super.key, required this.foundationSummary});
@@ -287,11 +287,7 @@ class _GuideWorkspacePageState extends State<GuideWorkspacePage> {
               const SizedBox(height: 7),
               Text(
                 text,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 15,
-                  height: 1.55,
-                ),
+                style: const TextStyle(color: ink, fontSize: 15, height: 1.55),
               ),
             ],
           ),
@@ -697,9 +693,7 @@ class _ConsultingState extends State<PersonalizedConsultingPage> {
           width: double.infinity,
           padding: const EdgeInsets.all(28),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF251950), Color(0xFF121225)],
-            ),
+            color: const Color(0xFFE9E6E0),
             border: Border.all(color: purple),
             borderRadius: BorderRadius.circular(20),
           ),
@@ -708,7 +702,7 @@ class _ConsultingState extends State<PersonalizedConsultingPage> {
               const Text(
                 'Tell us where you need support',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: ink,
                   fontSize: 24,
                   fontWeight: FontWeight.w700,
                 ),
@@ -907,7 +901,7 @@ class MemberStudioPage extends StatelessWidget {
             Text(
               t,
               style: const TextStyle(
-                color: Colors.white,
+                color: ink,
                 fontSize: 19,
                 fontWeight: FontWeight.w700,
               ),
@@ -933,19 +927,32 @@ class _Page extends StatelessWidget {
   final Widget? action;
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: ink,
+    backgroundColor: const Color(0xFFF4F1EB),
     appBar: AppBar(
-      backgroundColor: ink,
-      foregroundColor: Colors.white,
-      title: const HomeBrandButton(size: 38, dark: true),
+      toolbarHeight: 78,
+      backgroundColor: const Color(0xFFF7F5F0),
+      surfaceTintColor: Colors.transparent,
+      foregroundColor: ink,
+      title: const HomeBrandButton(size: 58, dark: false),
       actions: const [
-        AppNavigationMenu(side: PlatformSide.business),
+        AppNavigationMenu(side: PlatformSide.business, dark: false),
         SizedBox(width: 12),
       ],
     ),
-    body: TopoBackground(
-      color: ink,
-      opacity: .11,
+    body: Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFFF4F1EB),
+        image: DecorationImage(
+          image: const AssetImage(
+            'assets/images/affinity-reflection-facade.png',
+          ),
+          fit: BoxFit.cover,
+          colorFilter: ColorFilter.mode(
+            const Color(0xFFF4F1EB).withValues(alpha: .92),
+            BlendMode.srcOver,
+          ),
+        ),
+      ),
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(28),
         child: Center(
@@ -957,7 +964,7 @@ class _Page extends StatelessWidget {
                 Text(
                   title,
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: ink,
                     fontSize: 44,
                     fontWeight: FontWeight.w700,
                     letterSpacing: -2,

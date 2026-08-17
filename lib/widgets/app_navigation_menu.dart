@@ -83,7 +83,7 @@ class AppNavigationMenu extends StatelessWidget {
   Widget build(BuildContext context) =>
       PopupMenuButton<AppNavigationDestination>(
         tooltip: 'Open navigation',
-        color: const Color(0xFF171728),
+        color: dark ? const Color(0xFF171728) : Colors.white,
         offset: const Offset(0, 44),
         onSelected: (destination) => _open(context, destination),
         itemBuilder: (_) => [
@@ -95,8 +95,8 @@ class AppNavigationMenu extends StatelessWidget {
               height: 43,
               child: Text(
                 _label(destination),
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: dark ? Colors.white : const Color(0xFF161616),
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                 ),
@@ -104,9 +104,13 @@ class AppNavigationMenu extends StatelessWidget {
             ),
           ],
         ],
-        child: const SizedBox.square(
+        child: SizedBox.square(
           dimension: 44,
-          child: Icon(Icons.menu_rounded, color: Colors.white, size: 28),
+          child: Icon(
+            Icons.menu_rounded,
+            color: dark ? Colors.white : const Color(0xFF161616),
+            size: 28,
+          ),
         ),
       );
 }

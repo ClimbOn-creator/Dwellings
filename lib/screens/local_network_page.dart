@@ -6,7 +6,7 @@ import '../services/backend_service.dart';
 import '../services/account_service.dart';
 import '../widgets/brand_logo.dart';
 import '../widgets/home_brand_button.dart';
-import '../widgets/site_footer.dart';
+import '../widgets/membership_footer.dart';
 import '../widgets/profile_photo.dart';
 import '../widgets/app_navigation_menu.dart';
 import '../widgets/canadian_city_field.dart';
@@ -14,7 +14,6 @@ import '../widgets/topo_background.dart';
 import 'auth_page.dart';
 import 'business_acquisition_page.dart';
 import 'home_screen.dart';
-import 'marketing_pages.dart';
 import 'member_profile_page.dart';
 
 const _ink = brandInk;
@@ -82,6 +81,17 @@ class _LocalNetworkPageState extends State<LocalNetworkPage> {
   @override
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: _paper,
+    appBar: AppBar(
+      toolbarHeight: 78,
+      backgroundColor: const Color(0xFFF7F5F0),
+      surfaceTintColor: Colors.transparent,
+      foregroundColor: _ink,
+      title: const HomeBrandButton(size: 58, dark: false),
+      actions: [
+        AppNavigationMenu(side: _side, dark: false, onSideChanged: _changeSide),
+        const SizedBox(width: 12),
+      ],
+    ),
     body: CustomScrollView(
       slivers: [
         SliverToBoxAdapter(
@@ -103,27 +113,7 @@ class _LocalNetworkPageState extends State<LocalNetworkPage> {
           ),
         ),
         const SliverToBoxAdapter(child: _MarketplaceTrust()),
-        SliverToBoxAdapter(
-          child: SiteFooter(
-            onHome: () =>
-                Navigator.of(context).popUntil((route) => route.isFirst),
-            onAbout: () => openMarketingPage(
-              context,
-              MarketingDestination.about,
-              replace: true,
-            ),
-            onTeam: () => openMarketingPage(
-              context,
-              MarketingDestination.team,
-              replace: true,
-            ),
-            onMember: () => openMarketingPage(
-              context,
-              MarketingDestination.membership,
-              replace: true,
-            ),
-          ),
-        ),
+        const SliverToBoxAdapter(child: MembershipFooter()),
       ],
     ),
   );
@@ -148,7 +138,7 @@ class _NetworkHero extends StatelessWidget {
     final desktop = MediaQuery.sizeOf(context).width >= 850;
     return Container(
       height: desktop ? 680 : 850,
-      color: _ink,
+      color: const Color(0xFFF4F1EB),
       child: Stack(
         fit: StackFit.expand,
         children: [
@@ -160,7 +150,7 @@ class _NetworkHero extends StatelessWidget {
                 ? MediaQuery.sizeOf(context).width * .48
                 : MediaQuery.sizeOf(context).width,
             child: Image.asset(
-              'assets/images/hero-city.jpg',
+              'assets/images/affinity-city-hero.png',
               fit: BoxFit.cover,
             ),
           ),
@@ -170,8 +160,16 @@ class _NetworkHero extends StatelessWidget {
                 begin: Alignment.centerLeft,
                 end: Alignment.centerRight,
                 colors: desktop
-                    ? const [_ink, Color(0xF2050510), Color(0x4A050510)]
-                    : const [_ink, Color(0xE9050510), Color(0xA0050510)],
+                    ? const [
+                        Color(0xFFF4F1EB),
+                        Color(0xE6F4F1EB),
+                        Color(0x55F4F1EB),
+                      ]
+                    : const [
+                        Color(0xFFF4F1EB),
+                        Color(0xEAF4F1EB),
+                        Color(0xAAF4F1EB),
+                      ],
                 stops: desktop ? const [0, .58, 1] : const [0, .7, 1],
               ),
             ),
@@ -205,14 +203,13 @@ class _NetworkHero extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _NetworkNav(side: side, onSide: onSide, onModel: onModel),
                 const Spacer(),
                 Text(
                   side == PlatformSide.property
                       ? 'YOUR LOCAL PROPERTY TEAM'
                       : 'YOUR BUSINESS ACQUISITION TEAM',
                   style: const TextStyle(
-                    color: _lilac,
+                    color: Color(0xFF5F5B56),
                     fontSize: 10,
                     fontWeight: FontWeight.w900,
                     letterSpacing: 1.5,
@@ -224,7 +221,7 @@ class _NetworkHero extends StatelessWidget {
                       ? 'The right people.\nIn the right city.'
                       : 'Specialists for\nevery deal stage.',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: _ink,
                     fontSize: desktop ? 72 : 52,
                     height: .93,
                     fontWeight: FontWeight.w600,
@@ -239,7 +236,7 @@ class _NetworkHero extends StatelessWidget {
                         ? 'Find local realtors, mortgage brokers, property lawyers, accountants and lenders around the market you are analyzing.'
                         : 'Build a transaction team across search, legal, quality of earnings, financing, tax, insurance, people, cybersecurity and wealth planning.',
                     style: const TextStyle(
-                      color: Color(0xFFC5C5D0),
+                      color: Color(0xFF5F5B56),
                       fontSize: 16,
                       height: 1.6,
                     ),
@@ -254,34 +251,6 @@ class _NetworkHero extends StatelessWidget {
       ),
     );
   }
-}
-
-class _NetworkNav extends StatelessWidget {
-  const _NetworkNav({
-    required this.side,
-    required this.onSide,
-    required this.onModel,
-  });
-  final PlatformSide side;
-  final ValueChanged<PlatformSide> onSide;
-  final VoidCallback onModel;
-  @override
-  Widget build(BuildContext context) => Container(
-    height: 68,
-    padding: const EdgeInsets.symmetric(horizontal: 10),
-    decoration: BoxDecoration(
-      color: Colors.white.withValues(alpha: .055),
-      borderRadius: BorderRadius.circular(34),
-      border: Border.all(color: Colors.white.withValues(alpha: .11)),
-    ),
-    child: Row(
-      children: [
-        const HomeBrandButton(size: 44),
-        const Spacer(),
-        AppNavigationMenu(side: side, onSideChanged: onSide),
-      ],
-    ),
-  );
 }
 
 class _CitySelector extends StatelessWidget {

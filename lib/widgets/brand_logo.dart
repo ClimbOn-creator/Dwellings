@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 const brandInk = Color(0xFF050510);
-const brandPurple = Color(0xFF1677FF);
-const brandLilac = Color(0xFF8FC5FF);
+const brandPurple = Color(0xFF252525);
+const brandLilac = Color(0xFF9B9B98);
 
 class AffinityLogo extends StatelessWidget {
   const AffinityLogo({
@@ -17,70 +17,10 @@ class AffinityLogo extends StatelessWidget {
   final bool dark;
 
   @override
-  Widget build(BuildContext context) => Row(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      SizedBox(
-        width: size,
-        height: size,
-        child: CustomPaint(painter: _LogoPainter(dark: dark)),
-      ),
-      if (showWordmark) ...[
-        SizedBox(width: size * .28),
-        Text(
-          'AFFINITY',
-          style: TextStyle(
-            color: dark ? Colors.white : brandInk,
-            fontSize: size * .29,
-            fontWeight: FontWeight.w800,
-            letterSpacing: size * .027,
-          ),
-        ),
-      ],
-    ],
+  Widget build(BuildContext context) => Image.asset(
+    'assets/brand/affinity-logo.png',
+    width: showWordmark ? size * 2.5 : size * 1.7,
+    height: size,
+    fit: BoxFit.contain,
   );
-}
-
-class _LogoPainter extends CustomPainter {
-  const _LogoPainter({required this.dark});
-
-  final bool dark;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final scale = size.width / 44;
-    final foreground = dark ? Colors.white : brandInk;
-    final mark = Paint()
-      ..color = foreground
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3 * scale
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
-    final frame = RRect.fromRectAndRadius(
-      Rect.fromLTWH(5 * scale, 5 * scale, 34 * scale, 34 * scale),
-      Radius.circular(10 * scale),
-    );
-    canvas.drawRRect(frame, mark);
-    canvas.drawLine(
-      Offset(14 * scale, 29 * scale),
-      Offset(22 * scale, 16 * scale),
-      mark,
-    );
-    canvas.drawLine(
-      Offset(22 * scale, 16 * scale),
-      Offset(30 * scale, 29 * scale),
-      mark,
-    );
-    canvas.drawLine(
-      Offset(14 * scale, 29 * scale),
-      Offset(30 * scale, 29 * scale),
-      mark,
-    );
-    final accent = Paint()..color = brandPurple;
-    canvas.drawCircle(Offset(33.5 * scale, 10.5 * scale), 2.6 * scale, accent);
-  }
-
-  @override
-  bool shouldRepaint(covariant _LogoPainter oldDelegate) =>
-      oldDelegate.dark != dark;
 }

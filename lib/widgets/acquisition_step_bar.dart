@@ -17,8 +17,8 @@ class AcquisitionStepBar extends StatelessWidget {
     width: double.infinity,
     padding: const EdgeInsets.all(14),
     decoration: BoxDecoration(
-      color: const Color(0xFF121225).withValues(alpha: .94),
-      border: Border.all(color: const Color(0xFF34344F)),
+      color: const Color(0xFFF8F6F1).withValues(alpha: .96),
+      border: Border.all(color: const Color(0xFFD6D1CA)),
       borderRadius: BorderRadius.circular(18),
     ),
     child: Column(
@@ -27,7 +27,7 @@ class AcquisitionStepBar extends StatelessWidget {
         Text(
           'STEP ${currentStep + 1} OF ${_steps.length} · ${_steps[currentStep].toUpperCase()}',
           style: const TextStyle(
-            color: Color(0xFF8FC5FF),
+            color: Color(0xFF5F5B56),
             fontSize: 10,
             fontWeight: FontWeight.w900,
             letterSpacing: 1.2,
@@ -52,8 +52,8 @@ class AcquisitionStepBar extends StatelessWidget {
                       ),
                       decoration: BoxDecoration(
                         color: index == currentStep
-                            ? const Color(0xFF1677FF)
-                            : Colors.white.withValues(alpha: .045),
+                            ? const Color(0xFF1B1B1B)
+                            : const Color(0xFFECE8E1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
@@ -61,7 +61,7 @@ class AcquisitionStepBar extends StatelessWidget {
                         style: TextStyle(
                           color: index == currentStep
                               ? Colors.white
-                              : const Color(0xFFB7B7C5),
+                              : const Color(0xFF5F5B56),
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
                         ),
@@ -82,6 +82,10 @@ class AcquisitionStepBar extends StatelessWidget {
                 if (currentStep < _steps.length - 1)
                   FilledButton.icon(
                     onPressed: () => onSelected(currentStep + 1),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFF252525),
+                      foregroundColor: Colors.white,
+                    ),
                     iconAlignment: IconAlignment.end,
                     icon: const Icon(Icons.arrow_forward, size: 17),
                     label: const Text('Next step'),

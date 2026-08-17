@@ -9,7 +9,6 @@ import '../services/account_service.dart';
 import '../widgets/app_navigation_menu.dart';
 import '../widgets/home_brand_button.dart';
 import '../widgets/acquisition_step_bar.dart';
-import '../widgets/topo_background.dart';
 import '../widgets/membership_footer.dart';
 import 'auth_page.dart';
 import 'business_acquisition_page.dart';
@@ -17,13 +16,13 @@ import 'deal_rooms_page.dart';
 import 'assistant_workspace_page.dart';
 
 const _ink = Color(0xFF050510);
-const _green = Color(0xFF1677FF);
-const _lime = Color(0xFF8FC5FF);
-const _paper = Color(0xFF09091B);
+const _green = Color(0xFF252525);
+const _lime = Color(0xFF9B9B98);
 const _line = Color(0xFF292944);
 const _muted = Color(0xFFA5A5B5);
 const _surface = Color(0xFF121225);
-const _lilac = Color(0xFF8FC5FF);
+const _lilac = Color(0xFF9B9B98);
+const _cream = Color(0xFFF4F1EB);
 
 class AcquisitionSupportPage extends StatefulWidget {
   const AcquisitionSupportPage({super.key});
@@ -46,127 +45,133 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: _paper,
-    body: TopoBackground(
-      color: _paper,
-      opacity: .18,
-      child: CustomScrollView(
-        slivers: [
-          SliverToBoxAdapter(child: _header()),
-          SliverToBoxAdapter(child: _hero()),
-          SliverToBoxAdapter(child: _goalStatement()),
-          SliverToBoxAdapter(child: _audiences()),
-          SliverToBoxAdapter(child: _movingMarketing()),
-          SliverToBoxAdapter(child: _path()),
-          SliverPadding(
-            padding: EdgeInsets.fromLTRB(24, 28, 24, 70),
-            sliver: SliverToBoxAdapter(
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: 1080),
-                  child: MembershipFooter(),
-                ),
+    backgroundColor: _cream,
+    body: CustomScrollView(
+      slivers: [
+        SliverAppBar(
+          pinned: true,
+          automaticallyImplyLeading: false,
+          toolbarHeight: 86,
+          elevation: 0,
+          scrolledUnderElevation: 1,
+          backgroundColor: const Color(0xFFF7F5F0),
+          surfaceTintColor: Colors.transparent,
+          title: const HomeBrandButton(size: 66, dark: false),
+          actions: [
+            OutlinedButton(
+              onPressed: () => _open(const AcquisitionBlueprintPage()),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: _ink,
+                side: const BorderSide(color: Color(0xFFBDB9B2)),
               ),
+              child: const Text('START MY PATH'),
             ),
-          ),
-        ],
-      ),
+            const SizedBox(width: 8),
+            const AppNavigationMenu(side: PlatformSide.business, dark: false),
+            const SizedBox(width: 18),
+          ],
+        ),
+        SliverToBoxAdapter(child: _hero()),
+        SliverToBoxAdapter(child: _goalStatement()),
+        SliverToBoxAdapter(child: _audiences()),
+        SliverToBoxAdapter(child: _movingMarketing()),
+        SliverToBoxAdapter(child: _path()),
+        const SliverToBoxAdapter(child: MembershipFooter()),
+      ],
     ),
   );
 
-  Widget _header() => SafeArea(
-    bottom: false,
-    child: Padding(
-      padding: const EdgeInsets.fromLTRB(24, 18, 24, 0),
-      child: Row(
-        children: [
-          const HomeBrandButton(size: 44, dark: true),
-          const Spacer(),
-          OutlinedButton(
-            onPressed: () => _open(const AcquisitionBlueprintPage()),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.white,
-              side: const BorderSide(color: Colors.white38),
-            ),
-            child: const Text('START MY PATH'),
-          ),
-          const SizedBox(width: 8),
-          const AppNavigationMenu(side: PlatformSide.business),
-        ],
+  Widget _hero() => Container(
+    constraints: const BoxConstraints(minHeight: 690),
+    decoration: const BoxDecoration(
+      image: DecorationImage(
+        image: AssetImage('assets/images/affinity-city-hero.png'),
+        fit: BoxFit.cover,
       ),
     ),
-  );
-
-  Widget _hero() => Padding(
-    padding: const EdgeInsets.fromLTRB(24, 90, 24, 96),
+    padding: const EdgeInsets.fromLTRB(24, 150, 24, 0),
+    alignment: Alignment.bottomCenter,
     child: Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 1180),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'BUSINESS ACQUISITION, MADE NAVIGABLE',
-              style: TextStyle(
-                color: _lilac,
-                fontSize: 10,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 1.7,
-              ),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              'Don’t just find a business.\nKnow what you’re buying into.',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: MediaQuery.sizeOf(context).width < 700 ? 52 : 88,
-                height: .93,
-                fontWeight: FontWeight.w700,
-                letterSpacing: -4.8,
-              ),
-            ),
-            const SizedBox(height: 28),
-            const SizedBox(
-              width: 780,
-              child: Text(
-                'Affinity helps aspiring buyers define the right target, prepare to transact, screen real opportunities, and build the professional team needed to close with confidence.',
-                style: TextStyle(color: _muted, fontSize: 19, height: 1.55),
-              ),
-            ),
-            const SizedBox(height: 34),
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
+        child: Align(
+          alignment: Alignment.bottomLeft,
+          child: Container(
+            width: 820,
+            padding: const EdgeInsets.fromLTRB(44, 42, 44, 46),
+            color: const Color(0xF7F7F5F0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                FilledButton.icon(
-                  onPressed: () => _open(const AcquisitionBlueprintPage()),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: _green,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 26,
-                      vertical: 20,
-                    ),
+                const Text(
+                  'BUSINESS ACQUISITION, MADE NAVIGABLE',
+                  style: TextStyle(
+                    color: Color(0xFF65615C),
+                    fontSize: 10,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.7,
                   ),
-                  icon: const Icon(Icons.arrow_forward),
-                  label: const Text('I WANT TO BUY A BUSINESS'),
                 ),
-                OutlinedButton.icon(
-                  onPressed: () => _open(const MemberStudioPage()),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.white,
-                    side: const BorderSide(color: Colors.white38),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 26,
-                      vertical: 20,
+                const SizedBox(height: 20),
+                Text(
+                  'Don’t just find a business.\nKnow what you’re buying into.',
+                  style: TextStyle(
+                    color: _ink,
+                    fontSize: MediaQuery.sizeOf(context).width < 700 ? 44 : 66,
+                    height: .96,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -3.4,
+                  ),
+                ),
+                const SizedBox(height: 28),
+                const SizedBox(
+                  width: 780,
+                  child: Text(
+                    'Affinity helps aspiring buyers define the right target, prepare to transact, screen real opportunities, and build the professional team needed to close with confidence.',
+                    style: TextStyle(
+                      color: Color(0xFF5D5954),
+                      fontSize: 17,
+                      height: 1.5,
                     ),
                   ),
-                  icon: const Icon(Icons.badge_outlined),
-                  label: const Text('I PROVIDE PROFESSIONAL SERVICES'),
+                ),
+                const SizedBox(height: 34),
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  children: [
+                    FilledButton.icon(
+                      onPressed: () => _open(const AcquisitionBlueprintPage()),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: _ink,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 26,
+                          vertical: 20,
+                        ),
+                      ),
+                      icon: const Icon(Icons.arrow_forward),
+                      label: const Text('I WANT TO BUY A BUSINESS'),
+                    ),
+                    OutlinedButton.icon(
+                      onPressed: () => _open(const MemberStudioPage()),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: _ink,
+                        side: const BorderSide(color: Color(0xFFAAA69F)),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 26,
+                          vertical: 20,
+                        ),
+                      ),
+                      icon: const Icon(Icons.badge_outlined),
+                      label: const Text('I PROVIDE PROFESSIONAL SERVICES'),
+                    ),
+                  ],
                 ),
               ],
             ),
-          ],
+          ),
         ),
       ),
     ),
@@ -214,8 +219,14 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
     ),
   );
 
-  Widget _audiences() => Padding(
-    padding: const EdgeInsets.fromLTRB(24, 92, 24, 70),
+  Widget _audiences() => Container(
+    decoration: const BoxDecoration(
+      image: DecorationImage(
+        image: AssetImage('assets/images/affinity-reflection-facade.png'),
+        fit: BoxFit.cover,
+      ),
+    ),
+    padding: const EdgeInsets.fromLTRB(24, 112, 24, 112),
     child: Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 1120),
@@ -284,7 +295,7 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
       ),
     ];
     return Padding(
-      padding: const EdgeInsets.only(bottom: 94),
+      padding: const EdgeInsets.symmetric(vertical: 94),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -293,7 +304,7 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
             child: Text(
               'WHAT AFFINITY MOVES FORWARD',
               style: TextStyle(
-                color: _lilac,
+                color: Color(0xFF66615B),
                 fontSize: 10,
                 fontWeight: FontWeight.w900,
                 letterSpacing: 1.5,
@@ -1485,19 +1496,32 @@ class _ModuleScaffold extends StatelessWidget {
   final ValueChanged<int> onStepSelected;
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: _paper,
+    backgroundColor: _cream,
     appBar: AppBar(
-      backgroundColor: _ink,
-      foregroundColor: Colors.white,
-      title: const HomeBrandButton(size: 38, dark: true),
+      toolbarHeight: 78,
+      backgroundColor: const Color(0xFFF7F5F0),
+      surfaceTintColor: Colors.transparent,
+      foregroundColor: _ink,
+      title: const HomeBrandButton(size: 58, dark: false),
       actions: const [
-        AppNavigationMenu(side: PlatformSide.business),
+        AppNavigationMenu(side: PlatformSide.business, dark: false),
         SizedBox(width: 12),
       ],
     ),
-    body: TopoBackground(
-      color: _paper,
-      opacity: .055,
+    body: Container(
+      decoration: BoxDecoration(
+        color: _cream,
+        image: DecorationImage(
+          image: const AssetImage(
+            'assets/images/affinity-reflection-facade.png',
+          ),
+          fit: BoxFit.cover,
+          colorFilter: ColorFilter.mode(
+            _cream.withValues(alpha: .9),
+            BlendMode.srcOver,
+          ),
+        ),
+      ),
       child: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(22, 28, 22, 80),
         child: Center(
@@ -1514,7 +1538,7 @@ class _ModuleScaffold extends StatelessWidget {
                 Text(
                   kicker,
                   style: const TextStyle(
-                    color: _green,
+                    color: Color(0xFF625E58),
                     fontSize: 10,
                     fontWeight: FontWeight.w900,
                     letterSpacing: 1.4,
@@ -1524,7 +1548,7 @@ class _ModuleScaffold extends StatelessWidget {
                 Text(
                   title,
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: _ink,
                     fontSize: 44,
                     fontWeight: FontWeight.w700,
                     letterSpacing: -2,
@@ -1533,7 +1557,7 @@ class _ModuleScaffold extends StatelessWidget {
                 const SizedBox(height: 8),
                 Text(
                   subtitle,
-                  style: const TextStyle(color: _muted, height: 1.5),
+                  style: const TextStyle(color: Color(0xFF5F5B56), height: 1.5),
                 ),
                 const SizedBox(height: 30),
                 child,

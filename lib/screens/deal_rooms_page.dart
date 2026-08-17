@@ -15,12 +15,12 @@ import 'acquisition_support_page.dart';
 import 'business_acquisition_page.dart';
 import 'auth_page.dart';
 
-const _ink = Color(0xFF050510);
-const _paper = Color(0xFF09091B);
-const _purple = Color(0xFF1677FF);
-const _lilac = Color(0xFF8FC5FF);
-const _surface = Color(0xFF121225);
-const _line = Color(0xFF292944);
+const _ink = Color(0xFF171717);
+const _paper = Color(0xFFF4F1EB);
+const _purple = Color(0xFF252525);
+const _lilac = Color(0xFF9B9B98);
+const _surface = Color(0xFFFCFBF8);
+const _line = Color(0xFFD6D1C9);
 
 class DealRoomsPage extends StatefulWidget {
   const DealRoomsPage({super.key, this.initialSide = PlatformSide.property});
@@ -138,29 +138,39 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
     final base = Theme.of(context);
     return Theme(
       data: base.copyWith(
-        colorScheme: const ColorScheme.dark(
+        colorScheme: const ColorScheme.light(
           primary: _purple,
           surface: _surface,
         ),
-        textTheme: base.textTheme.apply(
-          bodyColor: Colors.white,
-          displayColor: Colors.white,
-        ),
+        textTheme: base.textTheme.apply(bodyColor: _ink, displayColor: _ink),
       ),
       child: Scaffold(
         backgroundColor: _paper,
         appBar: AppBar(
-          backgroundColor: _ink,
-          foregroundColor: Colors.white,
-          title: const HomeBrandButton(size: 38, dark: true),
+          toolbarHeight: 78,
+          backgroundColor: const Color(0xFFF7F5F0),
+          surfaceTintColor: Colors.transparent,
+          foregroundColor: _ink,
+          title: const HomeBrandButton(size: 58, dark: false),
           actions: const [
-            AppNavigationMenu(side: PlatformSide.business),
+            AppNavigationMenu(side: PlatformSide.business, dark: false),
             SizedBox(width: 12),
           ],
         ),
-        body: TopoBackground(
-          color: _paper,
-          opacity: .11,
+        body: Container(
+          decoration: BoxDecoration(
+            color: _paper,
+            image: DecorationImage(
+              image: const AssetImage(
+                'assets/images/affinity-reflection-facade.png',
+              ),
+              fit: BoxFit.cover,
+              colorFilter: ColorFilter.mode(
+                _paper.withValues(alpha: .91),
+                BlendMode.srcOver,
+              ),
+            ),
+          ),
           child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(22, 28, 22, 90),
             child: Center(
@@ -174,7 +184,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                     const Text(
                       'PAGE 4 OF 4 · PIPELINE',
                       style: TextStyle(
-                        color: _lilac,
+                        color: Color(0xFF68635D),
                         fontSize: 10,
                         fontWeight: FontWeight.w900,
                         letterSpacing: 1.4,
@@ -184,7 +194,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                     const Text(
                       'My Deal Pipeline',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: _ink,
                         fontSize: 44,
                         fontWeight: FontWeight.w700,
                         letterSpacing: -2,
@@ -193,7 +203,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                     const SizedBox(height: 8),
                     const Text(
                       'Keep every opportunity, decision, deadline, and blocker in one focused acquisition workspace.',
-                      style: TextStyle(color: Color(0xFFA5A5B5), height: 1.5),
+                      style: TextStyle(color: Color(0xFF65615B), height: 1.5),
                     ),
                     const SizedBox(height: 24),
                     Wrap(
@@ -213,7 +223,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                           backgroundColor: _surface,
                           selectedColor: _purple,
                           checkmarkColor: Colors.white,
-                          labelStyle: const TextStyle(color: Colors.white),
+                          labelStyle: const TextStyle(color: _ink),
                           onSelected: (value) =>
                               setState(() => _showArchived = value),
                         ),
@@ -1253,7 +1263,7 @@ class _DealRoomPageState extends State<DealRoomPage> {
                 Text(
                   '${_room.dealKind.toUpperCase()} · ${_room.currentStage.toUpperCase().replaceAll('_', ' ')} · ${bundle.members.length} TEAM MEMBER${bundle.members.length == 1 ? '' : 'S'}',
                   style: const TextStyle(
-                    color: Color(0xFF8FC5FF),
+                    color: Color(0xFF9B9B98),
                     fontSize: 12,
                   ),
                 ),

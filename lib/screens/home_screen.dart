@@ -19,7 +19,7 @@ import 'deal_rooms_page.dart';
 import 'marketing_pages.dart';
 
 const _ink = Color(0xFF090909);
-const _green = Color(0xFF1677FF);
+const _green = Color(0xFF252525);
 const _lime = Color(0xFFA78BFA);
 const _paper = Color(0xFFF7F7F7);
 const _card = Color(0xFFFFFFFF);
@@ -1301,7 +1301,7 @@ class _Panel extends StatelessWidget {
     decoration: BoxDecoration(
       color: const Color(0xFFFAF9FF),
       borderRadius: BorderRadius.circular(28),
-      border: Border.all(color: const Color(0xFF1677FF).withValues(alpha: .28)),
+      border: Border.all(color: const Color(0xFF252525).withValues(alpha: .28)),
       boxShadow: const [
         BoxShadow(
           color: Color(0x33000000),
