@@ -400,8 +400,10 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
     padding: const EdgeInsets.all(34),
     decoration: BoxDecoration(
       color: _surface,
-      border: Border.all(color: _line),
-      borderRadius: BorderRadius.circular(20),
+      border: const Border(
+        top: BorderSide(color: Color(0xFF244E43), width: 5),
+        bottom: BorderSide(color: _line),
+      ),
     ),
     child: Column(
       children: [
@@ -462,8 +464,10 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
     padding: const EdgeInsets.all(18),
     decoration: BoxDecoration(
       color: _surface,
-      borderRadius: BorderRadius.circular(17),
-      border: Border.all(color: _line),
+      border: const Border(
+        top: BorderSide(color: Color(0xFF244E43), width: 3),
+        bottom: BorderSide(color: _line),
+      ),
     ),
     child: Row(
       children: [
@@ -497,25 +501,20 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
       ).push(MaterialPageRoute<void>(builder: (_) => DealRoomPage(room: room)));
       _refresh();
     },
-    borderRadius: BorderRadius.circular(20),
     child: Container(
       width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(22),
-      decoration: BoxDecoration(
+      margin: EdgeInsets.zero,
+      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
+      decoration: const BoxDecoration(
         color: _surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: _line),
+        border: Border(bottom: BorderSide(color: _line)),
       ),
       child: Row(
         children: [
           Container(
             width: 58,
             height: 58,
-            decoration: BoxDecoration(
-              color: _purple.withValues(alpha: .14),
-              borderRadius: BorderRadius.circular(17),
-            ),
+            decoration: const BoxDecoration(color: Color(0xFFE8ECE8)),
             child: Icon(
               room.isBusiness ? Icons.storefront_outlined : Icons.apartment,
               color: _purple,

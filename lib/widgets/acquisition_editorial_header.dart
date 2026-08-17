@@ -31,14 +31,10 @@ class AcquisitionEditorialHeader extends StatelessWidget {
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
           color: const Color(0xFFFDFCF9).withValues(alpha: .97),
-          borderRadius: BorderRadius.circular(3),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x26000000),
-              blurRadius: 34,
-              offset: Offset(0, 18),
-            ),
-          ],
+          border: Border(
+            left: BorderSide(color: accent, width: 8),
+            bottom: const BorderSide(color: Color(0xFFD6D1CA)),
+          ),
         ),
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -86,13 +82,13 @@ class AcquisitionEditorialHeader extends StatelessWidget {
             final number = Container(
               width: compact ? double.infinity : 190,
               height: compact ? 108 : null,
-              color: accent,
+              color: const Color(0xFFF6F3ED),
               padding: const EdgeInsets.all(22),
               alignment: compact ? Alignment.centerLeft : Alignment.bottomLeft,
               child: Text(
                 '0${currentStep + 1}',
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: accent,
                   fontSize: 66,
                   height: .9,
                   fontWeight: FontWeight.w300,

@@ -18,8 +18,10 @@ class AcquisitionStepBar extends StatelessWidget {
     padding: const EdgeInsets.all(14),
     decoration: BoxDecoration(
       color: const Color(0xFFF8F6F1).withValues(alpha: .96),
-      border: Border.all(color: const Color(0xFFD6D1CA)),
-      borderRadius: BorderRadius.circular(18),
+      border: const Border(
+        top: BorderSide(color: Color(0xFF244E43), width: 2),
+        bottom: BorderSide(color: Color(0xFFD6D1CA)),
+      ),
     ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -44,23 +46,27 @@ class AcquisitionStepBar extends StatelessWidget {
                 for (var index = 0; index < _steps.length; index++)
                   InkWell(
                     onTap: () => onSelected(index),
-                    borderRadius: BorderRadius.circular(12),
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 12,
                         vertical: 10,
                       ),
                       decoration: BoxDecoration(
-                        color: index == currentStep
-                            ? const Color(0xFF1B1B1B)
-                            : const Color(0xFFECE8E1),
-                        borderRadius: BorderRadius.circular(12),
+                        color: Colors.transparent,
+                        border: Border(
+                          bottom: BorderSide(
+                            color: index == currentStep
+                                ? const Color(0xFF244E43)
+                                : Colors.transparent,
+                            width: 3,
+                          ),
+                        ),
                       ),
                       child: Text(
                         '${index + 1}. ${_steps[index]}',
                         style: TextStyle(
                           color: index == currentStep
-                              ? Colors.white
+                              ? const Color(0xFF244E43)
                               : const Color(0xFF5F5B56),
                           fontSize: 11,
                           fontWeight: FontWeight.w700,

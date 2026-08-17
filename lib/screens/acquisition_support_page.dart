@@ -1581,19 +1581,13 @@ class _LabeledField extends StatelessWidget {
             ),
           ),
           if (unit != null)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: const Color(0xFF292944),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                unit!,
-                style: const TextStyle(
-                  color: _lilac,
-                  fontSize: 9,
-                  fontWeight: FontWeight.w800,
-                ),
+            Text(
+              unit!,
+              style: const TextStyle(
+                color: _green,
+                fontSize: 9,
+                fontWeight: FontWeight.w900,
+                letterSpacing: .8,
               ),
             ),
         ],
@@ -1618,10 +1612,13 @@ class _GuidedQuestion extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
     width: double.infinity,
-    padding: const EdgeInsets.all(30),
-    decoration: BoxDecoration(
+    padding: const EdgeInsets.symmetric(horizontal: 34, vertical: 40),
+    decoration: const BoxDecoration(
       color: Colors.white,
-      borderRadius: BorderRadius.circular(24),
+      border: Border(
+        top: BorderSide(color: _green, width: 5),
+        bottom: BorderSide(color: Color(0xFFD8D5CF)),
+      ),
     ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1646,15 +1643,19 @@ class _GuidedQuestion extends StatelessWidget {
           data: Theme.of(context).copyWith(
             inputDecorationTheme: InputDecorationTheme(
               filled: true,
-              fillColor: const Color(0xFFF4F6FA),
+              fillColor: const Color(0xFFFAF9F6),
               hintStyle: const TextStyle(color: Color(0xFF898995)),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.zero,
                 borderSide: const BorderSide(color: Color(0xFFD8DDE8)),
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.zero,
                 borderSide: const BorderSide(color: Color(0xFFD8DDE8)),
+              ),
+              focusedBorder: const OutlineInputBorder(
+                borderRadius: BorderRadius.zero,
+                borderSide: BorderSide(color: _green, width: 2),
               ),
             ),
             textTheme: Theme.of(

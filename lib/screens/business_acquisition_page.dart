@@ -392,12 +392,16 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
           fillColor: Colors.white,
           hintStyle: const TextStyle(color: Color(0xFF85817A)),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.zero,
             borderSide: const BorderSide(color: _line),
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.zero,
             borderSide: const BorderSide(color: _line),
+          ),
+          focusedBorder: const OutlineInputBorder(
+            borderRadius: BorderRadius.zero,
+            borderSide: BorderSide(color: Color(0xFF244E43), width: 2),
           ),
         ),
       ),
@@ -551,7 +555,7 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
   Widget _dealCommandBar() => TopoCard(
     color: Colors.white,
     padding: const EdgeInsets.all(18),
-    borderRadius: BorderRadius.circular(22),
+    borderRadius: BorderRadius.zero,
     child: const Wrap(
       spacing: 24,
       runSpacing: 12,
@@ -572,8 +576,10 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
     padding: const EdgeInsets.all(20),
     decoration: BoxDecoration(
       color: const Color(0xFFFFF4E5),
-      borderRadius: BorderRadius.circular(18),
-      border: Border.all(color: const Color(0xFFF2C879)),
+      border: const Border(
+        left: BorderSide(color: Color(0xFF805A35), width: 6),
+        bottom: BorderSide(color: Color(0xFFF2C879)),
+      ),
     ),
     child: const Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1081,18 +1087,13 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
 
   Widget _card(String title, Widget child) => Container(
     width: double.infinity,
-    padding: const EdgeInsets.all(26),
-    decoration: BoxDecoration(
+    padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 36),
+    decoration: const BoxDecoration(
       color: _surface,
-      borderRadius: BorderRadius.circular(28),
-      border: Border.all(color: _line),
-      boxShadow: const [
-        BoxShadow(
-          color: Color(0x30000000),
-          blurRadius: 34,
-          offset: Offset(0, 16),
-        ),
-      ],
+      border: Border(
+        top: BorderSide(color: Color(0xFF244E43), width: 5),
+        bottom: BorderSide(color: _line),
+      ),
     ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
