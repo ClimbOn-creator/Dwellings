@@ -10,6 +10,7 @@ import '../widgets/app_navigation_menu.dart';
 import '../widgets/home_brand_button.dart';
 import '../widgets/acquisition_step_bar.dart';
 import '../widgets/membership_footer.dart';
+import '../widgets/fixed_editorial_background.dart';
 import 'auth_page.dart';
 import 'business_acquisition_page.dart';
 import 'deal_rooms_page.dart';
@@ -85,7 +86,7 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
     constraints: const BoxConstraints(minHeight: 690),
     decoration: const BoxDecoration(
       image: DecorationImage(
-        image: AssetImage('assets/images/affinity-city-hero.png'),
+        image: AssetImage('assets/images/affinity-city-hero.jpg'),
         fit: BoxFit.cover,
       ),
     ),
@@ -222,7 +223,7 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
   Widget _audiences() => Container(
     decoration: const BoxDecoration(
       image: DecorationImage(
-        image: AssetImage('assets/images/affinity-reflection-facade.png'),
+        image: AssetImage('assets/images/affinity-reflection-facade.jpg'),
         fit: BoxFit.cover,
       ),
     ),
@@ -431,7 +432,7 @@ class _AudienceBlock extends StatelessWidget {
             fontWeight: FontWeight.w300,
           ),
         ),
-        const Spacer(),
+        const SizedBox(height: 92),
         Text(
           eyebrow,
           style: const TextStyle(
@@ -1508,64 +1509,65 @@ class _ModuleScaffold extends StatelessWidget {
         SizedBox(width: 12),
       ],
     ),
-    body: Container(
-      decoration: BoxDecoration(
-        color: _cream,
-        image: DecorationImage(
-          image: const AssetImage(
-            'assets/images/affinity-reflection-facade.png',
-          ),
-          fit: BoxFit.cover,
-          colorFilter: ColorFilter.mode(
-            _cream.withValues(alpha: .9),
-            BlendMode.srcOver,
-          ),
-        ),
-      ),
+    body: FixedEditorialBackground(
+      imagePath: currentStep == 0
+          ? 'assets/images/affinity-reflection-facade.jpg'
+          : 'assets/images/commercial-atrium.jpg',
+      wash: _cream,
+      washOpacity: currentStep == 0 ? .69 : .65,
       child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(22, 28, 22, 80),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 900),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                AcquisitionStepBar(
-                  currentStep: currentStep,
-                  onSelected: onStepSelected,
-                ),
-                const SizedBox(height: 34),
-                Text(
-                  kicker,
-                  style: const TextStyle(
-                    color: Color(0xFF625E58),
-                    fontSize: 10,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 1.4,
+        physics: const ClampingScrollPhysics(),
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(22, 28, 22, 80),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 900),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      AcquisitionStepBar(
+                        currentStep: currentStep,
+                        onSelected: onStepSelected,
+                      ),
+                      const SizedBox(height: 34),
+                      Text(
+                        kicker,
+                        style: const TextStyle(
+                          color: Color(0xFF625E58),
+                          fontSize: 10,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1.4,
+                        ),
+                      ),
+                      const SizedBox(height: 9),
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          color: _ink,
+                          fontSize: 44,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -2,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        subtitle,
+                        style: const TextStyle(
+                          color: Color(0xFF5F5B56),
+                          height: 1.5,
+                        ),
+                      ),
+                      const SizedBox(height: 30),
+                      child,
+                    ],
                   ),
                 ),
-                const SizedBox(height: 9),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: _ink,
-                    fontSize: 44,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: -2,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  subtitle,
-                  style: const TextStyle(color: Color(0xFF5F5B56), height: 1.5),
-                ),
-                const SizedBox(height: 30),
-                child,
-                const SizedBox(height: 42),
-                const MembershipFooter(),
-              ],
+              ),
             ),
-          ),
+            const MembershipFooter(),
+          ],
         ),
       ),
     ),

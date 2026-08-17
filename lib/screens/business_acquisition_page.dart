@@ -14,6 +14,7 @@ import '../widgets/canadian_city_field.dart';
 import '../widgets/topo_background.dart';
 import '../widgets/acquisition_step_bar.dart';
 import '../widgets/membership_footer.dart';
+import '../widgets/fixed_editorial_background.dart';
 import 'acquisition_support_page.dart';
 import 'auth_page.dart';
 import 'deal_rooms_page.dart';
@@ -413,88 +414,95 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
             SizedBox(width: 12),
           ],
         ),
-        body: Container(
-          decoration: BoxDecoration(
-            color: _paper,
-            image: DecorationImage(
-              image: const AssetImage(
-                'assets/images/affinity-reflection-facade.png',
-              ),
-              fit: BoxFit.cover,
-              colorFilter: ColorFilter.mode(
-                _paper.withValues(alpha: .91),
-                BlendMode.srcOver,
-              ),
-            ),
-          ),
+        body: FixedEditorialBackground(
+          imagePath: 'assets/images/affinity-deal-screen.jpg',
+          wash: _paper,
+          washOpacity: .64,
+          alignment: Alignment.centerLeft,
           child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(22, 28, 22, 90),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 900),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    AcquisitionStepBar(currentStep: 2, onSelected: _goStep),
-                    const SizedBox(height: 34),
-                    const Text(
-                      'PAGE 3 OF 4 · DEAL SCREEN',
-                      style: TextStyle(
-                        color: Color(0xFF68635D),
-                        fontSize: 10,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 1.4,
-                      ),
-                    ),
-                    const SizedBox(height: 9),
-                    const Text(
-                      'Initial Deal Screen',
-                      style: TextStyle(
-                        color: _ink,
-                        fontSize: 44,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: -2,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Test whether a specific business fits your Blueprint and whether its cash flow can support you.',
-                      style: TextStyle(color: Color(0xFF65615B), height: 1.5),
-                    ),
-                    const SizedBox(height: 30),
-                    _securityBoundary(),
-                    const SizedBox(height: 18),
-                    _dealCommandBar(),
-                    const SizedBox(height: 22),
-                    _identity(),
-                    const SizedBox(height: 22),
-                    _financialForm(),
-                    if (_inputStage == 3) ...[
-                      const SizedBox(height: 22),
-                      _evidenceForm(),
-                      const SizedBox(height: 26),
-                      SizedBox(
-                        width: double.infinity,
-                        child: FilledButton.icon(
-                          onPressed: _analyze,
-                          style: FilledButton.styleFrom(
-                            backgroundColor: _purple,
-                            padding: const EdgeInsets.symmetric(vertical: 21),
+            physics: const ClampingScrollPhysics(),
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(22, 28, 22, 90),
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 900),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          AcquisitionStepBar(
+                            currentStep: 2,
+                            onSelected: _goStep,
                           ),
-                          icon: const Icon(Icons.analytics_outlined),
-                          label: const Text('RUN INITIAL VIABILITY ASSESSMENT'),
-                        ),
+                          const SizedBox(height: 34),
+                          const Text(
+                            'PAGE 3 OF 4 · DEAL SCREEN',
+                            style: TextStyle(
+                              color: Color(0xFF68635D),
+                              fontSize: 10,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 1.4,
+                            ),
+                          ),
+                          const SizedBox(height: 9),
+                          const Text(
+                            'Initial Deal Screen',
+                            style: TextStyle(
+                              color: _ink,
+                              fontSize: 44,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: -2,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'Test whether a specific business fits your Blueprint and whether its cash flow can support you.',
+                            style: TextStyle(
+                              color: Color(0xFF65615B),
+                              height: 1.5,
+                            ),
+                          ),
+                          const SizedBox(height: 30),
+                          _securityBoundary(),
+                          const SizedBox(height: 18),
+                          _dealCommandBar(),
+                          const SizedBox(height: 22),
+                          _identity(),
+                          const SizedBox(height: 22),
+                          _financialForm(),
+                          if (_inputStage == 3) ...[
+                            const SizedBox(height: 22),
+                            _evidenceForm(),
+                            const SizedBox(height: 26),
+                            SizedBox(
+                              width: double.infinity,
+                              child: FilledButton.icon(
+                                onPressed: _analyze,
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: _purple,
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 21,
+                                  ),
+                                ),
+                                icon: const Icon(Icons.analytics_outlined),
+                                label: const Text(
+                                  'RUN INITIAL VIABILITY ASSESSMENT',
+                                ),
+                              ),
+                            ),
+                          ],
+                          if (_result != null) ...[
+                            const SizedBox(height: 42),
+                            _results(_result!),
+                          ],
+                        ],
                       ),
-                    ],
-                    if (_result != null) ...[
-                      const SizedBox(height: 42),
-                      _results(_result!),
-                    ],
-                    const SizedBox(height: 42),
-                    const MembershipFooter(),
-                  ],
+                    ),
+                  ),
                 ),
-              ),
+                const MembershipFooter(),
+              ],
             ),
           ),
         ),

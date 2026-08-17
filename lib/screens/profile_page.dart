@@ -451,7 +451,7 @@ class _ProfilePageState extends State<ProfilePage> {
     decoration: BoxDecoration(
       color: _paper,
       image: DecorationImage(
-        image: const AssetImage('assets/images/affinity-reflection-facade.png'),
+        image: const AssetImage('assets/images/affinity-reflection-facade.jpg'),
         fit: BoxFit.cover,
         colorFilter: ColorFilter.mode(
           _paper.withValues(alpha: .86),

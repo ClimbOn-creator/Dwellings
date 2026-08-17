@@ -11,6 +11,7 @@ import '../widgets/profile_photo.dart';
 import '../widgets/app_navigation_menu.dart';
 import '../widgets/acquisition_step_bar.dart';
 import '../widgets/membership_footer.dart';
+import '../widgets/fixed_editorial_background.dart';
 import 'acquisition_support_page.dart';
 import 'business_acquisition_page.dart';
 import 'auth_page.dart';
@@ -157,126 +158,130 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
             SizedBox(width: 12),
           ],
         ),
-        body: Container(
-          decoration: BoxDecoration(
-            color: _paper,
-            image: DecorationImage(
-              image: const AssetImage(
-                'assets/images/affinity-reflection-facade.png',
-              ),
-              fit: BoxFit.cover,
-              colorFilter: ColorFilter.mode(
-                _paper.withValues(alpha: .91),
-                BlendMode.srcOver,
-              ),
-            ),
-          ),
+        body: FixedEditorialBackground(
+          imagePath: 'assets/images/affinity-pipeline.jpg',
+          wash: _paper,
+          washOpacity: .65,
           child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(22, 28, 22, 90),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 900),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    AcquisitionStepBar(currentStep: 3, onSelected: _goStep),
-                    const SizedBox(height: 34),
-                    const Text(
-                      'PAGE 4 OF 4 · PIPELINE',
-                      style: TextStyle(
-                        color: Color(0xFF68635D),
-                        fontSize: 10,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 1.4,
-                      ),
-                    ),
-                    const SizedBox(height: 9),
-                    const Text(
-                      'My Deal Pipeline',
-                      style: TextStyle(
-                        color: _ink,
-                        fontSize: 44,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: -2,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Keep every opportunity, decision, deadline, and blocker in one focused acquisition workspace.',
-                      style: TextStyle(color: Color(0xFF65615B), height: 1.5),
-                    ),
-                    const SizedBox(height: 24),
-                    Wrap(
-                      spacing: 10,
-                      runSpacing: 10,
-                      children: [
-                        FilledButton.icon(
-                          onPressed: _creating ? null : _manualCreate,
-                          icon: const Icon(Icons.add),
-                          label: const Text('START A NEW DEAL'),
-                        ),
-                        FilterChip(
-                          label: Text(
-                            _showArchived ? 'PAST / ARCHIVED' : 'CURRENT',
+            physics: const ClampingScrollPhysics(),
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(22, 28, 22, 90),
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 900),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          AcquisitionStepBar(
+                            currentStep: 3,
+                            onSelected: _goStep,
                           ),
-                          selected: _showArchived,
-                          backgroundColor: _surface,
-                          selectedColor: _purple,
-                          checkmarkColor: Colors.white,
-                          labelStyle: const TextStyle(color: _ink),
-                          onSelected: (value) =>
-                              setState(() => _showArchived = value),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 30),
-                    FutureBuilder<List<DealRoom>>(
-                      future: _rooms,
-                      builder: (context, snapshot) {
-                        if (!snapshot.hasData) {
-                          return const SizedBox(
-                            height: 260,
-                            child: Center(child: CircularProgressIndicator()),
-                          );
-                        }
-                        final allRooms = snapshot.data!;
-                        final rooms = allRooms.where((room) {
-                          final lifecycleMatch = _showArchived
-                              ? room.status == 'archived' ||
-                                    room.status == 'completed' ||
-                                    room.status == 'cancelled'
-                              : room.status != 'archived' &&
-                                    room.status != 'completed' &&
-                                    room.status != 'cancelled';
-                          final sideMatch = room.isBusiness;
-                          return lifecycleMatch && sideMatch;
-                        }).toList();
-                        if (rooms.isEmpty) return _empty();
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _summary(allRooms),
-                            const SizedBox(height: 26),
-                            Text(
-                              '${rooms.length} ${_showArchived ? 'PAST' : 'CURRENT'} DEAL${rooms.length == 1 ? '' : 'S'}',
-                              style: const TextStyle(
-                                color: _lilac,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 1.1,
-                              ),
+                          const SizedBox(height: 34),
+                          const Text(
+                            'PAGE 4 OF 4 · PIPELINE',
+                            style: TextStyle(
+                              color: Color(0xFF68635D),
+                              fontSize: 10,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 1.4,
                             ),
-                            const SizedBox(height: 18),
-                            ...rooms.map(_roomCard),
-                          ],
-                        );
-                      },
+                          ),
+                          const SizedBox(height: 9),
+                          const Text(
+                            'My Deal Pipeline',
+                            style: TextStyle(
+                              color: _ink,
+                              fontSize: 44,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: -2,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'Keep every opportunity, decision, deadline, and blocker in one focused acquisition workspace.',
+                            style: TextStyle(
+                              color: Color(0xFF65615B),
+                              height: 1.5,
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          Wrap(
+                            spacing: 10,
+                            runSpacing: 10,
+                            children: [
+                              FilledButton.icon(
+                                onPressed: _creating ? null : _manualCreate,
+                                icon: const Icon(Icons.add),
+                                label: const Text('START A NEW DEAL'),
+                              ),
+                              FilterChip(
+                                label: Text(
+                                  _showArchived ? 'PAST / ARCHIVED' : 'CURRENT',
+                                ),
+                                selected: _showArchived,
+                                backgroundColor: _surface,
+                                selectedColor: _purple,
+                                checkmarkColor: Colors.white,
+                                labelStyle: const TextStyle(color: _ink),
+                                onSelected: (value) =>
+                                    setState(() => _showArchived = value),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 30),
+                          FutureBuilder<List<DealRoom>>(
+                            future: _rooms,
+                            builder: (context, snapshot) {
+                              if (!snapshot.hasData) {
+                                return const SizedBox(
+                                  height: 260,
+                                  child: Center(
+                                    child: CircularProgressIndicator(),
+                                  ),
+                                );
+                              }
+                              final allRooms = snapshot.data!;
+                              final rooms = allRooms.where((room) {
+                                final lifecycleMatch = _showArchived
+                                    ? room.status == 'archived' ||
+                                          room.status == 'completed' ||
+                                          room.status == 'cancelled'
+                                    : room.status != 'archived' &&
+                                          room.status != 'completed' &&
+                                          room.status != 'cancelled';
+                                final sideMatch = room.isBusiness;
+                                return lifecycleMatch && sideMatch;
+                              }).toList();
+                              if (rooms.isEmpty) return _empty();
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  _summary(allRooms),
+                                  const SizedBox(height: 26),
+                                  Text(
+                                    '${rooms.length} ${_showArchived ? 'PAST' : 'CURRENT'} DEAL${rooms.length == 1 ? '' : 'S'}',
+                                    style: const TextStyle(
+                                      color: _lilac,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w900,
+                                      letterSpacing: 1.1,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 18),
+                                  ...rooms.map(_roomCard),
+                                ],
+                              );
+                            },
+                          ),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 42),
-                    const MembershipFooter(),
-                  ],
+                  ),
                 ),
-              ),
+                const MembershipFooter(),
+              ],
             ),
           ),
         ),

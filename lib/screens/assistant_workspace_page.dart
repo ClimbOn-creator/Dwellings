@@ -5,8 +5,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/platform_side.dart';
 import '../widgets/home_brand_button.dart';
 import '../widgets/app_navigation_menu.dart';
-import '../widgets/topo_background.dart';
 import '../widgets/membership_footer.dart';
+import '../widgets/fixed_editorial_background.dart';
 import 'local_network_page.dart';
 import 'member_workspace_pages.dart';
 import '../services/backend_service.dart';
@@ -15,6 +15,7 @@ import '../services/consulting_service.dart';
 import 'business_acquisition_page.dart';
 import 'deal_rooms_page.dart';
 import 'profile_page.dart';
+import 'auth_page.dart';
 
 const ink = Color(0xFF171717),
     surface = Color(0xFFFCFBF8),
@@ -600,61 +601,62 @@ class _CalendarState extends State<PersonalizedCalendarPage> {
   );
 }
 
-class PersonalizedConsultingPage extends StatefulWidget {
+class PersonalizedConsultingPage extends StatelessWidget {
   const PersonalizedConsultingPage({super.key});
-  @override
-  State<PersonalizedConsultingPage> createState() => _ConsultingState();
-}
 
-class _ConsultingState extends State<PersonalizedConsultingPage> {
-  final phone = TextEditingController(),
-      outcome = TextEditingController(),
-      challenge = TextEditingController();
-  String format = 'Acquisition strategy session';
-  bool sending = false, sent = false;
-  Future<void> _submit() async {
-    if (outcome.text.trim().isEmpty) return;
-    setState(() => sending = true);
-    try {
-      await ConsultingService.request(
-        format: format,
-        phone: phone.text,
-        outcome: outcome.text,
-        challenge: challenge.text,
+  Future<void> _book(BuildContext context) async {
+    if (BackendService.user == null) {
+      await Navigator.push<void>(
+        context,
+        MaterialPageRoute<void>(builder: (_) => const AuthPage()),
       );
-      if (mounted) setState(() => sent = true);
-    } catch (error) {
-      if (mounted)
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('$error')));
-    } finally {
-      if (mounted) setState(() => sending = false);
+      if (!context.mounted || BackendService.user == null) return;
     }
+    if (!context.mounted) return;
+    await Navigator.push<void>(
+      context,
+      MaterialPageRoute<void>(builder: (_) => const ConsultingBookingPage()),
+    );
   }
 
   @override
   Widget build(BuildContext context) => _Page(
+    backgroundImage: 'assets/images/affinity-consulting.jpg',
+    washOpacity: .55,
     title: 'Founder-led acquisition consulting',
     subtitle:
-        'Focused support for buyers who need judgment, structure, and an accountable next step—not another generic report.',
+        'A personal, rigorous second set of eyes for the decisions that shape what you buy—and what happens after.',
     child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(22),
+          child: Image.asset(
+            'assets/images/affinity-consulting.jpg',
+            width: double.infinity,
+            height: 390,
+            fit: BoxFit.cover,
+            alignment: Alignment.center,
+            cacheWidth: 1400,
+            filterQuality: FilterQuality.low,
+          ),
+        ),
+        const SizedBox(height: 26),
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(28),
+          padding: const EdgeInsets.symmetric(horizontal: 34, vertical: 38),
           decoration: BoxDecoration(
-            color: surface,
+            color: const Color(0xFFFDFCF9),
             border: Border.all(color: line),
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(22),
           ),
           child: const Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'FOUNDER PROFILE',
+                'THE PERSON BEHIND THE FRAMEWORK',
                 style: TextStyle(
-                  color: lilac,
+                  color: muted,
                   fontSize: 10,
                   fontWeight: FontWeight.w800,
                   letterSpacing: 1.3,
@@ -662,120 +664,261 @@ class _ConsultingState extends State<PersonalizedConsultingPage> {
               ),
               SizedBox(height: 12),
               Text(
-                'Product, decision systems & acquisition support',
+                'Acquisition decisions deserve more than a spreadsheet.',
                 style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 25,
+                  color: ink,
+                  fontSize: 30,
+                  height: 1.12,
                   fontWeight: FontWeight.w700,
+                ),
+              ),
+              SizedBox(height: 20),
+              Text(
+                'Affinity was created around a simple belief: buyers make stronger choices when their personal goals, financial readiness, and deal criteria are examined together. The founder’s work combines product development, transparent financial modelling, and buyer-first decision systems to turn an intimidating acquisition into a series of clear, defensible choices.',
+                style: TextStyle(color: muted, height: 1.6),
+              ),
+              SizedBox(height: 18),
+              Text(
+                'The process is practical and candid. A consulting engagement can sharpen an acquisition mandate, identify readiness gaps before a lender does, challenge the assumptions in a live opportunity, or organize the next phase of diligence. The goal is not to make the decision for you. It is to help you see the decision clearly enough to own it.',
+                style: TextStyle(color: muted, height: 1.6),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 26),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 34, vertical: 38),
+          decoration: BoxDecoration(
+            color: const Color(0xFF1C2822),
+            borderRadius: BorderRadius.circular(22),
+          ),
+          child: const Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'WHEN A CONVERSATION HELPS',
+                style: TextStyle(
+                  color: Color(0xFFBFC9C3),
+                  fontSize: 10,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1.3,
                 ),
               ),
               SizedBox(height: 12),
               Text(
-                'The founder of Affinity combines product development, transparent financial modelling, buyer-first acquisition frameworks, and AI-assisted decision tools. Consulting is designed for business buyers who need help defining a mandate, preparing for financing, screening a live deal, or organizing diligence.',
-                style: TextStyle(color: muted, height: 1.6),
+                'Bring the question that keeps looping.',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 29,
+                  height: 1.1,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
-              SizedBox(height: 16),
-              Wrap(
-                spacing: 9,
-                runSpacing: 9,
-                children: [
-                  Chip(label: Text('Acquisition Blueprint')),
-                  Chip(label: Text('Buyer readiness')),
-                  Chip(label: Text('Deal screening')),
-                  Chip(label: Text('Diligence planning')),
-                ],
+              SizedBox(height: 18),
+              Text(
+                'Consulting is most useful when the numbers are available but the judgment is still hard: choosing a target, preparing to approach lenders, deciding whether to advance a deal, or translating diligence findings into an action plan. Sessions are built around your real situation and end with an explicit next step.',
+                style: TextStyle(color: Color(0xFFD8DFDB), height: 1.65),
               ),
             ],
           ),
         ),
         const SizedBox(height: 30),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(28),
-          decoration: BoxDecoration(
-            color: const Color(0xFFE9E6E0),
-            border: Border.all(color: purple),
-            borderRadius: BorderRadius.circular(20),
+        Center(
+          child: FilledButton.icon(
+            onPressed: () => _book(context),
+            style: FilledButton.styleFrom(
+              backgroundColor: ink,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 34, vertical: 21),
+            ),
+            icon: const Icon(Icons.calendar_month_outlined),
+            label: const Text('SET UP A CALL'),
           ),
-          child: Column(
-            children: [
-              const Text(
-                'Tell us where you need support',
-                style: TextStyle(
-                  color: ink,
-                  fontSize: 24,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 18),
-              DropdownButtonFormField<String>(
-                initialValue: format,
-                dropdownColor: surface,
-                items:
-                    [
-                          'Acquisition strategy session',
-                          'Readiness and financing review',
-                          'Live deal decision review',
-                          'Diligence planning',
-                        ]
-                        .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                        .toList(),
-                onChanged: (v) => format = v!,
-                decoration: const InputDecoration(
-                  labelText: 'Consulting focus',
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: phone,
-                decoration: const InputDecoration(labelText: 'Phone number'),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: outcome,
-                maxLines: 3,
-                decoration: const InputDecoration(
-                  labelText: 'What outcome do you need?',
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: challenge,
-                maxLines: 3,
-                decoration: const InputDecoration(
-                  labelText: 'What is making the decision difficult?',
-                ),
-              ),
-              const SizedBox(height: 22),
-              FilledButton.icon(
-                style: FilledButton.styleFrom(
-                  backgroundColor: sent ? const Color(0xFF2E9D71) : purple,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 30,
-                    vertical: 18,
-                  ),
-                ),
-                onPressed: sent || sending ? null : _submit,
-                icon: Icon(sent ? Icons.check : Icons.support_agent),
-                label: Text(
-                  sent
-                      ? 'Sent!'
-                      : sending
-                      ? 'Sending…'
-                      : 'I Want Support!',
-                ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                BackendService.user == null
-                    ? 'Sign in first so your verified email can be included.'
-                    : 'Your signed-in email and the details above will be sent securely to the founder.',
-                style: const TextStyle(color: muted, fontSize: 11),
-              ),
-            ],
+        ),
+        const SizedBox(height: 8),
+        Center(
+          child: Text(
+            BackendService.user == null
+                ? 'You will be asked to sign in before choosing a time.'
+                : 'Choose a preferred date and time for your call.',
+            style: const TextStyle(color: muted, fontSize: 11),
           ),
         ),
       ],
+    ),
+  );
+}
+
+class ConsultingBookingPage extends StatefulWidget {
+  const ConsultingBookingPage({super.key});
+
+  @override
+  State<ConsultingBookingPage> createState() => _ConsultingBookingPageState();
+}
+
+class _ConsultingBookingPageState extends State<ConsultingBookingPage> {
+  final phone = TextEditingController();
+  final contextNotes = TextEditingController();
+  DateTime? date;
+  String time = '9:00 AM Pacific';
+  String focus = 'Acquisition strategy session';
+  bool sending = false;
+  bool sent = false;
+
+  @override
+  void dispose() {
+    phone.dispose();
+    contextNotes.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickDate() async {
+    final now = DateTime.now();
+    final selected = await showDatePicker(
+      context: context,
+      initialDate: now.add(const Duration(days: 1)),
+      firstDate: now,
+      lastDate: now.add(const Duration(days: 120)),
+    );
+    if (selected != null) setState(() => date = selected);
+  }
+
+  Future<void> _submit() async {
+    if (date == null || contextNotes.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Choose a date and add a little context first.'),
+        ),
+      );
+      return;
+    }
+    setState(() => sending = true);
+    try {
+      await ConsultingService.request(
+        format: focus,
+        phone: phone.text,
+        outcome:
+            'Preferred call: ${DateFormat('EEEE, MMMM d, y').format(date!)} at $time',
+        challenge: contextNotes.text,
+      );
+      if (mounted) setState(() => sent = true);
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$error')));
+      }
+    } finally {
+      if (mounted) setState(() => sending = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => _Page(
+    backgroundImage: 'assets/images/affinity-consulting.jpg',
+    washOpacity: .62,
+    title: 'Choose a time to talk',
+    subtitle:
+        'Share a preferred time and the decision you want to work through. The founder will confirm the appointment by email.',
+    child: Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(30),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFDFCF9),
+        border: Border.all(color: line),
+        borderRadius: BorderRadius.circular(22),
+      ),
+      child: Column(
+        children: [
+          DropdownButtonFormField<String>(
+            initialValue: focus,
+            items:
+                const [
+                      'Acquisition strategy session',
+                      'Readiness and financing review',
+                      'Live deal decision review',
+                      'Diligence planning',
+                    ]
+                    .map(
+                      (value) =>
+                          DropdownMenuItem(value: value, child: Text(value)),
+                    )
+                    .toList(),
+            onChanged: (value) => focus = value!,
+            decoration: const InputDecoration(
+              labelText: 'What should the call focus on?',
+            ),
+          ),
+          const SizedBox(height: 14),
+          OutlinedButton.icon(
+            onPressed: _pickDate,
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size(double.infinity, 58),
+              alignment: Alignment.centerLeft,
+            ),
+            icon: const Icon(Icons.calendar_today_outlined),
+            label: Text(
+              date == null
+                  ? 'CHOOSE A DATE'
+                  : DateFormat('EEEE, MMMM d, y').format(date!),
+            ),
+          ),
+          const SizedBox(height: 14),
+          DropdownButtonFormField<String>(
+            initialValue: time,
+            items:
+                const [
+                      '9:00 AM Pacific',
+                      '10:30 AM Pacific',
+                      '1:00 PM Pacific',
+                      '3:00 PM Pacific',
+                    ]
+                    .map(
+                      (value) =>
+                          DropdownMenuItem(value: value, child: Text(value)),
+                    )
+                    .toList(),
+            onChanged: (value) => time = value!,
+            decoration: const InputDecoration(labelText: 'Preferred time'),
+          ),
+          const SizedBox(height: 14),
+          TextField(
+            controller: phone,
+            decoration: const InputDecoration(labelText: 'Phone number'),
+          ),
+          const SizedBox(height: 14),
+          TextField(
+            controller: contextNotes,
+            maxLines: 5,
+            decoration: const InputDecoration(
+              labelText: 'What would make this call useful?',
+            ),
+          ),
+          const SizedBox(height: 22),
+          FilledButton.icon(
+            onPressed: sent || sending ? null : _submit,
+            style: FilledButton.styleFrom(
+              backgroundColor: sent ? const Color(0xFF2E775C) : ink,
+              minimumSize: const Size(double.infinity, 58),
+            ),
+            icon: Icon(sent ? Icons.check : Icons.send_outlined),
+            label: Text(
+              sent
+                  ? 'CALL REQUESTED'
+                  : sending
+                  ? 'SENDING…'
+                  : 'REQUEST THIS TIME',
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            'Request sent as ${BackendService.user?.email ?? 'your signed-in account'}. This does not place anything on your personal calendar until the appointment is confirmed.',
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: muted, fontSize: 11, height: 1.4),
+          ),
+        ],
+      ),
     ),
   );
 }
@@ -786,6 +929,8 @@ class MemberStudioPage extends StatelessWidget {
       Navigator.push(c, MaterialPageRoute<void>(builder: (_) => p));
   @override
   Widget build(BuildContext context) => _Page(
+    backgroundImage: 'assets/images/affinity-member-studio.jpg',
+    washOpacity: .6,
     title: 'Professional Member Studio',
     subtitle:
         'Build a credible presence where acquisition buyers can discover your expertise, understand your services, and request support.',
@@ -921,10 +1066,14 @@ class _Page extends StatelessWidget {
     required this.subtitle,
     required this.child,
     this.action,
+    this.backgroundImage = 'assets/images/residential-courtyard.jpg',
+    this.washOpacity = .68,
   });
   final String title, subtitle;
   final Widget child;
   final Widget? action;
+  final String backgroundImage;
+  final double washOpacity;
   @override
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: const Color(0xFFF4F1EB),
@@ -939,50 +1088,49 @@ class _Page extends StatelessWidget {
         SizedBox(width: 12),
       ],
     ),
-    body: Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFFF4F1EB),
-        image: DecorationImage(
-          image: const AssetImage(
-            'assets/images/affinity-reflection-facade.png',
-          ),
-          fit: BoxFit.cover,
-          colorFilter: ColorFilter.mode(
-            const Color(0xFFF4F1EB).withValues(alpha: .92),
-            BlendMode.srcOver,
-          ),
-        ),
-      ),
+    body: FixedEditorialBackground(
+      imagePath: backgroundImage,
+      wash: const Color(0xFFF4F1EB),
+      washOpacity: washOpacity,
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(28),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 900),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: ink,
-                    fontSize: 44,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: -2,
+        physics: const ClampingScrollPhysics(),
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(28, 32, 28, 80),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 900),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          color: ink,
+                          fontSize: 44,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -2,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        subtitle,
+                        style: const TextStyle(color: muted, height: 1.5),
+                      ),
+                      if (action != null) ...[
+                        const SizedBox(height: 18),
+                        action!,
+                      ],
+                      const SizedBox(height: 28),
+                      child,
+                    ],
                   ),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  subtitle,
-                  style: const TextStyle(color: muted, height: 1.5),
-                ),
-                if (action != null) ...[const SizedBox(height: 18), action!],
-                const SizedBox(height: 28),
-                child,
-                const SizedBox(height: 42),
-                const MembershipFooter(),
-              ],
+              ),
             ),
-          ),
+            const MembershipFooter(),
+          ],
         ),
       ),
     ),

@@ -150,7 +150,7 @@ class _NetworkHero extends StatelessWidget {
                 ? MediaQuery.sizeOf(context).width * .48
                 : MediaQuery.sizeOf(context).width,
             child: Image.asset(
-              'assets/images/affinity-city-hero.png',
+              'assets/images/affinity-city-hero.jpg',
               fit: BoxFit.cover,
             ),
           ),

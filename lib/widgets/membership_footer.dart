@@ -33,7 +33,7 @@ class MembershipFooter extends StatelessWidget {
     ];
     return Container(
       width: double.infinity,
-      color: const Color(0xFFE9E6E0),
+      color: const Color(0xFF17231D),
       padding: EdgeInsets.fromLTRB(
         compact ? 26 : 64,
         compact ? 54 : 76,
@@ -66,7 +66,7 @@ class MembershipFooter extends StatelessWidget {
               ],
             ),
           const SizedBox(height: 46),
-          const Divider(color: Color(0xFFCBC7C0)),
+          const Divider(color: Color(0xFF526058)),
           const SizedBox(height: 18),
           const Row(
             children: [
@@ -74,13 +74,13 @@ class MembershipFooter extends StatelessWidget {
                 child: Text(
                   '© 2026 AFFINITY · BUSINESS ACQUISITION, MADE NAVIGABLE',
                   style: TextStyle(
-                    color: Color(0xFF77736D),
+                    color: Color(0xFFAEB8B2),
                     fontSize: 9,
                     letterSpacing: 1.1,
                   ),
                 ),
               ),
-              AuthButton(dark: false),
+              AuthButton(dark: true),
             ],
           ),
         ],
@@ -96,14 +96,14 @@ class _FooterIdentity extends StatelessWidget {
   Widget build(BuildContext context) => const Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      AffinityLogo(size: 72, dark: false),
+      AffinityLogo(size: 72, dark: true),
       SizedBox(height: 24),
       SizedBox(
         width: 300,
         child: Text(
           'Better judgment for the business you choose next.',
           style: TextStyle(
-            color: Color(0xFF171717),
+            color: Colors.white,
             fontSize: 28,
             height: 1.08,
             fontWeight: FontWeight.w600,
@@ -126,7 +126,7 @@ class _FooterColumn extends StatelessWidget {
       Text(
         title,
         style: const TextStyle(
-          color: Color(0xFF171717),
+          color: Colors.white,
           fontSize: 11,
           fontWeight: FontWeight.w800,
           letterSpacing: 1,
@@ -134,7 +134,7 @@ class _FooterColumn extends StatelessWidget {
       ),
       const SizedBox(height: 20),
       for (final item in items) ...[
-        Text(item, style: const TextStyle(color: Color(0xFF6F6B65))),
+        Text(item, style: const TextStyle(color: Color(0xFFB6C0BA))),
         const SizedBox(height: 12),
       ],
     ],
