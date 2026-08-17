@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import 'brand_logo.dart';
 import 'auth_button.dart';
-import 'topo_background.dart';
 
 class SiteFooter extends StatelessWidget {
   const SiteFooter({
@@ -21,8 +20,8 @@ class SiteFooter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final compact = MediaQuery.sizeOf(context).width < 720;
-    return TopoBackground(
-      opacity: .045,
+    return ColoredBox(
+      color: const Color(0xFF053827),
       child: Padding(
         padding: EdgeInsets.fromLTRB(
           compact ? 22 : 54,
@@ -97,35 +96,7 @@ class _Identity extends StatelessWidget {
   Widget build(BuildContext context) => InkWell(
     onTap: onTap,
     borderRadius: BorderRadius.circular(24),
-    child: const Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        AffinityLogo(size: 50),
-        SizedBox(width: 14),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'AFFINITY',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 1.4,
-              ),
-            ),
-            SizedBox(height: 4),
-            Text(
-              'DECIDE WITH CLARITY.',
-              style: TextStyle(
-                color: Color(0xFF8C8C9C),
-                fontSize: 8,
-                letterSpacing: 1.2,
-              ),
-            ),
-          ],
-        ),
-      ],
-    ),
+    child: const AffinityFooterLogo(width: 280),
   );
 }
 

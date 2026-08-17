@@ -37,7 +37,7 @@ class MembershipFooter extends StatelessWidget {
       child: SizedBox(
         width: viewport,
         child: Container(
-          color: const Color(0xFF17231D),
+          color: const Color(0xFF053827),
           padding: EdgeInsets.fromLTRB(
             compact ? 26 : 64,
             compact ? 54 : 76,
@@ -103,7 +103,7 @@ class _FooterIdentity extends StatelessWidget {
   Widget build(BuildContext context) => const Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      AffinityLogo(size: 72, dark: true),
+      AffinityFooterLogo(width: 300),
       SizedBox(height: 24),
       SizedBox(
         width: 300,

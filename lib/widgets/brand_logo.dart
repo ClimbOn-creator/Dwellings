@@ -24,3 +24,21 @@ class AffinityLogo extends StatelessWidget {
     fit: BoxFit.contain,
   );
 }
+
+/// The supplied mirrored Affinity artwork, cropped for use in full-width
+/// footers. Its background is the same #053827 used by the footer strip, so
+/// the image reads as part of the surface instead of as a separate tile.
+class AffinityFooterLogo extends StatelessWidget {
+  const AffinityFooterLogo({super.key, this.width = 300});
+
+  final double width;
+
+  @override
+  Widget build(BuildContext context) => Image.asset(
+    'assets/brand/affinity-footer-logo.png',
+    width: width,
+    fit: BoxFit.contain,
+    alignment: Alignment.centerLeft,
+    filterQuality: FilterQuality.high,
+  );
+}
