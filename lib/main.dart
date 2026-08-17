@@ -13,28 +13,38 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await BackendService.initialize();
   await AcquisitionFoundation.load();
-  runApp(const DwellingIqApp());
+  runApp(const AffinityApp());
 }
 
-class DwellingIqApp extends StatelessWidget {
-  const DwellingIqApp({super.key});
+class AffinityApp extends StatelessWidget {
+  const AffinityApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     const ink = Color(0xFF090909);
-    const purple = Color(0xFF6D28D9);
+    const blue = Color(0xFF1677FF);
     const paper = Color(0xFFF7F7F7);
     final base = ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
-      colorScheme: ColorScheme.fromSeed(seedColor: purple, surface: paper),
+      colorScheme: ColorScheme.fromSeed(seedColor: blue, surface: paper),
       scaffoldBackgroundColor: paper,
       textTheme: GoogleFonts.spaceGroteskTextTheme(),
     );
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'DwellingIQ',
+      title: 'Affinity',
       theme: base.copyWith(
+        pageTransitionsTheme: const PageTransitionsTheme(
+          builders: {
+            TargetPlatform.android: _AffinityPageTransitionsBuilder(),
+            TargetPlatform.iOS: _AffinityPageTransitionsBuilder(),
+            TargetPlatform.macOS: _AffinityPageTransitionsBuilder(),
+            TargetPlatform.windows: _AffinityPageTransitionsBuilder(),
+            TargetPlatform.linux: _AffinityPageTransitionsBuilder(),
+            TargetPlatform.fuchsia: _AffinityPageTransitionsBuilder(),
+          },
+        ),
         textTheme: base.textTheme.apply(bodyColor: ink, displayColor: ink),
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
@@ -99,4 +109,17 @@ class DwellingIqApp extends StatelessWidget {
       _ => const AcquisitionSupportPage(),
     };
   }
+}
+
+class _AffinityPageTransitionsBuilder extends PageTransitionsBuilder {
+  const _AffinityPageTransitionsBuilder();
+
+  @override
+  Widget buildTransitions<T>(
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) => child;
 }

@@ -19,7 +19,7 @@ import 'deal_rooms_page.dart';
 import 'marketing_pages.dart';
 
 const _ink = Color(0xFF090909);
-const _green = Color(0xFF6D28D9);
+const _green = Color(0xFF1677FF);
 const _lime = Color(0xFFA78BFA);
 const _paper = Color(0xFFF7F7F7);
 const _card = Color(0xFFFFFFFF);
@@ -266,7 +266,7 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
       if (cloud) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Analysis saved to your DwellingsIQ account.'),
+            content: const Text('Analysis saved to your Affinity account.'),
             behavior: SnackBarBehavior.floating,
             action: SnackBarAction(
               label: 'DEAL ROOMS',
@@ -605,7 +605,7 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
             ]),
             const SizedBox(height: 12),
             const Text(
-              'Assessment values are dated tax values—not appraisals. DwellingsIQ uses them only as a discrepancy and due-diligence signal.',
+              'Assessment values are dated tax values—not appraisals. Affinity uses them only as a discrepancy and due-diligence signal.',
               style: TextStyle(color: _muted, fontSize: 10, height: 1.5),
             ),
           ],
@@ -1091,7 +1091,7 @@ class _FuturistManifesto extends StatelessWidget {
                     ),
                     const SizedBox(height: 28),
                     const Text(
-                      'DwellingsIQ connects the place, the income, the debt, the exit and the risk in one visible system.',
+                      'Affinity connects the place, the income, the debt, the exit and the risk in one visible system.',
                       style: TextStyle(
                         color: _muted,
                         fontSize: 15,
@@ -1301,7 +1301,7 @@ class _Panel extends StatelessWidget {
     decoration: BoxDecoration(
       color: const Color(0xFFFAF9FF),
       borderRadius: BorderRadius.circular(28),
-      border: Border.all(color: const Color(0xFF7657FF).withValues(alpha: .28)),
+      border: Border.all(color: const Color(0xFF1677FF).withValues(alpha: .28)),
       boxShadow: const [
         BoxShadow(
           color: Color(0x33000000),

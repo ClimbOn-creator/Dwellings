@@ -454,7 +454,7 @@ class AccountService {
       'provider_id': provider.id,
       'requester_name': profile?.fullName.isNotEmpty == true
           ? profile!.fullName
-          : user.email?.split('@').first ?? 'DwellingsIQ member',
+          : user.email?.split('@').first ?? 'Affinity member',
       'requester_email': user.email ?? '',
       'requester_phone': phone?.trim().isEmpty == true ? null : phone?.trim(),
       'property_summary': propertySummary.trim(),

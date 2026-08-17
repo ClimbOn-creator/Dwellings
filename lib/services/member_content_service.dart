@@ -35,7 +35,7 @@ class MemberContentService {
         ? 'there'
         : recipientName.trim();
     final sender = senderName.trim().isEmpty
-        ? 'Your DwellingsIQ professional'
+        ? 'Your Affinity professional'
         : senderName.trim();
     final detail = context.trim().isEmpty
         ? 'I wanted to check in and make sure you have what you need for the next step.'
@@ -101,7 +101,7 @@ class MemberContentService {
       body:
           '''Hello,
 
-Here is your monthly DwellingsIQ briefing for $market.
+Here is your monthly Affinity briefing for $market.
 
 $topic
 

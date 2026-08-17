@@ -27,7 +27,7 @@ class AcquisitionStepBar extends StatelessWidget {
         Text(
           'STEP ${currentStep + 1} OF ${_steps.length} · ${_steps[currentStep].toUpperCase()}',
           style: const TextStyle(
-            color: Color(0xFFBCAEFF),
+            color: Color(0xFF8FC5FF),
             fontSize: 10,
             fontWeight: FontWeight.w900,
             letterSpacing: 1.2,
@@ -52,7 +52,7 @@ class AcquisitionStepBar extends StatelessWidget {
                       ),
                       decoration: BoxDecoration(
                         color: index == currentStep
-                            ? const Color(0xFF7657FF)
+                            ? const Color(0xFF1677FF)
                             : Colors.white.withValues(alpha: .045),
                         borderRadius: BorderRadius.circular(12),
                       ),

@@ -23,8 +23,12 @@ class TopoBackground extends StatelessWidget {
       children: [
         Positioned.fill(
           child: IgnorePointer(
-            child: CustomPaint(
-              painter: TopoLinesPainter(opacity: math.max(opacity, .14)),
+            child: RepaintBoundary(
+              child: CustomPaint(
+                isComplex: true,
+                willChange: false,
+                painter: TopoLinesPainter(opacity: math.max(opacity, .14)),
+              ),
             ),
           ),
         ),

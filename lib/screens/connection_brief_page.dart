@@ -10,8 +10,8 @@ import '../widgets/topo_background.dart';
 import 'profile_page.dart';
 
 const _paper = Color(0xFFF5F5F7);
-const _purple = Color(0xFF7657FF);
-const _lilac = Color(0xFFBCAEFF);
+const _purple = Color(0xFF1677FF);
+const _lilac = Color(0xFF8FC5FF);
 
 class ConnectionBriefPage extends StatefulWidget {
   const ConnectionBriefPage({

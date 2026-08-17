@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
 const brandInk = Color(0xFF050510);
-const brandPurple = Color(0xFF7657FF);
-const brandLilac = Color(0xFFBCAEFF);
+const brandPurple = Color(0xFF1677FF);
+const brandLilac = Color(0xFF8FC5FF);
 
-class DwellingIqLogo extends StatelessWidget {
-  const DwellingIqLogo({
+class AffinityLogo extends StatelessWidget {
+  const AffinityLogo({
     super.key,
     this.size = 44,
     this.showWordmark = true,
@@ -28,20 +28,11 @@ class DwellingIqLogo extends StatelessWidget {
       if (showWordmark) ...[
         SizedBox(width: size * .28),
         Text(
-          'DWELLINGS',
+          'AFFINITY',
           style: TextStyle(
             color: dark ? Colors.white : brandInk,
             fontSize: size * .29,
             fontWeight: FontWeight.w800,
-            letterSpacing: size * .027,
-          ),
-        ),
-        Text(
-          'IQ',
-          style: TextStyle(
-            color: brandPurple,
-            fontSize: size * .29,
-            fontWeight: FontWeight.w900,
             letterSpacing: size * .027,
           ),
         ),

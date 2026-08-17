@@ -24,8 +24,8 @@ import 'business_acquisition_page.dart';
 
 const _ink = Color(0xFF050510);
 const _paper = Color(0xFFF5F5F7);
-const _purple = Color(0xFF7657FF);
-const _lilac = Color(0xFFBCAEFF);
+const _purple = Color(0xFF1677FF);
+const _lilac = Color(0xFF8FC5FF);
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -497,7 +497,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       Text(
                         _publicIdentity(profile),
                         style: const TextStyle(
-                          color: Color(0xFFBCAEFF),
+                          color: Color(0xFF8FC5FF),
                           fontSize: 14,
                         ),
                       ),
@@ -615,7 +615,7 @@ class _ProfilePageState extends State<ProfilePage> {
   );
 
   String _publicIdentity(AccountProfile? profile) {
-    if (profile == null) return 'DwellingsIQ member';
+    if (profile == null) return 'Affinity member';
     final parts = [
       profile.jobTitle,
       profile.companyName,
@@ -664,7 +664,7 @@ class _ProfilePageState extends State<ProfilePage> {
         Text(
           stats.verified
               ? 'Your verified marketplace listing and client opportunity pipeline.'
-              : 'Your application is ${stats.onboardingStatus.replaceAll('_', ' ')}. Your listing stays private until DwellingsIQ verifies it.',
+              : 'Your application is ${stats.onboardingStatus.replaceAll('_', ' ')}. Your listing stays private until Affinity verifies it.',
           style: const TextStyle(color: Color(0xFFB8B8C5), fontSize: 12),
         ),
         const SizedBox(height: 18),

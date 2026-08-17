@@ -8,7 +8,7 @@ import '../widgets/app_navigation_menu.dart';
 
 const _ink = Color(0xFF050510);
 const _paper = Color(0xFFF5F5F7);
-const _purple = Color(0xFF7657FF);
+const _purple = Color(0xFF1677FF);
 
 class AuthPage extends StatefulWidget {
   const AuthPage({super.key, this.onAuthenticated});
@@ -178,7 +178,7 @@ class _AuthPageState extends State<AuthPage> {
                     const SizedBox(height: 64),
                     Text(
                       _creating
-                          ? 'Create your DwellingsIQ account.'
+                          ? 'Create your Affinity account.'
                           : 'Welcome back.',
                       style: const TextStyle(
                         color: Colors.white,

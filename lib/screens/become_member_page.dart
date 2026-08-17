@@ -12,8 +12,8 @@ import 'auth_page.dart';
 
 const _ink = Color(0xFF050510);
 const _paper = Color(0xFFF5F5F7);
-const _purple = Color(0xFF7657FF);
-const _lilac = Color(0xFFBCAEFF);
+const _purple = Color(0xFF1677FF);
+const _lilac = Color(0xFF8FC5FF);
 
 class BecomeMemberPage extends StatefulWidget {
   const BecomeMemberPage({
@@ -474,7 +474,7 @@ class _BecomeMemberPageState extends State<BecomeMemberPage> {
                 contentPadding: EdgeInsets.zero,
                 activeColor: _purple,
                 title: const Text(
-                  'I agree that DwellingsIQ may contact me about this application.',
+                  'I agree that Affinity may contact me about this application.',
                   style: TextStyle(fontSize: 13),
                 ),
                 controlAffinity: ListTileControlAffinity.leading,

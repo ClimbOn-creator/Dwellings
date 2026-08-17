@@ -24,17 +24,13 @@ class HomeBrandButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Semantics(
     button: true,
-    label: 'DwellingsIQ home',
+    label: 'Affinity home',
     child: InkWell(
       onTap: () => open(context),
       borderRadius: BorderRadius.circular(14),
       child: Padding(
         padding: const EdgeInsets.all(2),
-        child: DwellingIqLogo(
-          size: size,
-          showWordmark: showWordmark,
-          dark: dark,
-        ),
+        child: AffinityLogo(size: size, showWordmark: showWordmark, dark: dark),
       ),
     ),
   );

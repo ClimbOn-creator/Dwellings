@@ -16,8 +16,8 @@ import 'profile_page.dart';
 
 const _ink = Color(0xFF050510);
 const _paper = Color(0xFFF5F5F7);
-const _purple = Color(0xFF7657FF);
-const _lilac = Color(0xFFBCAEFF);
+const _purple = Color(0xFF1677FF);
+const _lilac = Color(0xFF8FC5FF);
 
 class PlatformHubPage extends StatelessWidget {
   const PlatformHubPage({super.key, required this.side});

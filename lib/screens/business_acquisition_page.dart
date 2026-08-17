@@ -25,8 +25,8 @@ const _ink = Color(0xFF050510);
 const _paper = Color(0xFF09091B);
 const _surface = Color(0xFF121225);
 const _line = Color(0xFF292944);
-const _purple = Color(0xFF7657FF);
-const _lilac = Color(0xFFBCAEFF);
+const _purple = Color(0xFF1677FF);
+const _lilac = Color(0xFF8FC5FF);
 const _red = Color(0xFFB42318);
 const _green = Color(0xFF16825D);
 
@@ -48,6 +48,7 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
   bool _saving = false;
   bool _locating = false;
   String? _assessmentId;
+  int _inputStage = 0;
 
   static const _definitions = <_BusinessField>[
     _BusinessField(
@@ -458,21 +459,23 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
                     _identity(),
                     const SizedBox(height: 22),
                     _financialForm(),
-                    const SizedBox(height: 22),
-                    _evidenceForm(),
-                    const SizedBox(height: 26),
-                    SizedBox(
-                      width: double.infinity,
-                      child: FilledButton.icon(
-                        onPressed: _analyze,
-                        style: FilledButton.styleFrom(
-                          backgroundColor: _purple,
-                          padding: const EdgeInsets.symmetric(vertical: 21),
+                    if (_inputStage == 3) ...[
+                      const SizedBox(height: 22),
+                      _evidenceForm(),
+                      const SizedBox(height: 26),
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton.icon(
+                          onPressed: _analyze,
+                          style: FilledButton.styleFrom(
+                            backgroundColor: _purple,
+                            padding: const EdgeInsets.symmetric(vertical: 21),
+                          ),
+                          icon: const Icon(Icons.analytics_outlined),
+                          label: const Text('RUN INITIAL VIABILITY ASSESSMENT'),
                         ),
-                        icon: const Icon(Icons.analytics_outlined),
-                        label: const Text('RUN INITIAL VIABILITY ASSESSMENT'),
                       ),
-                    ),
+                    ],
                     if (_result != null) ...[
                       const SizedBox(height: 42),
                       _results(_result!),
@@ -662,25 +665,73 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
     ],
   );
 
-  Widget _financialForm() => _card(
-    'Financial and operational inputs',
-    LayoutBuilder(
-      builder: (context, constraints) {
-        final width = constraints.maxWidth >= 760
-            ? (constraints.maxWidth - 20) / 3
-            : constraints.maxWidth >= 520
-            ? (constraints.maxWidth - 10) / 2
-            : constraints.maxWidth;
-        return Wrap(
-          spacing: 10,
-          runSpacing: 12,
-          children: _definitions
-              .map((definition) => _businessInput(definition, width))
-              .toList(),
-        );
-      },
-    ),
-  );
+  Widget _financialForm() {
+    const titles = [
+      'Price and headline performance',
+      'Normalizing owner earnings',
+      'Closing capital and financing',
+      'Operating risk signals',
+    ];
+    final start = _inputStage * 6;
+    final visible = _definitions.skip(start).take(6).toList();
+    return _card(
+      titles[_inputStage],
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'FINANCIAL MOMENT ${_inputStage + 1} OF 4',
+            style: const TextStyle(
+              color: _lilac,
+              fontSize: 9,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1.2,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Use only the figures you have. Blank fields remain unknown and become questions for diligence.',
+            style: TextStyle(color: Color(0xFFA5A5B5), height: 1.45),
+          ),
+          const SizedBox(height: 20),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final width = constraints.maxWidth >= 760
+                  ? (constraints.maxWidth - 10) / 2
+                  : constraints.maxWidth >= 520
+                  ? (constraints.maxWidth - 10) / 2
+                  : constraints.maxWidth;
+              return Wrap(
+                spacing: 10,
+                runSpacing: 12,
+                children: visible
+                    .map((definition) => _businessInput(definition, width))
+                    .toList(),
+              );
+            },
+          ),
+          const SizedBox(height: 22),
+          Row(
+            children: [
+              if (_inputStage > 0)
+                TextButton.icon(
+                  onPressed: () => setState(() => _inputStage--),
+                  icon: const Icon(Icons.arrow_back),
+                  label: const Text('Back'),
+                ),
+              const Spacer(),
+              if (_inputStage < 3)
+                FilledButton.icon(
+                  onPressed: () => setState(() => _inputStage++),
+                  icon: const Icon(Icons.arrow_forward),
+                  label: const Text('NEXT FINANCIAL MOMENT'),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _businessInput(_BusinessField definition, double width) {
     final years =

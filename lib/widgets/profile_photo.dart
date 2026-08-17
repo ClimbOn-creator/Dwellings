@@ -38,7 +38,7 @@ class ProfilePhoto extends StatelessWidget {
   Widget _fallback() => Container(
     color: const Color(0xFFE8E4F8),
     alignment: Alignment.center,
-    child: Icon(Icons.person, color: const Color(0xFF7657FF), size: size * .48),
+    child: Icon(Icons.person, color: const Color(0xFF1677FF), size: size * .48),
   );
 }
 

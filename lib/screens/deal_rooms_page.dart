@@ -17,8 +17,8 @@ import 'auth_page.dart';
 
 const _ink = Color(0xFF050510);
 const _paper = Color(0xFF09091B);
-const _purple = Color(0xFF7657FF);
-const _lilac = Color(0xFFBCAEFF);
+const _purple = Color(0xFF1677FF);
+const _lilac = Color(0xFF8FC5FF);
 const _surface = Color(0xFF121225);
 const _line = Color(0xFF292944);
 
@@ -1253,7 +1253,7 @@ class _DealRoomPageState extends State<DealRoomPage> {
                 Text(
                   '${_room.dealKind.toUpperCase()} · ${_room.currentStage.toUpperCase().replaceAll('_', ' ')} · ${bundle.members.length} TEAM MEMBER${bundle.members.length == 1 ? '' : 'S'}',
                   style: const TextStyle(
-                    color: Color(0xFFBCAEFF),
+                    color: Color(0xFF8FC5FF),
                     fontSize: 12,
                   ),
                 ),

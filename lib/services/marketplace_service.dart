@@ -163,7 +163,7 @@ class ProviderReview {
   factory ProviderReview.fromJson(Map<String, dynamic> row) => ProviderReview(
     id: row['id'] as String,
     userId: row['user_id'] as String,
-    reviewerName: row['reviewer_name'] as String? ?? 'DwellingsIQ member',
+    reviewerName: row['reviewer_name'] as String? ?? 'Affinity member',
     rating: row['rating'] as int,
     text: row['review_text'] as String? ?? '',
     createdAt: DateTime.parse(row['created_at'] as String),

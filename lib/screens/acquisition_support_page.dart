@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -18,13 +17,13 @@ import 'deal_rooms_page.dart';
 import 'assistant_workspace_page.dart';
 
 const _ink = Color(0xFF050510);
-const _green = Color(0xFF7657FF);
-const _lime = Color(0xFFBCAEFF);
+const _green = Color(0xFF1677FF);
+const _lime = Color(0xFF8FC5FF);
 const _paper = Color(0xFF09091B);
 const _line = Color(0xFF292944);
 const _muted = Color(0xFFA5A5B5);
 const _surface = Color(0xFF121225);
-const _lilac = Color(0xFFBCAEFF);
+const _lilac = Color(0xFF8FC5FF);
 
 class AcquisitionSupportPage extends StatefulWidget {
   const AcquisitionSupportPage({super.key});
@@ -35,26 +34,9 @@ class AcquisitionSupportPage extends StatefulWidget {
 
 class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
   final _marketingScroll = ScrollController();
-  Timer? _motion;
-
-  @override
-  void initState() {
-    super.initState();
-    _motion = Timer.periodic(const Duration(seconds: 4), (_) {
-      if (!_marketingScroll.hasClients) return;
-      final max = _marketingScroll.position.maxScrollExtent;
-      final next = _marketingScroll.offset + 390;
-      _marketingScroll.animateTo(
-        next >= max - 20 ? 0 : next,
-        duration: const Duration(milliseconds: 950),
-        curve: Curves.easeInOutCubic,
-      );
-    });
-  }
 
   @override
   void dispose() {
-    _motion?.cancel();
     _marketingScroll.dispose();
     super.dispose();
   }
@@ -147,7 +129,7 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
             const SizedBox(
               width: 780,
               child: Text(
-                'DwellingsIQ helps aspiring buyers define the right target, prepare to transact, screen real opportunities, and build the professional team needed to close with confidence.',
+                'Affinity helps aspiring buyers define the right target, prepare to transact, screen real opportunities, and build the professional team needed to close with confidence.',
                 style: TextStyle(color: _muted, fontSize: 19, height: 1.55),
               ),
             ),
@@ -309,7 +291,7 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 24),
             child: Text(
-              'WHAT DWELLINGSIQ MOVES FORWARD',
+              'WHAT AFFINITY MOVES FORWARD',
               style: TextStyle(
                 color: _lilac,
                 fontSize: 10,
@@ -594,6 +576,7 @@ class AcquisitionBlueprintPage extends StatefulWidget {
 class _AcquisitionBlueprintPageState extends State<AcquisitionBlueprintPage> {
   AcquisitionFoundation? value;
   final controllers = <String, TextEditingController>{};
+  int _chapter = 0;
 
   @override
   void initState() {
@@ -663,12 +646,6 @@ class _AcquisitionBlueprintPageState extends State<AcquisitionBlueprintPage> {
     ).pushReplacement(MaterialPageRoute<void>(builder: (_) => page));
   }
 
-  void _clear() => setState(() {
-    for (final controller in controllers.values) {
-      controller.clear();
-    }
-  });
-
   @override
   Widget build(BuildContext context) => _ModuleScaffold(
     kicker: 'PAGE 1 OF 4 · BLUEPRINT',
@@ -680,91 +657,161 @@ class _AcquisitionBlueprintPageState extends State<AcquisitionBlueprintPage> {
     child: value == null
         ? const Center(child: CircularProgressIndicator())
         : Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _FormSection(
-                number: '01',
-                title: 'Target acquisition',
+              Row(
                 children: [
-                  _dropdown('type', 'Acquisition type', const [
-                    'Business acquisition',
-                    'Asset purchase',
-                    'Share purchase',
-                    'Undecided',
-                  ]),
-                  _input(
-                    'geography',
-                    'Target geography',
-                    hint: 'City, province, or region',
+                  Text(
+                    'QUESTION ${_chapter + 1} OF 4',
+                    style: const TextStyle(
+                      color: _lime,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1.3,
+                    ),
                   ),
-                  _input(
-                    'minPrice',
-                    'Minimum purchase price',
-                    unit: r'$ CAD',
-                    hint: 'e.g. 500,000',
+                  const Spacer(),
+                  Text(
+                    '${((_chapter + 1) / 4 * 100).round()}%',
+                    style: const TextStyle(color: _muted, fontSize: 11),
                   ),
-                  _input(
-                    'maxPrice',
-                    'Maximum purchase price',
-                    unit: r'$ CAD',
-                    hint: 'e.g. 2,000,000',
-                  ),
-                  _input(
-                    'minReturn',
-                    'Minimum return or earnings yield',
-                    unit: '%',
-                    hint: 'e.g. 18',
-                  ),
-                  _dropdown('involvement', 'Desired operating role', const [
-                    'Owner-operator',
-                    'Strategic owner',
-                    'Investor with manager',
-                    'Undecided',
-                  ]),
                 ],
               ),
-              const SizedBox(height: 18),
-              _FormSection(
-                number: '02',
-                title: 'Fit and boundaries',
-                children: [
-                  _input(
-                    'industries',
-                    'Preferred industries or asset types',
-                    hint: 'Industries you understand or want to explore',
-                  ),
-                  _input(
-                    'limits',
-                    'Hard limits',
-                    hint: 'Conditions that immediately rule out a deal',
-                    maxLines: 3,
-                  ),
-                  _input(
-                    'stretch',
-                    'Acceptable stretch criteria',
-                    hint: 'Where you could be flexible',
-                    maxLines: 3,
-                  ),
-                ],
+              const SizedBox(height: 10),
+              LinearProgressIndicator(
+                value: (_chapter + 1) / 4,
+                minHeight: 3,
+                color: _green,
+                backgroundColor: _line,
+              ),
+              const SizedBox(height: 24),
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 160),
+                child: KeyedSubtree(
+                  key: ValueKey(_chapter),
+                  child: _chapterBody(),
+                ),
               ),
               const SizedBox(height: 22),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  OutlinedButton.icon(
-                    onPressed: _clear,
-                    icon: const Icon(Icons.cleaning_services_outlined),
-                    label: const Text('Clear form'),
-                  ),
-                  const SizedBox(width: 10),
-                  FilledButton.icon(
-                    onPressed: _save,
-                    icon: const Icon(Icons.check_rounded),
-                    label: const Text('Save Step 1 to profile'),
-                  ),
-                ],
-              ),
+              _chapterActions(),
             ],
           ),
+  );
+
+  Widget _chapterBody() => switch (_chapter) {
+    0 => _GuidedQuestion(
+      title: 'What kind of owner do you want to become?',
+      copy:
+          'Start with the role and structure—not a price. You can revise this as your search becomes clearer.',
+      children: [
+        _dropdown('type', 'Acquisition structure', const [
+          'Business acquisition',
+          'Asset purchase',
+          'Share purchase',
+          'I’m not sure yet',
+        ]),
+        _dropdown('involvement', 'Your preferred role', const [
+          'Owner-operator',
+          'Strategic owner',
+          'Investor with manager',
+          'I’m not sure yet',
+        ]),
+      ],
+    ),
+    1 => _GuidedQuestion(
+      title: 'What would feel like a natural fit?',
+      copy:
+          'Use plain language. A broad answer is useful; “local service businesses” is enough to begin.',
+      children: [
+        _input(
+          'geography',
+          'Where would you consider buying?',
+          hint: 'A city, province, region, or remote',
+        ),
+        _input(
+          'industries',
+          'What businesses interest you?',
+          hint: 'Industries, business models, or simply “open to ideas”',
+        ),
+      ],
+    ),
+    2 => _GuidedQuestion(
+      title: 'Do you know your financial range?',
+      copy:
+          'These figures are optional planning estimates—not a test or lending approval. Leave them blank if you are still learning.',
+      children: [
+        _input(
+          'minPrice',
+          'Lower purchase range',
+          unit: r'$ CAD',
+          hint: 'Optional',
+        ),
+        _input(
+          'maxPrice',
+          'Upper purchase range',
+          unit: r'$ CAD',
+          hint: 'Optional',
+        ),
+        _input(
+          'minReturn',
+          'Minimum return or earnings yield',
+          unit: '%',
+          hint: 'Optional',
+        ),
+      ],
+    ),
+    _ => _GuidedQuestion(
+      title: 'What should protect you from the wrong deal?',
+      copy:
+          'Name the risks you already know you do not want. If nothing comes to mind, uncertainty is a valid answer.',
+      children: [
+        _input(
+          'limits',
+          'Non-negotiables',
+          hint: 'Examples: no turnaround, no heavy travel—or “not sure yet”',
+          maxLines: 3,
+        ),
+        _input(
+          'stretch',
+          'Where could you be flexible?',
+          hint: 'Optional',
+          maxLines: 3,
+        ),
+      ],
+    ),
+  };
+
+  Widget _chapterActions() => Row(
+    children: [
+      if (_chapter > 0)
+        TextButton.icon(
+          onPressed: () => setState(() => _chapter--),
+          icon: const Icon(Icons.arrow_back),
+          label: const Text('Back'),
+        ),
+      const Spacer(),
+      if (_chapter == 2)
+        TextButton(
+          onPressed: () {
+            controllers['minPrice']?.clear();
+            controllers['maxPrice']?.clear();
+            controllers['minReturn']?.clear();
+            setState(() => _chapter++);
+          },
+          child: const Text('I DON’T KNOW YET'),
+        ),
+      const SizedBox(width: 10),
+      FilledButton.icon(
+        onPressed: _chapter < 3
+            ? () async {
+                await _updateDraft();
+                if (mounted) setState(() => _chapter++);
+              }
+            : _save,
+        icon: Icon(_chapter < 3 ? Icons.arrow_forward : Icons.check_rounded),
+        label: Text(_chapter < 3 ? 'CONTINUE' : 'SAVE BLUEPRINT'),
+      ),
+    ],
   );
 
   Widget _input(
@@ -776,6 +823,7 @@ class _AcquisitionBlueprintPageState extends State<AcquisitionBlueprintPage> {
   }) => _LabeledField(
     label: label,
     unit: unit,
+    labelColor: _ink,
     child: TextField(
       controller: controllers[key],
       keyboardType: ['minPrice', 'maxPrice', 'minReturn'].contains(key)
@@ -790,6 +838,7 @@ class _AcquisitionBlueprintPageState extends State<AcquisitionBlueprintPage> {
     final current = controllers[key]?.text.trim() ?? '';
     return _LabeledField(
       label: label,
+      labelColor: _ink,
       child: DropdownButtonFormField<String>(
         initialValue: options.contains(current) ? current : null,
         hint: const Text('Select an option'),
@@ -813,6 +862,7 @@ class BuyerReadinessPage extends StatefulWidget {
 class _BuyerReadinessPageState extends State<BuyerReadinessPage> {
   AcquisitionFoundation? value;
   final controllers = <String, TextEditingController>{};
+  int _stage = 0;
 
   @override
   void initState() {
@@ -891,97 +941,155 @@ class _BuyerReadinessPageState extends State<BuyerReadinessPage> {
       child: current == null
           ? const Center(child: CircularProgressIndicator())
           : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _ReadinessSummary(value: current),
-                const SizedBox(height: 18),
-                _FormSection(
-                  number: '01',
-                  title: 'Financial capacity',
+                Row(
                   children: [
-                    for (final item in const {
-                      'equity': 'Available equity or cash',
-                      'reserves': 'Post-close reserves',
-                      'income': 'Annual supporting income',
-                    }.entries)
-                      _LabeledField(
-                        label: item.value,
-                        unit: r'$ CAD',
-                        child: TextField(
-                          controller: controllers[item.key],
-                          keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(
-                            hintText: 'Enter amount',
-                          ),
-                        ),
+                    Text(
+                      'MOMENT ${_stage + 1} OF 3',
+                      style: const TextStyle(
+                        color: _lime,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.3,
                       ),
-                    _LabeledField(
-                      label: 'Credit profile',
-                      child: DropdownButtonFormField<String>(
-                        initialValue:
-                            const [
-                              'Excellent',
-                              'Good',
-                              'Fair',
-                              'Needs work',
-                            ].contains(controllers['credit']?.text)
-                            ? controllers['credit']!.text
-                            : null,
-                        hint: const Text('Select a profile'),
-                        items: const ['Excellent', 'Good', 'Fair', 'Needs work']
-                            .map(
-                              (option) => DropdownMenuItem(
-                                value: option,
-                                child: Text(option),
-                              ),
-                            )
-                            .toList(),
-                        onChanged: (selected) =>
-                            controllers['credit']?.text = selected ?? '',
-                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      '${((_stage + 1) / 3 * 100).round()}%',
+                      style: const TextStyle(color: _muted, fontSize: 11),
                     ),
                   ],
                 ),
-                const SizedBox(height: 18),
-                _FormSection(
-                  number: '02',
-                  title: 'Transaction package',
-                  children: [
-                    for (final item in const {
-                      'proof': 'Proof of funds',
-                      'tax': 'Tax returns / financial statements',
-                      'resume': 'Buyer résumé / operating story',
-                      'entity': 'Acquisition entity information',
-                      'lender': 'Introductory lender conversation',
-                    }.entries)
-                      CheckboxListTile(
-                        value: current.readiness[item.key] == true,
-                        title: Text(item.value),
-                        subtitle: Text(
-                          current.readiness[item.key] == true
-                              ? 'Ready'
-                              : 'Action needed',
-                        ),
-                        activeColor: _green,
-                        contentPadding: EdgeInsets.zero,
-                        onChanged: (checked) => setState(
-                          () => current.readiness[item.key] = checked == true,
-                        ),
-                      ),
-                  ],
+                const SizedBox(height: 10),
+                LinearProgressIndicator(
+                  value: (_stage + 1) / 3,
+                  minHeight: 3,
+                  color: _green,
+                  backgroundColor: _line,
+                ),
+                const SizedBox(height: 24),
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 160),
+                  child: KeyedSubtree(
+                    key: ValueKey(_stage),
+                    child: _readinessMoment(current),
+                  ),
                 ),
                 const SizedBox(height: 22),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: FilledButton.icon(
-                    onPressed: _save,
-                    icon: const Icon(Icons.check_rounded),
-                    label: const Text('Save Step 2 to profile'),
-                  ),
+                Row(
+                  children: [
+                    if (_stage > 0)
+                      TextButton.icon(
+                        onPressed: () => setState(() => _stage--),
+                        icon: const Icon(Icons.arrow_back),
+                        label: const Text('Back'),
+                      ),
+                    const Spacer(),
+                    FilledButton.icon(
+                      onPressed: _stage < 2
+                          ? () async {
+                              await _updateDraft();
+                              if (mounted) setState(() => _stage++);
+                            }
+                          : _save,
+                      icon: Icon(
+                        _stage < 2 ? Icons.arrow_forward : Icons.check_rounded,
+                      ),
+                      label: Text(_stage < 2 ? 'CONTINUE' : 'SAVE READINESS'),
+                    ),
+                  ],
                 ),
               ],
             ),
     );
   }
+
+  Widget _readinessMoment(AcquisitionFoundation current) => switch (_stage) {
+    0 => _GuidedQuestion(
+      title: 'What capital could be available?',
+      copy:
+          'A rough range is enough. Leave every field blank if you have not had this conversation yet.',
+      children: [
+        _readinessInput('equity', 'Cash or equity you might use'),
+        _readinessInput('reserves', 'Capital you want untouched after closing'),
+      ],
+    ),
+    1 => _GuidedQuestion(
+      title: 'What supports the acquisition?',
+      copy:
+          'These answers help frame—not approve—your capacity. “I’m not sure yet” is included on purpose.',
+      children: [
+        _readinessInput('income', 'Annual supporting income'),
+        _LabeledField(
+          label: 'How would you describe your credit?',
+          labelColor: _ink,
+          child: DropdownButtonFormField<String>(
+            initialValue:
+                const [
+                  'Excellent',
+                  'Good',
+                  'Fair',
+                  'Needs work',
+                  'I’m not sure yet',
+                ].contains(controllers['credit']?.text)
+                ? controllers['credit']!.text
+                : null,
+            hint: const Text('Choose what feels closest'),
+            items:
+                const [
+                      'Excellent',
+                      'Good',
+                      'Fair',
+                      'Needs work',
+                      'I’m not sure yet',
+                    ]
+                    .map(
+                      (option) =>
+                          DropdownMenuItem(value: option, child: Text(option)),
+                    )
+                    .toList(),
+            onChanged: (selected) =>
+                controllers['credit']?.text = selected ?? '',
+          ),
+        ),
+      ],
+    ),
+    _ => _GuidedQuestion(
+      title: 'What is already in motion?',
+      copy:
+          'This is a planning checklist, not homework you must finish today. Select only what is genuinely underway.',
+      children: [
+        for (final item in const {
+          'proof': 'Proof of funds',
+          'tax': 'Tax returns or financial statements',
+          'resume': 'Buyer résumé or operating story',
+          'entity': 'Acquisition entity information',
+          'lender': 'An introductory lender conversation',
+        }.entries)
+          CheckboxListTile(
+            value: current.readiness[item.key] == true,
+            title: Text(item.value),
+            activeColor: _green,
+            contentPadding: EdgeInsets.zero,
+            controlAffinity: ListTileControlAffinity.leading,
+            onChanged: (checked) =>
+                setState(() => current.readiness[item.key] = checked == true),
+          ),
+      ],
+    ),
+  };
+
+  Widget _readinessInput(String key, String label) => _LabeledField(
+    label: label,
+    labelColor: _ink,
+    unit: r'$ CAD',
+    child: TextField(
+      controller: controllers[key],
+      keyboardType: TextInputType.number,
+      decoration: const InputDecoration(hintText: 'Optional estimate'),
+    ),
+  );
 }
 
 // Retained temporarily for migration of earlier local Guide sessions.
@@ -1441,9 +1549,15 @@ class _ModuleScaffold extends StatelessWidget {
 }
 
 class _LabeledField extends StatelessWidget {
-  const _LabeledField({required this.label, required this.child, this.unit});
+  const _LabeledField({
+    required this.label,
+    required this.child,
+    this.unit,
+    this.labelColor = const Color(0xFFE2E2EA),
+  });
   final String label;
   final String? unit;
+  final Color labelColor;
   final Widget child;
 
   @override
@@ -1455,8 +1569,8 @@ class _LabeledField extends StatelessWidget {
           Expanded(
             child: Text(
               label,
-              style: const TextStyle(
-                color: Color(0xFFE2E2EA),
+              style: TextStyle(
+                color: labelColor,
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
               ),
@@ -1486,112 +1600,75 @@ class _LabeledField extends StatelessWidget {
   );
 }
 
-class _FormSection extends StatelessWidget {
-  const _FormSection({
-    required this.number,
+class _GuidedQuestion extends StatelessWidget {
+  const _GuidedQuestion({
     required this.title,
+    required this.copy,
     required this.children,
   });
-  final String number, title;
+
+  final String title;
+  final String copy;
   final List<Widget> children;
+
   @override
   Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.all(22),
+    width: double.infinity,
+    padding: const EdgeInsets.all(30),
     decoration: BoxDecoration(
-      color: _surface,
-      border: Border.all(color: _line),
-      borderRadius: BorderRadius.circular(18),
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(24),
     ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            CircleAvatar(
-              backgroundColor: _green,
-              foregroundColor: Colors.white,
-              child: Text(number),
-            ),
-            const SizedBox(width: 12),
-            Text(
-              title,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ],
-        ),
-        const Divider(height: 32, color: _line),
-        LayoutBuilder(
-          builder: (_, box) => Wrap(
-            spacing: 14,
-            runSpacing: 14,
-            children: [
-              for (final child in children)
-                SizedBox(
-                  width: box.maxWidth >= 680
-                      ? (box.maxWidth - 14) / 2
-                      : box.maxWidth,
-                  child: child,
-                ),
-            ],
+        Text(
+          title,
+          style: const TextStyle(
+            color: _ink,
+            fontSize: 32,
+            height: 1.08,
+            fontWeight: FontWeight.w800,
+            letterSpacing: -1.4,
           ),
         ),
-      ],
-    ),
-  );
-}
-
-class _ReadinessSummary extends StatelessWidget {
-  const _ReadinessSummary({required this.value});
-  final AcquisitionFoundation value;
-  @override
-  Widget build(BuildContext context) => Container(
-    width: double.infinity,
-    padding: const EdgeInsets.all(22),
-    decoration: BoxDecoration(
-      color: _ink,
-      borderRadius: BorderRadius.circular(18),
-    ),
-    child: Wrap(
-      spacing: 42,
-      runSpacing: 12,
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'OVERALL READINESS',
-              style: TextStyle(color: _lime, fontSize: 9, letterSpacing: 1),
-            ),
-            Text(
-              '${value.readinessScore}/100',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 30,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ],
+        const SizedBox(height: 12),
+        Text(
+          copy,
+          style: const TextStyle(color: Color(0xFF626270), height: 1.55),
         ),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'INDICATIVE CAPACITY',
-              style: TextStyle(color: _lime, fontSize: 9, letterSpacing: 1),
-            ),
-            Text(
-              _money(value.capacity),
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 30,
-                fontWeight: FontWeight.w800,
+        const SizedBox(height: 28),
+        Theme(
+          data: Theme.of(context).copyWith(
+            inputDecorationTheme: InputDecorationTheme(
+              filled: true,
+              fillColor: const Color(0xFFF4F6FA),
+              hintStyle: const TextStyle(color: Color(0xFF898995)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: const BorderSide(color: Color(0xFFD8DDE8)),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: const BorderSide(color: Color(0xFFD8DDE8)),
               ),
             ),
-          ],
+            textTheme: Theme.of(
+              context,
+            ).textTheme.apply(bodyColor: _ink, displayColor: _ink),
+          ),
+          child: DefaultTextStyle.merge(
+            style: const TextStyle(color: _ink),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (var i = 0; i < children.length; i++) ...[
+                  children[i],
+                  if (i < children.length - 1) const SizedBox(height: 18),
+                ],
+              ],
+            ),
+          ),
         ),
       ],
     ),

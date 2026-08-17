@@ -10,7 +10,7 @@ import '../widgets/topo_background.dart';
 import '../widgets/membership_footer.dart';
 
 const _paper = Color(0xFFF5F5F7);
-const _purple = Color(0xFF7657FF);
+const _purple = Color(0xFF1677FF);
 
 class MemberLeadInboxPage extends StatefulWidget {
   const MemberLeadInboxPage({super.key});
@@ -449,7 +449,7 @@ class _MemberWorkspaceShell extends StatelessWidget {
                         Text(
                           eyebrow,
                           style: const TextStyle(
-                            color: Color(0xFFBCAEFF),
+                            color: Color(0xFF8FC5FF),
                             fontSize: 10,
                             fontWeight: FontWeight.w800,
                             letterSpacing: 1.5,
@@ -563,7 +563,7 @@ class _DraftCard extends StatelessWidget {
         const Text(
           'YOUR DRAFT',
           style: TextStyle(
-            color: Color(0xFFBCAEFF),
+            color: Color(0xFF8FC5FF),
             fontSize: 9,
             fontWeight: FontWeight.w800,
             letterSpacing: 1.4,

@@ -12,7 +12,7 @@ import 'connection_brief_page.dart';
 
 const _ink = Color(0xFF050510);
 const _paper = Color(0xFFF5F5F7);
-const _purple = Color(0xFF7657FF);
+const _purple = Color(0xFF1677FF);
 
 class MemberProfilePage extends StatefulWidget {
   const MemberProfilePage({super.key, required this.provider});
@@ -307,7 +307,7 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
                           Text(
                             '${provider.jobTitle} · ${provider.company}',
                             style: const TextStyle(
-                              color: Color(0xFFBCAEFF),
+                              color: Color(0xFF8FC5FF),
                               fontSize: 15,
                             ),
                           ),

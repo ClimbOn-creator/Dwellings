@@ -18,8 +18,8 @@ import 'profile_page.dart';
 
 const ink = Color(0xFF050510),
     surface = Color(0xFF121225),
-    purple = Color(0xFF7657FF),
-    lilac = Color(0xFFBCAEFF),
+    purple = Color(0xFF1677FF),
+    lilac = Color(0xFF8FC5FF),
     line = Color(0xFF2B2B49),
     muted = Color(0xFFA5A5B5);
 
@@ -52,7 +52,7 @@ class _GuideWorkspacePageState extends State<GuideWorkspacePage> {
         {
           'role': 'assistant',
           'text':
-              'I’m your DwellingIQ acquisition strategist. I remember this workspace across visits. Before I recommend anything, what does a successful acquisition need to change in your life or business?',
+              'I’m your Affinity acquisition strategist. I remember this workspace across visits. Before I recommend anything, what does a successful acquisition need to change in your life or business?',
         },
       ];
     if (mounted) setState(() {});
@@ -173,7 +173,7 @@ class _GuideWorkspacePageState extends State<GuideWorkspacePage> {
                 ),
                 const Spacer(),
                 const Text(
-                  'DwellingIQ creates drafts and plans. You approve every external action.',
+                  'Affinity creates drafts and plans. You approve every external action.',
                   style: TextStyle(color: muted, fontSize: 10, height: 1.4),
                 ),
               ],
@@ -675,7 +675,7 @@ class _ConsultingState extends State<PersonalizedConsultingPage> {
               ),
               SizedBox(height: 12),
               Text(
-                'The founder of DwellingIQ combines product development, transparent financial modelling, buyer-first acquisition frameworks, and AI-assisted decision tools. Consulting is designed for business buyers who need help defining a mandate, preparing for financing, screening a live deal, or organizing diligence.',
+                'The founder of Affinity combines product development, transparent financial modelling, buyer-first acquisition frameworks, and AI-assisted decision tools. Consulting is designed for business buyers who need help defining a mandate, preparing for financing, screening a live deal, or organizing diligence.',
                 style: TextStyle(color: muted, height: 1.6),
               ),
               SizedBox(height: 16),

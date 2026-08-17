@@ -64,7 +64,7 @@ class SiteFooter extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    '© 2026 DWELLINGSIQ',
+                    '© 2026 AFFINITY',
                     style: TextStyle(
                       color: Color(0xFF777787),
                       fontSize: 9,
@@ -73,7 +73,7 @@ class SiteFooter extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  'PROPERTY INTELLIGENCE · CANADA',
+                  'BUSINESS ACQUISITION · CANADA',
                   style: TextStyle(
                     color: Color(0xFF777787),
                     fontSize: 9,
@@ -100,13 +100,13 @@ class _Identity extends StatelessWidget {
     child: const Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        DwellingIqLogo(size: 50),
+        AffinityLogo(size: 50),
         SizedBox(width: 14),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'DWELLINGSIQ',
+              'AFFINITY',
               style: TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.w800,
@@ -147,36 +147,22 @@ class _FooterLinks extends StatelessWidget {
       const AuthButton(dark: true),
       _FooterButton(label: 'ABOUT', onTap: onAbout),
       _FooterButton(label: 'TEAM', onTap: onTeam),
-      _FooterButton(
-        label: 'BECOME A MEMBER',
-        onTap: onMember,
-        highlighted: true,
-      ),
     ],
   );
 }
 
 class _FooterButton extends StatelessWidget {
-  const _FooterButton({
-    required this.label,
-    required this.onTap,
-    this.highlighted = false,
-  });
+  const _FooterButton({required this.label, required this.onTap});
   final String label;
   final VoidCallback onTap;
-  final bool highlighted;
 
   @override
   Widget build(BuildContext context) => OutlinedButton(
     onPressed: onTap,
     style: OutlinedButton.styleFrom(
-      foregroundColor: highlighted ? Colors.white : const Color(0xFFC7C7D2),
-      backgroundColor: highlighted
-          ? const Color(0xFF7657FF)
-          : Colors.transparent,
-      side: BorderSide(
-        color: highlighted ? const Color(0xFF7657FF) : Colors.white24,
-      ),
+      foregroundColor: const Color(0xFFC7C7D2),
+      backgroundColor: Colors.transparent,
+      side: const BorderSide(color: Colors.white24),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
     ),
     child: Text(
