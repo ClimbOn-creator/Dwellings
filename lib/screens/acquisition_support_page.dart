@@ -8,7 +8,7 @@ import '../services/backend_service.dart';
 import '../services/account_service.dart';
 import '../widgets/app_navigation_menu.dart';
 import '../widgets/home_brand_button.dart';
-import '../widgets/acquisition_step_bar.dart';
+import '../widgets/acquisition_editorial_header.dart';
 import '../widgets/membership_footer.dart';
 import '../widgets/fixed_editorial_background.dart';
 import 'auth_page.dart';
@@ -1514,7 +1514,7 @@ class _ModuleScaffold extends StatelessWidget {
           ? 'assets/images/affinity-reflection-facade.jpg'
           : 'assets/images/commercial-atrium.jpg',
       wash: _cream,
-      washOpacity: currentStep == 0 ? .69 : .65,
+      washOpacity: currentStep == 0 ? .38 : .34,
       child: SingleChildScrollView(
         physics: const ClampingScrollPhysics(),
         child: Column(
@@ -1527,39 +1527,17 @@ class _ModuleScaffold extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      AcquisitionStepBar(
+                      AcquisitionEditorialHeader(
                         currentStep: currentStep,
                         onSelected: onStepSelected,
+                        kicker: kicker,
+                        title: title,
+                        subtitle: subtitle,
+                        accent: currentStep == 0
+                            ? const Color(0xFF244E43)
+                            : const Color(0xFF40556D),
                       ),
-                      const SizedBox(height: 34),
-                      Text(
-                        kicker,
-                        style: const TextStyle(
-                          color: Color(0xFF625E58),
-                          fontSize: 10,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 1.4,
-                        ),
-                      ),
-                      const SizedBox(height: 9),
-                      Text(
-                        title,
-                        style: const TextStyle(
-                          color: _ink,
-                          fontSize: 44,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: -2,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        subtitle,
-                        style: const TextStyle(
-                          color: Color(0xFF5F5B56),
-                          height: 1.5,
-                        ),
-                      ),
-                      const SizedBox(height: 30),
+                      const SizedBox(height: 42),
                       child,
                     ],
                   ),

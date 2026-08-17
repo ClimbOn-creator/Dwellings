@@ -12,7 +12,7 @@ import '../widgets/home_brand_button.dart';
 import '../widgets/app_navigation_menu.dart';
 import '../widgets/canadian_city_field.dart';
 import '../widgets/topo_background.dart';
-import '../widgets/acquisition_step_bar.dart';
+import '../widgets/acquisition_editorial_header.dart';
 import '../widgets/membership_footer.dart';
 import '../widgets/fixed_editorial_background.dart';
 import 'acquisition_support_page.dart';
@@ -417,7 +417,7 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
         body: FixedEditorialBackground(
           imagePath: 'assets/images/affinity-deal-screen.jpg',
           wash: _paper,
-          washOpacity: .64,
+          washOpacity: .32,
           alignment: Alignment.centerLeft,
           child: SingleChildScrollView(
             physics: const ClampingScrollPhysics(),
@@ -431,39 +431,16 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          AcquisitionStepBar(
+                          AcquisitionEditorialHeader(
                             currentStep: 2,
                             onSelected: _goStep,
+                            kicker: 'PAGE 3 OF 4 · DEAL SCREEN',
+                            title: 'Initial Deal Screen',
+                            subtitle:
+                                'Test whether a specific business fits your Blueprint and whether its cash flow can support you.',
+                            accent: Color(0xFF805A35),
                           ),
-                          const SizedBox(height: 34),
-                          const Text(
-                            'PAGE 3 OF 4 · DEAL SCREEN',
-                            style: TextStyle(
-                              color: Color(0xFF68635D),
-                              fontSize: 10,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 1.4,
-                            ),
-                          ),
-                          const SizedBox(height: 9),
-                          const Text(
-                            'Initial Deal Screen',
-                            style: TextStyle(
-                              color: _ink,
-                              fontSize: 44,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: -2,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          const Text(
-                            'Test whether a specific business fits your Blueprint and whether its cash flow can support you.',
-                            style: TextStyle(
-                              color: Color(0xFF65615B),
-                              height: 1.5,
-                            ),
-                          ),
-                          const SizedBox(height: 30),
+                          const SizedBox(height: 42),
                           _securityBoundary(),
                           const SizedBox(height: 18),
                           _dealCommandBar(),

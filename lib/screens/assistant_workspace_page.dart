@@ -622,7 +622,7 @@ class PersonalizedConsultingPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) => _Page(
     backgroundImage: 'assets/images/affinity-consulting.jpg',
-    washOpacity: .55,
+    washOpacity: .36,
     title: 'Founder-led acquisition consulting',
     subtitle:
         'A personal, rigorous second set of eyes for the decisions that shape what you buy—and what happens after.',
@@ -683,6 +683,18 @@ class PersonalizedConsultingPage extends StatelessWidget {
                 style: TextStyle(color: muted, height: 1.6),
               ),
             ],
+          ),
+        ),
+        const SizedBox(height: 26),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(22),
+          child: Image.asset(
+            'assets/images/commercial-atrium.jpg',
+            width: double.infinity,
+            height: 330,
+            fit: BoxFit.cover,
+            cacheWidth: 1400,
+            filterQuality: FilterQuality.low,
           ),
         ),
         const SizedBox(height: 26),
@@ -930,7 +942,7 @@ class MemberStudioPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) => _Page(
     backgroundImage: 'assets/images/affinity-member-studio.jpg',
-    washOpacity: .6,
+    washOpacity: .32,
     title: 'Professional Member Studio',
     subtitle:
         'Build a credible presence where acquisition buyers can discover your expertise, understand your services, and request support.',
@@ -1104,24 +1116,55 @@ class _Page extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        title,
-                        style: const TextStyle(
-                          color: ink,
-                          fontSize: 44,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: -2,
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 34,
+                          vertical: 36,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFDFCF9).withValues(alpha: .97),
+                          borderRadius: BorderRadius.circular(3),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Color(0x26000000),
+                              blurRadius: 34,
+                              offset: Offset(0, 18),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              title,
+                              style: const TextStyle(
+                                color: ink,
+                                fontSize: 48,
+                                height: 1,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: -2.4,
+                              ),
+                            ),
+                            const SizedBox(height: 14),
+                            ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 680),
+                              child: Text(
+                                subtitle,
+                                style: const TextStyle(
+                                  color: muted,
+                                  fontSize: 15,
+                                  height: 1.55,
+                                ),
+                              ),
+                            ),
+                            if (action != null) ...[
+                              const SizedBox(height: 18),
+                              action!,
+                            ],
+                          ],
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        subtitle,
-                        style: const TextStyle(color: muted, height: 1.5),
-                      ),
-                      if (action != null) ...[
-                        const SizedBox(height: 18),
-                        action!,
-                      ],
                       const SizedBox(height: 28),
                       child,
                     ],

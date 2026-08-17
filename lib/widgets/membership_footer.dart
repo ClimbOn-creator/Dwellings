@@ -31,59 +31,66 @@ class MembershipFooter extends StatelessWidget {
         items: ['Our approach', 'Privacy', 'Terms', 'Contact'],
       ),
     ];
-    return Container(
-      width: double.infinity,
-      color: const Color(0xFF17231D),
-      padding: EdgeInsets.fromLTRB(
-        compact ? 26 : 64,
-        compact ? 54 : 76,
-        compact ? 26 : 64,
-        30,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (compact)
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const _FooterIdentity(),
-                const SizedBox(height: 42),
-                ...columns.map(
-                  (column) => Padding(
-                    padding: const EdgeInsets.only(bottom: 30),
-                    child: column,
-                  ),
-                ),
-              ],
-            )
-          else
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Expanded(flex: 4, child: _FooterIdentity()),
-                for (final column in columns) Expanded(flex: 2, child: column),
-              ],
-            ),
-          const SizedBox(height: 46),
-          const Divider(color: Color(0xFF526058)),
-          const SizedBox(height: 18),
-          const Row(
+    return UnconstrainedBox(
+      constrainedAxis: Axis.vertical,
+      alignment: Alignment.topCenter,
+      child: SizedBox(
+        width: viewport,
+        child: Container(
+          color: const Color(0xFF17231D),
+          padding: EdgeInsets.fromLTRB(
+            compact ? 26 : 64,
+            compact ? 54 : 76,
+            compact ? 26 : 64,
+            30,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Text(
-                  '© 2026 AFFINITY · BUSINESS ACQUISITION, MADE NAVIGABLE',
-                  style: TextStyle(
-                    color: Color(0xFFAEB8B2),
-                    fontSize: 9,
-                    letterSpacing: 1.1,
-                  ),
+              if (compact)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const _FooterIdentity(),
+                    const SizedBox(height: 42),
+                    ...columns.map(
+                      (column) => Padding(
+                        padding: const EdgeInsets.only(bottom: 30),
+                        child: column,
+                      ),
+                    ),
+                  ],
+                )
+              else
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Expanded(flex: 4, child: _FooterIdentity()),
+                    for (final column in columns)
+                      Expanded(flex: 2, child: column),
+                  ],
                 ),
+              const SizedBox(height: 46),
+              const Divider(color: Color(0xFF526058)),
+              const SizedBox(height: 18),
+              const Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      '© 2026 AFFINITY · BUSINESS ACQUISITION, MADE NAVIGABLE',
+                      style: TextStyle(
+                        color: Color(0xFFAEB8B2),
+                        fontSize: 9,
+                        letterSpacing: 1.1,
+                      ),
+                    ),
+                  ),
+                  AuthButton(dark: true),
+                ],
               ),
-              AuthButton(dark: true),
             ],
           ),
-        ],
+        ),
       ),
     );
   }

@@ -9,7 +9,7 @@ import '../widgets/home_brand_button.dart';
 import '../widgets/topo_background.dart';
 import '../widgets/profile_photo.dart';
 import '../widgets/app_navigation_menu.dart';
-import '../widgets/acquisition_step_bar.dart';
+import '../widgets/acquisition_editorial_header.dart';
 import '../widgets/membership_footer.dart';
 import '../widgets/fixed_editorial_background.dart';
 import 'acquisition_support_page.dart';
@@ -161,7 +161,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
         body: FixedEditorialBackground(
           imagePath: 'assets/images/affinity-pipeline.jpg',
           wash: _paper,
-          washOpacity: .65,
+          washOpacity: .32,
           child: SingleChildScrollView(
             physics: const ClampingScrollPhysics(),
             child: Column(
@@ -174,39 +174,16 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          AcquisitionStepBar(
+                          AcquisitionEditorialHeader(
                             currentStep: 3,
                             onSelected: _goStep,
+                            kicker: 'PAGE 4 OF 4 · PIPELINE',
+                            title: 'My Deal Pipeline',
+                            subtitle:
+                                'Keep every opportunity, decision, deadline, and blocker in one focused acquisition workspace.',
+                            accent: Color(0xFF244E43),
                           ),
-                          const SizedBox(height: 34),
-                          const Text(
-                            'PAGE 4 OF 4 · PIPELINE',
-                            style: TextStyle(
-                              color: Color(0xFF68635D),
-                              fontSize: 10,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 1.4,
-                            ),
-                          ),
-                          const SizedBox(height: 9),
-                          const Text(
-                            'My Deal Pipeline',
-                            style: TextStyle(
-                              color: _ink,
-                              fontSize: 44,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: -2,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          const Text(
-                            'Keep every opportunity, decision, deadline, and blocker in one focused acquisition workspace.',
-                            style: TextStyle(
-                              color: Color(0xFF65615B),
-                              height: 1.5,
-                            ),
-                          ),
-                          const SizedBox(height: 24),
+                          const SizedBox(height: 38),
                           Wrap(
                             spacing: 10,
                             runSpacing: 10,
