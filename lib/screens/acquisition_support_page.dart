@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -14,6 +15,7 @@ import '../widgets/membership_footer.dart';
 import 'auth_page.dart';
 import 'business_acquisition_page.dart';
 import 'deal_rooms_page.dart';
+import 'assistant_workspace_page.dart';
 
 const _ink = Color(0xFF050510);
 const _green = Color(0xFF7657FF);
@@ -32,195 +34,549 @@ class AcquisitionSupportPage extends StatefulWidget {
 }
 
 class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
-  AcquisitionFoundation? _foundation;
+  final _marketingScroll = ScrollController();
+  Timer? _motion;
 
   @override
   void initState() {
     super.initState();
-    AcquisitionFoundation.load().then((value) {
-      if (mounted) setState(() => _foundation = value);
+    _motion = Timer.periodic(const Duration(seconds: 4), (_) {
+      if (!_marketingScroll.hasClients) return;
+      final max = _marketingScroll.position.maxScrollExtent;
+      final next = _marketingScroll.offset + 390;
+      _marketingScroll.animateTo(
+        next >= max - 20 ? 0 : next,
+        duration: const Duration(milliseconds: 950),
+        curve: Curves.easeInOutCubic,
+      );
     });
   }
 
-  void _open(Widget page) => Navigator.of(context)
-      .push(MaterialPageRoute<void>(builder: (_) => page))
-      .then((_) async {
-        final value = await AcquisitionFoundation.load();
-        if (mounted) setState(() => _foundation = value);
-      });
+  @override
+  void dispose() {
+    _motion?.cancel();
+    _marketingScroll.dispose();
+    super.dispose();
+  }
+
+  void _open(Widget page) =>
+      Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => page));
 
   @override
-  Widget build(BuildContext context) {
-    final value = _foundation;
-    if (value == null) {
-      return const Scaffold(
-        backgroundColor: _paper,
-        body: Center(child: CircularProgressIndicator(color: _green)),
-      );
-    }
-    final readiness = value.readinessScore;
-    return Scaffold(
-      backgroundColor: _paper,
-      body: TopoBackground(
-        color: _paper,
-        opacity: .11,
-        child: CustomScrollView(
-          slivers: [
-            SliverToBoxAdapter(child: _mobileHeader(value)),
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(24, 44, 24, 110),
-              sliver: SliverToBoxAdapter(
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 1080),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'ACQUISITION SUPPORT',
-                          style: TextStyle(
-                            color: _green,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 1.5,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          'Define. Prepare.\nScreen with confidence.',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: MediaQuery.sizeOf(context).width < 650
-                                ? 42
-                                : 64,
-                            height: .98,
-                            letterSpacing: -3,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const SizedBox(height: 18),
-                        const Text(
-                          'Start with the buyer—not the deal. Your Blueprint and Readiness profile become the benchmark for every opportunity.',
-                          style: TextStyle(
-                            color: _muted,
-                            fontSize: 16,
-                            height: 1.6,
-                          ),
-                        ),
-                        const SizedBox(height: 34),
-                        _NorthStar(value: value),
-                        const SizedBox(height: 18),
-                        LayoutBuilder(
-                          builder: (_, box) {
-                            final width = box.maxWidth >= 760
-                                ? (box.maxWidth - 24) / 3
-                                : box.maxWidth;
-                            return Wrap(
-                              spacing: 12,
-                              runSpacing: 12,
-                              children: [
-                                _MetricCard(
-                                  width: width,
-                                  label: 'BLUEPRINT CLARITY',
-                                  value: '${value.blueprintScore}',
-                                  note: 'Your mandate is the deal benchmark.',
-                                  onTap: () =>
-                                      _open(const AcquisitionBlueprintPage()),
-                                ),
-                                _MetricCard(
-                                  width: width,
-                                  label: 'BUYER READINESS',
-                                  value: '$readiness',
-                                  note: readiness >= 70
-                                      ? 'A solid base for the right deal.'
-                                      : 'Priority actions remain.',
-                                  onTap: () =>
-                                      _open(const BuyerReadinessPage()),
-                                ),
-                                _MetricCard(
-                                  width: width,
-                                  label: 'INDICATIVE CAPACITY',
-                                  value: _compactMoney(value.capacity),
-                                  note: 'Directional—not lending approval.',
-                                  onTap: () =>
-                                      _open(const BuyerReadinessPage()),
-                                ),
-                              ],
-                            );
-                          },
-                        ),
-                        const SizedBox(height: 42),
-                        const Text(
-                          'YOUR ACQUISITION PATH',
-                          style: TextStyle(
-                            color: _green,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 1.5,
-                          ),
-                        ),
-                        const SizedBox(height: 14),
-                        _ActionTile(
-                          number: '01',
-                          title: 'Acquisition Blueprint',
-                          copy:
-                              'Define target type, geography, economics, involvement, hard limits, and stretch criteria.',
-                          action: 'Refine mandate',
-                          onTap: () => _open(const AcquisitionBlueprintPage()),
-                        ),
-                        _ActionTile(
-                          number: '02',
-                          title: 'Buyer Readiness',
-                          copy:
-                              'Measure financial capacity, documentation, experience, and lender preparation.',
-                          action: 'Build readiness',
-                          onTap: () => _open(const BuyerReadinessPage()),
-                        ),
-                        _ActionTile(
-                          number: '03',
-                          title: 'Initial Deal Screen',
-                          copy:
-                              'Test a live opportunity without confusing deal fit with your ability to execute.',
-                          action: 'Screen a deal',
-                          onTap: () => _open(const BusinessAcquisitionPage()),
-                        ),
-                        _ActionTile(
-                          number: '04',
-                          title: 'My Deal Pipeline',
-                          copy:
-                              'Compare active opportunities, preserve decisions, and move serious deals into support.',
-                          action: 'View pipeline',
-                          onTap: () => _open(
-                            const DealRoomsPage(
-                              initialSide: PlatformSide.business,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 36),
-                        const MembershipFooter(),
-                      ],
-                    ),
-                  ),
+  Widget build(BuildContext context) => Scaffold(
+    backgroundColor: _paper,
+    body: TopoBackground(
+      color: _paper,
+      opacity: .18,
+      child: CustomScrollView(
+        slivers: [
+          SliverToBoxAdapter(child: _header()),
+          SliverToBoxAdapter(child: _hero()),
+          SliverToBoxAdapter(child: _goalStatement()),
+          SliverToBoxAdapter(child: _audiences()),
+          SliverToBoxAdapter(child: _movingMarketing()),
+          SliverToBoxAdapter(child: _path()),
+          SliverPadding(
+            padding: EdgeInsets.fromLTRB(24, 28, 24, 70),
+            sliver: SliverToBoxAdapter(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: 1080),
+                  child: MembershipFooter(),
                 ),
               ),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+
+  Widget _header() => SafeArea(
+    bottom: false,
+    child: Padding(
+      padding: const EdgeInsets.fromLTRB(24, 18, 24, 0),
+      child: Row(
+        children: [
+          const HomeBrandButton(size: 44, dark: true),
+          const Spacer(),
+          OutlinedButton(
+            onPressed: () => _open(const AcquisitionBlueprintPage()),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.white,
+              side: const BorderSide(color: Colors.white38),
+            ),
+            child: const Text('START MY PATH'),
+          ),
+          const SizedBox(width: 8),
+          const AppNavigationMenu(side: PlatformSide.business),
+        ],
+      ),
+    ),
+  );
+
+  Widget _hero() => Padding(
+    padding: const EdgeInsets.fromLTRB(24, 90, 24, 96),
+    child: Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 1180),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'BUSINESS ACQUISITION, MADE NAVIGABLE',
+              style: TextStyle(
+                color: _lilac,
+                fontSize: 10,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.7,
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'Don’t just find a business.\nKnow what you’re buying into.',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: MediaQuery.sizeOf(context).width < 700 ? 52 : 88,
+                height: .93,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -4.8,
+              ),
+            ),
+            const SizedBox(height: 28),
+            const SizedBox(
+              width: 780,
+              child: Text(
+                'DwellingsIQ helps aspiring buyers define the right target, prepare to transact, screen real opportunities, and build the professional team needed to close with confidence.',
+                style: TextStyle(color: _muted, fontSize: 19, height: 1.55),
+              ),
+            ),
+            const SizedBox(height: 34),
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: [
+                FilledButton.icon(
+                  onPressed: () => _open(const AcquisitionBlueprintPage()),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: _green,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 26,
+                      vertical: 20,
+                    ),
+                  ),
+                  icon: const Icon(Icons.arrow_forward),
+                  label: const Text('I WANT TO BUY A BUSINESS'),
+                ),
+                OutlinedButton.icon(
+                  onPressed: () => _open(const MemberStudioPage()),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    side: const BorderSide(color: Colors.white38),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 26,
+                      vertical: 20,
+                    ),
+                  ),
+                  icon: const Icon(Icons.badge_outlined),
+                  label: const Text('I PROVIDE PROFESSIONAL SERVICES'),
+                ),
+              ],
             ),
           ],
         ),
       ),
+    ),
+  );
+
+  Widget _goalStatement() => Container(
+    color: Colors.white,
+    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 86),
+    child: Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 1120),
+        child: LayoutBuilder(
+          builder: (context, box) {
+            const statement = Text(
+              'A clearer path from “I want to buy a business” to “this is the right business for me.”',
+              style: TextStyle(
+                color: _ink,
+                fontSize: 42,
+                height: 1.08,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -2.2,
+              ),
+            );
+            const copy = Text(
+              'The goal is not more deal flow. It is better judgment: a personal acquisition Blueprint, an honest view of readiness, disciplined screening, and access to specialists when the stakes rise.',
+              style: TextStyle(color: Color(0xFF555562), height: 1.65),
+            );
+            if (box.maxWidth < 720) {
+              return const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [statement, SizedBox(height: 28), copy],
+              );
+            }
+            return const Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(flex: 6, child: statement),
+                SizedBox(width: 70),
+                Expanded(flex: 4, child: copy),
+              ],
+            );
+          },
+        ),
+      ),
+    ),
+  );
+
+  Widget _audiences() => Padding(
+    padding: const EdgeInsets.fromLTRB(24, 92, 24, 70),
+    child: Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 1120),
+        child: LayoutBuilder(
+          builder: (context, box) {
+            final narrow = box.maxWidth < 760;
+            final buyer = _AudienceBlock(
+              number: '01',
+              eyebrow: 'FOR BUYERS & THE ACQUISITION-CURIOUS',
+              title: 'Turn interest into a mandate.',
+              copy:
+                  'Learn the path, define what fits your life and capital, measure your readiness, and screen opportunities against your own rules.',
+              action: 'BUILD MY BLUEPRINT',
+              onTap: () => _open(const AcquisitionBlueprintPage()),
+            );
+            final member = _AudienceBlock(
+              number: '02',
+              eyebrow: 'FOR PROFESSIONAL MEMBERS',
+              title: 'Be visible when buyers need you.',
+              copy:
+                  'Create a credible professional presence inside the Member Studio so acquisition buyers can understand your expertise and engage your services.',
+              action: 'EXPLORE MEMBER STUDIO',
+              onTap: () => _open(const MemberStudioPage()),
+            );
+            return narrow
+                ? Column(children: [buyer, const SizedBox(height: 18), member])
+                : Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(child: buyer),
+                      const SizedBox(width: 18),
+                      Expanded(child: member),
+                    ],
+                  );
+          },
+        ),
+      ),
+    ),
+  );
+
+  Widget _movingMarketing() {
+    const stories = [
+      (
+        'DEFINE',
+        'Build a buyer-first acquisition Blueprint.',
+        'Set the industries, geography, price range, role, return expectations, and hard limits that define a viable target.',
+        Icons.explore_outlined,
+      ),
+      (
+        'PREPARE',
+        'Know what must be true before you transact.',
+        'Organize capital, reserves, documentation, operating credibility, and lender conversations into an honest readiness view.',
+        Icons.verified_user_outlined,
+      ),
+      (
+        'SCREEN',
+        'Pressure-test the deal—not your hopes.',
+        'Normalize earnings, account for owner pay and working capital, test debt, and expose missing evidence before an offer.',
+        Icons.query_stats_outlined,
+      ),
+      (
+        'CONNECT',
+        'Bring in the right expertise at the right moment.',
+        'Find member professionals whose services match the financing, legal, diligence, tax, risk, and transition work ahead.',
+        Icons.hub_outlined,
+      ),
+    ];
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 94),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 24),
+            child: Text(
+              'WHAT DWELLINGSIQ MOVES FORWARD',
+              style: TextStyle(
+                color: _lilac,
+                fontSize: 10,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.5,
+              ),
+            ),
+          ),
+          const SizedBox(height: 18),
+          SizedBox(
+            height: 310,
+            child: ListView.separated(
+              controller: _marketingScroll,
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              scrollDirection: Axis.horizontal,
+              itemCount: stories.length,
+              separatorBuilder: (_, _) => const SizedBox(width: 16),
+              itemBuilder: (_, index) {
+                final story = stories[index];
+                return _MovingMarketingCard(
+                  eyebrow: story.$1,
+                  title: story.$2,
+                  copy: story.$3,
+                  icon: story.$4,
+                );
+              },
+            ),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _mobileHeader(AcquisitionFoundation value) => Material(
-    color: _ink,
-    child: SafeArea(
-      bottom: false,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+  Widget _path() => Container(
+    color: Colors.white,
+    padding: const EdgeInsets.fromLTRB(24, 82, 24, 88),
+    child: Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 1120),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'THE BUYER PATH',
+              style: TextStyle(
+                color: _green,
+                fontSize: 10,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.5,
+              ),
+            ),
+            const SizedBox(height: 14),
+            const Text(
+              'Four steps. One clearer decision.',
+              style: TextStyle(
+                color: _ink,
+                fontSize: 44,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -2.2,
+              ),
+            ),
+            const SizedBox(height: 30),
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: [
+                _HomePathStep('01', 'Blueprint', 'Define the target.', () {
+                  _open(const AcquisitionBlueprintPage());
+                }),
+                _HomePathStep('02', 'Readiness', 'Prepare the buyer.', () {
+                  _open(const BuyerReadinessPage());
+                }),
+                _HomePathStep('03', 'Deal screen', 'Test the opportunity.', () {
+                  _open(const BusinessAcquisitionPage());
+                }),
+                _HomePathStep('04', 'Pipeline', 'Manage what advances.', () {
+                  _open(
+                    const DealRoomsPage(initialSide: PlatformSide.business),
+                  );
+                }),
+              ],
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+class _AudienceBlock extends StatelessWidget {
+  const _AudienceBlock({
+    required this.number,
+    required this.eyebrow,
+    required this.title,
+    required this.copy,
+    required this.action,
+    required this.onTap,
+  });
+  final String number, eyebrow, title, copy, action;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    constraints: const BoxConstraints(minHeight: 430),
+    padding: const EdgeInsets.all(30),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(4),
+      boxShadow: const [
+        BoxShadow(
+          color: Color(0x33000000),
+          blurRadius: 40,
+          offset: Offset(0, 20),
+        ),
+      ],
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          number,
+          style: const TextStyle(
+            color: _green,
+            fontSize: 56,
+            height: 1,
+            fontWeight: FontWeight.w300,
+          ),
+        ),
+        const Spacer(),
+        Text(
+          eyebrow,
+          style: const TextStyle(
+            color: _green,
+            fontSize: 9,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.2,
+          ),
+        ),
+        const SizedBox(height: 11),
+        Text(
+          title,
+          style: const TextStyle(
+            color: _ink,
+            fontSize: 31,
+            height: 1.05,
+            fontWeight: FontWeight.w700,
+            letterSpacing: -1.4,
+          ),
+        ),
+        const SizedBox(height: 14),
+        Text(
+          copy,
+          style: const TextStyle(color: Color(0xFF555562), height: 1.55),
+        ),
+        const SizedBox(height: 24),
+        TextButton.icon(
+          onPressed: onTap,
+          style: TextButton.styleFrom(foregroundColor: _ink),
+          iconAlignment: IconAlignment.end,
+          icon: const Icon(Icons.arrow_forward),
+          label: Text(action),
+        ),
+      ],
+    ),
+  );
+}
+
+class _MovingMarketingCard extends StatelessWidget {
+  const _MovingMarketingCard({
+    required this.eyebrow,
+    required this.title,
+    required this.copy,
+    required this.icon,
+  });
+  final String eyebrow, title, copy;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: MediaQuery.sizeOf(context).width < 520 ? 300 : 370,
+    padding: const EdgeInsets.all(28),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(4),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(icon, color: _green, size: 30),
+            const Spacer(),
+            Text(
+              eyebrow,
+              style: const TextStyle(
+                color: _green,
+                fontSize: 9,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.3,
+              ),
+            ),
+          ],
+        ),
+        const Spacer(),
+        Text(
+          title,
+          style: const TextStyle(
+            color: _ink,
+            fontSize: 26,
+            height: 1.06,
+            fontWeight: FontWeight.w700,
+            letterSpacing: -1,
+          ),
+        ),
+        const SizedBox(height: 14),
+        Text(
+          copy,
+          style: const TextStyle(color: Color(0xFF555562), height: 1.5),
+        ),
+      ],
+    ),
+  );
+}
+
+class _HomePathStep extends StatelessWidget {
+  const _HomePathStep(this.number, this.title, this.copy, this.onTap);
+  final String number, title, copy;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+    width: MediaQuery.sizeOf(context).width < 620 ? double.infinity : 260,
+    child: InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 21),
+        decoration: const BoxDecoration(
+          border: Border(top: BorderSide(color: Color(0xFFCDCDD4))),
+        ),
         child: Row(
           children: [
-            const HomeBrandButton(size: 42, dark: true),
-            const Spacer(),
-            const AppNavigationMenu(side: PlatformSide.business),
+            Text(
+              number,
+              style: const TextStyle(
+                color: _green,
+                fontSize: 11,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      color: _ink,
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  Text(copy, style: const TextStyle(color: Color(0xFF777783))),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_forward, color: _ink, size: 18),
           ],
         ),
       ),
@@ -1188,219 +1544,6 @@ class _FormSection extends StatelessWidget {
   );
 }
 
-class _NorthStar extends StatelessWidget {
-  const _NorthStar({required this.value});
-  final AcquisitionFoundation value;
-  @override
-  Widget build(BuildContext context) => Container(
-    width: double.infinity,
-    padding: const EdgeInsets.all(24),
-    decoration: BoxDecoration(
-      gradient: const LinearGradient(
-        colors: [Color(0xFF181033), Color(0xFF0D0D20)],
-      ),
-      border: Border.all(color: Color(0xFF392A78)),
-      borderRadius: BorderRadius.circular(18),
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'YOUR NORTH STAR',
-          style: TextStyle(color: _lime, fontSize: 9, letterSpacing: 1.3),
-        ),
-        const SizedBox(height: 7),
-        Text(
-          '${value.blueprint['type']}',
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 22,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-        const SizedBox(height: 5),
-        Text(
-          '${value.blueprint['geography']} · ${_money(value.minPrice)}–${_money(value.maxPrice)} · ${value.blueprint['involvement']}',
-          style: const TextStyle(color: Color(0xFFB8CEC3), fontSize: 11),
-        ),
-      ],
-    ),
-  );
-}
-
-class _MetricCard extends StatelessWidget {
-  const _MetricCard({
-    required this.width,
-    required this.label,
-    required this.value,
-    required this.note,
-    required this.onTap,
-  });
-  final double width;
-  final String label, value, note;
-  final VoidCallback onTap;
-  @override
-  Widget build(BuildContext context) => InkWell(
-    onTap: onTap,
-    borderRadius: BorderRadius.circular(16),
-    child: Container(
-      width: width,
-      height: 155,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: _surface,
-        border: Border.all(color: _line),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(
-              color: _muted,
-              fontSize: 9,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 1,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            value,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 32,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-          const Spacer(),
-          Text(note, style: const TextStyle(color: _muted, fontSize: 10)),
-        ],
-      ),
-    ),
-  );
-}
-
-class _ActionTile extends StatelessWidget {
-  const _ActionTile({
-    required this.number,
-    required this.title,
-    required this.copy,
-    required this.action,
-    required this.onTap,
-  });
-  final String number, title, copy, action;
-  final VoidCallback onTap;
-  @override
-  Widget build(BuildContext context) => Card(
-    margin: const EdgeInsets.only(bottom: 10),
-    elevation: 0,
-    color: _surface,
-    shape: RoundedRectangleBorder(
-      side: const BorderSide(color: _line),
-      borderRadius: BorderRadius.circular(14),
-    ),
-    child: InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Row(
-          children: [
-            CircleAvatar(
-              backgroundColor: const Color(0xFF241A4E),
-              foregroundColor: _lilac,
-              child: Text(number),
-            ),
-            const SizedBox(width: 15),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    copy,
-                    style: const TextStyle(
-                      color: _muted,
-                      fontSize: 11,
-                      height: 1.4,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 12),
-            Text(
-              action,
-              style: const TextStyle(
-                color: _green,
-                fontWeight: FontWeight.w700,
-                fontSize: 11,
-              ),
-            ),
-          ],
-        ),
-      ),
-    ),
-  );
-}
-
-class _GuideBanner extends StatelessWidget {
-  const _GuideBanner({required this.summary, required this.onTap});
-  final String summary;
-  final VoidCallback onTap;
-  @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.all(22),
-    decoration: BoxDecoration(
-      gradient: const LinearGradient(
-        colors: [Color(0xFF211648), Color(0xFF101024)],
-      ),
-      border: Border.all(color: Color(0xFF3A2B79)),
-      borderRadius: BorderRadius.circular(16),
-    ),
-    child: Row(
-      children: [
-        const CircleAvatar(
-          backgroundColor: _green,
-          foregroundColor: Colors.white,
-          child: Icon(Icons.auto_awesome_rounded),
-        ),
-        const SizedBox(width: 14),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'YOUR ACQUISITION GUIDE',
-                style: TextStyle(
-                  color: _green,
-                  fontSize: 9,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 1,
-                ),
-              ),
-              const SizedBox(height: 5),
-              Text(summary, style: const TextStyle(color: _muted, height: 1.4)),
-            ],
-          ),
-        ),
-        TextButton(
-          onPressed: onTap,
-          child: const Text('Talk through my plan →'),
-        ),
-      ],
-    ),
-  );
-}
-
 class _ReadinessSummary extends StatelessWidget {
   const _ReadinessSummary({required this.value});
   final AcquisitionFoundation value;
@@ -1457,6 +1600,3 @@ class _ReadinessSummary extends StatelessWidget {
 
 String _money(num value) =>
     '\$${value.round().toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (_) => ',')}';
-String _compactMoney(num value) => value >= 1000000
-    ? '\$${(value / 1000000).toStringAsFixed(1)}M'
-    : '\$${(value / 1000).round()}K';

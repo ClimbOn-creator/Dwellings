@@ -13,6 +13,8 @@ import '../services/backend_service.dart';
 import '../services/calendar_sync_service.dart';
 import '../services/consulting_service.dart';
 import 'business_acquisition_page.dart';
+import 'deal_rooms_page.dart';
+import 'profile_page.dart';
 
 const ink = Color(0xFF050510),
     surface = Color(0xFF121225),
@@ -790,11 +792,49 @@ class MemberStudioPage extends StatelessWidget {
       Navigator.push(c, MaterialPageRoute<void>(builder: (_) => p));
   @override
   Widget build(BuildContext context) => _Page(
-    title: 'Member Studio & Marketing',
+    title: 'Professional Member Studio',
     subtitle:
-        'One umbrella workspace for acquisition marketing, newsletters, client service, leads, and professional connections.',
+        'Build a credible presence where acquisition buyers can discover your expertise, understand your services, and request support.',
     child: Column(
       children: [
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(26),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: const Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'BE VISIBLE AT THE RIGHT MOMENT',
+                style: TextStyle(
+                  color: purple,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1.5,
+                ),
+              ),
+              SizedBox(height: 12),
+              Text(
+                'Your expertise belongs inside the acquisition journey.',
+                style: TextStyle(
+                  color: ink,
+                  fontSize: 30,
+                  height: 1.05,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              SizedBox(height: 12),
+              Text(
+                'Create a professional presence, be discovered by serious buyers, and receive consented introductions when your services match a real need.',
+                style: TextStyle(color: Color(0xFF555568), height: 1.55),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 18),
         LayoutBuilder(
           builder: (context, box) => Wrap(
             spacing: 14,
@@ -802,33 +842,36 @@ class MemberStudioPage extends StatelessWidget {
             children: [
               _studio(
                 box,
-                'Email composer',
-                'Create a reviewable client or acquisition email.',
-                Icons.mail_outline,
-                () => _open(context, const MemberEmailComposerPage()),
+                'My professional profile',
+                'Show buyers your credentials, location, specialties, and the services you provide.',
+                Icons.badge_outlined,
+                () => _open(context, const ProfilePage()),
               ),
               _studio(
                 box,
-                'Newsletter builder',
-                'Generate a useful local update for your audience.',
-                Icons.newspaper_outlined,
-                () => _open(context, const MemberNewsletterBuilderPage()),
+                'Member directory presence',
+                'See how acquisition professionals appear to buyers looking for trusted support.',
+                Icons.storefront_outlined,
+                () => _open(
+                  context,
+                  const LocalNetworkPage(side: PlatformSide.business),
+                ),
               ),
               _studio(
                 box,
-                'Lead inbox',
-                'Manage consented introductions and opportunities.',
+                'Buyer lead inbox',
+                'Manage consented introductions from buyers who need your specific expertise.',
                 Icons.inbox_outlined,
                 () => _open(context, const MemberLeadInboxPage()),
               ),
               _studio(
                 box,
-                'Members & experts',
-                'Find realtors, lenders, lawyers, accountants and advisors.',
-                Icons.groups_outlined,
+                'Deal collaboration',
+                'Join the buyer around an active opportunity and keep the work moving in one place.',
+                Icons.handshake_outlined,
                 () => _open(
                   context,
-                  const LocalNetworkPage(side: PlatformSide.business),
+                  const DealRoomsPage(initialSide: PlatformSide.business),
                 ),
               ),
             ],

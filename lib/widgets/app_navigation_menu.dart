@@ -41,7 +41,7 @@ class AppNavigationMenu extends StatelessWidget {
     AppNavigationDestination.readiness => 'Step 2 · Readiness',
     AppNavigationDestination.dealScreen => 'Step 3 · Deal screen',
     AppNavigationDestination.pipeline => 'Step 4 · Pipeline',
-    AppNavigationDestination.memberStudio => 'Member Studio & Marketing',
+    AppNavigationDestination.memberStudio => 'Professional Member Studio',
     AppNavigationDestination.network => 'Members & experts',
     AppNavigationDestination.consulting => 'Personal consulting',
     AppNavigationDestination.profile => 'My profile',
