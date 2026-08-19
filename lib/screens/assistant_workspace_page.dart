@@ -8,14 +8,12 @@ import '../widgets/app_navigation_menu.dart';
 import '../widgets/membership_footer.dart';
 import '../widgets/fixed_editorial_background.dart';
 import 'local_network_page.dart';
-import 'member_workspace_pages.dart';
 import '../services/backend_service.dart';
 import '../services/calendar_sync_service.dart';
 import '../services/consulting_service.dart';
 import 'business_acquisition_page.dart';
-import 'deal_rooms_page.dart';
-import 'profile_page.dart';
 import 'auth_page.dart';
+import 'member_deal_marketplace_page.dart';
 
 const ink = Color(0xFF171717),
     surface = Color(0xFFFCFBF8),
@@ -937,139 +935,9 @@ class _ConsultingBookingPageState extends State<ConsultingBookingPage> {
 
 class MemberStudioPage extends StatelessWidget {
   const MemberStudioPage({super.key});
-  void _open(BuildContext c, Widget p) =>
-      Navigator.push(c, MaterialPageRoute<void>(builder: (_) => p));
+
   @override
-  Widget build(BuildContext context) => _Page(
-    backgroundImage: 'assets/images/affinity-member-studio.jpg',
-    washOpacity: .32,
-    title: 'Professional Member Studio',
-    subtitle:
-        'Build a credible presence where acquisition buyers can discover your expertise, understand your services, and request support.',
-    child: Column(
-      children: [
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(26),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: const Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'BE VISIBLE AT THE RIGHT MOMENT',
-                style: TextStyle(
-                  color: purple,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 1.5,
-                ),
-              ),
-              SizedBox(height: 12),
-              Text(
-                'Your expertise belongs inside the acquisition journey.',
-                style: TextStyle(
-                  color: ink,
-                  fontSize: 30,
-                  height: 1.05,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              SizedBox(height: 12),
-              Text(
-                'Create a professional presence, be discovered by serious buyers, and receive consented introductions when your services match a real need.',
-                style: TextStyle(color: Color(0xFF555568), height: 1.55),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 18),
-        LayoutBuilder(
-          builder: (context, box) => Wrap(
-            spacing: 14,
-            runSpacing: 14,
-            children: [
-              _studio(
-                box,
-                'My professional profile',
-                'Show buyers your credentials, location, specialties, and the services you provide.',
-                Icons.badge_outlined,
-                () => _open(context, const ProfilePage()),
-              ),
-              _studio(
-                box,
-                'Member directory presence',
-                'See how acquisition professionals appear to buyers looking for trusted support.',
-                Icons.storefront_outlined,
-                () => _open(
-                  context,
-                  const LocalNetworkPage(side: PlatformSide.business),
-                ),
-              ),
-              _studio(
-                box,
-                'Buyer lead inbox',
-                'Manage consented introductions from buyers who need your specific expertise.',
-                Icons.inbox_outlined,
-                () => _open(context, const MemberLeadInboxPage()),
-              ),
-              _studio(
-                box,
-                'Deal collaboration',
-                'Join the buyer around an active opportunity and keep the work moving in one place.',
-                Icons.handshake_outlined,
-                () => _open(
-                  context,
-                  const DealRoomsPage(initialSide: PlatformSide.business),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    ),
-  );
-  Widget _studio(
-    BoxConstraints b,
-    String t,
-    String d,
-    IconData i,
-    VoidCallback f,
-  ) => SizedBox(
-    width: b.maxWidth > 700 ? (b.maxWidth - 14) / 2 : b.maxWidth,
-    child: InkWell(
-      onTap: f,
-      borderRadius: BorderRadius.circular(18),
-      child: Container(
-        height: 190,
-        padding: const EdgeInsets.all(22),
-        decoration: BoxDecoration(
-          color: surface,
-          border: Border.all(color: line),
-          borderRadius: BorderRadius.circular(18),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(i, color: lilac, size: 30),
-            const Spacer(),
-            Text(
-              t,
-              style: const TextStyle(
-                color: ink,
-                fontSize: 19,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(d, style: const TextStyle(color: muted, height: 1.4)),
-          ],
-        ),
-      ),
-    ),
-  );
+  Widget build(BuildContext context) => const MemberDealMarketplacePage();
 }
 
 class _Page extends StatelessWidget {
