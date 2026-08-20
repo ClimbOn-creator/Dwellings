@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/platform_side.dart';
 import '../services/backend_service.dart';
+import '../services/site_content_service.dart';
 import '../screens/acquisition_support_page.dart';
 import '../screens/assistant_workspace_page.dart';
 import '../screens/auth_page.dart';
@@ -9,6 +10,7 @@ import '../screens/business_acquisition_page.dart';
 import '../screens/deal_rooms_page.dart';
 import '../screens/local_network_page.dart';
 import '../screens/profile_page.dart';
+import '../screens/content_studio_page.dart';
 
 enum AppNavigationDestination {
   overview,
@@ -80,7 +82,36 @@ class AppNavigationMenu extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) =>
+  Widget build(BuildContext context) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      FutureBuilder<bool>(
+        future: SiteContentService.canEdit(),
+        builder: (context, snapshot) => snapshot.data == true
+            ? IconButton(
+                tooltip: 'Edit site content',
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const ContentStudioPage(),
+                  ),
+                ),
+                icon: Icon(
+                  Icons.edit_note_rounded,
+                  color: dark ? Colors.white : const Color(0xFF161616),
+                ),
+              )
+            : const SizedBox.shrink(),
+      ),
+      IconButton(
+        tooltip: BackendService.user == null ? 'Sign in' : 'My profile',
+        onPressed: () => _open(context, AppNavigationDestination.profile),
+        icon: Icon(
+          BackendService.user == null
+              ? Icons.person_outline_rounded
+              : Icons.account_circle_outlined,
+          color: dark ? Colors.white : const Color(0xFF161616),
+        ),
+      ),
       PopupMenuButton<AppNavigationDestination>(
         tooltip: 'Open navigation',
         color: dark ? const Color(0xFF171728) : Colors.white,
@@ -112,5 +143,7 @@ class AppNavigationMenu extends StatelessWidget {
             size: 28,
           ),
         ),
-      );
+      ),
+    ],
+  );
 }

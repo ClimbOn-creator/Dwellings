@@ -4,24 +4,25 @@ import '../models/platform_side.dart';
 import '../services/backend_service.dart';
 import '../services/affinity_admin_service.dart';
 import '../services/deal_room_service.dart';
+import '../services/marketplace_service.dart';
 import '../services/member_deal_marketplace_service.dart';
 import '../widgets/app_navigation_menu.dart';
-import '../widgets/fixed_editorial_background.dart';
 import '../widgets/home_brand_button.dart';
 import '../widgets/membership_footer.dart';
+import '../widgets/profile_photo.dart';
+import '../widgets/site_copy_text.dart';
 import 'auth_page.dart';
 import 'deal_rooms_page.dart';
-import 'profile_page.dart';
 import 'affinity_review_desk_page.dart';
+import 'member_profile_page.dart';
 
 const _ink = Color(0xFF171717);
 const _green = Color(0xFF053827);
-const _paper = Color(0xFFF4F1EB);
 const _surface = Color(0xFFFCFBF8);
 const _line = Color(0xFFD6D1C9);
 const _muted = Color(0xFF68635D);
 
-enum _StudioView { opportunities, myPitches, dealResponses }
+enum _StudioView { opportunities, professionals, myPitches, dealResponses }
 
 class MemberDealMarketplacePage extends StatefulWidget {
   const MemberDealMarketplacePage({super.key});
@@ -36,6 +37,8 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
   late Future<List<MemberDealOpportunity>> _opportunities;
   late Future<List<MemberDealPitch>> _myPitches;
   late Future<List<MemberDealPitch>> _responses;
+  late Future<List<MarketplaceProvider>> _professionals;
+  String _professionalQuery = '';
 
   @override
   void initState() {
@@ -47,6 +50,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
     _opportunities = MemberDealMarketplaceService.browse();
     _myPitches = MemberDealMarketplaceService.loadMyPitches();
     _responses = MemberDealMarketplaceService.loadBuyerResponses();
+    _professionals = MarketplaceService.loadAffinityMembers();
   }
 
   Future<bool> _ensureSignedIn() async {
@@ -166,7 +170,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: _paper,
+    backgroundColor: const Color(0xFFF1F3EF),
     appBar: AppBar(
       toolbarHeight: 78,
       backgroundColor: const Color(0xFFF7F5F0),
@@ -178,38 +182,10 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
         SizedBox(width: 12),
       ],
     ),
-    body: FixedEditorialBackground(
-      imagePath: 'assets/images/affinity-member-studio.jpg',
-      wash: _paper,
-      washOpacity: .2,
-      child: SingleChildScrollView(
-        physics: const ClampingScrollPhysics(),
-        child: Column(
-          children: [
-            _hero(),
-            Container(
-              width: double.infinity,
-              color: _paper,
-              padding: const EdgeInsets.fromLTRB(22, 38, 22, 84),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 1040),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _privacyStrip(),
-                      const SizedBox(height: 28),
-                      _viewSelector(),
-                      const SizedBox(height: 26),
-                      _currentView(),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            const MembershipFooter(),
-          ],
-        ),
+    body: SingleChildScrollView(
+      physics: const ClampingScrollPhysics(),
+      child: Column(
+        children: [_hero(), _workspace(), const MembershipFooter()],
       ),
     ),
   );
@@ -218,73 +194,91 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
     final compact = MediaQuery.sizeOf(context).width < 600;
     return Container(
       width: double.infinity,
-      constraints: const BoxConstraints(minHeight: 460),
-      padding: EdgeInsets.fromLTRB(24, compact ? 42 : 80, 24, 70),
+      constraints: const BoxConstraints(minHeight: 350),
+      padding: EdgeInsets.fromLTRB(24, compact ? 52 : 72, 24, 58),
+      decoration: const BoxDecoration(
+        color: Color(0xFF0B3A2C),
+        image: DecorationImage(
+          image: AssetImage('assets/images/affinity-member-studio.jpg'),
+          fit: BoxFit.cover,
+          opacity: .2,
+          alignment: Alignment.center,
+        ),
+      ),
       child: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1040),
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: Container(
-              constraints: const BoxConstraints(maxWidth: 670),
-              padding: const EdgeInsets.all(34),
-              color: Colors.white.withValues(alpha: .96),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+          constraints: const BoxConstraints(maxWidth: 1180),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SiteCopyText(
+                'studio.eyebrow',
+                'AFFINITY PROFESSIONAL NETWORK',
+                style: TextStyle(
+                  color: Color(0xFFC8D8D1),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1.6,
+                ),
+              ),
+              const SizedBox(height: 16),
+              SiteCopyText(
+                'studio.title',
+                'Opportunity meets expertise.',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: compact ? 42 : 62,
+                  height: .96,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -3,
+                ),
+              ),
+              const SizedBox(height: 20),
+              const SizedBox(
+                width: 720,
+                child: SiteCopyText(
+                  'studio.intro',
+                  'A private professional network where verified specialists discover Affinity-reviewed acquisitions, understand the need, and make a concise confidential pitch.',
+                  style: TextStyle(
+                    color: Color(0xFFD9E2DE),
+                    fontSize: 17,
+                    height: 1.55,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 28),
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
                 children: [
-                  const Text(
-                    'AFFINITY MEMBER STUDIO',
-                    style: TextStyle(
-                      color: _green,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 1.5,
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  Text(
-                    'Serious deals.\nThe right people.',
-                    style: TextStyle(
-                      color: _ink,
-                      fontSize: compact ? 40 : 52,
-                      height: .98,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -2.4,
-                    ),
-                  ),
-                  const SizedBox(height: 18),
-                  const Text(
-                    'A private opportunity network where Affinity-reviewed deals meet verified acquisition professionals—without exposing the buyer.',
-                    style: TextStyle(color: _muted, fontSize: 16, height: 1.5),
-                  ),
-                  const SizedBox(height: 24),
-                  Wrap(
-                    spacing: 10,
-                    runSpacing: 10,
-                    children: [
-                      FilledButton(
-                        onPressed: _submitDeal,
-                        style: FilledButton.styleFrom(backgroundColor: _green),
-                        child: const Text('SUBMIT MY DEAL FOR REVIEW'),
+                  FilledButton.icon(
+                    onPressed: _submitDeal,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: _green,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 22,
+                        vertical: 18,
                       ),
-                      OutlinedButton(
-                        onPressed: () => Navigator.of(context).push(
-                          MaterialPageRoute<void>(
-                            builder: (_) => const ProfilePage(),
-                          ),
-                        ),
-                        child: const Text('MEMBER PROFILE'),
-                      ),
-                      FutureBuilder<bool>(
-                        future: AffinityAdminService.isAdmin(),
-                        builder: (context, snapshot) {
-                          if (snapshot.data != true) {
-                            return const SizedBox.shrink();
-                          }
-                          return OutlinedButton.icon(
+                    ),
+                    icon: const Icon(Icons.add_rounded),
+                    label: const Text('SUBMIT A DEAL'),
+                  ),
+                  FutureBuilder<bool>(
+                    future: AffinityAdminService.isAdmin(),
+                    builder: (context, snapshot) => snapshot.data == true
+                        ? OutlinedButton.icon(
                             onPressed: () => Navigator.of(context).push(
                               MaterialPageRoute<void>(
                                 builder: (_) => const AffinityReviewDeskPage(),
+                              ),
+                            ),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: Colors.white,
+                              side: const BorderSide(color: Color(0xFF8AA59A)),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 18,
                               ),
                             ),
                             icon: const Icon(
@@ -292,43 +286,128 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                               size: 18,
                             ),
                             label: const Text('REVIEW DESK'),
-                          );
-                        },
-                      ),
-                    ],
+                          )
+                        : const SizedBox.shrink(),
                   ),
                 ],
               ),
-            ),
+            ],
           ),
         ),
       ),
     );
   }
 
+  Widget _workspace() => Container(
+    width: double.infinity,
+    color: const Color(0xFFF1F3EF),
+    padding: const EdgeInsets.fromLTRB(20, 34, 20, 84),
+    child: Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 1180),
+        child: LayoutBuilder(
+          builder: (context, box) {
+            final desktop = box.maxWidth >= 900;
+            if (!desktop) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _viewSelector(),
+                  const SizedBox(height: 20),
+                  _currentView(),
+                  const SizedBox(height: 20),
+                  _privacyStrip(),
+                ],
+              );
+            }
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(width: 220, child: _desktopNavigation()),
+                const SizedBox(width: 20),
+                Expanded(child: _currentView()),
+                const SizedBox(width: 20),
+                SizedBox(width: 250, child: _privacyStrip()),
+              ],
+            );
+          },
+        ),
+      ),
+    ),
+  );
+
+  Widget _desktopNavigation() => Material(
+    color: Colors.white,
+    borderRadius: BorderRadius.circular(20),
+    child: Padding(
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        children: [
+          _navItem(
+            _StudioView.opportunities,
+            Icons.work_outline_rounded,
+            'Opportunities',
+          ),
+          _navItem(
+            _StudioView.professionals,
+            Icons.people_outline_rounded,
+            'Professionals',
+          ),
+          _navItem(_StudioView.myPitches, Icons.send_outlined, 'My pitches'),
+          _navItem(
+            _StudioView.dealResponses,
+            Icons.inbox_outlined,
+            'Deal responses',
+          ),
+        ],
+      ),
+    ),
+  );
+
+  Widget _navItem(_StudioView view, IconData icon, String label) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 2),
+    child: ListTile(
+      dense: true,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      selected: _view == view,
+      selectedTileColor: const Color(0xFFE7EEE9),
+      leading: Icon(icon, size: 20, color: _view == view ? _green : _muted),
+      title: Text(
+        label,
+        style: TextStyle(
+          fontSize: 13,
+          fontWeight: _view == view ? FontWeight.w700 : FontWeight.w500,
+        ),
+      ),
+      onTap: () => setState(() => _view = view),
+    ),
+  );
+
   Widget _privacyStrip() => Container(
     width: double.infinity,
     padding: const EdgeInsets.all(22),
-    decoration: const BoxDecoration(
-      color: _green,
-      borderRadius: BorderRadius.all(Radius.circular(4)),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(20),
     ),
-    child: const Row(
+    child: const Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(Icons.lock_outline, color: Colors.white),
-        SizedBox(width: 14),
-        Expanded(
-          child: Text(
-            'PRIVACY BY DESIGN  ·  Members see an Affinity-written summary, score band, region, and support needs. Names, exact addresses, documents, raw assessments, and buyer contact details stay private. Contact is released only when the buyer accepts a pitch.',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 12,
-              height: 1.55,
-              fontWeight: FontWeight.w600,
-              letterSpacing: .25,
-            ),
-          ),
+        CircleAvatar(
+          radius: 19,
+          backgroundColor: Color(0xFFE7EEE9),
+          child: Icon(Icons.shield_outlined, color: _green, size: 20),
+        ),
+        SizedBox(height: 16),
+        Text(
+          'Private by design',
+          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+        ),
+        SizedBox(height: 9),
+        SiteCopyText(
+          'studio.privacy',
+          'Members see only an Affinity-written opportunity brief. Buyer names, exact addresses, documents, raw assessments, and contact details remain private until the buyer accepts a pitch.',
+          style: TextStyle(color: _muted, fontSize: 12, height: 1.55),
         ),
       ],
     ),
@@ -339,6 +418,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
     runSpacing: 9,
     children: [
       _viewChip(_StudioView.opportunities, 'OPPORTUNITIES'),
+      _viewChip(_StudioView.professionals, 'PROFESSIONALS'),
       _viewChip(_StudioView.myPitches, 'MY PITCHES'),
       _viewChip(_StudioView.dealResponses, 'MY DEAL RESPONSES'),
     ],
@@ -361,6 +441,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
 
   Widget _currentView() => switch (_view) {
     _StudioView.opportunities => _opportunityFeed(),
+    _StudioView.professionals => _professionalDirectory(),
     _StudioView.myPitches => _pitchList(_myPitches, buyerView: false),
     _StudioView.dealResponses => _pitchList(_responses, buyerView: true),
   };
@@ -376,10 +457,12 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
           title: 'Member access required',
           message:
               'Sign in with a verified professional profile to browse approved opportunities. Buyer identities remain private.',
-          action: 'OPEN MY PROFILE',
-          onTap: () => Navigator.of(
-            context,
-          ).push(MaterialPageRoute<void>(builder: (_) => const ProfilePage())),
+          action: BackendService.user == null ? 'SIGN IN' : null,
+          onTap: BackendService.user == null
+              ? () async {
+                  if (await _ensureSignedIn() && mounted) setState(_reload);
+                }
+              : null,
         );
       }
       final deals = snapshot.data ?? [];
@@ -391,11 +474,109 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
         );
       }
       return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          const SiteCopyText(
+            'studio.opportunities_title',
+            'Reviewed opportunities',
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.w700,
+              letterSpacing: -1,
+            ),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Concise, anonymous briefs prepared by Affinity.',
+            style: TextStyle(color: _muted),
+          ),
+          const SizedBox(height: 20),
           for (final deal in deals) ...[
             _DealPost(deal: deal, onPitch: () => _pitch(deal)),
             const SizedBox(height: 18),
           ],
+        ],
+      );
+    },
+  );
+
+  Widget _professionalDirectory() => FutureBuilder<List<MarketplaceProvider>>(
+    future: _professionals,
+    builder: (context, snapshot) {
+      if (snapshot.connectionState == ConnectionState.waiting) {
+        return const _LoadingBlock();
+      }
+      final query = _professionalQuery.trim().toLowerCase();
+      final providers = (snapshot.data ?? const <MarketplaceProvider>[])
+          .where(
+            (provider) =>
+                query.isEmpty ||
+                '${provider.name} ${provider.company} ${provider.jobTitle} ${provider.specialty}'
+                    .toLowerCase()
+                    .contains(query),
+          )
+          .toList();
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SiteCopyText(
+            'studio.professionals_title',
+            'Verified professionals',
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.w700,
+              letterSpacing: -1,
+            ),
+          ),
+          const SizedBox(height: 6),
+          const SiteCopyText(
+            'studio.professionals_intro',
+            'Find the people buyers may need across financing, diligence, legal, tax, insurance, operations, and transition.',
+            style: TextStyle(color: _muted, height: 1.45),
+          ),
+          const SizedBox(height: 18),
+          TextField(
+            onChanged: (value) => setState(() => _professionalQuery = value),
+            decoration: InputDecoration(
+              hintText: 'Search expertise, company, or name',
+              prefixIcon: const Icon(Icons.search_rounded),
+              fillColor: Colors.white,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: BorderSide.none,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: BorderSide.none,
+              ),
+            ),
+          ),
+          const SizedBox(height: 18),
+          if (providers.isEmpty)
+            const _AccessState(
+              title: 'No matching professionals yet',
+              message:
+                  'Try a broader specialty or check back as the verified network grows.',
+            )
+          else
+            LayoutBuilder(
+              builder: (context, box) {
+                final width = box.maxWidth >= 680
+                    ? (box.maxWidth - 14) / 2
+                    : box.maxWidth;
+                return Wrap(
+                  spacing: 14,
+                  runSpacing: 14,
+                  children: [
+                    for (final provider in providers)
+                      SizedBox(
+                        width: width,
+                        child: _ProfessionalCard(provider: provider),
+                      ),
+                  ],
+                );
+              },
+            ),
         ],
       );
     },
@@ -476,8 +657,8 @@ class _DealPost extends StatelessWidget {
     padding: const EdgeInsets.all(26),
     decoration: BoxDecoration(
       color: _surface,
-      border: Border.all(color: _line),
-      borderRadius: BorderRadius.circular(4),
+      border: Border.all(color: const Color(0xFFE2E5DF)),
+      borderRadius: BorderRadius.circular(22),
     ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -731,8 +912,8 @@ class _PitchCard extends StatelessWidget {
     padding: const EdgeInsets.all(24),
     decoration: BoxDecoration(
       color: _surface,
-      border: Border.all(color: _line),
-      borderRadius: BorderRadius.circular(4),
+      border: Border.all(color: const Color(0xFFE2E5DF)),
+      borderRadius: BorderRadius.circular(20),
     ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -796,6 +977,136 @@ class _PitchCard extends StatelessWidget {
           ),
         ],
       ],
+    ),
+  );
+}
+
+class _ProfessionalCard extends StatelessWidget {
+  const _ProfessionalCard({required this.provider});
+  final MarketplaceProvider provider;
+
+  @override
+  Widget build(BuildContext context) => Material(
+    color: Colors.white,
+    borderRadius: BorderRadius.circular(20),
+    child: InkWell(
+      borderRadius: BorderRadius.circular(20),
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => MemberProfilePage(provider: provider),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                ProfilePhoto(
+                  size: 56,
+                  photoUrl: provider.photoUrl,
+                  exampleIndex: provider.photoIndex,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              provider.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 17,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                          if (provider.verified) ...[
+                            const SizedBox(width: 5),
+                            const Icon(
+                              Icons.verified_rounded,
+                              color: _green,
+                              size: 17,
+                            ),
+                          ],
+                        ],
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        provider.jobTitle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(color: _muted, fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              provider.company.isEmpty
+                  ? provider.category.label
+                  : provider.company,
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+            ),
+            if (provider.specialty.isNotEmpty) ...[
+              const SizedBox(height: 7),
+              Text(
+                provider.specialty,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: _muted,
+                  fontSize: 12,
+                  height: 1.45,
+                ),
+              ),
+            ],
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 9,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE7EEE9),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    provider.category.label.toUpperCase(),
+                    style: const TextStyle(
+                      color: _green,
+                      fontSize: 8,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: .5,
+                    ),
+                  ),
+                ),
+                const Spacer(),
+                const Text(
+                  'VIEW PROFILE',
+                  style: TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: .6,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                const Icon(Icons.arrow_forward_rounded, size: 16),
+              ],
+            ),
+          ],
+        ),
+      ),
     ),
   );
 }
@@ -895,7 +1206,10 @@ class _AccessState extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     width: double.infinity,
     padding: const EdgeInsets.all(38),
-    color: Colors.white,
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(20),
+    ),
     child: Column(
       children: [
         const Icon(Icons.lock_outline, color: _green, size: 32),

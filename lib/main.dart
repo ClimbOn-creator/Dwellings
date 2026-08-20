@@ -8,12 +8,15 @@ import 'screens/local_network_page.dart';
 import 'screens/member_workspace_pages.dart';
 import 'screens/member_deal_marketplace_page.dart';
 import 'screens/affinity_review_desk_page.dart';
+import 'screens/content_studio_page.dart';
 import 'screens/acquisition_support_page.dart';
 import 'services/backend_service.dart';
+import 'services/site_content_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await BackendService.initialize();
+  await SiteContentService.initialize();
   await AcquisitionFoundation.load();
   runApp(const AffinityApp());
 }
@@ -110,6 +113,7 @@ class AffinityApp extends StatelessWidget {
       'member-leads' => const MemberLeadInboxPage(),
       'member-studio' => const MemberDealMarketplacePage(),
       'review-desk' => const AffinityReviewDeskPage(),
+      'content-studio' => const ContentStudioPage(),
       'email-composer' => const MemberEmailComposerPage(),
       'newsletter-builder' => const MemberNewsletterBuilderPage(),
       'landing' => const AcquisitionSupportPage(),

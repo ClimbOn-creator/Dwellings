@@ -569,6 +569,30 @@ class MarketplaceService {
     }
   }
 
+  static Future<List<MarketplaceProvider>> loadAffinityMembers() async {
+    if (!BackendService.configured) {
+      return _demo(cities.first, PlatformSide.business).providers;
+    }
+    try {
+      final rows = await Supabase.instance.client
+          .from('provider_profiles')
+          .select(
+            'id, provider_type, display_name, company_name, description, phone, email, website_url, '
+            'license_number, license_region, accepting_leads, membership_tier, verified, years_experience, review_score, review_count, job_title, '
+            'is_example, photo_index, logo_object_key, '
+            'sponsored_placements(disclosure_label, active, starts_at, ends_at), '
+            'lender_rates(interest_rate, mortgage_type, verified_at, effective_at, expires_at)',
+          )
+          .eq('verified', true)
+          .eq('is_example', false)
+          .order('display_name')
+          .limit(120);
+      return providersFromRows(rows);
+    } catch (_) {
+      return _demo(cities.first, PlatformSide.business).providers;
+    }
+  }
+
   static List<MarketplaceProvider> providersFromRows(List<dynamic> rows) {
     final providers = <MarketplaceProvider>[];
     for (final raw in rows) {

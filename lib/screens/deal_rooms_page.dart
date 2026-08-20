@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../models/platform_side.dart';
 import '../services/backend_service.dart';
 import '../services/deal_room_service.dart';
+import '../services/site_content_service.dart';
 import '../widgets/home_brand_button.dart';
 import '../widgets/topo_background.dart';
 import '../widgets/profile_photo.dart';
@@ -178,9 +179,14 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                             currentStep: 3,
                             onSelected: _goStep,
                             kicker: 'PAGE 4 OF 4 · PIPELINE',
-                            title: 'My Deal Pipeline',
-                            subtitle:
-                                'Keep every opportunity, decision, deadline, and blocker in one focused acquisition workspace.',
+                            title: SiteContentService.text(
+                              'pipeline.title',
+                              'My Deal Pipeline',
+                            ),
+                            subtitle: SiteContentService.text(
+                              'pipeline.subtitle',
+                              'Keep every opportunity, decision, deadline, and blocker in one focused acquisition workspace.',
+                            ),
                             accent: Color(0xFF244E43),
                           ),
                           const SizedBox(height: 38),

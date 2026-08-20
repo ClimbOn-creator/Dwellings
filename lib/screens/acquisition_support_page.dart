@@ -6,11 +6,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/platform_side.dart';
 import '../services/backend_service.dart';
 import '../services/account_service.dart';
+import '../services/site_content_service.dart';
 import '../widgets/app_navigation_menu.dart';
 import '../widgets/home_brand_button.dart';
 import '../widgets/acquisition_editorial_header.dart';
 import '../widgets/membership_footer.dart';
 import '../widgets/fixed_editorial_background.dart';
+import '../widgets/site_copy_text.dart';
 import 'auth_page.dart';
 import 'business_acquisition_page.dart';
 import 'deal_rooms_page.dart';
@@ -105,7 +107,8 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                const SiteCopyText(
+                  'home.eyebrow',
                   'BUSINESS ACQUISITION, MADE NAVIGABLE',
                   style: TextStyle(
                     color: Color(0xFF65615C),
@@ -115,7 +118,8 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                Text(
+                SiteCopyText(
+                  'home.title',
                   'Don’t just find a business.\nKnow what you’re buying into.',
                   style: TextStyle(
                     color: _ink,
@@ -128,7 +132,8 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
                 const SizedBox(height: 28),
                 const SizedBox(
                   width: 780,
-                  child: Text(
+                  child: SiteCopyText(
+                    'home.intro',
                     'Affinity helps aspiring buyers define the right target, prepare to transact, screen real opportunities, and build the professional team needed to close with confidence.',
                     style: TextStyle(
                       color: Color(0xFF5D5954),
@@ -186,7 +191,8 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
         constraints: const BoxConstraints(maxWidth: 1120),
         child: LayoutBuilder(
           builder: (context, box) {
-            const statement = Text(
+            const statement = SiteCopyText(
+              'home.goal',
               'A clearer path from “I want to buy a business” to “this is the right business for me.”',
               style: TextStyle(
                 color: _ink,
@@ -196,7 +202,8 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
                 letterSpacing: -2.2,
               ),
             );
-            const copy = Text(
+            const copy = SiteCopyText(
+              'home.goal_body',
               'The goal is not more deal flow. It is better judgment: a personal acquisition Blueprint, an honest view of readiness, disciplined screening, and access to specialists when the stakes rise.',
               style: TextStyle(color: Color(0xFF555562), height: 1.65),
             );
@@ -237,18 +244,28 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
             final buyer = _AudienceBlock(
               number: '01',
               eyebrow: 'FOR BUYERS & THE ACQUISITION-CURIOUS',
-              title: 'Turn interest into a mandate.',
-              copy:
-                  'Learn the path, define what fits your life and capital, measure your readiness, and screen opportunities against your own rules.',
+              title: SiteContentService.text(
+                'home.buyer_title',
+                'Turn interest into a mandate.',
+              ),
+              copy: SiteContentService.text(
+                'home.buyer_body',
+                'Learn the path, define what fits your life and capital, measure your readiness, and screen opportunities against your own rules.',
+              ),
               action: 'BUILD MY BLUEPRINT',
               onTap: () => _open(const AcquisitionBlueprintPage()),
             );
             final member = _AudienceBlock(
               number: '02',
               eyebrow: 'FOR PROFESSIONAL MEMBERS',
-              title: 'Be visible when buyers need you.',
-              copy:
-                  'Create a credible professional presence inside the Member Studio so acquisition buyers can understand your expertise and engage your services.',
+              title: SiteContentService.text(
+                'home.member_title',
+                'Be visible when buyers need you.',
+              ),
+              copy: SiteContentService.text(
+                'home.member_body',
+                'Build a credible professional presence and respond privately when an Affinity-reviewed opportunity fits your expertise.',
+              ),
               action: 'EXPLORE MEMBER STUDIO',
               onTap: () => _open(const MemberStudioPage()),
             );
@@ -661,9 +678,11 @@ class _AcquisitionBlueprintPageState extends State<AcquisitionBlueprintPage> {
   @override
   Widget build(BuildContext context) => _ModuleScaffold(
     kicker: 'PAGE 1 OF 4 · BLUEPRINT',
-    title: 'Acquisition Blueprint',
-    subtitle:
-        'Define the acquisition you want before a compelling deal changes the rules.',
+    title: SiteContentService.text('blueprint.title', 'Acquisition Blueprint'),
+    subtitle: SiteContentService.text(
+      'blueprint.subtitle',
+      'Define the acquisition you want before a compelling deal changes the rules.',
+    ),
     currentStep: 0,
     onStepSelected: _goStep,
     child: value == null
@@ -712,9 +731,14 @@ class _AcquisitionBlueprintPageState extends State<AcquisitionBlueprintPage> {
 
   Widget _chapterBody() => switch (_chapter) {
     0 => _GuidedQuestion(
-      title: 'What kind of owner do you want to become?',
-      copy:
-          'Start with the role and structure—not a price. You can revise this as your search becomes clearer.',
+      title: SiteContentService.text(
+        'blueprint.q1_title',
+        'What kind of owner do you want to become?',
+      ),
+      copy: SiteContentService.text(
+        'blueprint.q1_body',
+        'Start with the role and structure—not a price. You can revise this as your search becomes clearer.',
+      ),
       children: [
         _dropdown('type', 'Acquisition structure', const [
           'Business acquisition',
@@ -731,9 +755,14 @@ class _AcquisitionBlueprintPageState extends State<AcquisitionBlueprintPage> {
       ],
     ),
     1 => _GuidedQuestion(
-      title: 'What would feel like a natural fit?',
-      copy:
-          'Use plain language. A broad answer is useful; “local service businesses” is enough to begin.',
+      title: SiteContentService.text(
+        'blueprint.q2_title',
+        'What would feel like a natural fit?',
+      ),
+      copy: SiteContentService.text(
+        'blueprint.q2_body',
+        'Use plain language. A broad answer is useful; “local service businesses” is enough to begin.',
+      ),
       children: [
         _input(
           'geography',
@@ -748,9 +777,14 @@ class _AcquisitionBlueprintPageState extends State<AcquisitionBlueprintPage> {
       ],
     ),
     2 => _GuidedQuestion(
-      title: 'Do you know your financial range?',
-      copy:
-          'These figures are optional planning estimates—not a test or lending approval. Leave them blank if you are still learning.',
+      title: SiteContentService.text(
+        'blueprint.q3_title',
+        'Do you know your financial range?',
+      ),
+      copy: SiteContentService.text(
+        'blueprint.q3_body',
+        'These figures are optional planning estimates—not a test or lending approval. Leave them blank if you are still learning.',
+      ),
       children: [
         _input(
           'minPrice',
@@ -773,9 +807,14 @@ class _AcquisitionBlueprintPageState extends State<AcquisitionBlueprintPage> {
       ],
     ),
     _ => _GuidedQuestion(
-      title: 'What should protect you from the wrong deal?',
-      copy:
-          'Name the risks you already know you do not want. If nothing comes to mind, uncertainty is a valid answer.',
+      title: SiteContentService.text(
+        'blueprint.q4_title',
+        'What should protect you from the wrong deal?',
+      ),
+      copy: SiteContentService.text(
+        'blueprint.q4_body',
+        'Name the risks you already know you do not want. If nothing comes to mind, uncertainty is a valid answer.',
+      ),
       children: [
         _input(
           'limits',
@@ -945,9 +984,11 @@ class _BuyerReadinessPageState extends State<BuyerReadinessPage> {
     final current = value;
     return _ModuleScaffold(
       kicker: 'PAGE 2 OF 4 · READINESS',
-      title: 'Buyer Readiness',
-      subtitle:
-          'Understand what you can execute now and your path to becoming transaction-ready.',
+      title: SiteContentService.text('readiness.title', 'Buyer Readiness'),
+      subtitle: SiteContentService.text(
+        'readiness.subtitle',
+        'Understand what you can execute now and your path to becoming transaction-ready.',
+      ),
       currentStep: 1,
       onStepSelected: _goStep,
       child: current == null
@@ -1019,18 +1060,28 @@ class _BuyerReadinessPageState extends State<BuyerReadinessPage> {
 
   Widget _readinessMoment(AcquisitionFoundation current) => switch (_stage) {
     0 => _GuidedQuestion(
-      title: 'What capital could be available?',
-      copy:
-          'A rough range is enough. Leave every field blank if you have not had this conversation yet.',
+      title: SiteContentService.text(
+        'readiness.q1_title',
+        'What capital could be available?',
+      ),
+      copy: SiteContentService.text(
+        'readiness.q1_body',
+        'A rough range is enough. Leave every field blank if you have not had this conversation yet.',
+      ),
       children: [
         _readinessInput('equity', 'Cash or equity you might use'),
         _readinessInput('reserves', 'Capital you want untouched after closing'),
       ],
     ),
     1 => _GuidedQuestion(
-      title: 'What supports the acquisition?',
-      copy:
-          'These answers help frame—not approve—your capacity. “I’m not sure yet” is included on purpose.',
+      title: SiteContentService.text(
+        'readiness.q2_title',
+        'What supports the acquisition?',
+      ),
+      copy: SiteContentService.text(
+        'readiness.q2_body',
+        'These answers help frame—not approve—your capacity. “I’m not sure yet” is included on purpose.',
+      ),
       children: [
         _readinessInput('income', 'Annual supporting income'),
         _LabeledField(
@@ -1068,9 +1119,14 @@ class _BuyerReadinessPageState extends State<BuyerReadinessPage> {
       ],
     ),
     _ => _GuidedQuestion(
-      title: 'What is already in motion?',
-      copy:
-          'This is a planning checklist, not homework you must finish today. Select only what is genuinely underway.',
+      title: SiteContentService.text(
+        'readiness.q3_title',
+        'What is already in motion?',
+      ),
+      copy: SiteContentService.text(
+        'readiness.q3_body',
+        'This is a planning checklist, not homework you must finish today. Select only what is genuinely underway.',
+      ),
       children: [
         for (final item in const {
           'proof': 'Proof of funds',

@@ -8,6 +8,7 @@ import '../services/business_service.dart';
 import '../services/marketplace_service.dart';
 import '../services/account_service.dart';
 import '../services/device_location_service.dart';
+import '../services/site_content_service.dart';
 import '../widgets/home_brand_button.dart';
 import '../widgets/app_navigation_menu.dart';
 import '../widgets/canadian_city_field.dart';
@@ -439,9 +440,14 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
                             currentStep: 2,
                             onSelected: _goStep,
                             kicker: 'PAGE 3 OF 4 · DEAL SCREEN',
-                            title: 'Initial Deal Screen',
-                            subtitle:
-                                'Test whether a specific business fits your Blueprint and whether its cash flow can support you.',
+                            title: SiteContentService.text(
+                              'screen.title',
+                              'Initial Deal Screen',
+                            ),
+                            subtitle: SiteContentService.text(
+                              'screen.subtitle',
+                              'Test whether a specific business fits your Blueprint and whether its cash flow can support you.',
+                            ),
                             accent: Color(0xFF805A35),
                           ),
                           const SizedBox(height: 42),
@@ -581,15 +587,18 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
         bottom: BorderSide(color: Color(0xFFF2C879)),
       ),
     ),
-    child: const Row(
+    child: Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Icon(Icons.shield_outlined, color: Color(0xFF8A5800)),
         SizedBox(width: 12),
         Expanded(
           child: Text(
-            'CONFIDENTIAL DATA BOUNDARY · Use summarized figures only. Do not upload tax returns, payroll, customer lists, employee records or confidential seller documents. The hardened M&A vault—mandatory MFA, malware scanning, audit logging, watermarks and expiring downloads—is not yet active.',
-            style: TextStyle(
+            SiteContentService.text(
+              'screen.privacy',
+              'CONFIDENTIAL DATA BOUNDARY · Use summarized figures only. Do not upload tax returns, payroll, customer lists, employee records or confidential seller documents.',
+            ),
+            style: const TextStyle(
               color: Color(0xFF6D4805),
               fontSize: 12,
               height: 1.5,
@@ -691,9 +700,12 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
-            'Use only the figures you have. Blank fields remain unknown and become questions for diligence.',
-            style: TextStyle(color: Color(0xFFA5A5B5), height: 1.45),
+          Text(
+            SiteContentService.text(
+              'screen.form_help',
+              'Use only the figures you have. Blank fields remain unknown and become questions for diligence.',
+            ),
+            style: const TextStyle(color: Color(0xFFA5A5B5), height: 1.45),
           ),
           const SizedBox(height: 20),
           LayoutBuilder(

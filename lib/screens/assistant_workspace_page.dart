@@ -11,6 +11,7 @@ import 'local_network_page.dart';
 import '../services/backend_service.dart';
 import '../services/calendar_sync_service.dart';
 import '../services/consulting_service.dart';
+import '../services/site_content_service.dart';
 import 'business_acquisition_page.dart';
 import 'auth_page.dart';
 import 'member_deal_marketplace_page.dart';
@@ -621,9 +622,14 @@ class PersonalizedConsultingPage extends StatelessWidget {
   Widget build(BuildContext context) => _Page(
     backgroundImage: 'assets/images/affinity-consulting.jpg',
     washOpacity: .36,
-    title: 'Founder-led acquisition consulting',
-    subtitle:
-        'A personal, rigorous second set of eyes for the decisions that shape what you buy—and what happens after.',
+    title: SiteContentService.text(
+      'consulting.title',
+      'Founder-led acquisition consulting',
+    ),
+    subtitle: SiteContentService.text(
+      'consulting.subtitle',
+      'A personal, rigorous second set of eyes for the decisions that shape what you buy—and what happens after.',
+    ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
