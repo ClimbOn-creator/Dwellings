@@ -56,6 +56,17 @@ The consulting form verifies the signed-in Supabase user and sends the request t
 
 Requests include the authenticated user's name/email plus their supplied phone, consulting focus, desired outcome and current challenge.
 
+### Member Studio private beta
+
+Apply `supabase/migrations/202608200017_private_beta_operations.sql` for professional matching, private notifications, buyer shortlisting, audit history, and beta metrics. In-app notifications work through Supabase. To also deliver transactional email, configure:
+
+- `SUPABASE_SERVICE_ROLE_KEY` — server-side only
+- `RESEND_API_KEY`
+- `AFFINITY_FROM_EMAIL` — a sender on a Resend-verified domain
+- `APP_BASE_URL` — the production Affinity URL
+
+The founding-member onboarding flow does not charge a card. Paid billing remains a separate, explicit activation step after the private beta.
+
 ### Google and Outlook calendar sync
 
 Apply `supabase/migrations/202608150013_calendar_connections.sql`, then configure these encrypted Cloudflare Pages variables:

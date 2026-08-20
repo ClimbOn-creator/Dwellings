@@ -6,6 +6,7 @@ import '../services/affinity_admin_service.dart';
 import '../services/deal_room_service.dart';
 import '../services/marketplace_service.dart';
 import '../services/member_deal_marketplace_service.dart';
+import '../services/member_beta_service.dart';
 import '../widgets/app_navigation_menu.dart';
 import '../widgets/home_brand_button.dart';
 import '../widgets/membership_footer.dart';
@@ -15,6 +16,7 @@ import 'auth_page.dart';
 import 'deal_rooms_page.dart';
 import 'affinity_review_desk_page.dart';
 import 'member_profile_page.dart';
+import 'professional_onboarding_page.dart';
 
 const _ink = Color(0xFF171717);
 const _green = Color(0xFF053827);
@@ -39,6 +41,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
   late Future<List<MemberDealPitch>> _responses;
   late Future<List<MarketplaceProvider>> _professionals;
   String _professionalQuery = '';
+  String _responseFilter = 'all';
 
   @override
   void initState() {
@@ -165,6 +168,21 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
     }
   }
 
+  Future<void> _openMatchSettings() async {
+    if (!await _ensureSignedIn() || !mounted) return;
+    try {
+      final current = await MemberBetaService.loadPreferences();
+      if (!mounted) return;
+      final saved = await showDialog<bool>(
+        context: context,
+        builder: (_) => _MatchSettingsDialog(current: current),
+      );
+      if (saved == true && mounted) setState(_reload);
+    } catch (error) {
+      if (mounted) _message(_friendlyError(error));
+    }
+  }
+
   void _message(String text) =>
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
 
@@ -263,6 +281,23 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                     ),
                     icon: const Icon(Icons.add_rounded),
                     label: const Text('SUBMIT A DEAL'),
+                  ),
+                  OutlinedButton.icon(
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const ProfessionalOnboardingPage(),
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      side: const BorderSide(color: Color(0xFF8AA59A)),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 18,
+                      ),
+                    ),
+                    icon: const Icon(Icons.badge_outlined, size: 18),
+                    label: const Text('JOIN THE NETWORK'),
                   ),
                   FutureBuilder<bool>(
                     future: AffinityAdminService.isAdmin(),
@@ -476,14 +511,35 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SiteCopyText(
-            'studio.opportunities_title',
-            'Reviewed opportunities',
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.w700,
-              letterSpacing: -1,
-            ),
+          LayoutBuilder(
+            builder: (context, box) {
+              const title = SiteCopyText(
+                'studio.opportunities_title',
+                'Reviewed opportunities',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -1,
+                ),
+              );
+              final settings = OutlinedButton.icon(
+                onPressed: _openMatchSettings,
+                icon: const Icon(Icons.tune_rounded, size: 17),
+                label: const Text('MATCH SETTINGS'),
+              );
+              if (box.maxWidth < 560) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [title, const SizedBox(height: 12), settings],
+                );
+              }
+              return Row(
+                children: [
+                  Expanded(child: title),
+                  settings,
+                ],
+              );
+            },
           ),
           const SizedBox(height: 6),
           const Text(
@@ -609,8 +665,13 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
           message: _friendlyError(snapshot.error!),
         );
       }
-      final pitches = snapshot.data ?? [];
-      if (pitches.isEmpty) {
+      final allPitches = snapshot.data ?? [];
+      final pitches = buyerView && _responseFilter != 'all'
+          ? allPitches
+                .where((pitch) => pitch.status == _responseFilter)
+                .toList()
+          : allPitches;
+      if (allPitches.isEmpty) {
         return _AccessState(
           title: buyerView ? 'No deal responses yet' : 'No pitches yet',
           message: buyerView
@@ -619,7 +680,50 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
         );
       }
       return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (buyerView) ...[
+            const Text(
+              'Compare private pitches',
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -1,
+              ),
+            ),
+            const SizedBox(height: 7),
+            const Text(
+              'Shortlist promising professionals before sharing your identity. Only acceptance releases your account email.',
+              style: TextStyle(color: _muted, height: 1.45),
+            ),
+            const SizedBox(height: 16),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                _responseChip('all', 'ALL ${allPitches.length}'),
+                _responseChip(
+                  'submitted',
+                  'NEW ${allPitches.where((p) => p.status == 'submitted').length}',
+                ),
+                _responseChip(
+                  'shortlisted',
+                  'SHORTLIST ${allPitches.where((p) => p.status == 'shortlisted').length}',
+                ),
+                _responseChip(
+                  'accepted',
+                  'CONNECTED ${allPitches.where((p) => p.status == 'accepted').length}',
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+          ],
+          if (pitches.isEmpty)
+            const _AccessState(
+              title: 'No pitches in this view',
+              message:
+                  'Choose another response filter to compare your private proposals.',
+            ),
           for (final pitch in pitches) ...[
             _PitchCard(
               pitch: pitch,
@@ -643,6 +747,19 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
         ],
       );
     },
+  );
+
+  Widget _responseChip(String value, String label) => ChoiceChip(
+    label: Text(label),
+    selected: _responseFilter == value,
+    selectedColor: _green,
+    backgroundColor: Colors.white,
+    labelStyle: TextStyle(
+      color: _responseFilter == value ? Colors.white : _ink,
+      fontSize: 9,
+      fontWeight: FontWeight.w900,
+    ),
+    onSelected: (_) => setState(() => _responseFilter = value),
   );
 }
 
@@ -710,6 +827,25 @@ class _DealPost extends StatelessWidget {
           '${deal.industry} · ${deal.region} · ${deal.stage}',
           style: const TextStyle(color: _green, fontWeight: FontWeight.w700),
         ),
+        if (deal.matchScore != null) ...[
+          const SizedBox(height: 11),
+          Row(
+            children: [
+              const Icon(Icons.auto_awesome_outlined, size: 16, color: _green),
+              const SizedBox(width: 7),
+              Expanded(
+                child: Text(
+                  '${deal.matchScore}% professional match · ${deal.matchReason}',
+                  style: const TextStyle(
+                    color: _green,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
         const SizedBox(height: 18),
         Text(deal.summary, style: const TextStyle(height: 1.6, fontSize: 15)),
         const SizedBox(height: 22),
@@ -959,11 +1095,18 @@ class _PitchCard extends StatelessWidget {
             style: const TextStyle(color: _green, fontWeight: FontWeight.w800),
           ),
         ],
-        if (buyerView && pitch.status == 'submitted') ...[
+        if (buyerView &&
+            (pitch.status == 'submitted' || pitch.status == 'shortlisted')) ...[
           const SizedBox(height: 18),
           Wrap(
             spacing: 9,
             children: [
+              if (pitch.status == 'submitted')
+                OutlinedButton.icon(
+                  onPressed: () => onRespond?.call('shortlisted'),
+                  icon: const Icon(Icons.bookmark_add_outlined, size: 17),
+                  label: const Text('SHORTLIST'),
+                ),
               FilledButton(
                 onPressed: () => onRespond?.call('accepted'),
                 style: FilledButton.styleFrom(backgroundColor: _green),
@@ -978,6 +1121,137 @@ class _PitchCard extends StatelessWidget {
         ],
       ],
     ),
+  );
+}
+
+class _MatchSettingsDialog extends StatefulWidget {
+  const _MatchSettingsDialog({required this.current});
+  final AffinityMatchPreferences current;
+
+  @override
+  State<_MatchSettingsDialog> createState() => _MatchSettingsDialogState();
+}
+
+class _MatchSettingsDialogState extends State<_MatchSettingsDialog> {
+  late final TextEditingController specialties;
+  late final TextEditingController regions;
+  late double minimumScore;
+  late bool emailNotifications;
+  bool saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    specialties = TextEditingController(
+      text: widget.current.specialties.join(', '),
+    );
+    regions = TextEditingController(text: widget.current.regions.join(', '));
+    minimumScore = widget.current.minimumScore.toDouble();
+    emailNotifications = widget.current.emailNotifications;
+  }
+
+  @override
+  void dispose() {
+    specialties.dispose();
+    regions.dispose();
+    super.dispose();
+  }
+
+  List<String> _split(String value) => value
+      .split(RegExp(r'[,\n]'))
+      .map((item) => item.trim())
+      .where((item) => item.isNotEmpty)
+      .toList();
+
+  Future<void> _save() async {
+    setState(() => saving = true);
+    try {
+      await MemberBetaService.savePreferences(
+        AffinityMatchPreferences(
+          specialties: _split(specialties.text),
+          regions: _split(regions.text),
+          minimumScore: minimumScore.round(),
+          emailNotifications: emailNotifications,
+        ),
+      );
+      if (mounted) Navigator.pop(context, true);
+    } catch (error) {
+      if (mounted) {
+        setState(() => saving = false);
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(_friendlyError(error))));
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    title: const Text('Opportunity match settings'),
+    content: SizedBox(
+      width: 560,
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Affinity uses these preferences to rank and filter anonymous opportunities. They are never shown to buyers.',
+              style: TextStyle(color: _muted, height: 1.45),
+            ),
+            const SizedBox(height: 18),
+            TextField(
+              controller: specialties,
+              maxLines: 2,
+              decoration: const InputDecoration(
+                labelText: 'Expertise',
+                hintText: 'Commercial lending, QOE, M&A legal',
+              ),
+            ),
+            const SizedBox(height: 13),
+            TextField(
+              controller: regions,
+              maxLines: 2,
+              decoration: const InputDecoration(
+                labelText: 'Regions',
+                hintText: 'British Columbia, Alberta',
+              ),
+            ),
+            const SizedBox(height: 18),
+            Text(
+              'Minimum Affinity score · ${minimumScore.round()}',
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
+            Slider(
+              value: minimumScore,
+              min: 0,
+              max: 100,
+              divisions: 20,
+              activeColor: _green,
+              onChanged: (value) => setState(() => minimumScore = value),
+            ),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              value: emailNotifications,
+              activeThumbColor: _green,
+              title: const Text('Email me about private activity'),
+              subtitle: const Text('Deal matches and pitch decisions only.'),
+              onChanged: (value) => setState(() => emailNotifications = value),
+            ),
+          ],
+        ),
+      ),
+    ),
+    actions: [
+      TextButton(
+        onPressed: saving ? null : () => Navigator.pop(context),
+        child: const Text('CANCEL'),
+      ),
+      FilledButton(
+        onPressed: saving ? null : _save,
+        style: FilledButton.styleFrom(backgroundColor: _green),
+        child: Text(saving ? 'SAVING…' : 'SAVE MATCH SETTINGS'),
+      ),
+    ],
   );
 }
 

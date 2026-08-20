@@ -9,6 +9,8 @@ import 'screens/member_workspace_pages.dart';
 import 'screens/member_deal_marketplace_page.dart';
 import 'screens/affinity_review_desk_page.dart';
 import 'screens/content_studio_page.dart';
+import 'screens/notification_center_page.dart';
+import 'screens/professional_onboarding_page.dart';
 import 'screens/acquisition_support_page.dart';
 import 'services/backend_service.dart';
 import 'services/site_content_service.dart';
@@ -114,6 +116,8 @@ class AffinityApp extends StatelessWidget {
       'member-studio' => const MemberDealMarketplacePage(),
       'review-desk' => const AffinityReviewDeskPage(),
       'content-studio' => const ContentStudioPage(),
+      'notifications' => const NotificationCenterPage(),
+      'professional-onboarding' => const ProfessionalOnboardingPage(),
       'email-composer' => const MemberEmailComposerPage(),
       'newsletter-builder' => const MemberNewsletterBuilderPage(),
       'landing' => const AcquisitionSupportPage(),

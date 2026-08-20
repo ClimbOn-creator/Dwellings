@@ -125,9 +125,11 @@ class MembershipService {
       'provider_type': type,
       'display_name': application['full_name'],
       'company_name': application['company_name'] ?? '',
-      'job_title': MemberType.values
-          .firstWhere((value) => value.databaseValue == type)
-          .label,
+      'job_title':
+          application['job_title'] ??
+          MemberType.values
+              .firstWhere((value) => value.databaseValue == type)
+              .label,
       'description': application['notes'] ?? '',
       'phone': application['phone'],
       'email': application['email'],

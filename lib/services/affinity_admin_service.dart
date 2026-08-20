@@ -2,6 +2,74 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'backend_service.dart';
 
+class AffinityBetaMetrics {
+  const AffinityBetaMetrics({
+    required this.submittedDeals,
+    required this.publishedDeals,
+    required this.totalPitches,
+    required this.shortlistedPitches,
+    required this.acceptedPitches,
+    required this.activeProfessionals,
+    required this.pendingEmails,
+    required this.averageHoursToPublish,
+  });
+
+  final int submittedDeals;
+  final int publishedDeals;
+  final int totalPitches;
+  final int shortlistedPitches;
+  final int acceptedPitches;
+  final int activeProfessionals;
+  final int pendingEmails;
+  final double averageHoursToPublish;
+
+  factory AffinityBetaMetrics.fromJson(Map<String, dynamic> row) =>
+      AffinityBetaMetrics(
+        submittedDeals: (row['submitted_deals'] as num?)?.toInt() ?? 0,
+        publishedDeals: (row['published_deals'] as num?)?.toInt() ?? 0,
+        totalPitches: (row['total_pitches'] as num?)?.toInt() ?? 0,
+        shortlistedPitches: (row['shortlisted_pitches'] as num?)?.toInt() ?? 0,
+        acceptedPitches: (row['accepted_pitches'] as num?)?.toInt() ?? 0,
+        activeProfessionals:
+            (row['active_professionals'] as num?)?.toInt() ?? 0,
+        pendingEmails: (row['pending_emails'] as num?)?.toInt() ?? 0,
+        averageHoursToPublish:
+            (row['average_hours_to_publish'] as num?)?.toDouble() ?? 0,
+      );
+}
+
+class AffinityAuditEvent {
+  const AffinityAuditEvent({
+    required this.id,
+    required this.eventType,
+    required this.entityType,
+    required this.actorEmail,
+    required this.createdAt,
+    required this.metadata,
+  });
+
+  final String id;
+  final String eventType;
+  final String entityType;
+  final String actorEmail;
+  final DateTime createdAt;
+  final Map<String, dynamic> metadata;
+
+  factory AffinityAuditEvent.fromJson(Map<String, dynamic> row) =>
+      AffinityAuditEvent(
+        id: row['id'] as String,
+        eventType: row['event_type'] as String? ?? 'activity',
+        entityType: row['entity_type'] as String? ?? '',
+        actorEmail: row['actor_email'] as String? ?? 'system',
+        createdAt:
+            DateTime.tryParse(row['created_at'] as String? ?? '') ??
+            DateTime.now(),
+        metadata: row['metadata'] is Map
+            ? Map<String, dynamic>.from(row['metadata'] as Map)
+            : const {},
+      );
+}
+
 class AffinityReviewItem {
   const AffinityReviewItem({
     required this.id,
@@ -221,6 +289,27 @@ class AffinityAdminService {
         'access_onboarding_status': onboardingStatus,
       },
     );
+  }
+
+  static Future<AffinityBetaMetrics> loadBetaMetrics() async {
+    _requireUser();
+    final row = await _client.rpc('load_affinity_beta_metrics');
+    return AffinityBetaMetrics.fromJson(Map<String, dynamic>.from(row as Map));
+  }
+
+  static Future<List<AffinityAuditEvent>> loadAuditEvents() async {
+    _requireUser();
+    final rows = await _client.rpc(
+      'load_affinity_audit_events',
+      params: {'event_limit': 80},
+    );
+    return (rows as List<dynamic>)
+        .map(
+          (row) => AffinityAuditEvent.fromJson(
+            Map<String, dynamic>.from(row as Map),
+          ),
+        )
+        .toList();
   }
 
   static void _requireUser() {

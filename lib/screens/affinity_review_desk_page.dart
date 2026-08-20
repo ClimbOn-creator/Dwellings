@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../models/platform_side.dart';
 import '../services/affinity_admin_service.dart';
 import '../services/backend_service.dart';
+import '../services/member_beta_service.dart';
 import '../widgets/app_navigation_menu.dart';
 import '../widgets/home_brand_button.dart';
 import '../widgets/membership_footer.dart';
@@ -26,6 +27,8 @@ class _AffinityReviewDeskPageState extends State<AffinityReviewDeskPage> {
   late Future<bool> _access;
   late Future<List<AffinityReviewItem>> _queue;
   late Future<List<AffinityMemberAccount>> _members;
+  late Future<AffinityBetaMetrics> _metrics;
+  late Future<List<AffinityAuditEvent>> _events;
   int _tab = 0;
 
   @override
@@ -37,12 +40,27 @@ class _AffinityReviewDeskPageState extends State<AffinityReviewDeskPage> {
   void _reload() {
     _queue = Future.value(const <AffinityReviewItem>[]);
     _members = Future.value(const <AffinityMemberAccount>[]);
+    _metrics = Future.value(
+      const AffinityBetaMetrics(
+        submittedDeals: 0,
+        publishedDeals: 0,
+        totalPitches: 0,
+        shortlistedPitches: 0,
+        acceptedPitches: 0,
+        activeProfessionals: 0,
+        pendingEmails: 0,
+        averageHoursToPublish: 0,
+      ),
+    );
+    _events = Future.value(const <AffinityAuditEvent>[]);
     _access = AffinityAdminService.isAdmin();
     _access.then((allowed) {
       if (!mounted || !allowed) return;
       setState(() {
         _queue = AffinityAdminService.loadReviewQueue();
         _members = AffinityAdminService.loadMemberAccounts();
+        _metrics = AffinityAdminService.loadBetaMetrics();
+        _events = AffinityAdminService.loadAuditEvents();
       });
     });
   }
@@ -98,10 +116,16 @@ class _AffinityReviewDeskPageState extends State<AffinityReviewDeskPage> {
                           children: [
                             _tabChip(0, 'DEAL REVIEW QUEUE'),
                             _tabChip(1, 'MEMBER ACCOUNTS'),
+                            _tabChip(2, 'BETA OPERATIONS'),
                           ],
                         ),
                         const SizedBox(height: 26),
-                        if (_tab == 0) _reviewQueue() else _memberAccounts(),
+                        if (_tab == 0)
+                          _reviewQueue()
+                        else if (_tab == 1)
+                          _memberAccounts()
+                        else
+                          _operations(),
                       ],
                     ),
                   ),
@@ -275,10 +299,162 @@ class _AffinityReviewDeskPageState extends State<AffinityReviewDeskPage> {
     },
   );
 
+  Widget _operations() => FutureBuilder<AffinityBetaMetrics>(
+    future: _metrics,
+    builder: (context, metricSnapshot) {
+      if (metricSnapshot.connectionState == ConnectionState.waiting) {
+        return const _Loading();
+      }
+      if (metricSnapshot.hasError) return _error(metricSnapshot.error!);
+      final metrics = metricSnapshot.data!;
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: [
+              _OperationsMetric('DEALS SUBMITTED', '${metrics.submittedDeals}'),
+              _OperationsMetric(
+                'LIVE OPPORTUNITIES',
+                '${metrics.publishedDeals}',
+              ),
+              _OperationsMetric('TOTAL PITCHES', '${metrics.totalPitches}'),
+              _OperationsMetric('SHORTLISTED', '${metrics.shortlistedPitches}'),
+              _OperationsMetric('CONNECTIONS', '${metrics.acceptedPitches}'),
+              _OperationsMetric(
+                'ACTIVE PROFESSIONALS',
+                '${metrics.activeProfessionals}',
+              ),
+              _OperationsMetric(
+                'AVG. HOURS TO PUBLISH',
+                metrics.averageHoursToPublish.toStringAsFixed(1),
+              ),
+              _OperationsMetric('PENDING EMAILS', '${metrics.pendingEmails}'),
+            ],
+          ),
+          const SizedBox(height: 20),
+          FilledButton.icon(
+            onPressed: () async {
+              await MemberBetaService.flushEmailOutbox();
+              if (mounted) _refresh();
+            },
+            style: FilledButton.styleFrom(backgroundColor: _green),
+            icon: const Icon(Icons.outgoing_mail, size: 18),
+            label: const Text('PROCESS NOTIFICATION EMAILS'),
+          ),
+          const SizedBox(height: 34),
+          const Text(
+            'Private audit trail',
+            style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 7),
+          const Text(
+            'A reviewer-only record of deal, pitch, and access decisions.',
+            style: TextStyle(color: _muted),
+          ),
+          const SizedBox(height: 16),
+          FutureBuilder<List<AffinityAuditEvent>>(
+            future: _events,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting)
+                return const _Loading();
+              if (snapshot.hasError) return _error(snapshot.error!);
+              final events = snapshot.data ?? [];
+              if (events.isEmpty)
+                return const _Empty(
+                  'New Member Studio activity will be recorded here.',
+                );
+              return Column(
+                children: [for (final event in events) _AuditRow(event)],
+              );
+            },
+          ),
+        ],
+      );
+    },
+  );
+
   Widget _error(Object error) => _Empty(
     error.toString().contains('does not exist')
         ? 'Apply migration 202608190015_affinity_review_desk.sql, then reload this page.'
         : error.toString(),
+  );
+}
+
+class _OperationsMetric extends StatelessWidget {
+  const _OperationsMetric(this.label, this.value);
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: 245,
+    padding: const EdgeInsets.all(20),
+    color: Colors.white,
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            color: _muted,
+            fontSize: 9,
+            fontWeight: FontWeight.w900,
+            letterSpacing: .8,
+          ),
+        ),
+        const SizedBox(height: 10),
+        Text(
+          value,
+          style: const TextStyle(fontSize: 30, fontWeight: FontWeight.w900),
+        ),
+      ],
+    ),
+  );
+}
+
+class _AuditRow extends StatelessWidget {
+  const _AuditRow(this.event);
+  final AffinityAuditEvent event;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    margin: const EdgeInsets.only(bottom: 2),
+    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+    color: Colors.white,
+    child: Row(
+      children: [
+        const CircleAvatar(
+          radius: 17,
+          backgroundColor: Color(0xFFE7ECE9),
+          child: Icon(Icons.history_rounded, color: _green, size: 17),
+        ),
+        const SizedBox(width: 13),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                event.eventType.replaceAll('_', ' '),
+                style: const TextStyle(fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                '${event.entityType} · ${event.actorEmail} · ${event.metadata}',
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(color: _muted, fontSize: 11),
+              ),
+            ],
+          ),
+        ),
+        Text(
+          DateFormat.MMMd().add_jm().format(event.createdAt.toLocal()),
+          style: const TextStyle(color: _muted, fontSize: 10),
+        ),
+      ],
+    ),
   );
 }
 

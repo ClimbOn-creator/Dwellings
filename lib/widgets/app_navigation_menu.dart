@@ -11,6 +11,8 @@ import '../screens/deal_rooms_page.dart';
 import '../screens/local_network_page.dart';
 import '../screens/profile_page.dart';
 import '../screens/content_studio_page.dart';
+import '../screens/notification_center_page.dart';
+import '../services/member_beta_service.dart';
 
 enum AppNavigationDestination {
   overview,
@@ -102,6 +104,26 @@ class AppNavigationMenu extends StatelessWidget {
               )
             : const SizedBox.shrink(),
       ),
+      if (BackendService.user != null)
+        FutureBuilder<int>(
+          future: MemberBetaService.unreadCount(),
+          builder: (context, snapshot) => Badge(
+            isLabelVisible: (snapshot.data ?? 0) > 0,
+            label: Text('${snapshot.data ?? 0}'),
+            child: IconButton(
+              tooltip: 'Private updates',
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const NotificationCenterPage(),
+                ),
+              ),
+              icon: Icon(
+                Icons.notifications_none_rounded,
+                color: dark ? Colors.white : const Color(0xFF161616),
+              ),
+            ),
+          ),
+        ),
       IconButton(
         tooltip: BackendService.user == null ? 'Sign in' : 'My profile',
         onPressed: () => _open(context, AppNavigationDestination.profile),

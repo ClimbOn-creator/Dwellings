@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'backend_service.dart';
+import 'member_beta_service.dart';
 
 class MemberDealOpportunity {
   const MemberDealOpportunity({
@@ -16,6 +17,8 @@ class MemberDealOpportunity {
     required this.scoreLabel,
     required this.supportNeeded,
     required this.publishedAt,
+    this.matchScore,
+    this.matchReason = '',
     this.isPreview = false,
   });
 
@@ -31,6 +34,8 @@ class MemberDealOpportunity {
   final String scoreLabel;
   final List<String> supportNeeded;
   final DateTime publishedAt;
+  final int? matchScore;
+  final String matchReason;
   final bool isPreview;
 
   factory MemberDealOpportunity.fromJson(Map<String, dynamic> row) =>
@@ -52,6 +57,8 @@ class MemberDealOpportunity {
         publishedAt:
             DateTime.tryParse(row['published_at'] as String? ?? '') ??
             DateTime.now(),
+        matchScore: (row['match_score'] as num?)?.toInt(),
+        matchReason: row['match_reason'] as String? ?? '',
       );
 }
 
@@ -109,7 +116,12 @@ class MemberDealMarketplaceService {
     if (!BackendService.configured || BackendService.user == null) {
       return _previewDeals;
     }
-    final rows = await _client.rpc('browse_member_deals');
+    dynamic rows;
+    try {
+      rows = await _client.rpc('browse_matched_member_deals');
+    } catch (_) {
+      rows = await _client.rpc('browse_member_deals');
+    }
     return (rows as List<dynamic>)
         .map(
           (row) => MemberDealOpportunity.fromJson(
@@ -125,6 +137,7 @@ class MemberDealMarketplaceService {
       'submit_deal_to_member_studio',
       params: {'target_deal_room_id': dealRoomId},
     );
+    await MemberBetaService.flushEmailOutbox();
   }
 
   static Future<void> sendPitch({
@@ -143,6 +156,7 @@ class MemberDealMarketplaceService {
         'reply_email': contactEmail.trim(),
       },
     );
+    await MemberBetaService.flushEmailOutbox();
   }
 
   static Future<List<MemberDealPitch>> loadMyPitches() async {
@@ -163,6 +177,7 @@ class MemberDealMarketplaceService {
       'respond_to_member_deal_pitch',
       params: {'target_pitch_id': pitchId, 'response_status': status},
     );
+    await MemberBetaService.flushEmailOutbox();
   }
 
   static List<MemberDealPitch> _pitchRows(dynamic rows) =>
