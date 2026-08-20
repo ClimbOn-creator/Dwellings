@@ -7,6 +7,7 @@ import 'screens/business_acquisition_page.dart';
 import 'screens/local_network_page.dart';
 import 'screens/member_workspace_pages.dart';
 import 'screens/member_deal_marketplace_page.dart';
+import 'screens/affinity_review_desk_page.dart';
 import 'screens/acquisition_support_page.dart';
 import 'services/backend_service.dart';
 
@@ -108,6 +109,7 @@ class AffinityApp extends StatelessWidget {
       'deal-rooms' => const DealRoomsPage(initialSide: PlatformSide.business),
       'member-leads' => const MemberLeadInboxPage(),
       'member-studio' => const MemberDealMarketplacePage(),
+      'review-desk' => const AffinityReviewDeskPage(),
       'email-composer' => const MemberEmailComposerPage(),
       'newsletter-builder' => const MemberNewsletterBuilderPage(),
       'landing' => const AcquisitionSupportPage(),

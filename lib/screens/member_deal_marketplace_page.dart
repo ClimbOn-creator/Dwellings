@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/platform_side.dart';
 import '../services/backend_service.dart';
+import '../services/affinity_admin_service.dart';
 import '../services/deal_room_service.dart';
 import '../services/member_deal_marketplace_service.dart';
 import '../widgets/app_navigation_menu.dart';
@@ -11,6 +12,7 @@ import '../widgets/membership_footer.dart';
 import 'auth_page.dart';
 import 'deal_rooms_page.dart';
 import 'profile_page.dart';
+import 'affinity_review_desk_page.dart';
 
 const _ink = Color(0xFF171717);
 const _green = Color(0xFF053827);
@@ -272,6 +274,26 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                           ),
                         ),
                         child: const Text('MEMBER PROFILE'),
+                      ),
+                      FutureBuilder<bool>(
+                        future: AffinityAdminService.isAdmin(),
+                        builder: (context, snapshot) {
+                          if (snapshot.data != true) {
+                            return const SizedBox.shrink();
+                          }
+                          return OutlinedButton.icon(
+                            onPressed: () => Navigator.of(context).push(
+                              MaterialPageRoute<void>(
+                                builder: (_) => const AffinityReviewDeskPage(),
+                              ),
+                            ),
+                            icon: const Icon(
+                              Icons.admin_panel_settings_outlined,
+                              size: 18,
+                            ),
+                            label: const Text('REVIEW DESK'),
+                          );
+                        },
                       ),
                     ],
                   ),
