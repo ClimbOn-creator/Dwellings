@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../models/platform_side.dart';
 import '../services/backend_service.dart';
 import '../services/deal_room_service.dart';
+import '../services/member_deal_marketplace_service.dart';
 import '../services/site_content_service.dart';
 import '../widgets/home_brand_button.dart';
 import '../widgets/topo_background.dart';
@@ -19,7 +20,7 @@ import 'auth_page.dart';
 
 const _ink = Color(0xFF171717);
 const _paper = Color(0xFFF4F1EB);
-const _purple = Color(0xFF252525);
+const _purple = Color(0xFF053827);
 const _lilac = Color(0xFF9B9B98);
 const _surface = Color(0xFFFCFBF8);
 const _line = Color(0xFFD6D1C9);
@@ -961,6 +962,8 @@ class DealRoomPage extends StatefulWidget {
   State<DealRoomPage> createState() => _DealRoomPageState();
 }
 
+enum _DealWorkspaceView { overview, plan, vault, team }
+
 class _DealRoomPageState extends State<DealRoomPage> {
   late DealRoom _room;
   late Future<DealRoomBundle> _bundle;
@@ -970,6 +973,9 @@ class _DealRoomPageState extends State<DealRoomPage> {
   DateTime? _targetDate;
   bool _saving = false;
   bool _uploading = false;
+  bool _introductionsOpen = true;
+  _DealWorkspaceView _workspaceView = _DealWorkspaceView.overview;
+  late Future<List<MemberDealPitch>> _introductions;
 
   @override
   void initState() {
@@ -979,6 +985,7 @@ class _DealRoomPageState extends State<DealRoomPage> {
     _goals.text = _room.goals;
     _targetDate = _room.targetCloseDate;
     _bundle = DealRoomService.loadBundle(_room);
+    _introductions = MemberDealMarketplaceService.loadBuyerResponses();
   }
 
   @override
@@ -989,8 +996,10 @@ class _DealRoomPageState extends State<DealRoomPage> {
     super.dispose();
   }
 
-  void _refresh() =>
-      setState(() => _bundle = DealRoomService.loadBundle(_room));
+  void _refresh() => setState(() {
+    _bundle = DealRoomService.loadBundle(_room);
+    _introductions = MemberDealMarketplaceService.loadBuyerResponses();
+  });
 
   Future<void> _saveRoom(String status, {String? currentStage}) async {
     setState(() => _saving = true);
@@ -1095,108 +1104,679 @@ class _DealRoomPageState extends State<DealRoomPage> {
   @override
   Widget build(BuildContext context) => Theme(
     data: Theme.of(context).copyWith(
-      colorScheme: const ColorScheme.dark(primary: _purple, surface: _surface),
+      colorScheme: const ColorScheme.light(primary: _purple, surface: _surface),
+      scaffoldBackgroundColor: _paper,
       textTheme: Theme.of(
         context,
-      ).textTheme.apply(bodyColor: Colors.white, displayColor: Colors.white),
+      ).textTheme.apply(bodyColor: _ink, displayColor: _ink),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: const Color(0xFF1A1A2E),
-        hintStyle: const TextStyle(color: Color(0xFF858596)),
+        fillColor: Colors.white,
+        hintStyle: const TextStyle(color: Color(0xFF85817A)),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: _line),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: _line),
         ),
       ),
     ),
     child: Scaffold(
       backgroundColor: _paper,
-      body: TopoBackground(
-        color: _paper,
-        opacity: .11,
-        child: FutureBuilder<DealRoomBundle>(
-          future: _bundle,
-          builder: (context, snapshot) {
-            if (!snapshot.hasData) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            final bundle = snapshot.data!;
-            return CustomScrollView(
-              slivers: [
-                SliverToBoxAdapter(child: _roomHeader(bundle)),
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 22,
-                      vertical: 42,
-                    ),
-                    child: Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 1120),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (_room.isBusiness) _businessSecurityBoundary(),
-                            if (_room.isBusiness) const SizedBox(height: 18),
-                            _commandBar(bundle.tasks),
-                            const SizedBox(height: 18),
-                            _metrics(),
-                            const SizedBox(height: 24),
-                            LayoutBuilder(
-                              builder: (context, constraints) {
-                                final desktop = constraints.maxWidth >= 820;
-                                final overview = _overview();
-                                final team = _team(bundle.members);
-                                return desktop
-                                    ? Row(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Expanded(flex: 3, child: overview),
-                                          const SizedBox(width: 18),
-                                          Expanded(flex: 2, child: team),
-                                        ],
-                                      )
-                                    : Column(
-                                        children: [
-                                          overview,
-                                          const SizedBox(height: 18),
-                                          team,
-                                        ],
-                                      );
-                              },
-                            ),
-                            const SizedBox(height: 24),
-                            _checklist(bundle.tasks, bundle.members),
-                            const SizedBox(height: 24),
-                            if (_room.ownedByCurrentUser ||
-                                _room.sharingPreferences['documents'] ==
-                                    true) ...[
-                              _documents(
-                                bundle.documents,
-                                bundle.documentEvents,
+      appBar: AppBar(
+        toolbarHeight: 72,
+        backgroundColor: const Color(0xFFF8F6F1),
+        surfaceTintColor: Colors.transparent,
+        foregroundColor: _ink,
+        elevation: 0,
+        title: Row(
+          children: [
+            const HomeBrandButton(size: 48, dark: false),
+            const SizedBox(width: 18),
+            Container(width: 1, height: 28, color: _line),
+            const SizedBox(width: 18),
+            Flexible(
+              child: Text(
+                _room.title,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          if (MediaQuery.sizeOf(context).width >= 720) _privacyPill(),
+          IconButton(
+            onPressed: _openIntroductions,
+            tooltip: 'Introductions',
+            icon: const Icon(Icons.forum_outlined),
+          ),
+          const SizedBox(width: 8),
+          AppNavigationMenu(
+            side: _room.isBusiness
+                ? PlatformSide.business
+                : PlatformSide.property,
+            dark: false,
+          ),
+          const SizedBox(width: 12),
+        ],
+      ),
+      body: FutureBuilder<DealRoomBundle>(
+        future: _bundle,
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          final bundle = snapshot.data!;
+          return LayoutBuilder(
+            builder: (context, box) {
+              final desktop = box.maxWidth >= 980;
+              if (!desktop) return _mobileDashboard(bundle);
+              return Row(
+                children: [
+                  _dashboardRail(),
+                  const VerticalDivider(width: 1, thickness: 1, color: _line),
+                  Expanded(
+                    child: Column(
+                      children: [
+                        _dashboardHeader(bundle),
+                        const Divider(height: 1, color: _line),
+                        Expanded(
+                          child: SingleChildScrollView(
+                            padding: const EdgeInsets.fromLTRB(28, 26, 28, 64),
+                            child: Center(
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(
+                                  maxWidth: 1040,
+                                ),
+                                child: _workspace(bundle),
                               ),
-                              const SizedBox(height: 24),
-                            ],
-                            _notes(bundle.notes),
-                            const SizedBox(height: 42),
-                            const MembershipFooter(),
-                          ],
+                            ),
+                          ),
                         ),
-                      ),
+                      ],
                     ),
                   ),
+                  const VerticalDivider(width: 1, thickness: 1, color: _line),
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 220),
+                    curve: Curves.easeOutCubic,
+                    width: _introductionsOpen ? 360 : 64,
+                    color: const Color(0xFFF8F6F1),
+                    child: _introductionsOpen
+                        ? _introductionsPanel()
+                        : _collapsedIntroductions(),
+                  ),
+                ],
+              );
+            },
+          );
+        },
+      ),
+    ),
+  );
+
+  void _openIntroductions() {
+    if (MediaQuery.sizeOf(context).width >= 980) {
+      setState(() => _introductionsOpen = !_introductionsOpen);
+      return;
+    }
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFFF8F6F1),
+      showDragHandle: true,
+      builder: (context) => SafeArea(
+        child: SizedBox(
+          height: MediaQuery.sizeOf(context).height * .82,
+          child: _introductionsPanel(),
+        ),
+      ),
+    );
+  }
+
+  void _closeIntroductions() {
+    if (MediaQuery.sizeOf(context).width < 980 &&
+        Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+      return;
+    }
+    setState(() => _introductionsOpen = false);
+  }
+
+  Widget _privacyPill() => Container(
+    margin: const EdgeInsets.symmetric(vertical: 18),
+    padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
+    decoration: BoxDecoration(
+      color: const Color(0xFFE5EEE9),
+      borderRadius: BorderRadius.circular(30),
+    ),
+    child: const Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.lock_outline_rounded, size: 14, color: _purple),
+        SizedBox(width: 6),
+        Text(
+          'PRIVATE',
+          style: TextStyle(
+            color: _purple,
+            fontSize: 9,
+            fontWeight: FontWeight.w900,
+            letterSpacing: .8,
+          ),
+        ),
+      ],
+    ),
+  );
+
+  Widget _dashboardRail() => Container(
+    width: 78,
+    color: const Color(0xFFF8F6F1),
+    padding: const EdgeInsets.fromLTRB(10, 18, 10, 16),
+    child: Column(
+      children: [
+        _railButton(
+          _DealWorkspaceView.overview,
+          Icons.space_dashboard_outlined,
+          'Overview',
+        ),
+        _railButton(
+          _DealWorkspaceView.plan,
+          Icons.account_tree_outlined,
+          'Plan',
+        ),
+        _railButton(
+          _DealWorkspaceView.vault,
+          Icons.folder_copy_outlined,
+          'Vault',
+        ),
+        _railButton(_DealWorkspaceView.team, Icons.groups_2_outlined, 'Team'),
+        const Spacer(),
+        IconButton(
+          onPressed: () =>
+              setState(() => _introductionsOpen = !_introductionsOpen),
+          tooltip: _introductionsOpen
+              ? 'Hide introductions'
+              : 'Show introductions',
+          icon: Icon(
+            _introductionsOpen
+                ? Icons.view_sidebar_outlined
+                : Icons.forum_outlined,
+            color: _purple,
+          ),
+        ),
+      ],
+    ),
+  );
+
+  Widget _railButton(_DealWorkspaceView view, IconData icon, String tooltip) =>
+      Padding(
+        padding: const EdgeInsets.only(bottom: 10),
+        child: Tooltip(
+          message: tooltip,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(14),
+            onTap: () => setState(() => _workspaceView = view),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 160),
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                color: _workspaceView == view ? _purple : Colors.transparent,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: _workspaceView == view ? _purple : _line,
                 ),
-              ],
+              ),
+              child: Icon(
+                icon,
+                size: 21,
+                color: _workspaceView == view ? Colors.white : _ink,
+              ),
+            ),
+          ),
+        ),
+      );
+
+  Widget _dashboardHeader(DealRoomBundle bundle) => Container(
+    width: double.infinity,
+    color: Colors.white.withValues(alpha: .68),
+    padding: const EdgeInsets.fromLTRB(30, 20, 30, 18),
+    child: Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                _workspaceLabel.toUpperCase(),
+                style: const TextStyle(
+                  color: _purple,
+                  fontSize: 9,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.3,
+                ),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                _workspaceTitle,
+                style: const TextStyle(
+                  fontSize: 27,
+                  height: 1,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -.8,
+                ),
+              ),
+            ],
+          ),
+        ),
+        _headerFact(
+          '${bundle.tasks.where((task) => task.completed).length}/${bundle.tasks.length}',
+          'TASKS',
+        ),
+        const SizedBox(width: 28),
+        _headerFact(
+          _targetDate == null
+              ? 'NOT SET'
+              : DateFormat.MMMd().format(_targetDate!),
+          'TARGET CLOSE',
+        ),
+      ],
+    ),
+  );
+
+  String get _workspaceLabel => switch (_workspaceView) {
+    _DealWorkspaceView.overview => 'Deal command centre',
+    _DealWorkspaceView.plan => 'Guided execution',
+    _DealWorkspaceView.vault => 'Secure records',
+    _DealWorkspaceView.team => 'People and decisions',
+  };
+
+  String get _workspaceTitle => switch (_workspaceView) {
+    _DealWorkspaceView.overview => 'Overview',
+    _DealWorkspaceView.plan => 'Transaction plan',
+    _DealWorkspaceView.vault => 'Document vault',
+    _DealWorkspaceView.team => 'Deal team',
+  };
+
+  Widget _headerFact(String value, String label) => Column(
+    crossAxisAlignment: CrossAxisAlignment.end,
+    children: [
+      Text(
+        value,
+        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
+      ),
+      const SizedBox(height: 3),
+      Text(
+        label,
+        style: const TextStyle(
+          color: _lilac,
+          fontSize: 8,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+    ],
+  );
+
+  Widget _workspace(DealRoomBundle bundle) => switch (_workspaceView) {
+    _DealWorkspaceView.overview => Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (_room.isBusiness) _businessSecurityBoundary(),
+        if (_room.isBusiness) const SizedBox(height: 18),
+        _commandBar(bundle.tasks),
+        const SizedBox(height: 18),
+        _metrics(),
+        const SizedBox(height: 22),
+        _overview(),
+      ],
+    ),
+    _DealWorkspaceView.plan => _checklist(bundle.tasks, bundle.members),
+    _DealWorkspaceView.vault =>
+      (_room.ownedByCurrentUser ||
+              _room.sharingPreferences['documents'] == true)
+          ? _documents(bundle.documents, bundle.documentEvents)
+          : _restrictedVault(),
+    _DealWorkspaceView.team => Column(
+      children: [
+        _team(bundle.members),
+        const SizedBox(height: 18),
+        _notes(bundle.notes),
+      ],
+    ),
+  };
+
+  Widget _restrictedVault() => _card(
+    'Private document vault',
+    const Text(
+      'The buyer has not enabled document access for this workspace.',
+      style: TextStyle(color: _lilac),
+    ),
+  );
+
+  Widget _collapsedIntroductions() => Column(
+    children: [
+      const SizedBox(height: 16),
+      IconButton(
+        onPressed: () => setState(() => _introductionsOpen = true),
+        tooltip: 'Open introductions',
+        icon: const Icon(Icons.forum_outlined, color: _purple),
+      ),
+      const SizedBox(height: 8),
+      const RotatedBox(
+        quarterTurns: 1,
+        child: Text(
+          'INTRODUCTIONS',
+          style: TextStyle(
+            color: _purple,
+            fontSize: 9,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.5,
+          ),
+        ),
+      ),
+    ],
+  );
+
+  Widget _introductionsPanel() => Column(
+    children: [
+      Padding(
+        padding: const EdgeInsets.fromLTRB(18, 17, 10, 14),
+        child: Row(
+          children: [
+            Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                color: const Color(0xFFE5EEE9),
+                borderRadius: BorderRadius.circular(11),
+              ),
+              child: const Icon(Icons.forum_outlined, color: _purple, size: 18),
+            ),
+            const SizedBox(width: 11),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Introductions',
+                    style: TextStyle(fontWeight: FontWeight.w800),
+                  ),
+                  Text(
+                    'Private professional pitches',
+                    style: TextStyle(color: _lilac, fontSize: 10),
+                  ),
+                ],
+              ),
+            ),
+            IconButton(
+              onPressed: _closeIntroductions,
+              tooltip: 'Collapse',
+              icon: const Icon(Icons.chevron_right_rounded),
+            ),
+          ],
+        ),
+      ),
+      const Divider(height: 1, color: _line),
+      Expanded(
+        child: FutureBuilder<List<MemberDealPitch>>(
+          future: _introductions,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            final pitches = snapshot.data ?? const <MemberDealPitch>[];
+            if (!_room.ownedByCurrentUser) {
+              return _memberConversationBoundary();
+            }
+            if (pitches.isEmpty) return _emptyIntroductions();
+            return ListView.separated(
+              padding: const EdgeInsets.all(14),
+              itemCount: pitches.length,
+              separatorBuilder: (_, _) => const SizedBox(height: 10),
+              itemBuilder: (context, index) =>
+                  _introductionTile(pitches[index]),
             );
           },
         ),
       ),
+      Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(14),
+        decoration: const BoxDecoration(
+          color: Color(0xFFE5EEE9),
+          border: Border(top: BorderSide(color: _line)),
+        ),
+        child: const Text(
+          'Your identity stays private until you accept an introduction.',
+          style: TextStyle(
+            color: _purple,
+            fontSize: 10,
+            height: 1.4,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+    ],
+  );
+
+  Widget _emptyIntroductions() => const Padding(
+    padding: EdgeInsets.all(26),
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(Icons.mark_unread_chat_alt_outlined, size: 34, color: _lilac),
+        SizedBox(height: 14),
+        Text(
+          'No introductions yet',
+          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+        ),
+        SizedBox(height: 8),
+        Text(
+          'When a verified Affinity member responds to an approved anonymous opportunity, their short pitch will appear here.',
+          textAlign: TextAlign.center,
+          style: TextStyle(color: _lilac, fontSize: 12, height: 1.5),
+        ),
+      ],
     ),
+  );
+
+  Widget _memberConversationBoundary() => const Padding(
+    padding: EdgeInsets.all(24),
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(Icons.lock_person_outlined, size: 34, color: _purple),
+        SizedBox(height: 14),
+        Text(
+          'Buyer identity protected',
+          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+        ),
+        SizedBox(height: 8),
+        Text(
+          'Use the Member Studio opportunity feed to send a concise introduction. Direct contact opens only if the buyer accepts.',
+          textAlign: TextAlign.center,
+          style: TextStyle(color: _lilac, fontSize: 12, height: 1.5),
+        ),
+      ],
+    ),
+  );
+
+  Widget _introductionTile(MemberDealPitch pitch) => Container(
+    padding: const EdgeInsets.all(14),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      border: Border.all(color: _line),
+      borderRadius: BorderRadius.circular(14),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            CircleAvatar(
+              radius: 17,
+              backgroundColor: const Color(0xFFE5EEE9),
+              child: Text(
+                pitch.companyName.isNotEmpty
+                    ? pitch.companyName[0].toUpperCase()
+                    : 'A',
+                style: const TextStyle(
+                  color: _purple,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ),
+            const SizedBox(width: 9),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    pitch.companyName.isEmpty
+                        ? pitch.providerName
+                        : pitch.companyName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  Text(
+                    pitch.providerType,
+                    style: const TextStyle(color: _lilac, fontSize: 9),
+                  ),
+                ],
+              ),
+            ),
+            _pitchStatus(pitch.status),
+          ],
+        ),
+        const SizedBox(height: 11),
+        if (pitch.offerSummary.isNotEmpty) ...[
+          Text(
+            pitch.offerSummary,
+            style: const TextStyle(
+              color: _purple,
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 6),
+        ],
+        Text(
+          pitch.pitch,
+          maxLines: 4,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontSize: 11, height: 1.45),
+        ),
+        if (pitch.status == 'submitted' || pitch.status == 'shortlisted') ...[
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => _respondToIntroduction(pitch, 'declined'),
+                  child: const Text('PASS'),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: FilledButton(
+                  onPressed: () => _respondToIntroduction(pitch, 'accepted'),
+                  child: const Text('CONNECT'),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ],
+    ),
+  );
+
+  Widget _pitchStatus(String status) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+    decoration: BoxDecoration(
+      color: const Color(0xFFE5EEE9),
+      borderRadius: BorderRadius.circular(20),
+    ),
+    child: Text(
+      status.toUpperCase(),
+      style: const TextStyle(
+        color: _purple,
+        fontSize: 7,
+        fontWeight: FontWeight.w900,
+      ),
+    ),
+  );
+
+  Future<void> _respondToIntroduction(
+    MemberDealPitch pitch,
+    String status,
+  ) async {
+    try {
+      await MemberDealMarketplaceService.respondToPitch(pitch.id, status);
+      _refresh();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              status == 'accepted'
+                  ? 'Introduction accepted. Your contact details are now shared.'
+                  : 'Introduction passed.',
+            ),
+          ),
+        );
+      }
+    } catch (error) {
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$error')));
+    }
+  }
+
+  Widget _mobileDashboard(DealRoomBundle bundle) => Column(
+    children: [
+      _dashboardHeader(bundle),
+      Expanded(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(16, 18, 16, 80),
+          child: _workspace(bundle),
+        ),
+      ),
+      NavigationBar(
+        selectedIndex: _workspaceView.index,
+        backgroundColor: const Color(0xFFF8F6F1),
+        indicatorColor: const Color(0xFFE5EEE9),
+        onDestinationSelected: (index) =>
+            setState(() => _workspaceView = _DealWorkspaceView.values[index]),
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.space_dashboard_outlined),
+            label: 'Overview',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.account_tree_outlined),
+            label: 'Plan',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.folder_copy_outlined),
+            label: 'Vault',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.groups_2_outlined),
+            label: 'Team',
+          ),
+        ],
+      ),
+    ],
   );
 
   Widget _roomHeader(DealRoomBundle bundle) => TopoBackground(

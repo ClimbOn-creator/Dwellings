@@ -42,11 +42,26 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
   late Future<List<MarketplaceProvider>> _professionals;
   String _professionalQuery = '';
   String _responseFilter = 'all';
+  MemberDealOpportunity? _selectedOpportunity;
+  bool _interactionPanelOpen = true;
+  bool _sendingIntroduction = false;
+  final _introduction = TextEditingController();
+  final _offer = TextEditingController();
+  final _replyEmail = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _reload();
+    _replyEmail.text = BackendService.user?.email ?? '';
+  }
+
+  @override
+  void dispose() {
+    _introduction.dispose();
+    _offer.dispose();
+    _replyEmail.dispose();
+    super.dispose();
   }
 
   void _reload() {
@@ -72,6 +87,18 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
       _message(
         'This is a privacy-safe preview. Verified member deals become available after the Member Studio database update is applied.',
       );
+      return;
+    }
+    if (MediaQuery.sizeOf(context).width >= 900) {
+      setState(() {
+        _selectedOpportunity = deal;
+        _interactionPanelOpen = true;
+        _introduction.clear();
+        _offer.clear();
+        if (_replyEmail.text.trim().isEmpty) {
+          _replyEmail.text = BackendService.user?.email ?? '';
+        }
+      });
       return;
     }
     final sent = await showDialog<bool>(
@@ -358,11 +385,18 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
             return Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SizedBox(width: 220, child: _desktopNavigation()),
+                SizedBox(width: 76, child: _dashboardNavigation()),
                 const SizedBox(width: 20),
                 Expanded(child: _currentView()),
                 const SizedBox(width: 20),
-                SizedBox(width: 250, child: _privacyStrip()),
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 220),
+                  curve: Curves.easeOutCubic,
+                  width: _interactionPanelOpen ? 330 : 58,
+                  child: _interactionPanelOpen
+                      ? _memberInteractionPanel()
+                      : _collapsedInteractionPanel(),
+                ),
               ],
             );
           },
@@ -370,6 +404,290 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
       ),
     ),
   );
+
+  Widget _dashboardNavigation() => Material(
+    color: Colors.white,
+    borderRadius: BorderRadius.circular(20),
+    child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 12),
+      child: Column(
+        children: [
+          _dashboardNavItem(
+            _StudioView.opportunities,
+            Icons.work_outline_rounded,
+            'Opportunities',
+          ),
+          _dashboardNavItem(
+            _StudioView.professionals,
+            Icons.people_outline_rounded,
+            'Professionals',
+          ),
+          _dashboardNavItem(
+            _StudioView.myPitches,
+            Icons.send_outlined,
+            'My pitches',
+          ),
+          _dashboardNavItem(
+            _StudioView.dealResponses,
+            Icons.inbox_outlined,
+            'Buyer inbox',
+          ),
+        ],
+      ),
+    ),
+  );
+
+  Widget _dashboardNavItem(_StudioView view, IconData icon, String label) =>
+      Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: Tooltip(
+          message: label,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(13),
+            onTap: () => setState(() => _view = view),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 160),
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: _view == view ? _green : const Color(0xFFF4F1EB),
+                borderRadius: BorderRadius.circular(13),
+              ),
+              child: Icon(
+                icon,
+                size: 20,
+                color: _view == view ? Colors.white : _green,
+              ),
+            ),
+          ),
+        ),
+      );
+
+  Widget _collapsedInteractionPanel() => Material(
+    color: Colors.white,
+    borderRadius: BorderRadius.circular(20),
+    child: Column(
+      children: [
+        const SizedBox(height: 12),
+        IconButton(
+          onPressed: () => setState(() => _interactionPanelOpen = true),
+          tooltip: 'Open interaction panel',
+          icon: const Icon(Icons.forum_outlined, color: _green),
+        ),
+        const SizedBox(height: 8),
+        const RotatedBox(
+          quarterTurns: 1,
+          child: Text(
+            'INTRODUCTIONS',
+            style: TextStyle(
+              color: _green,
+              fontSize: 9,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1.3,
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+
+  Widget _memberInteractionPanel() => Material(
+    color: Colors.white,
+    borderRadius: BorderRadius.circular(20),
+    clipBehavior: Clip.antiAlias,
+    child: SizedBox(
+      height: 680,
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(18, 16, 8, 13),
+            child: Row(
+              children: [
+                const CircleAvatar(
+                  radius: 18,
+                  backgroundColor: Color(0xFFE7EEE9),
+                  child: Icon(Icons.forum_outlined, color: _green, size: 18),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    _selectedOpportunity == null
+                        ? 'Introduction panel'
+                        : 'Anonymous buyer',
+                    style: const TextStyle(fontWeight: FontWeight.w800),
+                  ),
+                ),
+                IconButton(
+                  onPressed: () =>
+                      setState(() => _interactionPanelOpen = false),
+                  tooltip: 'Collapse',
+                  icon: const Icon(Icons.chevron_right_rounded),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1, color: _line),
+          Expanded(
+            child: _selectedOpportunity == null
+                ? _interactionEmptyState()
+                : SingleChildScrollView(
+                    padding: const EdgeInsets.all(18),
+                    child: _introductionComposer(_selectedOpportunity!),
+                  ),
+          ),
+        ],
+      ),
+    ),
+  );
+
+  Widget _interactionEmptyState() => const Padding(
+    padding: EdgeInsets.all(24),
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(Icons.lock_person_outlined, size: 36, color: _green),
+        SizedBox(height: 16),
+        Text(
+          'Choose an opportunity',
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+        ),
+        SizedBox(height: 9),
+        Text(
+          'Open an Affinity-reviewed deal and make one concise, relevant introduction. The buyer remains anonymous unless they choose to connect.',
+          textAlign: TextAlign.center,
+          style: TextStyle(color: _muted, fontSize: 12, height: 1.5),
+        ),
+      ],
+    ),
+  );
+
+  Widget _introductionComposer(MemberDealOpportunity deal) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF4F1EB),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'ANONYMOUS OPPORTUNITY',
+              style: TextStyle(
+                color: _green,
+                fontSize: 8,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              deal.headline,
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '${deal.industry} · ${deal.region}',
+              style: const TextStyle(color: _muted, fontSize: 10),
+            ),
+          ],
+        ),
+      ),
+      const SizedBox(height: 18),
+      const Text(
+        'Your introduction',
+        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
+      ),
+      const SizedBox(height: 5),
+      const Text(
+        'Explain specifically how you can help this deal.',
+        style: TextStyle(color: _muted, fontSize: 11),
+      ),
+      const SizedBox(height: 10),
+      TextField(
+        controller: _introduction,
+        minLines: 5,
+        maxLines: 7,
+        maxLength: 420,
+        decoration: const InputDecoration(
+          hintText: 'We can support this acquisition by…',
+        ),
+      ),
+      const SizedBox(height: 10),
+      TextField(
+        controller: _offer,
+        maxLength: 120,
+        decoration: const InputDecoration(
+          labelText: 'Offer summary',
+          hintText: 'Example: Acquisition loan from 8%',
+        ),
+      ),
+      const SizedBox(height: 10),
+      TextField(
+        controller: _replyEmail,
+        keyboardType: TextInputType.emailAddress,
+        decoration: const InputDecoration(labelText: 'Contact email'),
+      ),
+      const SizedBox(height: 16),
+      SizedBox(
+        width: double.infinity,
+        child: FilledButton.icon(
+          onPressed: _sendingIntroduction
+              ? null
+              : () => _sendIntroduction(deal),
+          icon: _sendingIntroduction
+              ? const SizedBox.square(
+                  dimension: 15,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.send_outlined, size: 17),
+          label: Text(
+            _sendingIntroduction ? 'SENDING…' : 'SEND PRIVATE INTRODUCTION',
+          ),
+        ),
+      ),
+      const SizedBox(height: 12),
+      const Text(
+        'Your contact information is shown to the buyer. Their identity and contact information remain private until they accept.',
+        style: TextStyle(color: _muted, fontSize: 10, height: 1.45),
+      ),
+    ],
+  );
+
+  Future<void> _sendIntroduction(MemberDealOpportunity deal) async {
+    final pitch = _introduction.text.trim();
+    final email = _replyEmail.text.trim();
+    if (pitch.length < 30 || pitch.length > 420 || !email.contains('@')) {
+      _message(
+        'Add a 30–420 character introduction and a valid contact email.',
+      );
+      return;
+    }
+    setState(() => _sendingIntroduction = true);
+    try {
+      await MemberDealMarketplaceService.sendPitch(
+        opportunityId: deal.id,
+        pitch: pitch,
+        offerSummary: _offer.text,
+        contactEmail: email,
+      );
+      _introduction.clear();
+      _offer.clear();
+      _reload();
+      if (mounted) {
+        setState(() => _selectedOpportunity = null);
+        _message('Your private introduction was sent to the anonymous buyer.');
+      }
+    } catch (error) {
+      if (mounted) _message(_friendlyError(error));
+    } finally {
+      if (mounted) setState(() => _sendingIntroduction = false);
+    }
+  }
 
   Widget _desktopNavigation() => Material(
     color: Colors.white,
