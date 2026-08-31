@@ -51,7 +51,9 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
   late Future<List<MemberDealPitch>> _myPitches;
   late Future<List<MemberDealPitch>> _responses;
   late Future<List<MarketplaceProvider>> _professionals;
+  late Future<MarketplaceProvider?> _myProfessionalProfile;
   String _professionalQuery = '';
+  String _professionalRoleFilter = 'all';
   String _responseFilter = 'all';
   MemberDealOpportunity? _selectedOpportunity;
   bool _interactionPanelOpen = true;
@@ -60,6 +62,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
   final _introduction = TextEditingController();
   final _offer = TextEditingController();
   final _replyEmail = TextEditingController();
+  final _professionalSearch = TextEditingController();
 
   @override
   void initState() {
@@ -70,19 +73,27 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
   }
 
   Future<void> _loadSavedOpportunities() async {
+    final user = BackendService.user;
+    if (user == null) {
+      if (mounted) setState(_savedOpportunityIds.clear);
+      return;
+    }
     final preferences = await SharedPreferences.getInstance();
-    final saved = preferences.getStringList('affinity_saved_opportunities');
+    final saved = preferences.getStringList(
+      'affinity_saved_opportunities_${user.id}',
+    );
     if (!mounted || saved == null) return;
     setState(() => _savedOpportunityIds.addAll(saved));
   }
 
   Future<void> _toggleSavedOpportunity(String id) async {
+    if (!await _ensureSignedIn() || !mounted) return;
     setState(() {
       if (!_savedOpportunityIds.add(id)) _savedOpportunityIds.remove(id);
     });
     final preferences = await SharedPreferences.getInstance();
     await preferences.setStringList(
-      'affinity_saved_opportunities',
+      'affinity_saved_opportunities_${BackendService.user!.id}',
       _savedOpportunityIds.toList(),
     );
   }
@@ -92,6 +103,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
     _introduction.dispose();
     _offer.dispose();
     _replyEmail.dispose();
+    _professionalSearch.dispose();
     super.dispose();
   }
 
@@ -100,6 +112,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
     _myPitches = MemberDealMarketplaceService.loadMyPitches();
     _responses = MemberDealMarketplaceService.loadBuyerResponses();
     _professionals = MarketplaceService.loadAffinityMembers();
+    _myProfessionalProfile = MarketplaceService.loadMyProfessionalProfile();
   }
 
   Future<bool> _ensureSignedIn() async {
@@ -109,6 +122,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
     ).push(MaterialPageRoute<void>(builder: (_) => const AuthPage()));
     if (!mounted || BackendService.user == null) return false;
     setState(_reload);
+    await _loadSavedOpportunities();
     return true;
   }
 
@@ -896,18 +910,41 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
     onSelected: (_) => setState(() => _view = view),
   );
 
-  Widget _currentView() => switch (_view) {
-    _StudioView.opportunities => _opportunityFeed(),
-    _StudioView.matches => _matchedOpportunities(),
-    _StudioView.saved => _savedOpportunities(),
-    _StudioView.professionals => _professionalDirectory(),
-    _StudioView.myPitches => _pitchList(_myPitches, buyerView: false),
-    _StudioView.engagements => _engagements(),
-    _StudioView.dealResponses => _pitchList(_responses, buyerView: true),
-    _StudioView.analytics => _studioAnalytics(),
-    _StudioView.profile => _professionalProfileWorkspace(),
-    _StudioView.membership => _membershipWorkspace(),
-  };
+  Widget _currentView() {
+    const privateViews = <_StudioView>{
+      _StudioView.matches,
+      _StudioView.saved,
+      _StudioView.myPitches,
+      _StudioView.engagements,
+      _StudioView.dealResponses,
+      _StudioView.analytics,
+      _StudioView.profile,
+      _StudioView.membership,
+    };
+    if (privateViews.contains(_view) && BackendService.user == null) {
+      return _AccessState(
+        title: 'Your private member workspace',
+        message:
+            'Sign in to open this area. Matches, saved deals, pitches, analytics, buyer responses, and professional-profile information are tied only to your Affinity account.',
+        action: 'SIGN IN',
+        onTap: () async {
+          if (await _ensureSignedIn() && mounted) setState(_reload);
+        },
+      );
+    }
+    return switch (_view) {
+      _StudioView.opportunities => _opportunityFeed(),
+      _StudioView.matches => _matchedOpportunities(),
+      _StudioView.saved => _savedOpportunities(),
+      _StudioView.professionals => _professionalDirectory(),
+      _StudioView.myPitches => _pitchList(_myPitches, buyerView: false),
+      _StudioView.engagements => _engagements(),
+      _StudioView.dealResponses => _pitchList(_responses, buyerView: true),
+      _StudioView.analytics => _studioAnalytics(),
+      _StudioView.profile => _professionalProfileWorkspace(),
+      _StudioView.membership => _membershipWorkspace(),
+    };
+  }
 
   Widget _studioHeading(String eyebrow, String title, String description) =>
       Padding(
@@ -1107,6 +1144,8 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
             'Your network performance',
             'A private operating view of opportunity flow, introductions, and conversion—not public popularity metrics.',
           ),
+          _privateAccountBanner(),
+          const SizedBox(height: 16),
           Wrap(
             spacing: 12,
             runSpacing: 12,
@@ -1128,35 +1167,140 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
     },
   );
 
-  Widget _professionalProfileWorkspace() => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      _studioHeading(
-        'YOUR PROFESSIONAL IDENTITY',
-        'Build trust before the introduction',
-        'Your verified profile tells anonymous buyers what you do, where you work, and why your offer is credible.',
-      ),
-      _studioPanel(
-        Icons.badge_outlined,
-        'Professional profile',
-        'Add your company, role, specialties, service regions, credentials, transaction experience, and a clear contact path.',
-        action: 'EDIT PROFESSIONAL PROFILE',
-        onTap: () => Navigator.of(context).push(
-          MaterialPageRoute<void>(
-            builder: (_) => const ProfessionalOnboardingPage(),
+  Widget _professionalProfileWorkspace() => FutureBuilder<MarketplaceProvider?>(
+    future: _myProfessionalProfile,
+    builder: (context, snapshot) {
+      if (snapshot.connectionState == ConnectionState.waiting) {
+        return const _LoadingBlock();
+      }
+      final provider = snapshot.data;
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _studioHeading(
+            'PRIVATE ACCOUNT PROFILE',
+            provider == null
+                ? 'Create your professional identity'
+                : 'Welcome, ${provider.name}',
+            'This workspace is loaded from your signed-in Affinity account. Only your verified public directory fields are shown to other members.',
+          ),
+          if (provider == null)
+            _studioPanel(
+              Icons.badge_outlined,
+              'No professional profile is connected yet',
+              'Complete the professional application while signed in. Affinity will link the verified profile to this account after review.',
+              action: 'CREATE PROFESSIONAL PROFILE',
+              onTap: _openProfessionalOnboarding,
+            )
+          else
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(22),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border.all(color: _line),
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      ProfilePhoto(
+                        size: 60,
+                        photoUrl: provider.photoUrl,
+                        exampleIndex: provider.photoIndex,
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              provider.name,
+                              style: const TextStyle(
+                                fontSize: 21,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            Text(
+                              '${provider.jobTitle} · ${provider.company}',
+                              style: const TextStyle(color: _muted),
+                            ),
+                          ],
+                        ),
+                      ),
+                      _statusPill(provider.verified ? 'verified' : 'in review'),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  _privateProfileRow(
+                    'ACCOUNT',
+                    BackendService.user?.email ?? 'Signed-in member',
+                  ),
+                  _privateProfileRow(
+                    'PROFESSIONAL ROLE',
+                    provider.category.label,
+                  ),
+                  _privateProfileRow(
+                    'EXPERIENCE',
+                    '${provider.experience} years',
+                  ),
+                  _privateProfileRow(
+                    'MEMBERSHIP',
+                    provider.membershipTier.toUpperCase(),
+                  ),
+                  const SizedBox(height: 12),
+                  FilledButton.icon(
+                    onPressed: _openProfessionalOnboarding,
+                    icon: const Icon(Icons.edit_outlined, size: 17),
+                    label: const Text('UPDATE PROFILE DETAILS'),
+                  ),
+                ],
+              ),
+            ),
+          const SizedBox(height: 14),
+          _studioPanel(
+            Icons.tune_rounded,
+            'Private opportunity preferences',
+            'Industries, regions, deal sizes, and services are stored against your account and used to create your personal matching feed.',
+            action: 'UPDATE MATCH SETTINGS',
+            onTap: _openMatchSettings,
+          ),
+        ],
+      );
+    },
+  );
+
+  Widget _privateProfileRow(String label, String value) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 8),
+    child: Row(
+      children: [
+        SizedBox(
+          width: 150,
+          child: Text(
+            label,
+            style: const TextStyle(
+              color: _green,
+              fontSize: 8,
+              fontWeight: FontWeight.w900,
+              letterSpacing: .8,
+            ),
           ),
         ),
-      ),
-      const SizedBox(height: 14),
-      _studioPanel(
-        Icons.tune_rounded,
-        'Opportunity preferences',
-        'Choose industries, regions, deal sizes, and services so Affinity can surface the right work first.',
-        action: 'UPDATE MATCH SETTINGS',
-        onTap: _openMatchSettings,
-      ),
-    ],
+        Expanded(child: Text(value, style: const TextStyle(fontSize: 13))),
+      ],
+    ),
   );
+
+  Future<void> _openProfessionalOnboarding() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => const ProfessionalOnboardingPage(),
+      ),
+    );
+    if (mounted) setState(_reload);
+  }
 
   Widget _membershipWorkspace() => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1276,6 +1420,32 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
     ),
   );
 
+  Widget _privateAccountBanner() => Container(
+    width: double.infinity,
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+    decoration: BoxDecoration(
+      color: const Color(0xFFE5EEE9),
+      borderRadius: BorderRadius.circular(14),
+    ),
+    child: Row(
+      children: [
+        const Icon(Icons.lock_outline_rounded, color: _green, size: 18),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            'PRIVATE TO ${BackendService.user?.email?.toUpperCase() ?? 'YOUR ACCOUNT'} · NOT VISIBLE IN THE PROFESSIONAL DIRECTORY',
+            style: const TextStyle(
+              color: _green,
+              fontSize: 8,
+              fontWeight: FontWeight.w900,
+              letterSpacing: .75,
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+
   Widget _opportunityFeed() => FutureBuilder<List<MemberDealOpportunity>>(
     future: _opportunities,
     builder: (context, snapshot) {
@@ -1358,13 +1528,20 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
         return const _LoadingBlock();
       }
       final query = _professionalQuery.trim().toLowerCase();
-      final providers = (snapshot.data ?? const <MarketplaceProvider>[])
+      final allProviders = snapshot.data ?? const <MarketplaceProvider>[];
+      final availableRoles =
+          allProviders.map((provider) => provider.category).toSet().toList()
+            ..sort((a, b) => a.label.compareTo(b.label));
+      final providers = allProviders
           .where(
             (provider) =>
-                query.isEmpty ||
-                '${provider.name} ${provider.company} ${provider.jobTitle} ${provider.specialty}'
-                    .toLowerCase()
-                    .contains(query),
+                (_professionalRoleFilter == 'all' ||
+                    provider.category.databaseValue ==
+                        _professionalRoleFilter) &&
+                (query.isEmpty ||
+                    '${provider.name} ${provider.company}'
+                        .toLowerCase()
+                        .contains(query)),
           )
           .toList();
       return Column(
@@ -1386,21 +1563,99 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
             style: TextStyle(color: _muted, height: 1.45),
           ),
           const SizedBox(height: 18),
-          TextField(
-            onChanged: (value) => setState(() => _professionalQuery = value),
-            decoration: InputDecoration(
-              hintText: 'Search expertise, company, or name',
-              prefixIcon: const Icon(Icons.search_rounded),
-              fillColor: Colors.white,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide: BorderSide.none,
+          LayoutBuilder(
+            builder: (context, box) {
+              final search = TextField(
+                controller: _professionalSearch,
+                onChanged: (value) =>
+                    setState(() => _professionalQuery = value),
+                decoration: InputDecoration(
+                  hintText: 'Search a person or company',
+                  prefixIcon: const Icon(Icons.search_rounded),
+                  suffixIcon: _professionalQuery.isEmpty
+                      ? null
+                      : IconButton(
+                          tooltip: 'Clear search',
+                          onPressed: () => setState(() {
+                            _professionalQuery = '';
+                            _professionalSearch.clear();
+                          }),
+                          icon: const Icon(Icons.close_rounded),
+                        ),
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: const BorderSide(color: _line),
+                  ),
+                ),
+              );
+              final roleFilter = DropdownButtonFormField<String>(
+                initialValue: _professionalRoleFilter,
+                isExpanded: true,
+                decoration: InputDecoration(
+                  labelText: 'Professional role',
+                  prefixIcon: const Icon(Icons.filter_list_rounded),
+                  fillColor: Colors.white,
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: const BorderSide(color: _line),
+                  ),
+                ),
+                items: [
+                  const DropdownMenuItem(
+                    value: 'all',
+                    child: Text('All professional roles'),
+                  ),
+                  for (final role in availableRoles)
+                    DropdownMenuItem(
+                      value: role.databaseValue,
+                      child: Text(role.label),
+                    ),
+                ],
+                onChanged: (value) =>
+                    setState(() => _professionalRoleFilter = value ?? 'all'),
+              );
+              if (box.maxWidth < 650) {
+                return Column(
+                  children: [search, const SizedBox(height: 10), roleFilter],
+                );
+              }
+              return Row(
+                children: [
+                  Expanded(flex: 3, child: search),
+                  const SizedBox(width: 12),
+                  Expanded(flex: 2, child: roleFilter),
+                ],
+              );
+            },
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Text(
+                '${providers.length} VERIFIED PROFESSIONAL${providers.length == 1 ? '' : 'S'}',
+                style: const TextStyle(
+                  color: _green,
+                  fontSize: 9,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1,
+                ),
               ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide: BorderSide.none,
-              ),
-            ),
+              const Spacer(),
+              if (_professionalRoleFilter != 'all' || query.isNotEmpty)
+                TextButton(
+                  onPressed: () => setState(() {
+                    _professionalQuery = '';
+                    _professionalSearch.clear();
+                    _professionalRoleFilter = 'all';
+                  }),
+                  child: const Text('CLEAR FILTERS'),
+                ),
+            ],
           ),
           const SizedBox(height: 18),
           if (providers.isEmpty)

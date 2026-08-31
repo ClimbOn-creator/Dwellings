@@ -593,6 +593,29 @@ class MarketplaceService {
     }
   }
 
+  static Future<MarketplaceProvider?> loadMyProfessionalProfile() async {
+    final user = BackendService.user;
+    if (!BackendService.configured || user == null) return null;
+    try {
+      final row = await Supabase.instance.client
+          .from('provider_profiles')
+          .select(
+            'id, provider_type, display_name, company_name, description, phone, email, website_url, '
+            'license_number, license_region, accepting_leads, membership_tier, verified, years_experience, review_score, review_count, job_title, '
+            'is_example, photo_index, logo_object_key, '
+            'sponsored_placements(disclosure_label, active, starts_at, ends_at), '
+            'lender_rates(interest_rate, mortgage_type, verified_at, effective_at, expires_at)',
+          )
+          .eq('owner_user_id', user.id)
+          .maybeSingle();
+      if (row == null) return null;
+      final providers = providersFromRows([row]);
+      return providers.isEmpty ? null : providers.first;
+    } catch (_) {
+      return null;
+    }
+  }
+
   static List<MarketplaceProvider> providersFromRows(List<dynamic> rows) {
     final providers = <MarketplaceProvider>[];
     for (final raw in rows) {
