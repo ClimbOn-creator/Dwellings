@@ -6,14 +6,10 @@ import '../models/platform_side.dart';
 import '../services/backend_service.dart';
 import '../services/deal_room_service.dart';
 import '../services/member_deal_marketplace_service.dart';
-import '../services/site_content_service.dart';
 import '../widgets/home_brand_button.dart';
 import '../widgets/topo_background.dart';
 import '../widgets/profile_photo.dart';
 import '../widgets/app_navigation_menu.dart';
-import '../widgets/acquisition_editorial_header.dart';
-import '../widgets/membership_footer.dart';
-import '../widgets/fixed_editorial_background.dart';
 import 'acquisition_support_page.dart';
 import 'business_acquisition_page.dart';
 import 'auth_page.dart';
@@ -88,6 +84,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
         purchasePrice: result.purchasePrice,
         goals: result.goals,
         targetCloseDate: result.targetCloseDate,
+        profileSnapshot: result.profileSnapshot,
       );
       if (!mounted) return;
       await Navigator.of(
@@ -150,128 +147,603 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
       child: Scaffold(
         backgroundColor: _paper,
         appBar: AppBar(
-          toolbarHeight: 78,
+          toolbarHeight: 72,
           backgroundColor: const Color(0xFFF7F5F0),
           surfaceTintColor: Colors.transparent,
           foregroundColor: _ink,
-          title: const HomeBrandButton(size: 58, dark: false),
-          actions: const [
-            AppNavigationMenu(side: PlatformSide.business, dark: false),
-            SizedBox(width: 12),
+          title: const Row(
+            children: [
+              HomeBrandButton(size: 48, dark: false),
+              SizedBox(width: 18),
+              Text(
+                'DEAL OS',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.3,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            FilledButton.icon(
+              onPressed: _creating ? null : _manualCreate,
+              icon: const Icon(Icons.add_rounded, size: 18),
+              label: Text(_creating ? 'CREATING…' : 'NEW DEAL'),
+            ),
+            const SizedBox(width: 8),
+            const AppNavigationMenu(side: PlatformSide.business, dark: false),
+            const SizedBox(width: 12),
           ],
         ),
-        body: FixedEditorialBackground(
-          imagePath: 'assets/images/affinity-pipeline.jpg',
-          wash: _paper,
-          washOpacity: .32,
-          child: SingleChildScrollView(
-            physics: const ClampingScrollPhysics(),
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(22, 28, 22, 90),
-                  child: Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 900),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+        body: FutureBuilder<List<DealRoom>>(
+          future: _rooms,
+          builder: (context, snapshot) {
+            if (!snapshot.hasData)
+              return const Center(child: CircularProgressIndicator());
+            final allRooms = snapshot.data!
+                .where((room) => room.isBusiness)
+                .toList();
+            return LayoutBuilder(
+              builder: (context, box) {
+                final desktop = box.maxWidth >= 980;
+                return desktop
+                    ? Row(
                         children: [
-                          AcquisitionEditorialHeader(
-                            currentStep: 3,
-                            onSelected: _goStep,
-                            kicker: 'PAGE 4 OF 4 · PIPELINE',
-                            title: SiteContentService.text(
-                              'pipeline.title',
-                              'My Deal Pipeline',
-                            ),
-                            subtitle: SiteContentService.text(
-                              'pipeline.subtitle',
-                              'Keep every opportunity, decision, deadline, and blocker in one focused acquisition workspace.',
-                            ),
-                            accent: Color(0xFF244E43),
-                          ),
-                          const SizedBox(height: 38),
-                          Wrap(
-                            spacing: 10,
-                            runSpacing: 10,
-                            children: [
-                              FilledButton.icon(
-                                onPressed: _creating ? null : _manualCreate,
-                                icon: const Icon(Icons.add),
-                                label: const Text('START A NEW DEAL'),
-                              ),
-                              FilterChip(
-                                label: Text(
-                                  _showArchived ? 'PAST / ARCHIVED' : 'CURRENT',
-                                ),
-                                selected: _showArchived,
-                                backgroundColor: _surface,
-                                selectedColor: _purple,
-                                checkmarkColor: Colors.white,
-                                labelStyle: const TextStyle(color: _ink),
-                                onSelected: (value) =>
-                                    setState(() => _showArchived = value),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 30),
-                          FutureBuilder<List<DealRoom>>(
-                            future: _rooms,
-                            builder: (context, snapshot) {
-                              if (!snapshot.hasData) {
-                                return const SizedBox(
-                                  height: 260,
-                                  child: Center(
-                                    child: CircularProgressIndicator(),
-                                  ),
-                                );
-                              }
-                              final allRooms = snapshot.data!;
-                              final rooms = allRooms.where((room) {
-                                final lifecycleMatch = _showArchived
-                                    ? room.status == 'archived' ||
-                                          room.status == 'completed' ||
-                                          room.status == 'cancelled'
-                                    : room.status != 'archived' &&
-                                          room.status != 'completed' &&
-                                          room.status != 'cancelled';
-                                final sideMatch = room.isBusiness;
-                                return lifecycleMatch && sideMatch;
-                              }).toList();
-                              if (rooms.isEmpty) return _empty();
-                              return Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  _summary(allRooms),
-                                  const SizedBox(height: 26),
-                                  Text(
-                                    '${rooms.length} ${_showArchived ? 'PAST' : 'CURRENT'} DEAL${rooms.length == 1 ? '' : 'S'}',
-                                    style: const TextStyle(
-                                      color: _lilac,
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w900,
-                                      letterSpacing: 1.1,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 18),
-                                  ...rooms.map(_roomCard),
-                                ],
-                              );
-                            },
+                          _commandCentreRail(),
+                          const VerticalDivider(width: 1, color: _line),
+                          Expanded(child: _commandCentre(allRooms)),
+                          const VerticalDivider(width: 1, color: _line),
+                          SizedBox(
+                            width: 320,
+                            child: _dealIntelligence(allRooms),
                           ),
                         ],
-                      ),
-                    ),
-                  ),
-                ),
-                const MembershipFooter(),
-              ],
-            ),
-          ),
+                      )
+                    : _mobileCommandCentre(allRooms);
+              },
+            );
+          },
         ),
       ),
     );
   }
+
+  Widget _commandCentreRail() => Container(
+    width: 78,
+    color: const Color(0xFFF8F6F1),
+    padding: const EdgeInsets.fromLTRB(10, 18, 10, 16),
+    child: Column(
+      children: [
+        _pipelineRailButton(
+          Icons.space_dashboard_outlined,
+          'Command centre',
+          !_showArchived,
+        ),
+        _pipelineRailButton(
+          Icons.inventory_2_outlined,
+          'Archive',
+          _showArchived,
+          onTap: () => setState(() => _showArchived = true),
+        ),
+        _pipelineRailButton(
+          Icons.add_business_outlined,
+          'New deal',
+          false,
+          onTap: _manualCreate,
+        ),
+        _pipelineRailButton(
+          Icons.calculate_outlined,
+          'Deal screen',
+          false,
+          onTap: _create,
+        ),
+        const Spacer(),
+        _pipelineRailButton(
+          Icons.refresh_rounded,
+          'Refresh',
+          false,
+          onTap: _refresh,
+        ),
+      ],
+    ),
+  );
+
+  Widget _pipelineRailButton(
+    IconData icon,
+    String label,
+    bool selected, {
+    VoidCallback? onTap,
+  }) => Padding(
+    padding: const EdgeInsets.only(bottom: 10),
+    child: Tooltip(
+      message: label,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: onTap ?? () => setState(() => _showArchived = false),
+        child: Container(
+          width: 50,
+          height: 50,
+          decoration: BoxDecoration(
+            color: selected ? _purple : Colors.transparent,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: selected ? _purple : _line),
+          ),
+          child: Icon(icon, color: selected ? Colors.white : _ink, size: 21),
+        ),
+      ),
+    ),
+  );
+
+  Widget _commandCentre(List<DealRoom> allRooms) {
+    final rooms = allRooms.where((room) {
+      final archived =
+          room.status == 'archived' ||
+          room.status == 'completed' ||
+          room.status == 'cancelled';
+      return _showArchived ? archived : !archived;
+    }).toList();
+    final active = allRooms
+        .where(
+          (room) =>
+              room.status != 'archived' &&
+              room.status != 'completed' &&
+              room.status != 'cancelled',
+        )
+        .toList();
+    final blockers = active.fold<int>(
+      0,
+      (total, room) => total + room.blockedTaskCount,
+    );
+    final dueSoon = active
+        .where(
+          (room) =>
+              room.nextDueAt != null &&
+              room.nextDueAt!.isBefore(
+                DateTime.now().add(const Duration(days: 8)),
+              ),
+        )
+        .length;
+    return Column(
+      children: [
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.fromLTRB(30, 24, 30, 22),
+          color: Colors.white.withValues(alpha: .7),
+          child: LayoutBuilder(
+            builder: (context, box) {
+              final compact = box.maxWidth < 720;
+              final heading = Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _showArchived ? 'DEAL HISTORY' : 'BUYER COMMAND CENTRE',
+                    style: const TextStyle(
+                      color: _purple,
+                      fontSize: 9,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1.3,
+                    ),
+                  ),
+                  const SizedBox(height: 7),
+                  Text(
+                    _showArchived
+                        ? 'Archived acquisitions'
+                        : 'Every acquisition. One operating system.',
+                    style: const TextStyle(
+                      fontSize: 29,
+                      height: 1,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -1,
+                    ),
+                  ),
+                ],
+              );
+              final facts = Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _commandHeaderFact('${active.length}', 'ACTIVE'),
+                  const SizedBox(width: 22),
+                  _commandHeaderFact('$blockers', 'BLOCKERS'),
+                  const SizedBox(width: 22),
+                  _commandHeaderFact('$dueSoon', 'DUE SOON'),
+                ],
+              );
+              if (compact) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [heading, const SizedBox(height: 20), facts],
+                );
+              }
+              return Row(
+                children: [
+                  Expanded(child: heading),
+                  facts,
+                ],
+              );
+            },
+          ),
+        ),
+        const Divider(height: 1, color: _line),
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(28, 26, 28, 70),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _attentionStrip(active, blockers, dueSoon),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Text(
+                      _showArchived ? 'PAST DEALS' : 'LIVE DEALS',
+                      style: const TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.1,
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      '${rooms.length} TOTAL',
+                      style: const TextStyle(
+                        color: _lilac,
+                        fontSize: 9,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                if (rooms.isEmpty)
+                  _dashboardEmpty()
+                else
+                  ...rooms.map(_dashboardDealRow),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _commandHeaderFact(String value, String label) => Column(
+    crossAxisAlignment: CrossAxisAlignment.end,
+    children: [
+      Text(
+        value,
+        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+      ),
+      Text(
+        label,
+        style: const TextStyle(
+          color: _lilac,
+          fontSize: 8,
+          fontWeight: FontWeight.w900,
+        ),
+      ),
+    ],
+  );
+
+  Widget _attentionStrip(
+    List<DealRoom> active,
+    int blockers,
+    int dueSoon,
+  ) => Container(
+    width: double.infinity,
+    padding: const EdgeInsets.all(22),
+    decoration: BoxDecoration(
+      color: _purple,
+      borderRadius: BorderRadius.circular(18),
+    ),
+    child: Row(
+      children: [
+        Container(
+          width: 46,
+          height: 46,
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: .12),
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: const Icon(Icons.bolt_rounded, color: Colors.white),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'WHAT NEEDS ATTENTION',
+                style: TextStyle(
+                  color: Color(0xFFB8CEC4),
+                  fontSize: 8,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1,
+                ),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                active.isEmpty
+                    ? 'Start your first private acquisition workspace.'
+                    : blockers > 0
+                    ? '$blockers blocked task${blockers == 1 ? '' : 's'} need a decision.'
+                    : dueSoon > 0
+                    ? '$dueSoon deal${dueSoon == 1 ? '' : 's'} have work due this week.'
+                    : 'Your active deals are moving without recorded blockers.',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        ),
+        FilledButton(
+          onPressed: active.isEmpty
+              ? _manualCreate
+              : () => _openRoom(active.first),
+          style: FilledButton.styleFrom(
+            backgroundColor: Colors.white,
+            foregroundColor: _purple,
+          ),
+          child: Text(active.isEmpty ? 'START A DEAL' : 'OPEN NEXT DEAL'),
+        ),
+      ],
+    ),
+  );
+
+  Widget _dashboardDealRow(DealRoom room) => Padding(
+    padding: const EdgeInsets.only(bottom: 10),
+    child: Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () => _openRoom(room),
+        child: Padding(
+          padding: const EdgeInsets.all(18),
+          child: Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE5EEE9),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Icon(Icons.storefront_outlined, color: _purple),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                flex: 4,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      room.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${room.city.isEmpty ? 'Location private' : room.city} · ${room.currentStage.toUpperCase()}',
+                      style: const TextStyle(color: _lilac, fontSize: 10),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                flex: 2,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      room.purchasePrice <= 0
+                          ? 'Price pending'
+                          : NumberFormat.compactCurrency(
+                              symbol: r'$',
+                            ).format(room.purchasePrice),
+                      style: const TextStyle(fontWeight: FontWeight.w800),
+                    ),
+                    const Text(
+                      'PURCHASE PRICE',
+                      style: TextStyle(
+                        color: _lilac,
+                        fontSize: 7,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(
+                width: 130,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: LinearProgressIndicator(
+                        value: room.progress,
+                        minHeight: 6,
+                        color: _purple,
+                        backgroundColor: const Color(0xFFE8E5DE),
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      '${(room.progress * 100).round()}% COMPLETE',
+                      style: const TextStyle(
+                        color: _lilac,
+                        fontSize: 7,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 16),
+              if (room.blockedTaskCount > 0)
+                Badge(
+                  label: Text('${room.blockedTaskCount}'),
+                  child: const Icon(
+                    Icons.warning_amber_rounded,
+                    color: Color(0xFF9D3A32),
+                  ),
+                )
+              else
+                const Icon(Icons.arrow_forward_rounded, color: _purple),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
+
+  Future<void> _openRoom(DealRoom room) async {
+    await Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (_) => DealRoomPage(room: room)));
+    _refresh();
+  }
+
+  Widget _dashboardEmpty() => Container(
+    width: double.infinity,
+    padding: const EdgeInsets.symmetric(vertical: 64, horizontal: 24),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(18),
+    ),
+    child: Column(
+      children: [
+        const Icon(Icons.add_business_outlined, size: 42, color: _purple),
+        const SizedBox(height: 14),
+        Text(
+          _showArchived ? 'No archived deals' : 'Build your first Deal Room',
+          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          _showArchived
+              ? 'Completed and archived acquisitions will remain available here.'
+              : 'Start with what you know. Unknown information can be added later.',
+          textAlign: TextAlign.center,
+          style: const TextStyle(color: _lilac),
+        ),
+        if (!_showArchived) ...[
+          const SizedBox(height: 18),
+          FilledButton.icon(
+            onPressed: _manualCreate,
+            icon: const Icon(Icons.add),
+            label: const Text('NEW DEAL'),
+          ),
+        ],
+      ],
+    ),
+  );
+
+  Widget _dealIntelligence(List<DealRoom> rooms) {
+    final active = rooms
+        .where(
+          (room) =>
+              room.status != 'archived' &&
+              room.status != 'completed' &&
+              room.status != 'cancelled',
+        )
+        .toList();
+    final next = active.isEmpty ? null : active.first;
+    return Container(
+      color: const Color(0xFFF8F6F1),
+      child: Column(
+        children: [
+          const Padding(
+            padding: EdgeInsets.fromLTRB(20, 22, 20, 18),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 18,
+                  backgroundColor: Color(0xFFE5EEE9),
+                  child: Icon(
+                    Icons.insights_outlined,
+                    color: _purple,
+                    size: 18,
+                  ),
+                ),
+                SizedBox(width: 10),
+                Text(
+                  'Deal intelligence',
+                  style: TextStyle(fontWeight: FontWeight.w800),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1, color: _line),
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.all(18),
+              children: [
+                _sideInsight(
+                  'PORTFOLIO',
+                  active.isEmpty
+                      ? 'No active acquisitions yet.'
+                      : '${active.length} active acquisition${active.length == 1 ? '' : 's'} across your private workspace.',
+                ),
+                const SizedBox(height: 12),
+                _sideInsight(
+                  'NEXT ACTION',
+                  next?.currentStep ??
+                      'Create a deal to begin the guided plan.',
+                ),
+                const SizedBox(height: 12),
+                _sideInsight(
+                  'PRIVACY',
+                  'Nothing reaches the Member Studio until you submit it and Affinity approves an anonymous brief.',
+                ),
+                const SizedBox(height: 18),
+                OutlinedButton.icon(
+                  onPressed: _manualCreate,
+                  icon: const Icon(Icons.add_business_outlined),
+                  label: const Text('CREATE ANOTHER DEAL'),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _sideInsight(String label, String text) => Container(
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      border: Border.all(color: _line),
+      borderRadius: BorderRadius.circular(14),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            color: _purple,
+            fontSize: 8,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1,
+          ),
+        ),
+        const SizedBox(height: 7),
+        Text(text, style: const TextStyle(fontSize: 12, height: 1.5)),
+      ],
+    ),
+  );
+
+  Widget _mobileCommandCentre(List<DealRoom> rooms) => _commandCentre(rooms);
 
   Widget _header() => TopoBackground(
     opacity: .055,
@@ -649,6 +1121,7 @@ class _NewDealDetails {
     required this.purchasePrice,
     required this.goals,
     required this.targetCloseDate,
+    required this.profileSnapshot,
   });
   final String title;
   final String kind;
@@ -656,6 +1129,7 @@ class _NewDealDetails {
   final double purchasePrice;
   final String goals;
   final DateTime? targetCloseDate;
+  final Map<String, dynamic> profileSnapshot;
 }
 
 class _NewDealDialog extends StatefulWidget {
@@ -671,7 +1145,13 @@ class _NewDealDialogState extends State<_NewDealDialog> {
   final _location = TextEditingController();
   final _price = TextEditingController();
   final _goals = TextEditingController();
+  final _revenue = TextEditingController();
+  final _ebitda = TextEditingController();
+  final _availableCapital = TextEditingController();
   late String _kind;
+  String _industry = 'Business services';
+  int _step = 0;
+  bool _financingNeeded = true;
   DateTime? _targetDate;
 
   @override
@@ -686,6 +1166,9 @@ class _NewDealDialogState extends State<_NewDealDialog> {
     _location.dispose();
     _price.dispose();
     _goals.dispose();
+    _revenue.dispose();
+    _ebitda.dispose();
+    _availableCapital.dispose();
     super.dispose();
   }
 
@@ -711,92 +1194,434 @@ class _NewDealDialogState extends State<_NewDealDialog> {
             double.tryParse(_price.text.replaceAll(',', '').trim()) ?? 0,
         goals: _goals.text.trim(),
         targetCloseDate: _targetDate,
+        profileSnapshot: {
+          'industry': _industry,
+          'annual_revenue': _money(_revenue.text),
+          'reported_ebitda': _money(_ebitda.text),
+          'available_capital': _money(_availableCapital.text),
+          'financing_needed': _financingNeeded,
+          'wizard_version': 1,
+        },
       ),
     );
   }
 
+  double? _money(String value) {
+    final cleaned = value.replaceAll(',', '').trim();
+    return cleaned.isEmpty ? null : double.tryParse(cleaned);
+  }
+
   @override
-  Widget build(BuildContext context) => AlertDialog(
+  Widget build(BuildContext context) => Dialog(
     backgroundColor: _surface,
     surfaceTintColor: Colors.transparent,
-    title: const Text(
-      'Start a new acquisition',
-      style: TextStyle(color: Colors.white),
-    ),
-    content: SizedBox(
-      width: 560,
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Align(
-              alignment: Alignment.centerLeft,
-              child: Chip(label: Text('Business acquisition')),
+    insetPadding: const EdgeInsets.all(18),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+    child: ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 940, maxHeight: 680),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.fromLTRB(24, 18, 14, 18),
+            decoration: const BoxDecoration(
+              color: _purple,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
             ),
-            const SizedBox(height: 13),
-            TextField(
-              controller: _title,
-              autofocus: true,
-              decoration: InputDecoration(
-                labelText: _kind == 'business'
-                    ? 'Business or opportunity name'
-                    : 'Property or deal name',
-              ),
-            ),
-            const SizedBox(height: 13),
-            TextField(
-              controller: _location,
-              decoration: const InputDecoration(
-                labelText: 'Address, city or market',
-              ),
-            ),
-            const SizedBox(height: 13),
-            TextField(
-              controller: _price,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Expected purchase price (CAD)',
-                prefixText: r'$ ',
-              ),
-            ),
-            const SizedBox(height: 13),
-            TextField(
-              controller: _goals,
-              minLines: 2,
-              maxLines: 4,
-              decoration: const InputDecoration(
-                labelText: 'Goals and important context',
-              ),
-            ),
-            const SizedBox(height: 13),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: _pickDate,
-                icon: const Icon(Icons.event_outlined),
-                label: Text(
-                  _targetDate == null
-                      ? 'ADD TARGET CLOSING DATE'
-                      : 'TARGET ${DateFormat.yMMMd().format(_targetDate!)}',
+            child: Row(
+              children: [
+                const Icon(Icons.add_business_outlined, color: Colors.white),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'NEW PRIVATE DEAL',
+                        style: TextStyle(
+                          color: Color(0xFFB8CEC4),
+                          fontSize: 8,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Start with what you know',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.close, color: Colors.white),
+                ),
+              ],
             ),
-            const SizedBox(height: 12),
-            Text(
-              '${DealRoomService.templatesFor(_kind).length} guided tasks will be created across ${DealRoomService.stagesFor(_kind).length} transaction stages.',
-              style: const TextStyle(color: Color(0xFF666674), fontSize: 11),
+          ),
+          Expanded(
+            child: LayoutBuilder(
+              builder: (context, box) {
+                final desktop = box.maxWidth >= 720;
+                return Row(
+                  children: [
+                    if (desktop) SizedBox(width: 220, child: _wizardRail()),
+                    if (desktop) const VerticalDivider(width: 1, color: _line),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.all(26),
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 180),
+                          child: KeyedSubtree(
+                            key: ValueKey(_step),
+                            child: _wizardStep(),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
-          ],
+          ),
+          const Divider(height: 1, color: _line),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                if (_step > 0)
+                  OutlinedButton(
+                    onPressed: () => setState(() => _step--),
+                    child: const Text('BACK'),
+                  ),
+                const Spacer(),
+                Text(
+                  '${_step + 1} OF 4',
+                  style: const TextStyle(
+                    color: _lilac,
+                    fontSize: 9,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                FilledButton(
+                  onPressed: _step == 3
+                      ? (_title.text.trim().isEmpty ? null : _submit)
+                      : () => setState(() => _step++),
+                  child: Text(_step == 3 ? 'CREATE PRIVATE DEAL' : 'CONTINUE'),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+
+  Widget _wizardRail() => Container(
+    color: const Color(0xFFF4F1EB),
+    padding: const EdgeInsets.all(18),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _wizardRailItem(0, Icons.storefront_outlined, 'Opportunity'),
+        _wizardRailItem(1, Icons.query_stats_outlined, 'What you know'),
+        _wizardRailItem(2, Icons.flag_outlined, 'Acquisition plan'),
+        _wizardRailItem(3, Icons.fact_check_outlined, 'Review'),
+        const Spacer(),
+        const Text(
+          'Unknown values can stay blank and be completed later inside the Deal Room.',
+          style: TextStyle(color: _lilac, fontSize: 10, height: 1.45),
+        ),
+      ],
+    ),
+  );
+
+  Widget _wizardRailItem(int step, IconData icon, String label) => Padding(
+    padding: const EdgeInsets.only(bottom: 8),
+    child: ListTile(
+      dense: true,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 10),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      selected: _step == step,
+      selectedTileColor: const Color(0xFFE5EEE9),
+      leading: Icon(icon, size: 19, color: _step == step ? _purple : _lilac),
+      title: Text(
+        label,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: _step == step ? FontWeight.w800 : FontWeight.w500,
         ),
       ),
+      onTap: () => setState(() => _step = step),
     ),
-    actions: [
-      TextButton(
-        onPressed: () => Navigator.pop(context),
-        child: const Text('CANCEL'),
+  );
+
+  Widget _wizardStep() => switch (_step) {
+    0 => _opportunityStep(),
+    1 => _knownStep(),
+    2 => _planStep(),
+    _ => _reviewStep(),
+  };
+
+  Widget _stepIntro(String eyebrow, String title, String text) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        eyebrow,
+        style: const TextStyle(
+          color: _purple,
+          fontSize: 9,
+          fontWeight: FontWeight.w900,
+          letterSpacing: 1.1,
+        ),
       ),
-      FilledButton(onPressed: _submit, child: const Text('CREATE DEAL')),
+      const SizedBox(height: 7),
+      Text(
+        title,
+        style: const TextStyle(
+          fontSize: 28,
+          height: 1,
+          fontWeight: FontWeight.w800,
+          letterSpacing: -1,
+        ),
+      ),
+      const SizedBox(height: 9),
+      Text(text, style: const TextStyle(color: _lilac, height: 1.5)),
+      const SizedBox(height: 22),
     ],
+  );
+
+  Widget _opportunityStep() => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      _stepIntro(
+        'STEP 1',
+        'The opportunity',
+        'Give the workspace a useful identity. Keep seller-sensitive information out of the title.',
+      ),
+      TextField(
+        controller: _title,
+        autofocus: true,
+        onChanged: (_) => setState(() {}),
+        decoration: const InputDecoration(
+          labelText: 'Private deal name',
+          hintText: 'Example: Lower Mainland service company',
+        ),
+      ),
+      const SizedBox(height: 13),
+      DropdownButtonFormField<String>(
+        initialValue: _industry,
+        decoration: const InputDecoration(labelText: 'Industry'),
+        items:
+            const [
+                  'Business services',
+                  'Home services',
+                  'Industrial services',
+                  'Healthcare',
+                  'Technology',
+                  'Retail',
+                  'Hospitality',
+                  'Other',
+                ]
+                .map(
+                  (value) => DropdownMenuItem(value: value, child: Text(value)),
+                )
+                .toList(),
+        onChanged: (value) => setState(() => _industry = value ?? _industry),
+      ),
+      const SizedBox(height: 13),
+      TextField(
+        controller: _location,
+        decoration: const InputDecoration(
+          labelText: 'City, region, or market',
+          hintText: 'Leave blank if location is not known',
+        ),
+      ),
+    ],
+  );
+
+  Widget _knownStep() => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      _stepIntro(
+        'STEP 2',
+        'What you know today',
+        'These figures are optional. Blank information becomes part of the diligence plan rather than blocking you.',
+      ),
+      _moneyField(_price, 'Expected purchase price', 'Unknown is okay'),
+      const SizedBox(height: 13),
+      _moneyField(
+        _revenue,
+        'Annual revenue',
+        'Use the latest normalized year if available',
+      ),
+      const SizedBox(height: 13),
+      _moneyField(
+        _ebitda,
+        'Reported EBITDA',
+        'Leave blank until earnings are verified',
+      ),
+    ],
+  );
+
+  Widget _moneyField(
+    TextEditingController controller,
+    String label,
+    String hint,
+  ) => TextField(
+    controller: controller,
+    keyboardType: TextInputType.number,
+    decoration: InputDecoration(
+      labelText: label,
+      hintText: hint,
+      prefixText: r'$ ',
+    ),
+  );
+
+  Widget _planStep() => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      _stepIntro(
+        'STEP 3',
+        'Your acquisition plan',
+        'Record the decision context. Affinity will turn this into tasks, evidence requests, and professional needs.',
+      ),
+      _moneyField(
+        _availableCapital,
+        'Capital currently available',
+        'Leave blank if financing capacity is not known',
+      ),
+      const SizedBox(height: 12),
+      SwitchListTile(
+        value: _financingNeeded,
+        contentPadding: EdgeInsets.zero,
+        title: const Text(
+          'Financing support expected',
+          style: TextStyle(fontWeight: FontWeight.w700),
+        ),
+        subtitle: const Text(
+          'Helps Affinity identify relevant lenders and capital partners.',
+        ),
+        onChanged: (value) => setState(() => _financingNeeded = value),
+      ),
+      const SizedBox(height: 10),
+      TextField(
+        controller: _goals,
+        minLines: 3,
+        maxLines: 5,
+        decoration: const InputDecoration(
+          labelText: 'Goals and decision context',
+          hintText: 'What would make this acquisition successful?',
+        ),
+      ),
+      const SizedBox(height: 13),
+      SizedBox(
+        width: double.infinity,
+        child: OutlinedButton.icon(
+          onPressed: _pickDate,
+          icon: const Icon(Icons.event_outlined),
+          label: Text(
+            _targetDate == null
+                ? 'ADD OPTIONAL TARGET CLOSE'
+                : 'TARGET ${DateFormat.yMMMd().format(_targetDate!)}',
+          ),
+        ),
+      ),
+    ],
+  );
+
+  Widget _reviewStep() => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      _stepIntro(
+        'STEP 4',
+        'Create the private workspace',
+        'Affinity will create a guided acquisition plan. Nothing is published to members automatically.',
+      ),
+      _reviewLine(
+        'Deal',
+        _title.text.trim().isEmpty
+            ? 'A private name is required'
+            : _title.text.trim(),
+      ),
+      _reviewLine('Industry', _industry),
+      _reviewLine(
+        'Location',
+        _location.text.trim().isEmpty ? 'Not known yet' : _location.text.trim(),
+      ),
+      _reviewLine(
+        'Purchase price',
+        _money(_price.text) == null
+            ? 'Not known yet'
+            : NumberFormat.simpleCurrency(
+                name: 'CAD',
+                decimalDigits: 0,
+              ).format(_money(_price.text)),
+      ),
+      _reviewLine(
+        'Revenue',
+        _money(_revenue.text) == null
+            ? 'Not known yet'
+            : NumberFormat.simpleCurrency(
+                name: 'CAD',
+                decimalDigits: 0,
+              ).format(_money(_revenue.text)),
+      ),
+      _reviewLine(
+        'Financing',
+        _financingNeeded ? 'Support expected' : 'Not currently required',
+      ),
+      const SizedBox(height: 18),
+      Container(
+        padding: const EdgeInsets.all(15),
+        decoration: BoxDecoration(
+          color: const Color(0xFFE5EEE9),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Text(
+          '${DealRoomService.templatesFor(_kind).length} guided actions across ${DealRoomService.stagesFor(_kind).length} acquisition stages will be added automatically.',
+          style: const TextStyle(
+            color: _purple,
+            fontSize: 11,
+            height: 1.45,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+    ],
+  );
+
+  Widget _reviewLine(String label, String value) => Container(
+    padding: const EdgeInsets.symmetric(vertical: 11),
+    decoration: const BoxDecoration(
+      border: Border(bottom: BorderSide(color: _line)),
+    ),
+    child: Row(
+      children: [
+        SizedBox(
+          width: 130,
+          child: Text(
+            label.toUpperCase(),
+            style: const TextStyle(
+              color: _lilac,
+              fontSize: 8,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: const TextStyle(fontWeight: FontWeight.w700),
+          ),
+        ),
+      ],
+    ),
   );
 }
 
@@ -962,7 +1787,17 @@ class DealRoomPage extends StatefulWidget {
   State<DealRoomPage> createState() => _DealRoomPageState();
 }
 
-enum _DealWorkspaceView { overview, plan, vault, team }
+enum _DealWorkspaceView {
+  overview,
+  profile,
+  financials,
+  evaluation,
+  plan,
+  vault,
+  team,
+  timeline,
+  privacy,
+}
 
 class _DealRoomPageState extends State<DealRoomPage> {
   late DealRoom _room;
@@ -970,6 +1805,12 @@ class _DealRoomPageState extends State<DealRoomPage> {
   final _note = TextEditingController();
   final _timeline = TextEditingController();
   final _goals = TextEditingController();
+  final _dealTitle = TextEditingController();
+  final _dealLocation = TextEditingController();
+  final _dealPrice = TextEditingController();
+  final _dealRevenue = TextEditingController();
+  final _dealEbitda = TextEditingController();
+  final _dealCapital = TextEditingController();
   DateTime? _targetDate;
   bool _saving = false;
   bool _uploading = false;
@@ -983,6 +1824,14 @@ class _DealRoomPageState extends State<DealRoomPage> {
     _room = widget.room;
     _timeline.text = _room.timeline;
     _goals.text = _room.goals;
+    _dealTitle.text = _room.title;
+    _dealLocation.text = _room.city;
+    _dealPrice.text = _room.purchasePrice <= 0
+        ? ''
+        : _room.purchasePrice.toStringAsFixed(0);
+    _dealRevenue.text = _snapshotNumber('annual_revenue');
+    _dealEbitda.text = _snapshotNumber('reported_ebitda');
+    _dealCapital.text = _snapshotNumber('available_capital');
     _targetDate = _room.targetCloseDate;
     _bundle = DealRoomService.loadBundle(_room);
     _introductions = MemberDealMarketplaceService.loadBuyerResponses();
@@ -993,7 +1842,18 @@ class _DealRoomPageState extends State<DealRoomPage> {
     _note.dispose();
     _timeline.dispose();
     _goals.dispose();
+    _dealTitle.dispose();
+    _dealLocation.dispose();
+    _dealPrice.dispose();
+    _dealRevenue.dispose();
+    _dealEbitda.dispose();
+    _dealCapital.dispose();
     super.dispose();
+  }
+
+  String _snapshotNumber(String key) {
+    final value = _room.propertySnapshot[key];
+    return value is num && value != 0 ? value.toStringAsFixed(0) : '';
   }
 
   void _refresh() => setState(() {
@@ -1038,6 +1898,61 @@ class _DealRoomPageState extends State<DealRoomPage> {
         blockedTaskCount: _room.blockedTaskCount,
         nextDueAt: _room.nextDueAt,
       );
+      _refresh();
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  double _fieldNumber(TextEditingController controller) =>
+      double.tryParse(controller.text.replaceAll(',', '').trim()) ?? 0;
+
+  Future<void> _saveDealProfile() async {
+    if (_dealTitle.text.trim().isEmpty) return;
+    setState(() => _saving = true);
+    try {
+      final snapshot = Map<String, dynamic>.from(_room.propertySnapshot)
+        ..['annual_revenue'] = _fieldNumber(_dealRevenue)
+        ..['reported_ebitda'] = _fieldNumber(_dealEbitda)
+        ..['available_capital'] = _fieldNumber(_dealCapital);
+      final price = _fieldNumber(_dealPrice);
+      await DealRoomService.updateDealProfile(
+        roomId: _room.id,
+        title: _dealTitle.text,
+        location: _dealLocation.text,
+        purchasePrice: price,
+        profileSnapshot: snapshot,
+      );
+      _room = DealRoom(
+        id: _room.id,
+        userId: _room.userId,
+        title: _dealTitle.text.trim(),
+        address: _dealLocation.text.trim(),
+        city: _dealLocation.text.trim(),
+        purchasePrice: price,
+        timeline: _room.timeline,
+        goals: _room.goals,
+        status: _room.status,
+        propertySnapshot: snapshot,
+        riskSnapshot: _room.riskSnapshot,
+        sharingPreferences: _room.sharingPreferences,
+        updatedAt: DateTime.now(),
+        transactionType: _room.transactionType,
+        dealKind: _room.dealKind,
+        currentStage: _room.currentStage,
+        targetCloseDate: _room.targetCloseDate,
+        archivedAt: _room.archivedAt,
+        completedTaskCount: _room.completedTaskCount,
+        totalTaskCount: _room.totalTaskCount,
+        currentStep: _room.currentStep,
+        blockedTaskCount: _room.blockedTaskCount,
+        nextDueAt: _room.nextDueAt,
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Deal profile saved.')));
+      }
       _refresh();
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -1280,23 +2195,58 @@ class _DealRoomPageState extends State<DealRoomPage> {
     padding: const EdgeInsets.fromLTRB(10, 18, 10, 16),
     child: Column(
       children: [
-        _railButton(
-          _DealWorkspaceView.overview,
-          Icons.space_dashboard_outlined,
-          'Overview',
+        Expanded(
+          child: ListView(
+            padding: EdgeInsets.zero,
+            children: [
+              _railButton(
+                _DealWorkspaceView.overview,
+                Icons.space_dashboard_outlined,
+                'Overview',
+              ),
+              _railButton(
+                _DealWorkspaceView.profile,
+                Icons.business_outlined,
+                'Deal profile',
+              ),
+              _railButton(
+                _DealWorkspaceView.financials,
+                Icons.calculate_outlined,
+                'Financial model',
+              ),
+              _railButton(
+                _DealWorkspaceView.evaluation,
+                Icons.radar_outlined,
+                'Evaluation',
+              ),
+              _railButton(
+                _DealWorkspaceView.plan,
+                Icons.account_tree_outlined,
+                'Plan',
+              ),
+              _railButton(
+                _DealWorkspaceView.vault,
+                Icons.folder_copy_outlined,
+                'Vault',
+              ),
+              _railButton(
+                _DealWorkspaceView.team,
+                Icons.groups_2_outlined,
+                'Team',
+              ),
+              _railButton(
+                _DealWorkspaceView.timeline,
+                Icons.timeline_outlined,
+                'Timeline',
+              ),
+              _railButton(
+                _DealWorkspaceView.privacy,
+                Icons.visibility_off_outlined,
+                'Privacy',
+              ),
+            ],
+          ),
         ),
-        _railButton(
-          _DealWorkspaceView.plan,
-          Icons.account_tree_outlined,
-          'Plan',
-        ),
-        _railButton(
-          _DealWorkspaceView.vault,
-          Icons.folder_copy_outlined,
-          'Vault',
-        ),
-        _railButton(_DealWorkspaceView.team, Icons.groups_2_outlined, 'Team'),
-        const Spacer(),
         IconButton(
           onPressed: () =>
               setState(() => _introductionsOpen = !_introductionsOpen),
@@ -1392,16 +2342,26 @@ class _DealRoomPageState extends State<DealRoomPage> {
 
   String get _workspaceLabel => switch (_workspaceView) {
     _DealWorkspaceView.overview => 'Deal command centre',
+    _DealWorkspaceView.profile => 'Editable source record',
+    _DealWorkspaceView.financials => 'Acquisition economics',
+    _DealWorkspaceView.evaluation => 'Evidence and risk',
     _DealWorkspaceView.plan => 'Guided execution',
     _DealWorkspaceView.vault => 'Secure records',
     _DealWorkspaceView.team => 'People and decisions',
+    _DealWorkspaceView.timeline => 'Stage and activity',
+    _DealWorkspaceView.privacy => 'Anonymous publishing controls',
   };
 
   String get _workspaceTitle => switch (_workspaceView) {
     _DealWorkspaceView.overview => 'Overview',
+    _DealWorkspaceView.profile => 'Deal profile',
+    _DealWorkspaceView.financials => 'Financial model',
+    _DealWorkspaceView.evaluation => 'Affinity evaluation',
     _DealWorkspaceView.plan => 'Transaction plan',
     _DealWorkspaceView.vault => 'Document vault',
     _DealWorkspaceView.team => 'Deal team',
+    _DealWorkspaceView.timeline => 'Deal timeline',
+    _DealWorkspaceView.privacy => 'Privacy preview',
   };
 
   Widget _headerFact(String value, String label) => Column(
@@ -1433,9 +2393,12 @@ class _DealRoomPageState extends State<DealRoomPage> {
         const SizedBox(height: 18),
         _metrics(),
         const SizedBox(height: 22),
-        _overview(),
+        _overviewPulse(bundle),
       ],
     ),
+    _DealWorkspaceView.profile => _overview(),
+    _DealWorkspaceView.financials => _financialWorkspace(),
+    _DealWorkspaceView.evaluation => _evaluationWorkspace(),
     _DealWorkspaceView.plan => _checklist(bundle.tasks, bundle.members),
     _DealWorkspaceView.vault =>
       (_room.ownedByCurrentUser ||
@@ -1449,6 +2412,8 @@ class _DealRoomPageState extends State<DealRoomPage> {
         _notes(bundle.notes),
       ],
     ),
+    _DealWorkspaceView.timeline => _timelineWorkspace(bundle),
+    _DealWorkspaceView.privacy => _privacyWorkspace(),
   };
 
   Widget _restrictedVault() => _card(
@@ -1458,6 +2423,611 @@ class _DealRoomPageState extends State<DealRoomPage> {
       style: TextStyle(color: _lilac),
     ),
   );
+
+  Widget _overviewPulse(DealRoomBundle bundle) {
+    final next = bundle.tasks.cast<DealRoomTask?>().firstWhere(
+      (task) => task != null && !task.completed,
+      orElse: () => null,
+    );
+    final blocked = bundle.tasks.where((task) => task.blocked).toList();
+    return LayoutBuilder(
+      builder: (context, box) {
+        final width = box.maxWidth >= 720
+            ? (box.maxWidth - 16) / 2
+            : box.maxWidth;
+        return Wrap(
+          spacing: 16,
+          runSpacing: 16,
+          children: [
+            SizedBox(
+              width: width,
+              child: _dashboardFeature(
+                Icons.bolt_outlined,
+                'NEXT ACTION',
+                next?.title ?? 'All guided actions are complete',
+                next?.details ??
+                    'Review the deal and prepare the next decision.',
+                action: next == null ? null : 'OPEN PLAN',
+                onTap: next == null
+                    ? null
+                    : () => setState(
+                        () => _workspaceView = _DealWorkspaceView.plan,
+                      ),
+              ),
+            ),
+            SizedBox(
+              width: width,
+              child: _dashboardFeature(
+                blocked.isEmpty
+                    ? Icons.verified_outlined
+                    : Icons.warning_amber_rounded,
+                'DEAL HEALTH',
+                blocked.isEmpty
+                    ? 'No recorded blockers'
+                    : '${blocked.length} blocker${blocked.length == 1 ? '' : 's'} need attention',
+                blocked.isEmpty
+                    ? 'The workspace is moving without a recorded obstruction.'
+                    : blocked.first.blockerNote,
+                action: blocked.isEmpty ? 'VIEW EVALUATION' : 'RESOLVE IN PLAN',
+                onTap: () => setState(
+                  () => _workspaceView = blocked.isEmpty
+                      ? _DealWorkspaceView.evaluation
+                      : _DealWorkspaceView.plan,
+                ),
+              ),
+            ),
+            SizedBox(
+              width: width,
+              child: _dashboardFeature(
+                Icons.lock_person_outlined,
+                'MEMBER STUDIO',
+                'Private until you submit',
+                'Affinity reviews the deal before any anonymous opportunity is shown to members.',
+                action: 'PRIVACY PREVIEW',
+                onTap: () =>
+                    setState(() => _workspaceView = _DealWorkspaceView.privacy),
+              ),
+            ),
+            SizedBox(
+              width: width,
+              child: _dashboardFeature(
+                Icons.forum_outlined,
+                'INTRODUCTIONS',
+                'Professional responses stay beside the deal',
+                'Compare concise offers and choose when your identity can be shared.',
+                action: 'OPEN INBOX',
+                onTap: _openIntroductions,
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _dashboardFeature(
+    IconData icon,
+    String eyebrow,
+    String title,
+    String description, {
+    String? action,
+    VoidCallback? onTap,
+  }) => Container(
+    constraints: const BoxConstraints(minHeight: 210),
+    padding: const EdgeInsets.all(22),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      border: Border.all(color: _line),
+      borderRadius: BorderRadius.circular(18),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, color: _purple, size: 23),
+        const SizedBox(height: 18),
+        Text(
+          eyebrow,
+          style: const TextStyle(
+            color: _purple,
+            fontSize: 8,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1,
+          ),
+        ),
+        const SizedBox(height: 7),
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 18,
+            height: 1.15,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        const SizedBox(height: 7),
+        Text(
+          description,
+          maxLines: 3,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(color: _lilac, fontSize: 11, height: 1.45),
+        ),
+        const SizedBox(height: 14),
+        if (action != null) TextButton(onPressed: onTap, child: Text(action)),
+      ],
+    ),
+  );
+
+  Widget _financialWorkspace() {
+    final risk = _room.riskSnapshot;
+    final cash = (risk['cash_after_owner_salary'] as num?)?.toDouble();
+    final dscr = (risk['dscr'] as num?)?.toDouble();
+    final viability = (risk['viability_score'] as num?)?.toDouble();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _workspaceNotice(
+          Icons.calculate_outlined,
+          'Live acquisition inputs',
+          'Edit the figures you know now. Use the full Deal Screen when you are ready for detailed debt, add-back, working-capital and scenario assumptions.',
+        ),
+        const SizedBox(height: 18),
+        _card(
+          'Core financial profile',
+          Column(
+            children: [
+              _financialInput(_dealPrice, 'Purchase price'),
+              const SizedBox(height: 12),
+              _financialInput(_dealRevenue, 'Annual revenue'),
+              const SizedBox(height: 12),
+              _financialInput(_dealEbitda, 'Reported EBITDA'),
+              const SizedBox(height: 12),
+              _financialInput(_dealCapital, 'Available buyer capital'),
+              if (_room.ownedByCurrentUser) ...[
+                const SizedBox(height: 16),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: FilledButton.icon(
+                    onPressed: _saving ? null : _saveDealProfile,
+                    icon: const Icon(Icons.save_outlined, size: 17),
+                    label: Text(_saving ? 'SAVING…' : 'SAVE FINANCIALS'),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(height: 18),
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: [
+            _metric(
+              'CASH AFTER OWNER',
+              cash == null
+                  ? 'PENDING'
+                  : NumberFormat.compactCurrency(symbol: r'$').format(cash),
+            ),
+            _metric(
+              'ACQUISITION DSCR',
+              dscr == null ? 'PENDING' : '${dscr.toStringAsFixed(2)}×',
+            ),
+            _metric(
+              'VIABILITY',
+              viability == null ? 'PENDING' : '${viability.round()}/100',
+            ),
+          ],
+        ),
+        const SizedBox(height: 18),
+        OutlinedButton.icon(
+          onPressed: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => const BusinessAcquisitionPage(),
+            ),
+          ),
+          icon: const Icon(Icons.open_in_new_rounded, size: 17),
+          label: const Text('OPEN FULL DEAL SCREEN'),
+        ),
+      ],
+    );
+  }
+
+  Widget _financialInput(TextEditingController controller, String label) =>
+      TextField(
+        controller: controller,
+        enabled: _room.ownedByCurrentUser,
+        keyboardType: TextInputType.number,
+        decoration: InputDecoration(
+          labelText: label,
+          prefixText: r'$ ',
+          hintText: 'Not known yet',
+        ),
+      );
+
+  Widget _evaluationWorkspace() {
+    final risk = (_room.riskSnapshot['risk_score'] as num?)?.toDouble();
+    final viability = (_room.riskSnapshot['viability_score'] as num?)
+        ?.toDouble();
+    final dscr = (_room.riskSnapshot['dscr'] as num?)?.toDouble();
+    final evidence = <String, bool>{
+      'Purchase price recorded': _room.purchasePrice > 0,
+      'Revenue supplied':
+          (_room.propertySnapshot['annual_revenue'] as num?) != null,
+      'EBITDA supplied':
+          (_room.propertySnapshot['reported_ebitda'] as num?) != null,
+      'Capital plan supplied':
+          (_room.propertySnapshot['available_capital'] as num?) != null,
+      'Target close recorded': _room.targetCloseDate != null,
+      'Private document uploaded later': false,
+    };
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          spacing: 14,
+          runSpacing: 14,
+          children: [
+            _scoreDial('VIABILITY', viability, reverse: false),
+            _scoreDial('RISK', risk, reverse: true),
+            _scoreDial(
+              'DSCR',
+              dscr == null ? null : (dscr / 2.5 * 100).clamp(0, 100).toDouble(),
+              reverse: false,
+              valueLabel: dscr == null ? null : '${dscr.toStringAsFixed(2)}×',
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+        _card(
+          'Evidence readiness',
+          Column(
+            children: evidence.entries
+                .map(
+                  (entry) => ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(
+                      entry.value
+                          ? Icons.check_circle_rounded
+                          : Icons.radio_button_unchecked_rounded,
+                      color: entry.value ? _purple : _lilac,
+                    ),
+                    title: Text(
+                      entry.key,
+                      style: TextStyle(
+                        fontWeight: entry.value
+                            ? FontWeight.w700
+                            : FontWeight.w500,
+                      ),
+                    ),
+                    trailing: Text(
+                      entry.value ? 'READY' : 'MISSING',
+                      style: TextStyle(
+                        color: entry.value ? _purple : const Color(0xFF9D3A32),
+                        fontSize: 8,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                )
+                .toList(),
+          ),
+        ),
+        const SizedBox(height: 18),
+        _workspaceNotice(
+          Icons.info_outline_rounded,
+          'Affinity review is evidence-led',
+          'Scores guide screening; they do not replace quality of earnings, legal, tax, lender, or operational diligence.',
+        ),
+      ],
+    );
+  }
+
+  Widget _scoreDial(
+    String label,
+    double? value, {
+    required bool reverse,
+    String? valueLabel,
+  }) {
+    final normalized = (value ?? 0).clamp(0, 100).toDouble();
+    final good = reverse ? normalized <= 35 : normalized >= 65;
+    return Container(
+      width: 210,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: _line),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Row(
+        children: [
+          SizedBox.square(
+            dimension: 58,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                CircularProgressIndicator(
+                  value: normalized / 100,
+                  strokeWidth: 7,
+                  color: good ? _purple : const Color(0xFFB36A46),
+                  backgroundColor: const Color(0xFFE7E2DA),
+                ),
+                Center(
+                  child: Text(
+                    value == null ? '—' : '${normalized.round()}',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 13),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  valueLabel ??
+                      (value == null ? 'PENDING' : '${normalized.round()}/100'),
+                  style: const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                Text(
+                  label,
+                  style: const TextStyle(
+                    color: _lilac,
+                    fontSize: 8,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _timelineWorkspace(DealRoomBundle bundle) {
+    final stages = DealRoomService.stagesFor(_room.dealKind);
+    final currentIndex = stages.indexOf(_room.currentStage);
+    return _card(
+      'Acquisition stage map',
+      Column(
+        children: [
+          for (var index = 0; index < stages.length; index++)
+            _timelineStage(
+              stages[index],
+              index < currentIndex,
+              index == currentIndex,
+              bundle.tasks
+                  .where((task) => task.stage == stages[index])
+                  .toList(),
+              last: index == stages.length - 1,
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _timelineStage(
+    String stage,
+    bool complete,
+    bool current,
+    List<DealRoomTask> tasks, {
+    required bool last,
+  }) => Row(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      SizedBox(
+        width: 38,
+        child: Column(
+          children: [
+            Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                color: current || complete ? _purple : const Color(0xFFE6E2DA),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                complete
+                    ? Icons.check
+                    : current
+                    ? Icons.arrow_forward
+                    : Icons.circle,
+                size: current || complete ? 15 : 7,
+                color: current || complete ? Colors.white : _lilac,
+              ),
+            ),
+            if (!last)
+              Container(
+                width: 2,
+                height: 54,
+                color: complete ? _purple : _line,
+              ),
+          ],
+        ),
+      ),
+      const SizedBox(width: 12),
+      Expanded(
+        child: Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                stage.toUpperCase().replaceAll('_', ' '),
+                style: TextStyle(
+                  color: current ? _purple : _ink,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: .7,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '${tasks.where((task) => task.completed).length}/${tasks.length} actions complete',
+                style: const TextStyle(color: _lilac, fontSize: 10),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ],
+  );
+
+  Widget _privacyWorkspace() => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      _workspaceNotice(
+        Icons.visibility_off_outlined,
+        'You control the boundary',
+        'Members never see the buyer name, exact address, raw assessment, documents, or contact information in the anonymous feed.',
+      ),
+      const SizedBox(height: 18),
+      _card(
+        'Professional workspace access',
+        Column(
+          children: [
+            _privacyToggle(
+              'financials',
+              'Share financial model',
+              'Approved deal-team professionals can view the financial summary.',
+            ),
+            _privacyToggle(
+              'risk',
+              'Share Affinity evaluation',
+              'Approved deal-team professionals can view risk and viability outputs.',
+            ),
+            _privacyToggle(
+              'documents',
+              'Allow document access',
+              'Only explicitly approved participants can open the private vault.',
+            ),
+          ],
+        ),
+      ),
+      const SizedBox(height: 18),
+      _card(
+        'What Member Studio sees',
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF4F1EB),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Row(
+                children: [
+                  CircleAvatar(
+                    radius: 19,
+                    backgroundColor: _purple,
+                    child: Icon(
+                      Icons.lock_person_outlined,
+                      color: Colors.white,
+                      size: 18,
+                    ),
+                  ),
+                  SizedBox(width: 10),
+                  Text(
+                    'ANONYMOUS BUYER · AFFINITY REVIEWED',
+                    style: TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: .6,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+              Text(
+                _room.propertySnapshot['industry'] as String? ??
+                    'Business acquisition opportunity',
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 7),
+              Text(
+                _room.city.isEmpty ? 'Region private' : _room.city,
+                style: const TextStyle(
+                  color: _purple,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Affinity writes and approves the summary, price band, support needs, and score label before publication.',
+                style: TextStyle(color: _lilac, height: 1.5),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ],
+  );
+
+  Widget _privacyToggle(String key, String title, String subtitle) =>
+      SwitchListTile(
+        value: _room.sharingPreferences[key] == true,
+        contentPadding: EdgeInsets.zero,
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
+        subtitle: Text(
+          subtitle,
+          style: const TextStyle(color: _lilac, fontSize: 11),
+        ),
+        onChanged: _room.ownedByCurrentUser
+            ? (value) => _setSharing(key, value)
+            : null,
+      );
+
+  Widget _workspaceNotice(IconData icon, String title, String text) =>
+      Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: const Color(0xFFE5EEE9),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFC7D7CF)),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, color: _purple),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      color: _purple,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    text,
+                    style: const TextStyle(
+                      color: Color(0xFF405D52),
+                      fontSize: 11,
+                      height: 1.45,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
 
   Widget _collapsedIntroductions() => Column(
     children: [
@@ -1751,33 +3321,103 @@ class _DealRoomPageState extends State<DealRoomPage> {
           child: _workspace(bundle),
         ),
       ),
-      NavigationBar(
-        selectedIndex: _workspaceView.index,
-        backgroundColor: const Color(0xFFF8F6F1),
-        indicatorColor: const Color(0xFFE5EEE9),
-        onDestinationSelected: (index) =>
-            setState(() => _workspaceView = _DealWorkspaceView.values[index]),
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.space_dashboard_outlined),
-            label: 'Overview',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.account_tree_outlined),
-            label: 'Plan',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.folder_copy_outlined),
-            label: 'Vault',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.groups_2_outlined),
-            label: 'Team',
-          ),
-        ],
+      Container(
+        height: 72,
+        decoration: const BoxDecoration(
+          color: Color(0xFFF8F6F1),
+          border: Border(top: BorderSide(color: _line)),
+        ),
+        child: ListView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          children: [
+            _mobileNav(
+              _DealWorkspaceView.overview,
+              Icons.space_dashboard_outlined,
+              'Overview',
+            ),
+            _mobileNav(
+              _DealWorkspaceView.profile,
+              Icons.business_outlined,
+              'Profile',
+            ),
+            _mobileNav(
+              _DealWorkspaceView.financials,
+              Icons.calculate_outlined,
+              'Financials',
+            ),
+            _mobileNav(
+              _DealWorkspaceView.evaluation,
+              Icons.radar_outlined,
+              'Evaluation',
+            ),
+            _mobileNav(
+              _DealWorkspaceView.plan,
+              Icons.account_tree_outlined,
+              'Plan',
+            ),
+            _mobileNav(
+              _DealWorkspaceView.vault,
+              Icons.folder_copy_outlined,
+              'Vault',
+            ),
+            _mobileNav(
+              _DealWorkspaceView.team,
+              Icons.groups_2_outlined,
+              'Team',
+            ),
+            _mobileNav(
+              _DealWorkspaceView.timeline,
+              Icons.timeline_outlined,
+              'Timeline',
+            ),
+            _mobileNav(
+              _DealWorkspaceView.privacy,
+              Icons.visibility_off_outlined,
+              'Privacy',
+            ),
+          ],
+        ),
       ),
     ],
   );
+
+  Widget _mobileNav(_DealWorkspaceView view, IconData icon, String label) =>
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 3),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () => setState(() => _workspaceView = view),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
+            decoration: BoxDecoration(
+              color: _workspaceView == view
+                  ? const Color(0xFFE5EEE9)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  icon,
+                  size: 18,
+                  color: _workspaceView == view ? _purple : _lilac,
+                ),
+                const SizedBox(width: 7),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: _workspaceView == view
+                        ? FontWeight.w800
+                        : FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
 
   Widget _roomHeader(DealRoomBundle bundle) => TopoBackground(
     child: Padding(

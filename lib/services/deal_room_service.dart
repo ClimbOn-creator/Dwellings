@@ -374,6 +374,7 @@ class DealRoomService {
     required double purchasePrice,
     required String goals,
     DateTime? targetCloseDate,
+    Map<String, dynamic> profileSnapshot = const {},
   }) async {
     final user = BackendService.user;
     if (user == null) throw StateError('Sign in to start a deal.');
@@ -390,6 +391,7 @@ class DealRoomService {
           'city': location.trim(),
           'purchase_price': purchasePrice,
           'goals': goals.trim(),
+          'property_snapshot': profileSnapshot,
           'target_close_date': targetCloseDate == null
               ? null
               : _dateOnly(targetCloseDate),
@@ -799,6 +801,26 @@ class DealRoomService {
           'archived_at': status == 'archived'
               ? DateTime.now().toIso8601String()
               : null,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('id', roomId);
+  }
+
+  static Future<void> updateDealProfile({
+    required String roomId,
+    required String title,
+    required String location,
+    required double purchasePrice,
+    required Map<String, dynamic> profileSnapshot,
+  }) async {
+    await _client
+        .from('deal_rooms')
+        .update({
+          'title': title.trim(),
+          'property_address': location.trim(),
+          'city': location.trim(),
+          'purchase_price': purchasePrice,
+          'property_snapshot': profileSnapshot,
           'updated_at': DateTime.now().toIso8601String(),
         })
         .eq('id', roomId);
