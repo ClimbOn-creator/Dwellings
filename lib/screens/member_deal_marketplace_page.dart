@@ -32,7 +32,6 @@ enum _StudioView {
   professionals,
   dealResponses,
   profile,
-  membership,
 }
 
 class MemberDealMarketplacePage extends StatefulWidget {
@@ -49,6 +48,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
   late Future<List<MemberDealPitch>> _responses;
   late Future<List<MarketplaceProvider>> _professionals;
   late Future<MarketplaceProvider?> _myProfessionalProfile;
+  late Future<bool> _creatorAccess;
   String _professionalQuery = '';
   String _professionalRoleFilter = 'all';
   String _responseFilter = 'all';
@@ -109,6 +109,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
     _responses = MemberDealMarketplaceService.loadBuyerResponses();
     _professionals = MarketplaceService.loadAffinityMembers();
     _myProfessionalProfile = MarketplaceService.loadMyProfessionalProfile();
+    _creatorAccess = AffinityAdminService.isAdmin();
   }
 
   Future<bool> _ensureSignedIn() async {
@@ -311,6 +312,11 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
         ],
       ),
       actions: [
+        IconButton(
+          onPressed: _submitDeal,
+          tooltip: 'Submit a deal to Affinity',
+          icon: const Icon(Icons.add_business_outlined),
+        ),
         FutureBuilder<bool>(
           future: AffinityAdminService.isAdmin(),
           builder: (context, snapshot) => snapshot.data == true
@@ -343,131 +349,6 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
     _view = view;
     if (view == _StudioView.dealResponses) _interactionPanelOpen = false;
   });
-
-  Widget _hero() {
-    final compact = MediaQuery.sizeOf(context).width < 600;
-    return Container(
-      width: double.infinity,
-      constraints: const BoxConstraints(minHeight: 350),
-      padding: EdgeInsets.fromLTRB(24, compact ? 52 : 72, 24, 58),
-      decoration: const BoxDecoration(
-        color: Color(0xFF0B3A2C),
-        image: DecorationImage(
-          image: AssetImage('assets/images/affinity-member-studio.jpg'),
-          fit: BoxFit.cover,
-          opacity: .2,
-          alignment: Alignment.center,
-        ),
-      ),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1180),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SiteCopyText(
-                'studio.eyebrow',
-                'AFFINITY PROFESSIONAL NETWORK',
-                style: TextStyle(
-                  color: Color(0xFFC8D8D1),
-                  fontSize: 11,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 1.6,
-                ),
-              ),
-              const SizedBox(height: 16),
-              SiteCopyText(
-                'studio.title',
-                'Opportunity meets expertise.',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: compact ? 42 : 62,
-                  height: .96,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: -3,
-                ),
-              ),
-              const SizedBox(height: 20),
-              const SizedBox(
-                width: 720,
-                child: SiteCopyText(
-                  'studio.intro',
-                  'A private professional network where verified specialists discover Affinity-reviewed acquisitions, understand the need, and make a concise confidential pitch.',
-                  style: TextStyle(
-                    color: Color(0xFFD9E2DE),
-                    fontSize: 17,
-                    height: 1.55,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 28),
-              Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                children: [
-                  FilledButton.icon(
-                    onPressed: _submitDeal,
-                    style: FilledButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: _green,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 22,
-                        vertical: 18,
-                      ),
-                    ),
-                    icon: const Icon(Icons.add_rounded),
-                    label: const Text('SUBMIT A DEAL'),
-                  ),
-                  OutlinedButton.icon(
-                    onPressed: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => const ProfessionalOnboardingPage(),
-                      ),
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.white,
-                      side: const BorderSide(color: Color(0xFF8AA59A)),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 18,
-                      ),
-                    ),
-                    icon: const Icon(Icons.badge_outlined, size: 18),
-                    label: const Text('JOIN THE NETWORK'),
-                  ),
-                  FutureBuilder<bool>(
-                    future: AffinityAdminService.isAdmin(),
-                    builder: (context, snapshot) => snapshot.data == true
-                        ? OutlinedButton.icon(
-                            onPressed: () => Navigator.of(context).push(
-                              MaterialPageRoute<void>(
-                                builder: (_) => const AffinityReviewDeskPage(),
-                              ),
-                            ),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: Colors.white,
-                              side: const BorderSide(color: Color(0xFF8AA59A)),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                                vertical: 18,
-                              ),
-                            ),
-                            icon: const Icon(
-                              Icons.admin_panel_settings_outlined,
-                              size: 18,
-                            ),
-                            label: const Text('REVIEW DESK'),
-                          )
-                        : const SizedBox.shrink(),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 
   Widget _workspace() => Container(
     width: double.infinity,
@@ -556,13 +437,8 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
           ),
           _dashboardNavItem(
             _StudioView.profile,
-            Icons.badge_outlined,
-            'Professional profile',
-          ),
-          _dashboardNavItem(
-            _StudioView.membership,
-            Icons.workspace_premium_outlined,
-            'Membership',
+            Icons.person_outline_rounded,
+            'My profile',
           ),
         ],
       ),
@@ -835,82 +711,6 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
     }
   }
 
-  Widget _desktopNavigation() => Material(
-    color: Colors.white,
-    borderRadius: BorderRadius.circular(20),
-    child: Padding(
-      padding: const EdgeInsets.all(12),
-      child: Column(
-        children: [
-          _navItem(
-            _StudioView.opportunities,
-            Icons.work_outline_rounded,
-            'Opportunities',
-          ),
-          _navItem(
-            _StudioView.professionals,
-            Icons.people_outline_rounded,
-            'Professionals',
-          ),
-          _navItem(
-            _StudioView.dealResponses,
-            Icons.inbox_outlined,
-            'Deal responses',
-          ),
-        ],
-      ),
-    ),
-  );
-
-  Widget _navItem(_StudioView view, IconData icon, String label) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 2),
-    child: ListTile(
-      dense: true,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      selected: _view == view,
-      selectedTileColor: const Color(0xFFE7EEE9),
-      leading: Icon(icon, size: 20, color: _view == view ? _green : _muted),
-      title: Text(
-        label,
-        style: TextStyle(
-          fontSize: 13,
-          fontWeight: _view == view ? FontWeight.w700 : FontWeight.w500,
-        ),
-      ),
-      onTap: () => setState(() => _view = view),
-    ),
-  );
-
-  Widget _privacyStrip() => Container(
-    width: double.infinity,
-    padding: const EdgeInsets.all(22),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(20),
-    ),
-    child: const Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        CircleAvatar(
-          radius: 19,
-          backgroundColor: Color(0xFFE7EEE9),
-          child: Icon(Icons.shield_outlined, color: _green, size: 20),
-        ),
-        SizedBox(height: 16),
-        Text(
-          'Private by design',
-          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
-        ),
-        SizedBox(height: 9),
-        SiteCopyText(
-          'studio.privacy',
-          'Members see only an Affinity-written opportunity brief. Buyer names, exact addresses, documents, raw assessments, and contact details remain private until the buyer accepts a pitch.',
-          style: TextStyle(color: _muted, fontSize: 12, height: 1.55),
-        ),
-      ],
-    ),
-  );
-
   Widget _viewSelector() => Wrap(
     spacing: 9,
     runSpacing: 9,
@@ -945,7 +745,6 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
       _StudioView.saved,
       _StudioView.dealResponses,
       _StudioView.profile,
-      _StudioView.membership,
     };
     if (privateViews.contains(_view) && BackendService.user == null) {
       return _AccessState(
@@ -966,7 +765,6 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
       _StudioView.professionals => _professionalDirectory(),
       _StudioView.dealResponses => _pitchList(_responses, buyerView: true),
       _StudioView.profile => _professionalProfileWorkspace(),
-      _StudioView.membership => _membershipWorkspace(),
     };
   }
 
@@ -1265,17 +1063,69 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _studioHeading(
-            'PRIVATE ACCOUNT PROFILE',
-            provider == null
-                ? 'Create your professional identity'
-                : 'Welcome, ${provider.name}',
-            'This workspace is loaded from your signed-in Affinity account. Only your verified public directory fields are shown to other members.',
+            'MY AFFINITY PROFILE',
+            provider == null ? 'Your profile' : 'Welcome, ${provider.name}',
+            'Manage your private account and the professional identity connected to it. Only verified directory fields are shown to other members.',
           ),
+          FutureBuilder<bool>(
+            future: _creatorAccess,
+            builder: (context, accessSnapshot) => Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(22),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border.all(color: _line),
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 28,
+                    backgroundColor: const Color(0xFFE5EEE9),
+                    child: Text(
+                      _accountInitial,
+                      style: const TextStyle(
+                        color: _green,
+                        fontSize: 21,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          provider?.name ?? 'Affinity member',
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          BackendService.user?.email ?? 'Signed-in account',
+                          style: const TextStyle(color: _muted),
+                        ),
+                      ],
+                    ),
+                  ),
+                  _statusPill(
+                    accessSnapshot.data == true
+                        ? 'creator access'
+                        : 'member account',
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
           if (provider == null)
             _studioPanel(
               Icons.badge_outlined,
-              'No professional profile is connected yet',
-              'Complete the professional application while signed in. Affinity will link the verified profile to this account after review.',
+              'Create your professional profile',
+              'Add the public professional details that will appear in the directory. Affinity links the profile to this signed-in account and reviews it before publication.',
               action: 'CREATE PROFESSIONAL PROFILE',
               onTap: _openProfessionalOnboarding,
             )
@@ -1346,18 +1196,25 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                 ],
               ),
             ),
-          const SizedBox(height: 14),
-          _studioPanel(
-            Icons.tune_rounded,
-            'Private opportunity preferences',
-            'Industries, regions, deal sizes, and services are stored against your account and used to create your personal matching feed.',
-            action: 'UPDATE MATCH SETTINGS',
-            onTap: _openMatchSettings,
-          ),
+          if (provider != null) ...[
+            const SizedBox(height: 14),
+            _studioPanel(
+              Icons.tune_rounded,
+              'Private opportunity preferences',
+              'Industries, regions, deal sizes, and services are stored against your account and used to create your personal matching feed.',
+              action: 'UPDATE MATCH SETTINGS',
+              onTap: _openMatchSettings,
+            ),
+          ],
         ],
       );
     },
   );
+
+  String get _accountInitial {
+    final email = BackendService.user?.email?.trim() ?? '';
+    return email.isEmpty ? 'A' : email.substring(0, 1).toUpperCase();
+  }
 
   Widget _privateProfileRow(String label, String value) => Padding(
     padding: const EdgeInsets.symmetric(vertical: 8),
@@ -1388,30 +1245,6 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
     );
     if (mounted) setState(_reload);
   }
-
-  Widget _membershipWorkspace() => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      _studioHeading(
-        'AFFINITY MEMBERSHIP',
-        'A professional network built around real deals',
-        'Membership unlocks reviewed opportunities, private introductions, verified discovery, and an operating workspace for converting expertise into acquisition work.',
-      ),
-      _studioPanel(
-        Icons.workspace_premium_outlined,
-        'Member access',
-        'Browse privacy-reviewed deal briefs, receive personalized matches, introduce your services, and appear in the verified professional directory.',
-        action: 'MANAGE MEMBERSHIP',
-        onTap: () => Navigator.of(context).push(
-          MaterialPageRoute<void>(
-            builder: (_) => const ProfessionalOnboardingPage(),
-          ),
-        ),
-      ),
-      const SizedBox(height: 14),
-      _privacyStrip(),
-    ],
-  );
 
   Widget _metricTile(String value, String label) => Container(
     constraints: const BoxConstraints(minWidth: 150),

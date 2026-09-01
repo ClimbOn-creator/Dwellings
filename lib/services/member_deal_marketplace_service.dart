@@ -117,22 +117,34 @@ class MemberDealMarketplaceService {
     if (!BackendService.configured || BackendService.user == null) {
       return _previewDeals;
     }
-    dynamic rows;
+
     try {
-      rows = await AffinityAdminService.isAdmin()
-          ? _client.rpc('browse_admin_member_deals')
-          : _client.rpc('browse_matched_member_deals');
+      final admin = await AffinityAdminService.isAdmin();
+      final rows = await _client.rpc(
+        admin ? 'browse_admin_member_deals' : 'browse_matched_member_deals',
+      );
+      return _opportunityRows(rows);
     } catch (_) {
-      rows = await _client.rpc('browse_member_deals');
+      try {
+        final rows = await _client.rpc('browse_member_deals');
+        return _opportunityRows(rows);
+      } catch (_) {
+        // Preview briefs contain no buyer identity or private deal data. Keep
+        // the Studio useful while a professional awaits verification or a
+        // newer Member Studio migration is still being deployed.
+        return _previewDeals;
+      }
     }
-    return (rows as List<dynamic>)
-        .map(
-          (row) => MemberDealOpportunity.fromJson(
-            Map<String, dynamic>.from(row as Map),
-          ),
-        )
-        .toList();
   }
+
+  static List<MemberDealOpportunity> _opportunityRows(dynamic rows) =>
+      (rows as List<dynamic>)
+          .map(
+            (row) => MemberDealOpportunity.fromJson(
+              Map<String, dynamic>.from(row as Map),
+            ),
+          )
+          .toList();
 
   static Future<void> submitForReview(String dealRoomId) async {
     _requireUser();

@@ -583,11 +583,16 @@ class MarketplaceService {
             'sponsored_placements(disclosure_label, active, starts_at, ends_at), '
             'lender_rates(interest_rate, mortgage_type, verified_at, effective_at, expires_at)',
           )
-          .eq('verified', true)
-          .eq('is_example', false)
+          // Real profiles must be verified. Fictional example profiles are
+          // intentionally public and make the directory usable before the
+          // founding network has completed verification.
+          .or('verified.eq.true,is_example.eq.true')
           .order('display_name')
           .limit(120);
-      return providersFromRows(rows);
+      final providers = providersFromRows(rows);
+      return providers.isEmpty
+          ? _demo(cities.first, PlatformSide.business).providers
+          : providers;
     } catch (_) {
       return _demo(cities.first, PlatformSide.business).providers;
     }

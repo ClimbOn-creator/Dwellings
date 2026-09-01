@@ -2,6 +2,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:dwelling_iq/services/member_deal_marketplace_service.dart';
 
 void main() {
+  test(
+    'privacy-safe example deals load without backend member access',
+    () async {
+      final opportunities = await MemberDealMarketplaceService.browse();
+
+      expect(opportunities, isNotEmpty);
+      expect(opportunities.every((deal) => deal.isPreview), isTrue);
+    },
+  );
+
   test('member opportunity model exposes only sanitized deal fields', () {
     final opportunity = MemberDealOpportunity.fromJson({
       'id': 'deal-1',
