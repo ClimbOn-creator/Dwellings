@@ -125,6 +125,12 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
 
   Future<void> _pitch(MemberDealOpportunity deal) async {
     if (!await _ensureSignedIn() || !mounted) return;
+    if (!deal.canContact) {
+      _message(
+        'Your professional role is already filled on this deal. You can still contact buyers on other opportunities.',
+      );
+      return;
+    }
     if (deal.isPreview) {
       _message(
         'This is a privacy-safe preview. Verified member deals become available after the Member Studio database update is applied.',
@@ -909,6 +915,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
           children: [
             _metricTile(deal.purchasePriceBand, 'PURCHASE PRICE'),
             _metricTile(deal.capitalRequiredBand, 'CAPITAL SOUGHT'),
+            _metricTile(deal.dealType, 'DEAL TYPE'),
             _metricTile(deal.scoreLabel, 'AFFINITY VIEW'),
             _metricTile(deal.stage, 'CURRENT STAGE'),
           ],
@@ -921,6 +928,8 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
               ? 'Affinity has not assigned professional requirements yet.'
               : deal.supportNeeded.join(' · '),
         ),
+        const SizedBox(height: 14),
+        _DealTeamStrip(members: deal.teamMembers),
         if (deal.matchScore != null) ...[
           const SizedBox(height: 14),
           _studioPanel(
@@ -954,12 +963,23 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
               ),
             ),
             FilledButton.icon(
-              onPressed: () {
-                setState(() => _interactionPanelOpen = true);
-                _pitch(deal);
-              },
-              icon: const Icon(Icons.forum_outlined, size: 17),
-              label: const Text('INTRODUCE YOUR SERVICES'),
+              onPressed: deal.canContact
+                  ? () {
+                      setState(() => _interactionPanelOpen = true);
+                      _pitch(deal);
+                    }
+                  : null,
+              icon: Icon(
+                deal.canContact
+                    ? Icons.forum_outlined
+                    : Icons.person_off_outlined,
+                size: 17,
+              ),
+              label: Text(
+                deal.canContact
+                    ? 'INTRODUCE YOUR SERVICES'
+                    : 'YOUR ROLE IS FILLED',
+              ),
             ),
           ],
         ),
@@ -971,12 +991,9 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
     future: _opportunities,
     builder: (context, snapshot) {
       if (!snapshot.hasData) return const _LoadingBlock();
-      final deals = [...snapshot.data!]
-        ..sort(
-          (a, b) => (b.matchScore ?? b.affinityScore).compareTo(
-            a.matchScore ?? a.affinityScore,
-          ),
-        );
+      final deals = MemberDealMarketplaceService.rankRecommendations(
+        snapshot.data!,
+      );
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1178,6 +1195,24 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                   _privateProfileRow(
                     'PROFESSIONAL ROLE',
                     provider.category.label,
+                  ),
+                  _privateProfileRow(
+                    'BACKGROUND',
+                    provider.specialty.isEmpty
+                        ? 'Add your background to improve recommendations'
+                        : provider.specialty,
+                  ),
+                  _privateProfileRow(
+                    'SPECIALTIES',
+                    provider.specialties.isEmpty
+                        ? 'Add specialties to improve recommendations'
+                        : provider.specialties.join(' · '),
+                  ),
+                  _privateProfileRow(
+                    'SERVICE AREAS',
+                    provider.serviceMarkets.isEmpty
+                        ? 'Add a city or region to improve recommendations'
+                        : provider.serviceMarkets.join(' · '),
                   ),
                   _privateProfileRow(
                     'EXPERIENCE',
@@ -1711,6 +1746,141 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
   );
 }
 
+class _DealTeamStrip extends StatelessWidget {
+  const _DealTeamStrip({required this.members});
+
+  final List<MemberDealTeamMember> members;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Row(
+        children: [
+          const Text(
+            'CURRENT DEAL TEAM',
+            style: TextStyle(
+              color: _green,
+              fontSize: 9,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1,
+            ),
+          ),
+          const Spacer(),
+          if (members.isNotEmpty)
+            const Row(
+              children: [
+                Text(
+                  'SCROLL',
+                  style: TextStyle(
+                    color: _muted,
+                    fontSize: 8,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: .7,
+                  ),
+                ),
+                SizedBox(width: 4),
+                Icon(Icons.swap_horiz_rounded, size: 16, color: _muted),
+              ],
+            ),
+        ],
+      ),
+      const SizedBox(height: 10),
+      if (members.isEmpty)
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 13),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF1F3EF),
+            borderRadius: BorderRadius.circular(13),
+          ),
+          child: const Text(
+            'No professionals have joined this deal yet.',
+            style: TextStyle(color: _muted, fontSize: 12),
+          ),
+        )
+      else
+        SizedBox(
+          height: 82,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            itemCount: members.length,
+            separatorBuilder: (_, _) => const SizedBox(width: 9),
+            itemBuilder: (context, index) {
+              final member = members[index];
+              return Container(
+                width: 230,
+                padding: const EdgeInsets.all(11),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF1F3EF),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: const Color(0xFFE0E5DF)),
+                ),
+                child: Row(
+                  children: [
+                    ProfilePhoto(
+                      size: 46,
+                      photoUrl: member.photoUrl,
+                      exampleIndex: member.photoIndex,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            member.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            member.jobTitle.isEmpty
+                                ? _roleLabel(member.providerType)
+                                : member.jobTitle,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: _green,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          if (member.company.isNotEmpty)
+                            Text(
+                              member.company,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: _muted,
+                                fontSize: 9,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+    ],
+  );
+
+  static String _roleLabel(String value) => value
+      .split('_')
+      .where((part) => part.isNotEmpty)
+      .map((part) => '${part[0].toUpperCase()}${part.substring(1)}')
+      .join(' ');
+}
+
 class _DealPost extends StatelessWidget {
   const _DealPost({
     required this.deal,
@@ -1823,6 +1993,7 @@ class _DealPost extends StatelessWidget {
               children: [
                 _Fact(label: 'PRICE BAND', value: deal.purchasePriceBand),
                 _Fact(label: 'CAPITAL SOUGHT', value: deal.capitalRequiredBand),
+                _Fact(label: 'DEAL TYPE', value: deal.dealType),
                 _Fact(label: 'AFFINITY VIEW', value: deal.scoreLabel),
               ],
             ),
@@ -1841,6 +2012,8 @@ class _DealPost extends StatelessWidget {
                 ],
               ),
             ],
+            const SizedBox(height: 22),
+            _DealTeamStrip(members: deal.teamMembers),
             const SizedBox(height: 22),
             Wrap(
               spacing: 14,
@@ -1871,10 +2044,19 @@ class _DealPost extends StatelessWidget {
                       label: const Text('VIEW FULL DEAL'),
                     ),
                     FilledButton.icon(
-                      onPressed: onPitch,
+                      onPressed: deal.canContact ? onPitch : null,
                       style: FilledButton.styleFrom(backgroundColor: _green),
-                      icon: const Icon(Icons.send_outlined, size: 18),
-                      label: const Text('PITCH THIS DEAL'),
+                      icon: Icon(
+                        deal.canContact
+                            ? Icons.send_outlined
+                            : Icons.person_off_outlined,
+                        size: 18,
+                      ),
+                      label: Text(
+                        deal.canContact
+                            ? 'PITCH THIS DEAL'
+                            : 'ROLE ALREADY FILLED',
+                      ),
                     ),
                   ],
                 ),
@@ -2496,6 +2678,10 @@ String _friendlyError(Object error) {
   final text = error.toString().replaceFirst('Exception: ', '');
   if (text.contains('verified Affinity member')) {
     return 'A verified, active professional membership is required to browse and pitch opportunities.';
+  }
+  if (text.contains('professional role is already filled') ||
+      text.contains('already has a')) {
+    return 'That buyer already has someone in your professional role for this deal. You can still contact them about a different opportunity.';
   }
   if (text.contains('Could not find the function') ||
       text.contains('does not exist')) {

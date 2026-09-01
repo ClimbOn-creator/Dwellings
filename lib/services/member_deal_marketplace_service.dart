@@ -4,6 +4,37 @@ import 'backend_service.dart';
 import 'affinity_admin_service.dart';
 import 'member_beta_service.dart';
 
+class MemberDealTeamMember {
+  const MemberDealTeamMember({
+    required this.providerId,
+    required this.name,
+    required this.company,
+    required this.providerType,
+    required this.jobTitle,
+    this.photoIndex,
+    this.photoUrl = '',
+  });
+
+  final String providerId;
+  final String name;
+  final String company;
+  final String providerType;
+  final String jobTitle;
+  final int? photoIndex;
+  final String photoUrl;
+
+  factory MemberDealTeamMember.fromJson(Map<String, dynamic> row) =>
+      MemberDealTeamMember(
+        providerId: row['provider_id'] as String? ?? '',
+        name: row['name'] as String? ?? 'Affinity professional',
+        company: row['company'] as String? ?? '',
+        providerType: row['provider_type'] as String? ?? 'professional',
+        jobTitle: row['job_title'] as String? ?? 'Professional',
+        photoIndex: (row['photo_index'] as num?)?.toInt(),
+        photoUrl: row['photo_url'] as String? ?? '',
+      );
+}
+
 class MemberDealOpportunity {
   const MemberDealOpportunity({
     required this.id,
@@ -12,6 +43,7 @@ class MemberDealOpportunity {
     required this.region,
     required this.summary,
     required this.stage,
+    required this.dealType,
     required this.purchasePriceBand,
     required this.capitalRequiredBand,
     required this.affinityScore,
@@ -20,6 +52,9 @@ class MemberDealOpportunity {
     required this.publishedAt,
     this.matchScore,
     this.matchReason = '',
+    this.canContact = true,
+    this.isRecommended = true,
+    this.teamMembers = const [],
     this.isPreview = false,
   });
 
@@ -29,6 +64,7 @@ class MemberDealOpportunity {
   final String region;
   final String summary;
   final String stage;
+  final String dealType;
   final String purchasePriceBand;
   final String capitalRequiredBand;
   final int affinityScore;
@@ -37,30 +73,44 @@ class MemberDealOpportunity {
   final DateTime publishedAt;
   final int? matchScore;
   final String matchReason;
+  final bool canContact;
+  final bool isRecommended;
+  final List<MemberDealTeamMember> teamMembers;
   final bool isPreview;
 
-  factory MemberDealOpportunity.fromJson(Map<String, dynamic> row) =>
-      MemberDealOpportunity(
-        id: row['id'] as String,
-        headline: row['headline'] as String? ?? 'Anonymous opportunity',
-        industry: row['industry'] as String? ?? 'Business services',
-        region: row['region'] as String? ?? 'Canada',
-        summary: row['summary'] as String? ?? '',
-        stage: row['stage'] as String? ?? 'Evaluated',
-        purchasePriceBand: row['purchase_price_band'] as String? ?? 'Private',
-        capitalRequiredBand:
-            row['capital_required_band'] as String? ?? 'To be discussed',
-        affinityScore: (row['affinity_score'] as num?)?.toInt() ?? 0,
-        scoreLabel: row['score_label'] as String? ?? 'Affinity reviewed',
-        supportNeeded: List<String>.from(
-          row['support_needed'] as List<dynamic>? ?? const [],
-        ),
-        publishedAt:
-            DateTime.tryParse(row['published_at'] as String? ?? '') ??
-            DateTime.now(),
-        matchScore: (row['match_score'] as num?)?.toInt(),
-        matchReason: row['match_reason'] as String? ?? '',
-      );
+  factory MemberDealOpportunity.fromJson(
+    Map<String, dynamic> row,
+  ) => MemberDealOpportunity(
+    id: row['id'] as String,
+    headline: row['headline'] as String? ?? 'Anonymous opportunity',
+    industry: row['industry'] as String? ?? 'Business services',
+    region: row['region'] as String? ?? 'Canada',
+    summary: row['summary'] as String? ?? '',
+    stage: row['stage'] as String? ?? 'Evaluated',
+    dealType: row['deal_type'] as String? ?? 'business',
+    purchasePriceBand: row['purchase_price_band'] as String? ?? 'Private',
+    capitalRequiredBand:
+        row['capital_required_band'] as String? ?? 'To be discussed',
+    affinityScore: (row['affinity_score'] as num?)?.toInt() ?? 0,
+    scoreLabel: row['score_label'] as String? ?? 'Affinity reviewed',
+    supportNeeded: List<String>.from(
+      row['support_needed'] as List<dynamic>? ?? const [],
+    ),
+    publishedAt:
+        DateTime.tryParse(row['published_at'] as String? ?? '') ??
+        DateTime.now(),
+    matchScore: (row['match_score'] as num?)?.toInt(),
+    matchReason: row['match_reason'] as String? ?? '',
+    canContact: row['can_contact'] as bool? ?? true,
+    isRecommended: row['is_recommended'] as bool? ?? true,
+    teamMembers: (row['team_members'] as List<dynamic>? ?? const [])
+        .whereType<Map>()
+        .map(
+          (member) =>
+              MemberDealTeamMember.fromJson(Map<String, dynamic>.from(member)),
+        )
+        .toList(),
+  );
 }
 
 class MemberDealPitch {
@@ -146,6 +196,22 @@ class MemberDealMarketplaceService {
           )
           .toList();
 
+  static List<MemberDealOpportunity> rankRecommendations(
+    Iterable<MemberDealOpportunity> opportunities,
+  ) {
+    final ranked = opportunities
+        .where(
+          (deal) =>
+              deal.canContact &&
+              deal.isRecommended &&
+              deal.matchScore != null &&
+              deal.matchScore! > 0,
+        )
+        .toList();
+    ranked.sort((a, b) => (b.matchScore ?? 0).compareTo(a.matchScore ?? 0));
+    return ranked;
+  }
+
   static Future<void> submitForReview(String dealRoomId) async {
     _requireUser();
     await _client.rpc(
@@ -218,12 +284,26 @@ class MemberDealMarketplaceService {
       summary:
           'Recurring commercial customers, an experienced operating team, and a buyer seeking financing and transaction support before entering exclusivity.',
       stage: 'Initial diligence',
+      dealType: 'Business acquisition',
       purchasePriceBand: r'$2M–$3M',
       capitalRequiredBand: r'$650K–$900K',
       affinityScore: 82,
       scoreLabel: 'Strong strategic fit',
       supportNeeded: const ['Commercial lender', 'M&A lawyer', 'QOE'],
       publishedAt: DateTime(2026, 8, 17),
+      matchScore: 84,
+      matchReason:
+          'your profession is requested · strong location match · background strongly aligns',
+      teamMembers: const [
+        MemberDealTeamMember(
+          providerId: 'preview-team-qoe',
+          name: 'Grace Okafor',
+          company: 'ClearLedger Advisory',
+          providerType: 'quality_of_earnings',
+          jobTitle: 'Quality of Earnings Director',
+          photoIndex: 4,
+        ),
+      ],
       isPreview: true,
     ),
     MemberDealOpportunity(
@@ -234,12 +314,16 @@ class MemberDealMarketplaceService {
       summary:
           'Owner-operated company with a durable customer base. The buyer wants help validating earnings quality, transition risk, and an appropriate financing structure.',
       stage: 'Evaluation complete',
+      dealType: 'Business acquisition',
       purchasePriceBand: r'$750K–$1.25M',
       capitalRequiredBand: r'$225K–$350K',
       affinityScore: 76,
       scoreLabel: 'Viable with conditions',
       supportNeeded: const ['Accountant', 'Commercial lender', 'HR adviser'],
       publishedAt: DateTime(2026, 8, 16),
+      matchScore: 72,
+      matchReason:
+          'adjacent professional fit · same province · some background overlap',
       isPreview: true,
     ),
   ];

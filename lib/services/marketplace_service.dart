@@ -112,6 +112,8 @@ class MarketplaceProvider {
     this.licenseRegion = '',
     this.acceptingLeads = true,
     this.locations = const [],
+    this.specialties = const [],
+    this.serviceMarkets = const [],
     this.membershipTier = 'free',
     this.rateLabel,
     this.rateVerifiedAt,
@@ -138,6 +140,8 @@ class MarketplaceProvider {
   final String licenseRegion;
   final bool acceptingLeads;
   final List<String> locations;
+  final List<String> specialties;
+  final List<String> serviceMarkets;
   final String membershipTier;
   final String? rateLabel;
   final DateTime? rateVerifiedAt;
@@ -530,7 +534,7 @@ class MarketplaceService {
           .from('provider_profiles')
           .select(
             'id, provider_type, display_name, company_name, description, phone, email, website_url, '
-            'license_number, license_region, accepting_leads, membership_tier, verified, years_experience, review_score, review_count, job_title, '
+            'license_number, license_region, accepting_leads, membership_tier, verified, years_experience, review_score, review_count, job_title, specialties, service_markets, '
             'is_example, photo_index, logo_object_key, '
             'provider_regions!inner(service_regions!inner(city, region, country_code)), '
             'sponsored_placements(disclosure_label, active, starts_at, ends_at), '
@@ -545,7 +549,7 @@ class MarketplaceService {
             .from('provider_profiles')
             .select(
               'id, provider_type, display_name, company_name, description, phone, email, website_url, '
-              'license_number, license_region, accepting_leads, membership_tier, verified, years_experience, review_score, review_count, job_title, '
+              'license_number, license_region, accepting_leads, membership_tier, verified, years_experience, review_score, review_count, job_title, specialties, service_markets, '
               'is_example, photo_index, logo_object_key, '
               'sponsored_placements(disclosure_label, active, starts_at, ends_at), '
               'lender_rates(interest_rate, mortgage_type, verified_at, effective_at, expires_at)',
@@ -578,7 +582,7 @@ class MarketplaceService {
           .from('provider_profiles')
           .select(
             'id, provider_type, display_name, company_name, description, phone, email, website_url, '
-            'license_number, license_region, accepting_leads, membership_tier, verified, years_experience, review_score, review_count, job_title, '
+            'license_number, license_region, accepting_leads, membership_tier, verified, years_experience, review_score, review_count, job_title, specialties, service_markets, '
             'is_example, photo_index, logo_object_key, '
             'sponsored_placements(disclosure_label, active, starts_at, ends_at), '
             'lender_rates(interest_rate, mortgage_type, verified_at, effective_at, expires_at)',
@@ -606,7 +610,7 @@ class MarketplaceService {
           .from('provider_profiles')
           .select(
             'id, provider_type, display_name, company_name, description, phone, email, website_url, '
-            'license_number, license_region, accepting_leads, membership_tier, verified, years_experience, review_score, review_count, job_title, '
+            'license_number, license_region, accepting_leads, membership_tier, verified, years_experience, review_score, review_count, job_title, specialties, service_markets, '
             'is_example, photo_index, logo_object_key, '
             'sponsored_placements(disclosure_label, active, starts_at, ends_at), '
             'lender_rates(interest_rate, mortgage_type, verified_at, effective_at, expires_at)',
@@ -642,6 +646,12 @@ class MarketplaceService {
           .where((location) => !location.startsWith(','))
           .toSet()
           .toList();
+      final specialties = List<String>.from(
+        row['specialties'] as List<dynamic>? ?? const [],
+      );
+      final serviceMarkets = List<String>.from(
+        row['service_markets'] as List<dynamic>? ?? const [],
+      );
       final rate = rates.isEmpty
           ? null
           : Map<String, dynamic>.from(rates.first as Map);
@@ -667,7 +677,9 @@ class MarketplaceService {
           licenseNumber: row['license_number'] as String? ?? '',
           licenseRegion: row['license_region'] as String? ?? '',
           acceptingLeads: row['accepting_leads'] as bool? ?? true,
-          locations: locations,
+          locations: {...locations, ...serviceMarkets}.toList(),
+          specialties: specialties,
+          serviceMarkets: serviceMarkets,
           membershipTier: row['membership_tier'] as String? ?? 'free',
           rateLabel: rate == null
               ? null
