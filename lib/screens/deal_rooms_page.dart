@@ -1142,6 +1142,7 @@ class _NewDealDialog extends StatefulWidget {
 
 class _NewDealDialogState extends State<_NewDealDialog> {
   final _title = TextEditingController();
+  final _details = TextEditingController();
   final _location = TextEditingController();
   final _price = TextEditingController();
   final _goals = TextEditingController();
@@ -1163,6 +1164,7 @@ class _NewDealDialogState extends State<_NewDealDialog> {
   @override
   void dispose() {
     _title.dispose();
+    _details.dispose();
     _location.dispose();
     _price.dispose();
     _goals.dispose();
@@ -1183,7 +1185,7 @@ class _NewDealDialogState extends State<_NewDealDialog> {
   }
 
   void _submit() {
-    if (_title.text.trim().isEmpty) return;
+    if (_title.text.trim().isEmpty || _details.text.trim().length < 40) return;
     Navigator.pop(
       context,
       _NewDealDetails(
@@ -1196,6 +1198,7 @@ class _NewDealDialogState extends State<_NewDealDialog> {
         targetCloseDate: _targetDate,
         profileSnapshot: {
           'industry': _industry,
+          'deal_details': _details.text.trim(),
           'annual_revenue': _money(_revenue.text),
           'reported_ebitda': _money(_ebitda.text),
           'available_capital': _money(_availableCapital.text),
@@ -1310,7 +1313,10 @@ class _NewDealDialogState extends State<_NewDealDialog> {
                 const SizedBox(width: 14),
                 FilledButton(
                   onPressed: _step == 3
-                      ? (_title.text.trim().isEmpty ? null : _submit)
+                      ? (_title.text.trim().isEmpty ||
+                                _details.text.trim().length < 40
+                            ? null
+                            : _submit)
                       : () => setState(() => _step++),
                   child: Text(_step == 3 ? 'CREATE PRIVATE DEAL' : 'CONTINUE'),
                 ),
@@ -1442,6 +1448,21 @@ class _NewDealDialogState extends State<_NewDealDialog> {
           hintText: 'Leave blank if location is not known',
         ),
       ),
+      const SizedBox(height: 13),
+      TextField(
+        controller: _details,
+        minLines: 3,
+        maxLines: 5,
+        maxLength: 500,
+        onChanged: (_) => setState(() {}),
+        decoration: const InputDecoration(
+          labelText: 'Deal details (required)',
+          hintText:
+              'In a short paragraph, describe the business, what attracts you to it, and what you are trying to accomplish.',
+          helperText:
+              'Minimum 40 characters. Keep seller-identifying details private.',
+        ),
+      ),
     ],
   );
 
@@ -1550,6 +1571,12 @@ class _NewDealDialogState extends State<_NewDealDialog> {
             : _title.text.trim(),
       ),
       _reviewLine('Industry', _industry),
+      _reviewLine(
+        'Deal details',
+        _details.text.trim().length < 40
+            ? 'A short paragraph is required'
+            : _details.text.trim(),
+      ),
       _reviewLine(
         'Location',
         _location.text.trim().isEmpty ? 'Not known yet' : _location.text.trim(),
@@ -1806,6 +1833,7 @@ class _DealRoomPageState extends State<DealRoomPage> {
   final _timeline = TextEditingController();
   final _goals = TextEditingController();
   final _dealTitle = TextEditingController();
+  final _dealDetails = TextEditingController();
   final _dealLocation = TextEditingController();
   final _dealPrice = TextEditingController();
   final _dealRevenue = TextEditingController();
@@ -1825,6 +1853,7 @@ class _DealRoomPageState extends State<DealRoomPage> {
     _timeline.text = _room.timeline;
     _goals.text = _room.goals;
     _dealTitle.text = _room.title;
+    _dealDetails.text = _room.propertySnapshot['deal_details'] as String? ?? '';
     _dealLocation.text = _room.city;
     _dealPrice.text = _room.purchasePrice <= 0
         ? ''
@@ -1843,6 +1872,7 @@ class _DealRoomPageState extends State<DealRoomPage> {
     _timeline.dispose();
     _goals.dispose();
     _dealTitle.dispose();
+    _dealDetails.dispose();
     _dealLocation.dispose();
     _dealPrice.dispose();
     _dealRevenue.dispose();
@@ -1912,6 +1942,7 @@ class _DealRoomPageState extends State<DealRoomPage> {
     setState(() => _saving = true);
     try {
       final snapshot = Map<String, dynamic>.from(_room.propertySnapshot)
+        ..['deal_details'] = _dealDetails.text.trim()
         ..['annual_revenue'] = _fieldNumber(_dealRevenue)
         ..['reported_ebitda'] = _fieldNumber(_dealEbitda)
         ..['available_capital'] = _fieldNumber(_dealCapital);
@@ -3700,6 +3731,21 @@ class _DealRoomPageState extends State<DealRoomPage> {
     Column(
       children: [
         TextField(
+          controller: _dealDetails,
+          enabled: _room.ownedByCurrentUser,
+          minLines: 3,
+          maxLines: 6,
+          maxLength: 500,
+          decoration: const InputDecoration(
+            labelText: 'Deal details',
+            hintText:
+                'Describe the business, what attracts you to it, and what you are trying to accomplish.',
+            helperText:
+                'Required before this deal can be submitted for review.',
+          ),
+        ),
+        const SizedBox(height: 12),
+        TextField(
           controller: _goals,
           enabled: _room.ownedByCurrentUser,
           minLines: 3,
@@ -3796,7 +3842,22 @@ class _DealRoomPageState extends State<DealRoomPage> {
               ),
               const SizedBox(width: 10),
               FilledButton(
-                onPressed: _saving ? null : () => _saveRoom(_room.status),
+                onPressed: _saving
+                    ? null
+                    : () async {
+                        if (_dealDetails.text.trim().length < 40) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Add at least 40 characters of deal details before saving.',
+                              ),
+                            ),
+                          );
+                          return;
+                        }
+                        await _saveRoom(_room.status);
+                        await _saveDealProfile();
+                      },
                 child: const Text('SAVE'),
               ),
             ],

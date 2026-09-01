@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'backend_service.dart';
+import 'affinity_admin_service.dart';
 import 'member_beta_service.dart';
 
 class MemberDealOpportunity {
@@ -118,7 +119,9 @@ class MemberDealMarketplaceService {
     }
     dynamic rows;
     try {
-      rows = await _client.rpc('browse_matched_member_deals');
+      rows = await AffinityAdminService.isAdmin()
+          ? _client.rpc('browse_admin_member_deals')
+          : _client.rpc('browse_matched_member_deals');
     } catch (_) {
       rows = await _client.rpc('browse_member_deals');
     }

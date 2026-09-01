@@ -26,13 +26,11 @@ const _muted = Color(0xFF68635D);
 
 enum _StudioView {
   opportunities,
-  matches,
+  recommendations,
+  opportunityDetail,
   saved,
-  myPitches,
-  engagements,
   professionals,
   dealResponses,
-  analytics,
   profile,
   membership,
 }
@@ -48,7 +46,6 @@ class MemberDealMarketplacePage extends StatefulWidget {
 class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
   _StudioView _view = _StudioView.opportunities;
   late Future<List<MemberDealOpportunity>> _opportunities;
-  late Future<List<MemberDealPitch>> _myPitches;
   late Future<List<MemberDealPitch>> _responses;
   late Future<List<MarketplaceProvider>> _professionals;
   late Future<MarketplaceProvider?> _myProfessionalProfile;
@@ -109,7 +106,6 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
 
   void _reload() {
     _opportunities = MemberDealMarketplaceService.browse();
-    _myPitches = MemberDealMarketplaceService.loadMyPitches();
     _responses = MemberDealMarketplaceService.loadBuyerResponses();
     _professionals = MarketplaceService.loadAffinityMembers();
     _myProfessionalProfile = MarketplaceService.loadMyProfessionalProfile();
@@ -229,6 +225,38 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
         ),
       );
       if (selected == null) return;
+      final details =
+          selected.propertySnapshot['deal_details'] as String? ?? '';
+      if (details.trim().length < 40) {
+        if (!mounted) return;
+        final edit = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Add a short deal description'),
+            content: const Text(
+              'Every submitted deal needs a short paragraph explaining the business, what interests you, and what you are trying to accomplish. This remains private until Affinity creates the anonymous member brief.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('NOT NOW'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('EDIT DEAL'),
+              ),
+            ],
+          ),
+        );
+        if (edit == true && mounted) {
+          await Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => DealRoomPage(room: selected),
+            ),
+          );
+        }
+        return;
+      }
       await MemberDealMarketplaceService.submitForReview(selected.id);
       if (mounted) {
         _message(
@@ -283,6 +311,20 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
         ],
       ),
       actions: [
+        FutureBuilder<bool>(
+          future: AffinityAdminService.isAdmin(),
+          builder: (context, snapshot) => snapshot.data == true
+              ? IconButton(
+                  tooltip: 'Affinity review desk',
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const AffinityReviewDeskPage(),
+                    ),
+                  ),
+                  icon: const Icon(Icons.admin_panel_settings_outlined),
+                )
+              : const SizedBox.shrink(),
+        ),
         IconButton(
           onPressed: _reloadAndRebuild,
           tooltip: 'Refresh studio',
@@ -296,6 +338,11 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
   );
 
   void _reloadAndRebuild() => setState(_reload);
+
+  void _selectView(_StudioView view) => setState(() {
+    _view = view;
+    if (view == _StudioView.dealResponses) _interactionPanelOpen = false;
+  });
 
   Widget _hero() {
     final compact = MediaQuery.sizeOf(context).width < 600;
@@ -488,24 +535,14 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
             'Opportunities',
           ),
           _dashboardNavItem(
-            _StudioView.matches,
+            _StudioView.recommendations,
             Icons.auto_awesome_outlined,
-            'My matches',
+            'Recommendations',
           ),
           _dashboardNavItem(
             _StudioView.saved,
             Icons.bookmark_border_rounded,
             'Saved',
-          ),
-          _dashboardNavItem(
-            _StudioView.myPitches,
-            Icons.send_outlined,
-            'My pitches',
-          ),
-          _dashboardNavItem(
-            _StudioView.engagements,
-            Icons.handshake_outlined,
-            'Engagements',
           ),
           _dashboardNavItem(
             _StudioView.professionals,
@@ -516,11 +553,6 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
             _StudioView.dealResponses,
             Icons.inbox_outlined,
             'Buyer inbox',
-          ),
-          _dashboardNavItem(
-            _StudioView.analytics,
-            Icons.query_stats_outlined,
-            'Analytics',
           ),
           _dashboardNavItem(
             _StudioView.profile,
@@ -544,7 +576,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
           message: label,
           child: InkWell(
             borderRadius: BorderRadius.circular(13),
-            onTap: () => setState(() => _view = view),
+            onTap: () => _selectView(view),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 160),
               width: 48,
@@ -820,7 +852,6 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
             Icons.people_outline_rounded,
             'Professionals',
           ),
-          _navItem(_StudioView.myPitches, Icons.send_outlined, 'My pitches'),
           _navItem(
             _StudioView.dealResponses,
             Icons.inbox_outlined,
@@ -885,12 +916,10 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
     runSpacing: 9,
     children: [
       _viewChip(_StudioView.opportunities, 'OPPORTUNITIES'),
-      _viewChip(_StudioView.matches, 'MATCHES'),
+      _viewChip(_StudioView.recommendations, 'RECOMMENDATIONS'),
       _viewChip(_StudioView.saved, 'SAVED'),
       _viewChip(_StudioView.professionals, 'PROFESSIONALS'),
-      _viewChip(_StudioView.myPitches, 'MY PITCHES'),
       _viewChip(_StudioView.dealResponses, 'MY DEAL RESPONSES'),
-      _viewChip(_StudioView.analytics, 'ANALYTICS'),
       _viewChip(_StudioView.profile, 'PROFILE'),
     ],
   );
@@ -907,17 +936,14 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
       letterSpacing: .7,
     ),
     side: const BorderSide(color: _line),
-    onSelected: (_) => setState(() => _view = view),
+    onSelected: (_) => _selectView(view),
   );
 
   Widget _currentView() {
     const privateViews = <_StudioView>{
-      _StudioView.matches,
+      _StudioView.recommendations,
       _StudioView.saved,
-      _StudioView.myPitches,
-      _StudioView.engagements,
       _StudioView.dealResponses,
-      _StudioView.analytics,
       _StudioView.profile,
       _StudioView.membership,
     };
@@ -925,7 +951,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
       return _AccessState(
         title: 'Your private member workspace',
         message:
-            'Sign in to open this area. Matches, saved deals, pitches, analytics, buyer responses, and professional-profile information are tied only to your Affinity account.',
+            'Sign in to open this area. Recommendations, saved deals, buyer responses, and professional-profile information are tied only to your Affinity account.',
         action: 'SIGN IN',
         onTap: () async {
           if (await _ensureSignedIn() && mounted) setState(_reload);
@@ -934,13 +960,11 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
     }
     return switch (_view) {
       _StudioView.opportunities => _opportunityFeed(),
-      _StudioView.matches => _matchedOpportunities(),
+      _StudioView.recommendations => _matchedOpportunities(),
+      _StudioView.opportunityDetail => _expandedOpportunity(),
       _StudioView.saved => _savedOpportunities(),
       _StudioView.professionals => _professionalDirectory(),
-      _StudioView.myPitches => _pitchList(_myPitches, buyerView: false),
-      _StudioView.engagements => _engagements(),
       _StudioView.dealResponses => _pitchList(_responses, buyerView: true),
-      _StudioView.analytics => _studioAnalytics(),
       _StudioView.profile => _professionalProfileWorkspace(),
       _StudioView.membership => _membershipWorkspace(),
     };
@@ -980,6 +1004,171 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
         ),
       );
 
+  void _openOpportunity(MemberDealOpportunity deal) => setState(() {
+    _selectedOpportunity = deal;
+    _view = _StudioView.opportunityDetail;
+  });
+
+  Widget _expandedOpportunity() {
+    final deal = _selectedOpportunity;
+    if (deal == null) {
+      return _AccessState(
+        title: 'Choose an opportunity',
+        message:
+            'Open a deal from Opportunities, Recommendations, or Saved to see its complete privacy-safe brief.',
+        action: 'BROWSE OPPORTUNITIES',
+        onTap: () => _selectView(_StudioView.opportunities),
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TextButton.icon(
+          onPressed: () => _selectView(_StudioView.opportunities),
+          icon: const Icon(Icons.arrow_back_rounded, size: 17),
+          label: const Text('ALL OPPORTUNITIES'),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const CircleAvatar(
+              radius: 27,
+              backgroundColor: _green,
+              child: Icon(Icons.lock_person_outlined, color: Colors.white),
+            ),
+            const SizedBox(width: 15),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'ANONYMOUS BUYER · AFFINITY REVIEWED',
+                    style: TextStyle(
+                      color: _green,
+                      fontSize: 9,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    deal.headline,
+                    style: const TextStyle(
+                      fontSize: 36,
+                      height: 1,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -1.4,
+                    ),
+                  ),
+                  const SizedBox(height: 9),
+                  Text(
+                    '${deal.industry} · ${deal.region} · ${deal.stage}',
+                    style: const TextStyle(
+                      color: _green,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            _Score(score: deal.affinityScore),
+          ],
+        ),
+        const SizedBox(height: 24),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            border: Border.all(color: _line),
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'WHAT THE BUYER IS TRYING TO ACQUIRE',
+                style: TextStyle(
+                  color: _green,
+                  fontSize: 9,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                deal.summary,
+                style: const TextStyle(fontSize: 17, height: 1.65),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: [
+            _metricTile(deal.purchasePriceBand, 'PURCHASE PRICE'),
+            _metricTile(deal.capitalRequiredBand, 'CAPITAL SOUGHT'),
+            _metricTile(deal.scoreLabel, 'AFFINITY VIEW'),
+            _metricTile(deal.stage, 'CURRENT STAGE'),
+          ],
+        ),
+        const SizedBox(height: 16),
+        _studioPanel(
+          Icons.groups_2_outlined,
+          'Where professional support is needed',
+          deal.supportNeeded.isEmpty
+              ? 'Affinity has not assigned professional requirements yet.'
+              : deal.supportNeeded.join(' · '),
+        ),
+        if (deal.matchScore != null) ...[
+          const SizedBox(height: 14),
+          _studioPanel(
+            Icons.auto_awesome_outlined,
+            '${deal.matchScore}% recommendation fit',
+            deal.matchReason,
+          ),
+        ],
+        const SizedBox(height: 14),
+        _studioPanel(
+          Icons.visibility_off_outlined,
+          'Buyer privacy boundary',
+          'The buyer’s name, contact details, exact business identity, address, raw assessment, and documents remain private. Your concise introduction is shared first; the buyer decides whether to connect.',
+        ),
+        const SizedBox(height: 18),
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: [
+            OutlinedButton.icon(
+              onPressed: () => _toggleSavedOpportunity(deal.id),
+              icon: Icon(
+                _savedOpportunityIds.contains(deal.id)
+                    ? Icons.bookmark_rounded
+                    : Icons.bookmark_border_rounded,
+              ),
+              label: Text(
+                _savedOpportunityIds.contains(deal.id)
+                    ? 'SAVED'
+                    : 'SAVE OPPORTUNITY',
+              ),
+            ),
+            FilledButton.icon(
+              onPressed: () {
+                setState(() => _interactionPanelOpen = true);
+                _pitch(deal);
+              },
+              icon: const Icon(Icons.forum_outlined, size: 17),
+              label: const Text('INTRODUCE YOUR SERVICES'),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
   Widget _matchedOpportunities() => FutureBuilder<List<MemberDealOpportunity>>(
     future: _opportunities,
     builder: (context, snapshot) {
@@ -995,12 +1184,14 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
         children: [
           _studioHeading(
             'PERSONALIZED DISCOVERY',
-            'Your strongest matches',
+            'Recommended for you',
             'Affinity ranks reviewed opportunities against your services, regions, and deal-size preferences.',
           ),
           Row(
             children: [
-              Expanded(child: _metricTile('${deals.length}', 'MATCHED DEALS')),
+              Expanded(
+                child: _metricTile('${deals.length}', 'RECOMMENDATIONS'),
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: _metricTile(
@@ -1014,7 +1205,11 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
           ),
           const SizedBox(height: 18),
           for (final deal in deals) ...[
-            _DealPost(deal: deal, onPitch: () => _pitch(deal)),
+            _DealPost(
+              deal: deal,
+              onOpen: () => _openOpportunity(deal),
+              onPitch: () => _pitch(deal),
+            ),
             const SizedBox(height: 16),
           ],
         ],
@@ -1047,121 +1242,13 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
             'Keep the deals that deserve a second look in one focused queue.',
           ),
           for (final deal in deals) ...[
-            _DealPost(deal: deal, onPitch: () => _pitch(deal)),
+            _DealPost(
+              deal: deal,
+              onOpen: () => _openOpportunity(deal),
+              onPitch: () => _pitch(deal),
+            ),
             const SizedBox(height: 16),
           ],
-        ],
-      );
-    },
-  );
-
-  Widget _engagements() => FutureBuilder<List<MemberDealPitch>>(
-    future: _myPitches,
-    builder: (context, snapshot) {
-      if (!snapshot.hasData) return const _LoadingBlock();
-      final active = snapshot.data!
-          .where(
-            (pitch) =>
-                pitch.status == 'accepted' || pitch.status == 'shortlisted',
-          )
-          .toList();
-      if (active.isEmpty) {
-        return const _AccessState(
-          title: 'No active engagements yet',
-          message:
-              'Shortlisted and accepted introductions become engagements here, giving you a clean handoff from discovery to active client work.',
-        );
-      }
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _studioHeading(
-            'ACTIVE WORK',
-            'Engagement pipeline',
-            'Track shortlisted conversations and accepted connections without turning the studio into social media.',
-          ),
-          for (final pitch in active) ...[
-            _engagementCard(pitch),
-            const SizedBox(height: 12),
-          ],
-        ],
-      );
-    },
-  );
-
-  Widget _engagementCard(MemberDealPitch pitch) => Container(
-    padding: const EdgeInsets.all(20),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      border: Border.all(color: _line),
-      borderRadius: BorderRadius.circular(18),
-    ),
-    child: Row(
-      children: [
-        const CircleAvatar(
-          backgroundColor: Color(0xFFE5EEE9),
-          child: Icon(Icons.handshake_outlined, color: _green),
-        ),
-        const SizedBox(width: 14),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                pitch.opportunityHeadline,
-                style: const TextStyle(fontWeight: FontWeight.w800),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                pitch.offerSummary.isEmpty ? pitch.pitch : pitch.offerSummary,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(color: _muted, fontSize: 12),
-              ),
-            ],
-          ),
-        ),
-        _statusPill(pitch.status),
-      ],
-    ),
-  );
-
-  Widget _studioAnalytics() => FutureBuilder<List<dynamic>>(
-    future: Future.wait<dynamic>([_opportunities, _myPitches, _responses]),
-    builder: (context, snapshot) {
-      if (!snapshot.hasData) return const _LoadingBlock();
-      final opportunities = snapshot.data![0] as List<MemberDealOpportunity>;
-      final pitches = snapshot.data![1] as List<MemberDealPitch>;
-      final responses = snapshot.data![2] as List<MemberDealPitch>;
-      final accepted = pitches
-          .where((pitch) => pitch.status == 'accepted')
-          .length;
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _studioHeading(
-            'STUDIO INTELLIGENCE',
-            'Your network performance',
-            'A private operating view of opportunity flow, introductions, and conversion—not public popularity metrics.',
-          ),
-          _privateAccountBanner(),
-          const SizedBox(height: 16),
-          Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            children: [
-              _metricTile('${opportunities.length}', 'LIVE OPPORTUNITIES'),
-              _metricTile('${pitches.length}', 'PITCHES SENT'),
-              _metricTile('$accepted', 'CONNECTIONS'),
-              _metricTile('${responses.length}', 'BUYER RESPONSES'),
-            ],
-          ),
-          const SizedBox(height: 20),
-          _studioPanel(
-            Icons.insights_outlined,
-            'Quality over volume',
-            'The Studio is designed for relevant, specific introductions. Match settings and concise pitches should improve conversion without exposing buyers or rewarding noisy posting.',
-          ),
         ],
       );
     },
@@ -1420,32 +1507,6 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
     ),
   );
 
-  Widget _privateAccountBanner() => Container(
-    width: double.infinity,
-    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
-    decoration: BoxDecoration(
-      color: const Color(0xFFE5EEE9),
-      borderRadius: BorderRadius.circular(14),
-    ),
-    child: Row(
-      children: [
-        const Icon(Icons.lock_outline_rounded, color: _green, size: 18),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Text(
-            'PRIVATE TO ${BackendService.user?.email?.toUpperCase() ?? 'YOUR ACCOUNT'} · NOT VISIBLE IN THE PROFESSIONAL DIRECTORY',
-            style: const TextStyle(
-              color: _green,
-              fontSize: 8,
-              fontWeight: FontWeight.w900,
-              letterSpacing: .75,
-            ),
-          ),
-        ),
-      ],
-    ),
-  );
-
   Widget _opportunityFeed() => FutureBuilder<List<MemberDealOpportunity>>(
     future: _opportunities,
     builder: (context, snapshot) {
@@ -1513,7 +1574,11 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
           ),
           const SizedBox(height: 20),
           for (final deal in deals) ...[
-            _DealPost(deal: deal, onPitch: () => _pitch(deal)),
+            _DealPost(
+              deal: deal,
+              onOpen: () => _openOpportunity(deal),
+              onPitch: () => _pitch(deal),
+            ),
             const SizedBox(height: 18),
           ],
         ],
@@ -1814,145 +1879,177 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
 }
 
 class _DealPost extends StatelessWidget {
-  const _DealPost({required this.deal, required this.onPitch});
+  const _DealPost({
+    required this.deal,
+    required this.onOpen,
+    required this.onPitch,
+  });
   final MemberDealOpportunity deal;
+  final VoidCallback onOpen;
   final VoidCallback onPitch;
 
   @override
-  Widget build(BuildContext context) => Container(
-    width: double.infinity,
-    padding: const EdgeInsets.all(26),
-    decoration: BoxDecoration(
-      color: _surface,
-      border: Border.all(color: const Color(0xFFE2E5DF)),
+  Widget build(BuildContext context) => Material(
+    color: Colors.transparent,
+    child: InkWell(
+      onTap: onOpen,
       borderRadius: BorderRadius.circular(22),
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(26),
+        decoration: BoxDecoration(
+          color: _surface,
+          border: Border.all(color: const Color(0xFFE2E5DF)),
+          borderRadius: BorderRadius.circular(22),
+        ),
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const CircleAvatar(
-              radius: 25,
-              backgroundColor: _green,
-              child: Icon(Icons.lock_person_outlined, color: Colors.white),
-            ),
-            const SizedBox(width: 14),
-            const Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'ANONYMOUS BUYER',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w900,
-                      fontSize: 11,
-                      letterSpacing: .8,
-                    ),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const CircleAvatar(
+                  radius: 25,
+                  backgroundColor: _green,
+                  child: Icon(Icons.lock_person_outlined, color: Colors.white),
+                ),
+                const SizedBox(width: 14),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'ANONYMOUS BUYER',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w900,
+                          fontSize: 11,
+                          letterSpacing: .8,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Identity protected · Affinity reviewed',
+                        style: TextStyle(color: _muted, fontSize: 12),
+                      ),
+                    ],
                   ),
-                  SizedBox(height: 4),
-                  Text(
-                    'Identity protected · Affinity reviewed',
-                    style: TextStyle(color: _muted, fontSize: 12),
+                ),
+                _Score(score: deal.affinityScore),
+              ],
+            ),
+            const SizedBox(height: 24),
+            Text(
+              deal.headline,
+              style: const TextStyle(
+                fontSize: 28,
+                height: 1.05,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -.8,
+              ),
+            ),
+            const SizedBox(height: 9),
+            Text(
+              '${deal.industry} · ${deal.region} · ${deal.stage}',
+              style: const TextStyle(
+                color: _green,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            if (deal.matchScore != null) ...[
+              const SizedBox(height: 11),
+              Row(
+                children: [
+                  const Icon(
+                    Icons.auto_awesome_outlined,
+                    size: 16,
+                    color: _green,
+                  ),
+                  const SizedBox(width: 7),
+                  Expanded(
+                    child: Text(
+                      '${deal.matchScore}% professional match · ${deal.matchReason}',
+                      style: const TextStyle(
+                        color: _green,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ),
                 ],
               ),
+            ],
+            const SizedBox(height: 18),
+            Text(
+              deal.summary,
+              style: const TextStyle(height: 1.6, fontSize: 15),
             ),
-            _Score(score: deal.affinityScore),
-          ],
-        ),
-        const SizedBox(height: 24),
-        Text(
-          deal.headline,
-          style: const TextStyle(
-            fontSize: 28,
-            height: 1.05,
-            fontWeight: FontWeight.w800,
-            letterSpacing: -.8,
-          ),
-        ),
-        const SizedBox(height: 9),
-        Text(
-          '${deal.industry} · ${deal.region} · ${deal.stage}',
-          style: const TextStyle(color: _green, fontWeight: FontWeight.w700),
-        ),
-        if (deal.matchScore != null) ...[
-          const SizedBox(height: 11),
-          Row(
-            children: [
-              const Icon(Icons.auto_awesome_outlined, size: 16, color: _green),
-              const SizedBox(width: 7),
-              Expanded(
-                child: Text(
-                  '${deal.matchScore}% professional match · ${deal.matchReason}',
-                  style: const TextStyle(
-                    color: _green,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
+            const SizedBox(height: 22),
+            Wrap(
+              spacing: 20,
+              runSpacing: 14,
+              children: [
+                _Fact(label: 'PRICE BAND', value: deal.purchasePriceBand),
+                _Fact(label: 'CAPITAL SOUGHT', value: deal.capitalRequiredBand),
+                _Fact(label: 'AFFINITY VIEW', value: deal.scoreLabel),
+              ],
+            ),
+            if (deal.supportNeeded.isNotEmpty) ...[
+              const SizedBox(height: 22),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final need in deal.supportNeeded)
+                    Chip(
+                      label: Text(need),
+                      backgroundColor: const Color(0xFFE7ECE9),
+                      side: BorderSide.none,
+                    ),
+                ],
+              ),
+            ],
+            const SizedBox(height: 22),
+            Wrap(
+              spacing: 14,
+              runSpacing: 14,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              alignment: WrapAlignment.spaceBetween,
+              children: [
+                SizedBox(
+                  width: 210,
+                  child: Text(
+                    deal.isPreview
+                        ? 'PRIVACY-SAFE PREVIEW'
+                        : 'ONLY YOUR PITCH IS SHARED',
+                    style: const TextStyle(
+                      color: _muted,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: .7,
+                    ),
                   ),
                 ),
-              ),
-            ],
-          ),
-        ],
-        const SizedBox(height: 18),
-        Text(deal.summary, style: const TextStyle(height: 1.6, fontSize: 15)),
-        const SizedBox(height: 22),
-        Wrap(
-          spacing: 20,
-          runSpacing: 14,
-          children: [
-            _Fact(label: 'PRICE BAND', value: deal.purchasePriceBand),
-            _Fact(label: 'CAPITAL SOUGHT', value: deal.capitalRequiredBand),
-            _Fact(label: 'AFFINITY VIEW', value: deal.scoreLabel),
-          ],
-        ),
-        if (deal.supportNeeded.isNotEmpty) ...[
-          const SizedBox(height: 22),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              for (final need in deal.supportNeeded)
-                Chip(
-                  label: Text(need),
-                  backgroundColor: const Color(0xFFE7ECE9),
-                  side: BorderSide.none,
+                Wrap(
+                  spacing: 8,
+                  children: [
+                    TextButton.icon(
+                      onPressed: onOpen,
+                      icon: const Icon(Icons.open_in_new_rounded, size: 17),
+                      label: const Text('VIEW FULL DEAL'),
+                    ),
+                    FilledButton.icon(
+                      onPressed: onPitch,
+                      style: FilledButton.styleFrom(backgroundColor: _green),
+                      icon: const Icon(Icons.send_outlined, size: 18),
+                      label: const Text('PITCH THIS DEAL'),
+                    ),
+                  ],
                 ),
-            ],
-          ),
-        ],
-        const SizedBox(height: 22),
-        Wrap(
-          spacing: 14,
-          runSpacing: 14,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          alignment: WrapAlignment.spaceBetween,
-          children: [
-            SizedBox(
-              width: 210,
-              child: Text(
-                deal.isPreview
-                    ? 'PRIVACY-SAFE PREVIEW'
-                    : 'ONLY YOUR PITCH IS SHARED',
-                style: const TextStyle(
-                  color: _muted,
-                  fontSize: 10,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: .7,
-                ),
-              ),
-            ),
-            FilledButton.icon(
-              onPressed: onPitch,
-              style: FilledButton.styleFrom(backgroundColor: _green),
-              icon: const Icon(Icons.send_outlined, size: 18),
-              label: const Text('PITCH THIS DEAL'),
+              ],
             ),
           ],
         ),
-      ],
+      ),
     ),
   );
 }
