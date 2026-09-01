@@ -28,6 +28,14 @@ void main() {
       'support_needed': ['Lender', 'M&A lawyer'],
       'match_score': 91,
       'match_reason': 'your profession is requested · strong location match',
+      'match_components': {
+        'profession': 25,
+        'location': 20,
+        'background': 16,
+        'deal_type': 10,
+        'deal_quality': 16,
+        'member_profile': 5,
+      },
       'can_contact': false,
       'is_recommended': false,
       'team_members': [
@@ -53,6 +61,7 @@ void main() {
     expect(opportunity.dealType, 'business');
     expect(opportunity.canContact, isFalse);
     expect(opportunity.isRecommended, isFalse);
+    expect(opportunity.matchComponents['deal_quality'], 16);
     expect(opportunity.teamMembers.single.name, 'Nadia Campbell');
     expect(
       opportunity.toString(),

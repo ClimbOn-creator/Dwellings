@@ -52,6 +52,7 @@ class MemberDealOpportunity {
     required this.publishedAt,
     this.matchScore,
     this.matchReason = '',
+    this.matchComponents = const {},
     this.canContact = true,
     this.isRecommended = true,
     this.teamMembers = const [],
@@ -73,10 +74,13 @@ class MemberDealOpportunity {
   final DateTime publishedAt;
   final int? matchScore;
   final String matchReason;
+  final Map<String, int> matchComponents;
   final bool canContact;
   final bool isRecommended;
   final List<MemberDealTeamMember> teamMembers;
   final bool isPreview;
+
+  int get dealScore => affinityScore.clamp(1, 99);
 
   factory MemberDealOpportunity.fromJson(
     Map<String, dynamic> row,
@@ -101,6 +105,11 @@ class MemberDealOpportunity {
         DateTime.now(),
     matchScore: (row['match_score'] as num?)?.toInt(),
     matchReason: row['match_reason'] as String? ?? '',
+    matchComponents: row['match_components'] is Map
+        ? Map<String, dynamic>.from(
+            row['match_components'] as Map,
+          ).map((key, value) => MapEntry(key, (value as num).toInt()))
+        : const {},
     canContact: row['can_contact'] as bool? ?? true,
     isRecommended: row['is_recommended'] as bool? ?? true,
     teamMembers: (row['team_members'] as List<dynamic>? ?? const [])
@@ -291,9 +300,17 @@ class MemberDealMarketplaceService {
       scoreLabel: 'Strong strategic fit',
       supportNeeded: const ['Commercial lender', 'M&A lawyer', 'QOE'],
       publishedAt: DateTime(2026, 8, 17),
-      matchScore: 84,
+      matchScore: 93,
       matchReason:
           'your profession is requested · strong location match · background strongly aligns',
+      matchComponents: const {
+        'profession': 25,
+        'location': 20,
+        'background': 16,
+        'deal_type': 10,
+        'deal_quality': 17,
+        'member_profile': 5,
+      },
       teamMembers: const [
         MemberDealTeamMember(
           providerId: 'preview-team-qoe',
@@ -321,9 +338,17 @@ class MemberDealMarketplaceService {
       scoreLabel: 'Viable with conditions',
       supportNeeded: const ['Accountant', 'Commercial lender', 'HR adviser'],
       publishedAt: DateTime(2026, 8, 16),
-      matchScore: 72,
+      matchScore: 53,
       matchReason:
           'adjacent professional fit · same province · some background overlap',
+      matchComponents: const {
+        'profession': 0,
+        'location': 12,
+        'background': 12,
+        'deal_type': 10,
+        'deal_quality': 15,
+        'member_profile': 4,
+      },
       isPreview: true,
     ),
   ];

@@ -70,9 +70,10 @@ The founding-member onboarding flow does not charge a card. Paid billing remains
 Apply `supabase/migrations/202608310018_admin_member_studio_access.sql` and
 `supabase/migrations/202609010019_professional_deal_matching.sql` after the
 private-beta migration. The latter centralizes the recommendation score across
-the Member Studio: requested profession (40 points), location (25), member
-background and specialties (20), deal-type relevance (10), and Affinity review
-quality (5). It also adds the public-safe Deal Room team roster, turns accepted
+the Member Studio: requested profession (25 points), location (20), member
+background and specialties (20), deal-type relevance (10), the deal’s
+Affinity review score (20), and member experience/reputation (5). It also adds
+the public-safe Deal Room team roster, turns accepted
 pitches into Deal Room memberships, and prevents a second accepted member of
 the same profession from contacting that buyer about the same deal.
 

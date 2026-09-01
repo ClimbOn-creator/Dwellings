@@ -8,6 +8,7 @@ import '../services/deal_room_service.dart';
 import '../services/marketplace_service.dart';
 import '../services/member_deal_marketplace_service.dart';
 import '../services/member_beta_service.dart';
+import '../theme/score_color_scale.dart';
 import '../widgets/app_navigation_menu.dart';
 import '../widgets/home_brand_button.dart';
 import '../widgets/profile_photo.dart';
@@ -808,6 +809,24 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
         ),
       );
 
+  String _matchExplanation(MemberDealOpportunity deal) {
+    final parts = <String>[];
+    void add(String key, String label, int maximum) {
+      final value = deal.matchComponents[key];
+      if (value != null) parts.add('$label $value/$maximum');
+    }
+
+    add('profession', 'Profession', 25);
+    add('location', 'Location', 20);
+    add('background', 'Background', 20);
+    add('deal_type', 'Deal type', 10);
+    add('deal_quality', 'Deal score', 20);
+    add('member_profile', 'Member profile', 5);
+    return parts.isEmpty
+        ? deal.matchReason
+        : '${deal.matchReason}\n${parts.join(' · ')}';
+  }
+
   void _openOpportunity(MemberDealOpportunity deal) => setState(() {
     _selectedOpportunity = deal;
     _view = _StudioView.opportunityDetail;
@@ -876,7 +895,10 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                 ],
               ),
             ),
-            _Score(score: deal.affinityScore),
+            _Score(
+              score: deal.matchScore ?? deal.affinityScore,
+              label: deal.matchScore == null ? 'DEAL' : 'MATCH',
+            ),
           ],
         ),
         const SizedBox(height: 24),
@@ -916,7 +938,10 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
             _metricTile(deal.purchasePriceBand, 'PURCHASE PRICE'),
             _metricTile(deal.capitalRequiredBand, 'CAPITAL SOUGHT'),
             _metricTile(deal.dealType, 'DEAL TYPE'),
-            _metricTile(deal.scoreLabel, 'AFFINITY VIEW'),
+            _metricTile(
+              '${deal.dealScore}/99 · ${deal.scoreLabel}',
+              'DEAL SCORE',
+            ),
             _metricTile(deal.stage, 'CURRENT STAGE'),
           ],
         ),
@@ -935,7 +960,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
           _studioPanel(
             Icons.auto_awesome_outlined,
             '${deal.matchScore}% recommendation fit',
-            deal.matchReason,
+            _matchExplanation(deal),
           ),
         ],
         const SizedBox(height: 14),
@@ -1746,6 +1771,48 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
   );
 }
 
+class _MatchComponents extends StatelessWidget {
+  const _MatchComponents({required this.components});
+
+  final Map<String, int> components;
+
+  @override
+  Widget build(BuildContext context) {
+    const definitions = [
+      ('profession', 'PROFESSION', 25),
+      ('location', 'LOCATION', 20),
+      ('background', 'BACKGROUND', 20),
+      ('deal_type', 'DEAL TYPE', 10),
+      ('deal_quality', 'DEAL SCORE', 20),
+      ('member_profile', 'YOUR PROFILE', 5),
+    ];
+    return Wrap(
+      spacing: 7,
+      runSpacing: 7,
+      children: [
+        for (final definition in definitions)
+          if (components[definition.$1] case final value?)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF1F3EF),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                '${definition.$2} $value/${definition.$3}',
+                style: const TextStyle(
+                  color: _green,
+                  fontSize: 8,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: .4,
+                ),
+              ),
+            ),
+      ],
+    );
+  }
+}
+
 class _DealTeamStrip extends StatelessWidget {
   const _DealTeamStrip({required this.members});
 
@@ -1937,7 +2004,10 @@ class _DealPost extends StatelessWidget {
                     ],
                   ),
                 ),
-                _Score(score: deal.affinityScore),
+                _Score(
+                  score: deal.matchScore ?? deal.affinityScore,
+                  label: deal.matchScore == null ? 'DEAL' : 'MATCH',
+                ),
               ],
             ),
             const SizedBox(height: 24),
@@ -1982,6 +2052,10 @@ class _DealPost extends StatelessWidget {
               ),
             ],
             const SizedBox(height: 18),
+            if (deal.matchComponents.isNotEmpty) ...[
+              _MatchComponents(components: deal.matchComponents),
+              const SizedBox(height: 18),
+            ],
             Text(
               deal.summary,
               style: const TextStyle(height: 1.6, fontSize: 15),
@@ -1994,7 +2068,10 @@ class _DealPost extends StatelessWidget {
                 _Fact(label: 'PRICE BAND', value: deal.purchasePriceBand),
                 _Fact(label: 'CAPITAL SOUGHT', value: deal.capitalRequiredBand),
                 _Fact(label: 'DEAL TYPE', value: deal.dealType),
-                _Fact(label: 'AFFINITY VIEW', value: deal.scoreLabel),
+                _Fact(
+                  label: 'DEAL SCORE',
+                  value: '${deal.dealScore}/99 · ${deal.scoreLabel}',
+                ),
               ],
             ),
             if (deal.supportNeeded.isNotEmpty) ...[
@@ -2548,29 +2625,49 @@ class _ProfessionalCard extends StatelessWidget {
 }
 
 class _Score extends StatelessWidget {
-  const _Score({required this.score});
+  const _Score({required this.score, this.label = 'SCORE'});
   final int score;
+  final String label;
   @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 9),
-    color: const Color(0xFFE7ECE9),
-    child: Column(
-      children: [
-        Text(
-          '$score',
-          style: const TextStyle(
-            color: _green,
-            fontSize: 22,
-            fontWeight: FontWeight.w900,
-          ),
+  Widget build(BuildContext context) {
+    final boundedScore = score.clamp(1, 99);
+    final color = scoreColor(boundedScore);
+    return Tooltip(
+      message:
+          '$label score $boundedScore of 99 · red is low, orange is mid-range, green is high',
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 9),
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(10),
+          boxShadow: [
+            BoxShadow(color: color.withValues(alpha: .22), blurRadius: 12),
+          ],
         ),
-        const Text(
-          'SCORE',
-          style: TextStyle(color: _green, fontSize: 8, letterSpacing: .8),
+        child: Column(
+          children: [
+            Text(
+              '$boundedScore',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 22,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            Text(
+              label,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 8,
+                fontWeight: FontWeight.w800,
+                letterSpacing: .8,
+              ),
+            ),
+          ],
         ),
-      ],
-    ),
-  );
+      ),
+    );
+  }
 }
 
 class _Fact extends StatelessWidget {

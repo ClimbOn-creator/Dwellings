@@ -62,12 +62,12 @@ declare
   wanted_lower text;
   deal_lower text := lower(coalesce(deal_region, ''));
 begin
-  if coalesce(cardinality(member_regions), 0) = 0 then return 10; end if;
+  if coalesce(cardinality(member_regions), 0) = 0 then return 8; end if;
   foreach wanted in array member_regions loop
     wanted_lower := lower(trim(wanted));
     if wanted_lower = '' then continue; end if;
     if deal_lower like '%' || wanted_lower || '%'
-       or wanted_lower like '%' || deal_lower || '%' then return 25; end if;
+       or wanted_lower like '%' || deal_lower || '%' then return 20; end if;
     if (wanted_lower like '%vancouver%' and
         (deal_lower like '%lower mainland%' or deal_lower like '%metro vancouver%'))
        or (deal_lower like '%vancouver%' and
@@ -76,7 +76,7 @@ begin
        or (deal_lower like '%victoria%' and wanted_lower like '%vancouver island%')
        or (wanted_lower like '%toronto%' and deal_lower like '%greater toronto%')
        or (deal_lower like '%toronto%' and wanted_lower like '%greater toronto%') then
-      return 25;
+      return 20;
     end if;
     if ((wanted_lower like '%british columbia%' or wanted_lower ~ '(^|,| )bc($|,| )') and
         (deal_lower like '%british columbia%' or deal_lower ~ '(^|,| )bc($|,| )'))
@@ -84,11 +84,36 @@ begin
         (deal_lower like '%alberta%' or deal_lower ~ '(^|,| )ab($|,| )'))
        or ((wanted_lower like '%ontario%' or wanted_lower ~ '(^|,| )on($|,| )') and
         (deal_lower like '%ontario%' or deal_lower ~ '(^|,| )on($|,| )')) then
-      return 14;
+      return 12;
     end if;
   end loop;
   return 0;
 end;
+$$;
+
+create or replace function public.affinity_deal_type_score(
+  provider_type text,
+  deal_type text,
+  profession_match boolean
+)
+returns integer
+language sql
+immutable
+set search_path = public
+as $$
+  select case
+    when lower(coalesce(deal_type, '')) = 'business' and provider_type in (
+      'business_broker', 'ma_lawyer', 'quality_of_earnings',
+      'commercial_lender', 'tax_advisor', 'insurance_advisor',
+      'human_resources', 'cybersecurity', 'industry_advisor', 'wealth_manager'
+    ) then 10
+    when lower(coalesce(deal_type, '')) in ('residential', 'commercial') and provider_type in (
+      'realtor', 'mortgage_broker', 'lawyer', 'accountant', 'lender',
+      'insurance_advisor', 'wealth_manager'
+    ) then 10
+    when profession_match then 8
+    else 2
+  end;
 $$;
 
 create or replace function public.affinity_background_score(
@@ -133,6 +158,7 @@ returns table (
   published_at timestamptz,
   match_score integer,
   match_reason text,
+  match_components jsonb,
   can_contact boolean,
   is_recommended boolean,
   team_members jsonb
@@ -165,6 +191,23 @@ as $$
              context.match_specialties, context.description, context.job_title,
              opportunity.industry, opportunity.summary, opportunity.support_needed
            ) as background_points,
+           public.affinity_deal_type_score(
+             context.provider_type, room.deal_kind,
+             public.affinity_profession_matches(
+               context.provider_type, opportunity.support_needed,
+               opportunity.industry, room.deal_kind
+             )
+           ) as deal_type_points,
+           round(
+             greatest(1, least(99, coalesce(opportunity.affinity_score, 1))) * 20.0 / 99.0
+           )::integer as deal_quality_points,
+           least(5,
+             case when coalesce(context.years_experience, 0) >= 10 then 3
+                  when coalesce(context.years_experience, 0) >= 5 then 2
+                  when coalesce(context.years_experience, 0) > 0 then 1 else 0 end +
+             case when coalesce(context.review_score, 0) >= 4.5 then 2
+                  when coalesce(context.review_score, 0) > 0 then 1 else 0 end
+           )::integer as member_profile_points,
            exists (
              select 1
              from public.deal_room_members member
@@ -209,27 +252,41 @@ as $$
          scored.score_label,
          scored.support_needed,
          scored.published_at,
-         case when target_provider_id is null then 100
-              when scored.role_taken then 0
-              else least(100,
-                (case when scored.profession_match then 40
-                      when coalesce(cardinality(scored.support_needed), 0) = 0 then 15 else 0 end) +
+         case when target_provider_id is null then
+                greatest(1, least(99, coalesce(scored.affinity_score, 1)))
+              when scored.role_taken then 1
+              else greatest(1, least(99,
+                (case when scored.profession_match then 25
+                      when coalesce(cardinality(scored.support_needed), 0) = 0 then 8 else 0 end) +
                 scored.location_points + scored.background_points +
-                (case when scored.profession_match then 10 else 3 end) +
-                least(5, coalesce(scored.affinity_score, 0) / 20)
-              )::integer end,
+                scored.deal_type_points + scored.deal_quality_points +
+                scored.member_profile_points
+              ))::integer end,
          case when target_provider_id is null then 'Affinity creator review access'
               when scored.role_taken then 'Your professional role is already filled on this deal'
               else concat_ws(' · ',
                 case when scored.profession_match then 'your profession is requested'
                      else 'adjacent professional fit' end,
-                case when scored.location_points = 25 then 'strong location match'
-                     when scored.location_points = 14 then 'same province'
+                case when scored.location_points = 20 then 'strong location match'
+                     when scored.location_points = 12 then 'same province'
                      when scored.location_points = 0 then 'outside your selected region'
                      else 'add a location for sharper matching' end,
                 case when scored.background_points >= 12 then 'background strongly aligns'
                      when scored.background_points > 0 then 'some background overlap'
-                     else 'no background overlap yet' end
+                     else 'no background overlap yet' end,
+                'deal quality ' || greatest(1, least(99, coalesce(scored.affinity_score, 1)))::text || '/99'
+              ) end,
+         case when target_provider_id is null then jsonb_build_object(
+                'deal_quality', greatest(1, least(99, coalesce(scored.affinity_score, 1)))
+              )
+              else jsonb_build_object(
+                'profession', case when scored.profession_match then 25
+                  when coalesce(cardinality(scored.support_needed), 0) = 0 then 8 else 0 end,
+                'location', scored.location_points,
+                'background', scored.background_points,
+                'deal_type', scored.deal_type_points,
+                'deal_quality', scored.deal_quality_points,
+                'member_profile', scored.member_profile_points
               ) end,
          target_provider_id is not null and not scored.role_taken,
          target_provider_id is null or (
@@ -249,7 +306,7 @@ returns table (
   id uuid, headline text, industry text, region text, summary text, stage text,
   deal_type text, purchase_price_band text, capital_required_band text,
   affinity_score integer, score_label text, support_needed text[], published_at timestamptz,
-  match_score integer, match_reason text, can_contact boolean,
+  match_score integer, match_reason text, match_components jsonb, can_contact boolean,
   is_recommended boolean, team_members jsonb
 )
 language plpgsql
@@ -275,7 +332,7 @@ returns table (
   id uuid, headline text, industry text, region text, summary text, stage text,
   deal_type text, purchase_price_band text, capital_required_band text,
   affinity_score integer, score_label text, support_needed text[], published_at timestamptz,
-  match_score integer, match_reason text, can_contact boolean,
+  match_score integer, match_reason text, match_components jsonb, can_contact boolean,
   is_recommended boolean, team_members jsonb
 )
 language plpgsql
@@ -301,7 +358,7 @@ returns table (
   id uuid, headline text, industry text, region text, summary text, stage text,
   deal_type text, purchase_price_band text, capital_required_band text,
   affinity_score integer, score_label text, support_needed text[], published_at timestamptz,
-  match_score integer, match_reason text, can_contact boolean,
+  match_score integer, match_reason text, match_components jsonb, can_contact boolean,
   is_recommended boolean, team_members jsonb
 )
 language plpgsql
