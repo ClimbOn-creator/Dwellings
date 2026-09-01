@@ -357,14 +357,16 @@ class _AffinityReviewDeskPageState extends State<AffinityReviewDeskPage> {
           FutureBuilder<List<AffinityAuditEvent>>(
             future: _events,
             builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting)
+              if (snapshot.connectionState == ConnectionState.waiting) {
                 return const _Loading();
+              }
               if (snapshot.hasError) return _error(snapshot.error!);
               final events = snapshot.data ?? [];
-              if (events.isEmpty)
+              if (events.isEmpty) {
                 return const _Empty(
                   'New Member Studio activity will be recorded here.',
                 );
+              }
               return Column(
                 children: [for (final event in events) _AuditRow(event)],
               );
@@ -563,6 +565,7 @@ class _ReviewEditorState extends State<_ReviewEditor> {
   late final TextEditingController score;
   late final TextEditingController scoreLabel;
   late final TextEditingController support;
+  late final Map<String, TextEditingController> brief;
   late final TextEditingController notes;
   bool saving = false;
 
@@ -580,6 +583,22 @@ class _ReviewEditorState extends State<_ReviewEditor> {
     score = TextEditingController(text: item.affinityScore?.toString() ?? '');
     scoreLabel = TextEditingController(text: item.scoreLabel);
     support = TextEditingController(text: item.supportNeeded.join(', '));
+    brief = {
+      for (final entry in const {
+        'buyer_objective': 'Buyer objective',
+        'target_business': 'Target business profile',
+        'operating_profile': 'Operating and management profile',
+        'revenue_profile': 'Revenue profile or band',
+        'earnings_profile': 'Earnings / EBITDA profile or band',
+        'financing_plan': 'Financing plan',
+        'timeline': 'Desired timeline',
+        'diligence_priorities': 'Diligence priorities',
+        'transaction_preferences': 'Transaction preferences',
+      }.entries)
+        entry.key: TextEditingController(
+          text: item.publicDetails[entry.key] ?? '',
+        ),
+    };
     notes = TextEditingController(text: item.reviewNotes);
   }
 
@@ -597,6 +616,7 @@ class _ReviewEditorState extends State<_ReviewEditor> {
       scoreLabel,
       support,
       notes,
+      ...brief.values,
     ]) {
       controller.dispose();
     }
@@ -636,6 +656,9 @@ class _ReviewEditorState extends State<_ReviewEditor> {
         industry: industry.text,
         region: region.text,
         summary: summary.text,
+        publicDetails: brief.map(
+          (key, controller) => MapEntry(key, controller.text.trim()),
+        )..removeWhere((key, value) => value.isEmpty),
         stage: stage.text,
         purchasePriceBand: priceBand.text,
         capitalRequiredBand: capitalBand.text,
@@ -709,6 +732,35 @@ class _ReviewEditorState extends State<_ReviewEditor> {
               ),
             ),
             const SizedBox(height: 12),
+            const Text(
+              'ANONYMOUS BUYER CRITERIA',
+              style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1),
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              'Translate the buyer’s inputs into useful member-facing criteria. Use ranges and general descriptions; never paste a company name, exact address, personal name, email, or identifying detail.',
+              style: TextStyle(color: _muted, height: 1.45),
+            ),
+            const SizedBox(height: 12),
+            for (final entry in const {
+              'buyer_objective': 'Buyer objective',
+              'target_business': 'Target business profile',
+              'operating_profile': 'Operating and management profile',
+              'revenue_profile': 'Revenue profile or band',
+              'earnings_profile': 'Earnings / EBITDA profile or band',
+              'financing_plan': 'Financing plan',
+              'timeline': 'Desired timeline',
+              'diligence_priorities': 'Diligence priorities',
+              'transaction_preferences': 'Transaction preferences',
+            }.entries) ...[
+              TextField(
+                controller: brief[entry.key],
+                minLines: 1,
+                maxLines: 3,
+                decoration: InputDecoration(labelText: entry.value),
+              ),
+              const SizedBox(height: 12),
+            ],
             Row(
               children: [
                 Expanded(

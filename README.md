@@ -77,6 +77,12 @@ the public-safe Deal Room team roster, turns accepted
 pitches into Deal Room memberships, and prevents a second accepted member of
 the same profession from contacting that buyer about the same deal.
 
+Apply `supabase/migrations/202609010020_member_networking.sql` for the Member
+Studio social layer: private one-to-one member conversations, unread and
+last-message ordering, deal-context chat, member referrals, buyer/referral
+notifications, and enforcement that referrals cannot bypass a filled deal
+role.
+
 ### Google and Outlook calendar sync
 
 Apply `supabase/migrations/202608150013_calendar_connections.sql`, then configure these encrypted Cloudflare Pages variables:

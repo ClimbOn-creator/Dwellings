@@ -87,6 +87,7 @@ class AffinityReviewItem {
     required this.assessmentResults,
     required this.headline,
     required this.summary,
+    required this.publicDetails,
     required this.purchasePriceBand,
     required this.capitalRequiredBand,
     required this.affinityScore,
@@ -111,6 +112,7 @@ class AffinityReviewItem {
   final Map<String, dynamic> assessmentResults;
   final String headline;
   final String summary;
+  final Map<String, String> publicDetails;
   final String purchasePriceBand;
   final String capitalRequiredBand;
   final int? affinityScore;
@@ -144,6 +146,11 @@ class AffinityReviewItem {
             : const {},
         headline: row['headline'] as String? ?? '',
         summary: row['summary'] as String? ?? '',
+        publicDetails: row['public_details'] is Map
+            ? Map<String, dynamic>.from(
+                row['public_details'] as Map,
+              ).map((key, value) => MapEntry(key, value?.toString() ?? ''))
+            : const {},
         purchasePriceBand: row['purchase_price_band'] as String? ?? 'Private',
         capitalRequiredBand:
             row['capital_required_band'] as String? ?? 'To be discussed',
@@ -213,7 +220,7 @@ class AffinityAdminService {
 
   static Future<List<AffinityReviewItem>> loadReviewQueue() async {
     _requireUser();
-    final rows = await _client.rpc('load_affinity_review_queue');
+    final rows = await _client.rpc('load_affinity_review_queue_v2');
     return (rows as List<dynamic>)
         .map(
           (row) => AffinityReviewItem.fromJson(
@@ -230,6 +237,7 @@ class AffinityAdminService {
     required String industry,
     required String region,
     required String summary,
+    required Map<String, String> publicDetails,
     required String stage,
     required String purchasePriceBand,
     required String capitalRequiredBand,
@@ -240,7 +248,7 @@ class AffinityAdminService {
   }) async {
     _requireUser();
     await _client.rpc(
-      'review_member_deal_opportunity',
+      'review_member_deal_opportunity_brief',
       params: {
         'target_opportunity_id': opportunityId,
         'review_status': status,
@@ -248,6 +256,7 @@ class AffinityAdminService {
         'public_industry': industry.trim(),
         'public_region': region.trim(),
         'public_summary': summary.trim(),
+        'public_brief': publicDetails,
         'public_stage': stage.trim(),
         'public_purchase_price_band': purchasePriceBand.trim(),
         'public_capital_required_band': capitalRequiredBand.trim(),

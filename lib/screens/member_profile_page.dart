@@ -15,9 +15,16 @@ const _paper = Color(0xFFF5F5F7);
 const _purple = Color(0xFF252525);
 
 class MemberProfilePage extends StatefulWidget {
-  const MemberProfilePage({super.key, required this.provider});
+  const MemberProfilePage({
+    super.key,
+    required this.provider,
+    this.onMessage,
+    this.onRefer,
+  });
 
   final MarketplaceProvider provider;
+  final Future<void> Function()? onMessage;
+  final Future<void> Function()? onRefer;
 
   @override
   State<MemberProfilePage> createState() => _MemberProfilePageState();
@@ -201,6 +208,17 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
     );
   }
 
+  Future<void> _messageMember() async {
+    if (widget.onMessage == null) return;
+    await widget.onMessage!();
+    if (mounted) Navigator.pop(context);
+  }
+
+  Future<void> _referMember() async {
+    if (widget.onRefer == null) return;
+    await widget.onRefer!();
+  }
+
   @override
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: _paper,
@@ -315,20 +333,56 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
                       ),
                     ),
                     if (MediaQuery.sizeOf(context).width >= 700)
-                      FilledButton.icon(
-                        onPressed: _changingTeam ? null : _toggleTeam,
-                        style: FilledButton.styleFrom(
-                          backgroundColor: _added
-                              ? const Color(0xFF16825D)
-                              : Colors.white,
-                          foregroundColor: _added ? Colors.white : _ink,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 22,
-                            vertical: 18,
+                      Wrap(
+                        spacing: 9,
+                        runSpacing: 9,
+                        children: [
+                          if (widget.onMessage != null)
+                            OutlinedButton.icon(
+                              onPressed: _messageMember,
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: Colors.white,
+                                side: const BorderSide(color: Colors.white54),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 18,
+                                  vertical: 17,
+                                ),
+                              ),
+                              icon: const Icon(
+                                Icons.chat_bubble_outline_rounded,
+                              ),
+                              label: const Text('MESSAGE'),
+                            ),
+                          if (widget.onRefer != null)
+                            OutlinedButton.icon(
+                              onPressed: _referMember,
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: Colors.white,
+                                side: const BorderSide(color: Colors.white54),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 18,
+                                  vertical: 17,
+                                ),
+                              ),
+                              icon: const Icon(Icons.person_add_alt_1_outlined),
+                              label: const Text('REFER'),
+                            ),
+                          FilledButton.icon(
+                            onPressed: _changingTeam ? null : _toggleTeam,
+                            style: FilledButton.styleFrom(
+                              backgroundColor: _added
+                                  ? const Color(0xFF16825D)
+                                  : Colors.white,
+                              foregroundColor: _added ? Colors.white : _ink,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 22,
+                                vertical: 18,
+                              ),
+                            ),
+                            icon: Icon(_added ? Icons.check_circle : Icons.add),
+                            label: Text(_added ? 'ADDED!' : 'ADD TO TEAM'),
                           ),
-                        ),
-                        icon: Icon(_added ? Icons.check_circle : Icons.add),
-                        label: Text(_added ? 'ADDED!' : 'ADD TO TEAM'),
+                        ],
                       ),
                   ],
                 ),

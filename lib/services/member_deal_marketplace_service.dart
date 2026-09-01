@@ -53,6 +53,7 @@ class MemberDealOpportunity {
     this.matchScore,
     this.matchReason = '',
     this.matchComponents = const {},
+    this.publicDetails = const {},
     this.canContact = true,
     this.isRecommended = true,
     this.teamMembers = const [],
@@ -75,6 +76,10 @@ class MemberDealOpportunity {
   final int? matchScore;
   final String matchReason;
   final Map<String, int> matchComponents;
+
+  /// Reviewer-approved acquisition criteria. Raw buyer inputs never enter the
+  /// member feed; only this deliberately anonymized brief is returned.
+  final Map<String, String> publicDetails;
   final bool canContact;
   final bool isRecommended;
   final List<MemberDealTeamMember> teamMembers;
@@ -109,6 +114,11 @@ class MemberDealOpportunity {
         ? Map<String, dynamic>.from(
             row['match_components'] as Map,
           ).map((key, value) => MapEntry(key, (value as num).toInt()))
+        : const {},
+    publicDetails: row['public_details'] is Map
+        ? Map<String, dynamic>.from(
+            row['public_details'] as Map,
+          ).map((key, value) => MapEntry(key, value?.toString() ?? ''))
         : const {},
     canContact: row['can_contact'] as bool? ?? true,
     isRecommended: row['is_recommended'] as bool? ?? true,
@@ -311,6 +321,23 @@ class MemberDealMarketplaceService {
         'deal_quality': 17,
         'member_profile': 5,
       },
+      publicDetails: const {
+        'buyer_objective':
+            'Acquire a durable industrial-services operator and preserve the existing management team while professionalizing reporting and finance.',
+        'target_business':
+            'Established B2B service company with recurring commercial accounts, defensible local relationships, and limited customer concentration.',
+        'operating_profile':
+            'Experienced operating team expected to remain after closing; owner transition support is preferred.',
+        'revenue_profile': r'$3M–$5M annual revenue',
+        'earnings_profile': r'$500K–$800K normalized EBITDA',
+        'financing_plan':
+            'Combination of buyer equity, acquisition debt, and a potential vendor note.',
+        'timeline': 'Targeting exclusivity within 60–90 days.',
+        'diligence_priorities':
+            'Earnings quality, customer concentration, working capital, management continuity, and environmental exposure.',
+        'transaction_preferences':
+            'Share or asset purchase remains open; meaningful transition support is preferred.',
+      },
       teamMembers: const [
         MemberDealTeamMember(
           providerId: 'preview-team-qoe',
@@ -348,6 +375,22 @@ class MemberDealMarketplaceService {
         'deal_type': 10,
         'deal_quality': 15,
         'member_profile': 4,
+      },
+      publicDetails: const {
+        'buyer_objective':
+            'Acquire a recurring-revenue home-services platform with a stable customer base and clear opportunities for operational improvement.',
+        'target_business':
+            'Owner-operated residential services company with repeat customers and an established local brand.',
+        'operating_profile':
+            'Buyer expects to retain key technicians and needs a practical owner-transition plan.',
+        'revenue_profile': r'$1M–$2M annual revenue',
+        'earnings_profile': r'$200K–$350K normalized EBITDA',
+        'financing_plan': 'Buyer equity plus senior acquisition financing.',
+        'timeline': 'Flexible close after diligence and financing approval.',
+        'diligence_priorities':
+            'Earnings normalization, technician retention, seasonality, customer churn, and fleet condition.',
+        'transaction_preferences':
+            'Asset purchase preferred, subject to tax and legal review.',
       },
       isPreview: true,
     ),

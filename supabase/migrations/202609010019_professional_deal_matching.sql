@@ -1,6 +1,9 @@
 -- Explainable professional-to-deal matching and deal-specific role exclusivity.
 -- Public feed functions still return privacy-reviewed fields only.
 
+alter table public.member_deal_opportunities
+  add column if not exists public_details jsonb not null default '{}'::jsonb;
+
 create or replace function public.affinity_profession_keywords(provider_type text)
 returns text[]
 language sql
@@ -148,6 +151,7 @@ returns table (
   industry text,
   region text,
   summary text,
+  public_details jsonb,
   stage text,
   deal_type text,
   purchase_price_band text,
@@ -244,6 +248,7 @@ as $$
          scored.industry,
          scored.region,
          scored.summary,
+         scored.public_details,
          scored.stage,
          coalesce(scored.deal_kind, 'business'),
          scored.purchase_price_band,
@@ -303,7 +308,7 @@ revoke all on function public.affinity_member_deal_feed(uuid) from public, anon,
 drop function if exists public.browse_member_deals();
 create function public.browse_member_deals()
 returns table (
-  id uuid, headline text, industry text, region text, summary text, stage text,
+  id uuid, headline text, industry text, region text, summary text, public_details jsonb, stage text,
   deal_type text, purchase_price_band text, capital_required_band text,
   affinity_score integer, score_label text, support_needed text[], published_at timestamptz,
   match_score integer, match_reason text, match_components jsonb, can_contact boolean,
@@ -329,7 +334,7 @@ grant execute on function public.browse_member_deals() to authenticated;
 drop function if exists public.browse_matched_member_deals();
 create function public.browse_matched_member_deals()
 returns table (
-  id uuid, headline text, industry text, region text, summary text, stage text,
+  id uuid, headline text, industry text, region text, summary text, public_details jsonb, stage text,
   deal_type text, purchase_price_band text, capital_required_band text,
   affinity_score integer, score_label text, support_needed text[], published_at timestamptz,
   match_score integer, match_reason text, match_components jsonb, can_contact boolean,
@@ -355,7 +360,7 @@ grant execute on function public.browse_matched_member_deals() to authenticated;
 drop function if exists public.browse_admin_member_deals();
 create function public.browse_admin_member_deals()
 returns table (
-  id uuid, headline text, industry text, region text, summary text, stage text,
+  id uuid, headline text, industry text, region text, summary text, public_details jsonb, stage text,
   deal_type text, purchase_price_band text, capital_required_band text,
   affinity_score integer, score_label text, support_needed text[], published_at timestamptz,
   match_score integer, match_reason text, match_components jsonb, can_contact boolean,
@@ -377,6 +382,199 @@ begin
 end;
 $$;
 grant execute on function public.browse_admin_member_deals() to authenticated;
+
+-- Reviewers convert private buyer inputs into this explicit, member-safe
+-- acquisition brief. The raw assessment is never returned by member feeds.
+create or replace function public.load_affinity_review_queue_v2()
+returns table (
+  id uuid,
+  status text,
+  submitted_at timestamptz,
+  updated_at timestamptz,
+  buyer_email text,
+  deal_title text,
+  region text,
+  current_stage text,
+  purchase_price numeric,
+  business_name text,
+  industry text,
+  assessment_inputs jsonb,
+  assessment_results jsonb,
+  headline text,
+  summary text,
+  public_details jsonb,
+  purchase_price_band text,
+  capital_required_band text,
+  affinity_score integer,
+  score_label text,
+  support_needed text[],
+  review_notes text,
+  pitch_count bigint
+)
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+begin
+  if not public.is_affinity_admin() then
+    raise exception 'Affinity administrator access required';
+  end if;
+
+  return query
+  select opportunity.id,
+         opportunity.status,
+         opportunity.submitted_at,
+         opportunity.updated_at,
+         opportunity.buyer_contact_email,
+         room.title,
+         coalesce(nullif(opportunity.region, ''), room.city),
+         room.current_stage,
+         room.purchase_price,
+         coalesce(assessment.business_name, room.title),
+         coalesce(nullif(opportunity.industry, ''), assessment.industry, ''),
+         coalesce(assessment.inputs, room.property_snapshot, '{}'::jsonb),
+         coalesce(assessment.results, room.risk_snapshot, '{}'::jsonb),
+         opportunity.headline,
+         opportunity.summary,
+         opportunity.public_details,
+         opportunity.purchase_price_band,
+         opportunity.capital_required_band,
+         opportunity.affinity_score,
+         opportunity.score_label,
+         opportunity.support_needed,
+         opportunity.review_notes,
+         count(response.id)
+  from public.member_deal_opportunities opportunity
+  join public.deal_rooms room on room.id = opportunity.deal_room_id
+  left join public.business_assessments assessment
+    on assessment.id = room.business_assessment_id
+  left join public.member_deal_pitches response
+    on response.opportunity_id = opportunity.id
+  group by opportunity.id, room.id, assessment.id
+  order by case opportunity.status
+      when 'submitted' then 0
+      when 'reviewing' then 1
+      when 'needs_information' then 2
+      when 'approved' then 3
+      when 'published' then 4
+      else 5
+    end,
+    opportunity.submitted_at desc;
+end;
+$$;
+
+grant execute on function public.load_affinity_review_queue_v2() to authenticated;
+
+create or replace function public.review_member_deal_opportunity_brief(
+  target_opportunity_id uuid,
+  review_status text,
+  public_headline text,
+  public_industry text,
+  public_region text,
+  public_summary text,
+  public_brief jsonb,
+  public_stage text,
+  public_purchase_price_band text,
+  public_capital_required_band text,
+  public_affinity_score integer,
+  public_score_label text,
+  public_support_needed text[],
+  private_review_notes text
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not public.is_affinity_admin() then
+    raise exception 'Affinity administrator access required';
+  end if;
+  if review_status not in (
+    'reviewing', 'needs_information', 'approved', 'published', 'paused', 'closed', 'declined'
+  ) then
+    raise exception 'Invalid review status';
+  end if;
+  if public_affinity_score is not null and
+      (public_affinity_score < 0 or public_affinity_score > 99) then
+    raise exception 'Affinity score must be between 0 and 99';
+  end if;
+  if exists (
+    select 1 from jsonb_object_keys(coalesce(public_brief, '{}'::jsonb)) key
+    where key not in (
+      'buyer_objective', 'target_business', 'operating_profile',
+      'revenue_profile', 'earnings_profile', 'financing_plan', 'timeline',
+      'diligence_priorities', 'transaction_preferences'
+    )
+  ) or length(coalesce(public_brief, '{}'::jsonb)::text) > 6000 then
+    raise exception 'The anonymous buyer brief contains unsupported or oversized fields';
+  end if;
+  if review_status = 'published' and (
+    char_length(trim(public_headline)) < 8 or
+    char_length(trim(public_summary)) < 40 or
+    public_affinity_score is null
+  ) then
+    raise exception 'A safe headline, summary, and score are required to publish';
+  end if;
+  if review_status = 'published' and exists (
+    select 1
+    from public.member_deal_opportunities candidate
+    join public.deal_rooms room on room.id = candidate.deal_room_id
+    left join public.business_assessments assessment
+      on assessment.id = room.business_assessment_id
+    where candidate.id = target_opportunity_id
+      and (
+        lower(trim(public_headline)) = lower(trim(room.title))
+        or (
+          char_length(trim(coalesce(assessment.business_name, ''))) >= 4
+          and lower(trim(public_headline)) = lower(trim(assessment.business_name))
+        )
+        or (
+          char_length(trim(room.title)) >= 4
+          and lower(public_summary || ' ' || coalesce(public_brief, '{}'::jsonb)::text)
+              like '%' || lower(trim(room.title)) || '%'
+        )
+        or (
+          char_length(trim(coalesce(assessment.business_name, ''))) >= 4
+          and lower(public_summary || ' ' || coalesce(public_brief, '{}'::jsonb)::text)
+              like '%' || lower(trim(assessment.business_name)) || '%'
+        )
+      )
+  ) then
+    raise exception 'The public brief must not contain the private deal or business name';
+  end if;
+
+  update public.member_deal_opportunities opportunity
+  set status = review_status,
+      headline = trim(public_headline),
+      industry = trim(public_industry),
+      region = trim(public_region),
+      summary = trim(public_summary),
+      public_details = coalesce(public_brief, '{}'::jsonb),
+      stage = trim(public_stage),
+      purchase_price_band = trim(public_purchase_price_band),
+      capital_required_band = trim(public_capital_required_band),
+      affinity_score = public_affinity_score,
+      score_label = trim(public_score_label),
+      support_needed = coalesce(public_support_needed, '{}'),
+      review_notes = trim(private_review_notes),
+      reviewed_at = now(),
+      published_at = case
+        when review_status = 'published' then coalesce(opportunity.published_at, now())
+        else opportunity.published_at
+      end,
+      updated_at = now()
+  where opportunity.id = target_opportunity_id;
+
+  if not found then raise exception 'Opportunity not found'; end if;
+end;
+$$;
+
+grant execute on function public.review_member_deal_opportunity_brief(
+  uuid, text, text, text, text, text, jsonb, text, text, text,
+  integer, text, text[], text
+) to authenticated;
 
 create or replace function public.enforce_deal_profession_exclusivity()
 returns trigger

@@ -19,6 +19,10 @@ void main() {
       'industry': 'Business services',
       'region': 'British Columbia',
       'summary': 'Affinity-approved summary',
+      'public_details': {
+        'buyer_objective': 'Acquire a recurring-revenue operator',
+        'revenue_profile': r'$2M–$4M annual revenue',
+      },
       'stage': 'Evaluation complete',
       'deal_type': 'business',
       'purchase_price_band': r'$1M–$2M',
@@ -53,6 +57,7 @@ void main() {
       'owner_user_id': 'private-user-id',
       'buyer_contact_email': 'private@example.com',
       'deal_room_id': 'private-room-id',
+      'assessment_inputs': {'business_name': 'Secret Company Ltd.'},
     });
 
     expect(opportunity.headline, 'Anonymous services acquisition');
@@ -62,11 +67,19 @@ void main() {
     expect(opportunity.canContact, isFalse);
     expect(opportunity.isRecommended, isFalse);
     expect(opportunity.matchComponents['deal_quality'], 16);
+    expect(
+      opportunity.publicDetails['buyer_objective'],
+      'Acquire a recurring-revenue operator',
+    );
     expect(opportunity.teamMembers.single.name, 'Nadia Campbell');
     expect(
       opportunity.toString(),
       isNot(
-        anyOf(contains('private@example.com'), contains('private-user-id')),
+        anyOf(
+          contains('private@example.com'),
+          contains('private-user-id'),
+          contains('Secret Company Ltd.'),
+        ),
       ),
     );
   });

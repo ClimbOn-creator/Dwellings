@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -7,6 +9,7 @@ import '../services/affinity_admin_service.dart';
 import '../services/deal_room_service.dart';
 import '../services/marketplace_service.dart';
 import '../services/member_deal_marketplace_service.dart';
+import '../services/member_network_service.dart';
 import '../services/member_beta_service.dart';
 import '../theme/score_color_scale.dart';
 import '../widgets/app_navigation_menu.dart';
@@ -35,6 +38,8 @@ enum _StudioView {
   profile,
 }
 
+enum _InteractionMode { inbox, chat, deal }
+
 class MemberDealMarketplacePage extends StatefulWidget {
   const MemberDealMarketplacePage({super.key});
 
@@ -50,6 +55,11 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
   late Future<List<MarketplaceProvider>> _professionals;
   late Future<MarketplaceProvider?> _myProfessionalProfile;
   late Future<bool> _creatorAccess;
+  late Future<List<MemberConversationSummary>> _conversations;
+  Future<List<MemberChatMessage>> _chatMessages = Future.value(const []);
+  MemberConversationSummary? _selectedConversation;
+  _InteractionMode _interactionMode = _InteractionMode.inbox;
+  Timer? _messageRefreshTimer;
   String _professionalQuery = '';
   String _professionalRoleFilter = 'all';
   String _responseFilter = 'all';
@@ -61,6 +71,8 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
   final _offer = TextEditingController();
   final _replyEmail = TextEditingController();
   final _professionalSearch = TextEditingController();
+  final _chatMessage = TextEditingController();
+  bool _sendingChat = false;
 
   @override
   void initState() {
@@ -68,6 +80,13 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
     _reload();
     _loadSavedOpportunities();
     _replyEmail.text = BackendService.user?.email ?? '';
+    _messageRefreshTimer = Timer.periodic(const Duration(seconds: 15), (_) {
+      if (mounted && BackendService.user != null) {
+        setState(
+          () => _conversations = MemberNetworkService.loadConversations(),
+        );
+      }
+    });
   }
 
   Future<void> _loadSavedOpportunities() async {
@@ -102,6 +121,8 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
     _offer.dispose();
     _replyEmail.dispose();
     _professionalSearch.dispose();
+    _chatMessage.dispose();
+    _messageRefreshTimer?.cancel();
     super.dispose();
   }
 
@@ -111,6 +132,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
     _professionals = MarketplaceService.loadAffinityMembers();
     _myProfessionalProfile = MarketplaceService.loadMyProfessionalProfile();
     _creatorAccess = AffinityAdminService.isAdmin();
+    _conversations = MemberNetworkService.loadConversations();
   }
 
   Future<bool> _ensureSignedIn() async {
@@ -142,6 +164,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
       setState(() {
         _selectedOpportunity = deal;
         _interactionPanelOpen = true;
+        _interactionMode = _InteractionMode.deal;
         _introduction.clear();
         _offer.clear();
         if (_replyEmail.text.trim().isEmpty) {
@@ -493,7 +516,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
         const RotatedBox(
           quarterTurns: 1,
           child: Text(
-            'INTRODUCTIONS',
+            'MESSAGES',
             style: TextStyle(
               color: _green,
               fontSize: 9,
@@ -523,13 +546,38 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
               ),
               const SizedBox(width: 10),
               Expanded(
-                child: Text(
-                  _selectedOpportunity == null
-                      ? 'Introduction panel'
-                      : 'Anonymous buyer',
-                  style: const TextStyle(fontWeight: FontWeight.w800),
+                child: Text(switch (_interactionMode) {
+                  _InteractionMode.inbox => 'Messages',
+                  _InteractionMode.chat =>
+                    _selectedConversation?.name ?? 'Conversation',
+                  _InteractionMode.deal => 'Anonymous buyer',
+                }, style: const TextStyle(fontWeight: FontWeight.w800)),
+              ),
+              IconButton(
+                onPressed: () => setState(() {
+                  _interactionMode = _InteractionMode.inbox;
+                  _selectedConversation = null;
+                }),
+                tooltip: 'Member messages',
+                icon: Icon(
+                  Icons.chat_bubble_outline_rounded,
+                  color: _interactionMode == _InteractionMode.inbox
+                      ? _green
+                      : _muted,
                 ),
               ),
+              if (_selectedOpportunity != null)
+                IconButton(
+                  onPressed: () =>
+                      setState(() => _interactionMode = _InteractionMode.deal),
+                  tooltip: 'Deal introduction',
+                  icon: Icon(
+                    Icons.business_center_outlined,
+                    color: _interactionMode == _InteractionMode.deal
+                        ? _green
+                        : _muted,
+                  ),
+                ),
               IconButton(
                 onPressed: () => setState(() => _interactionPanelOpen = false),
                 tooltip: 'Collapse',
@@ -540,18 +588,23 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
         ),
         const Divider(height: 1, color: _line),
         Expanded(
-          child: _selectedOpportunity == null
-              ? _interactionEmptyState()
-              : SingleChildScrollView(
-                  padding: const EdgeInsets.all(18),
-                  child: _introductionComposer(_selectedOpportunity!),
-                ),
+          child: switch (_interactionMode) {
+            _InteractionMode.inbox => _conversationInbox(),
+            _InteractionMode.chat => _conversationView(),
+            _InteractionMode.deal =>
+              _selectedOpportunity == null
+                  ? _dealIntroductionEmptyState()
+                  : SingleChildScrollView(
+                      padding: const EdgeInsets.all(18),
+                      child: _introductionComposer(_selectedOpportunity!),
+                    ),
+          },
         ),
       ],
     ),
   );
 
-  Widget _interactionEmptyState() => const Padding(
+  Widget _dealIntroductionEmptyState() => const Padding(
     padding: EdgeInsets.all(24),
     child: Column(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -572,6 +625,483 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
       ],
     ),
   );
+
+  Widget _conversationInbox() => FutureBuilder<List<MemberConversationSummary>>(
+    future: _conversations,
+    builder: (context, snapshot) {
+      if (snapshot.connectionState == ConnectionState.waiting) {
+        return const Center(child: CircularProgressIndicator(color: _green));
+      }
+      if (snapshot.hasError) {
+        return _AccessState(
+          title: 'Messages are unavailable',
+          message: _friendlyError(snapshot.error!),
+          action: 'TRY AGAIN',
+          onTap: () => setState(
+            () => _conversations = MemberNetworkService.loadConversations(),
+          ),
+        );
+      }
+      final conversations = snapshot.data ?? const [];
+      if (conversations.isEmpty) {
+        return const _AccessState(
+          title: 'Start a conversation',
+          message:
+              'Open a verified member profile or choose a professional from a deal team, then select Message.',
+        );
+      }
+      return RefreshIndicator(
+        color: _green,
+        onRefresh: () async {
+          final future = MemberNetworkService.loadConversations();
+          setState(() => _conversations = future);
+          await future;
+        },
+        child: ListView.separated(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          itemCount: conversations.length,
+          separatorBuilder: (_, _) => const Divider(height: 1, color: _line),
+          itemBuilder: (context, index) =>
+              _conversationTile(conversations[index]),
+        ),
+      );
+    },
+  );
+
+  Widget _conversationTile(MemberConversationSummary conversation) => InkWell(
+    onTap: () => _openConversation(conversation),
+    child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              ProfilePhoto(
+                size: 48,
+                photoUrl: conversation.photoUrl,
+                exampleIndex: conversation.photoIndex,
+              ),
+              if (conversation.unreadCount > 0)
+                Positioned(
+                  right: -2,
+                  top: -2,
+                  child: Container(
+                    width: 13,
+                    height: 13,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF168A52),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 2),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(width: 11),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        conversation.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: conversation.unreadCount > 0
+                              ? FontWeight.w900
+                              : FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      _relativeMessageTime(conversation.lastMessageAt),
+                      style: TextStyle(
+                        color: conversation.unreadCount > 0 ? _green : _muted,
+                        fontSize: 9,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        conversation.lastMessage.isEmpty
+                            ? 'New conversation'
+                            : conversation.lastMessage,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: conversation.unreadCount > 0 ? _ink : _muted,
+                          fontSize: 11,
+                          fontWeight: conversation.unreadCount > 0
+                              ? FontWeight.w700
+                              : FontWeight.w400,
+                        ),
+                      ),
+                    ),
+                    if (conversation.unreadCount > 0) ...[
+                      const SizedBox(width: 7),
+                      Container(
+                        constraints: const BoxConstraints(minWidth: 20),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: _green,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          '${conversation.unreadCount}',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 9,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                if (conversation.opportunityHeadline.isNotEmpty) ...[
+                  const SizedBox(height: 5),
+                  Text(
+                    conversation.opportunityHeadline,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: _green,
+                      fontSize: 9,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+
+  Future<void> _openConversation(MemberConversationSummary conversation) async {
+    setState(() {
+      _selectedConversation = conversation;
+      _interactionMode = _InteractionMode.chat;
+      _interactionPanelOpen = true;
+      _chatMessages = MemberNetworkService.loadMessages(conversation.id);
+    });
+    await MemberNetworkService.markRead(conversation.id);
+    if (mounted) {
+      setState(() => _conversations = MemberNetworkService.loadConversations());
+    }
+  }
+
+  Widget _conversationView() {
+    final conversation = _selectedConversation;
+    if (conversation == null) return _conversationInbox();
+    return Column(
+      children: [
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.fromLTRB(14, 11, 14, 10),
+          color: const Color(0xFFF7F5F0),
+          child: Row(
+            children: [
+              IconButton(
+                onPressed: () =>
+                    setState(() => _interactionMode = _InteractionMode.inbox),
+                icon: const Icon(Icons.arrow_back_rounded, size: 19),
+              ),
+              ProfilePhoto(
+                size: 38,
+                photoUrl: conversation.photoUrl,
+                exampleIndex: conversation.photoIndex,
+              ),
+              const SizedBox(width: 9),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      conversation.name,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    Text(
+                      conversation.jobTitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(color: _muted, fontSize: 9),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (conversation.opportunityHeadline.isNotEmpty)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            color: const Color(0xFFE7EEE9),
+            child: Text(
+              'DEAL · ${conversation.opportunityHeadline}',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: _green,
+                fontSize: 8,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ),
+        Expanded(
+          child: FutureBuilder<List<MemberChatMessage>>(
+            future: _chatMessages,
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) {
+                return const Center(
+                  child: CircularProgressIndicator(color: _green),
+                );
+              }
+              final messages = snapshot.data!;
+              return ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: messages.length,
+                itemBuilder: (context, index) =>
+                    _messageBubble(messages[index]),
+              );
+            },
+          ),
+        ),
+        SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 8, 8, 12),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _chatMessage,
+                    minLines: 1,
+                    maxLines: 4,
+                    maxLength: 2000,
+                    buildCounter:
+                        (
+                          _, {
+                          required currentLength,
+                          required isFocused,
+                          maxLength,
+                        }) => null,
+                    decoration: const InputDecoration(
+                      hintText: 'Message…',
+                      isDense: true,
+                    ),
+                    onSubmitted: (_) => _sendChatMessage(),
+                  ),
+                ),
+                const SizedBox(width: 5),
+                IconButton.filled(
+                  onPressed: _sendingChat ? null : _sendChatMessage,
+                  style: IconButton.styleFrom(backgroundColor: _green),
+                  icon: _sendingChat
+                      ? const SizedBox.square(
+                          dimension: 15,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Icon(Icons.send_rounded, size: 18),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _messageBubble(MemberChatMessage message) => Align(
+    alignment: message.isMine ? Alignment.centerRight : Alignment.centerLeft,
+    child: Container(
+      constraints: const BoxConstraints(maxWidth: 250),
+      margin: const EdgeInsets.only(bottom: 9),
+      padding: const EdgeInsets.fromLTRB(12, 9, 12, 7),
+      decoration: BoxDecoration(
+        color: message.isMine ? _green : const Color(0xFFF1F3EF),
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Text(
+            message.body,
+            style: TextStyle(
+              color: message.isMine ? Colors.white : _ink,
+              fontSize: 12,
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            _relativeMessageTime(message.createdAt),
+            style: TextStyle(
+              color: message.isMine ? Colors.white70 : _muted,
+              fontSize: 8,
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+
+  Future<void> _sendChatMessage() async {
+    final conversation = _selectedConversation;
+    final body = _chatMessage.text.trim();
+    if (conversation == null || body.isEmpty) return;
+    if (conversation.isPreview) {
+      _message('Sign in with a verified member profile to send messages.');
+      return;
+    }
+    setState(() => _sendingChat = true);
+    try {
+      await MemberNetworkService.sendMessage(conversation.id, body);
+      _chatMessage.clear();
+      if (mounted) {
+        setState(() {
+          _chatMessages = MemberNetworkService.loadMessages(conversation.id);
+          _conversations = MemberNetworkService.loadConversations();
+        });
+      }
+    } catch (error) {
+      if (mounted) _message(_friendlyError(error));
+    } finally {
+      if (mounted) setState(() => _sendingChat = false);
+    }
+  }
+
+  Future<void> _startMemberChat(
+    MarketplaceProvider provider, {
+    MemberDealOpportunity? deal,
+  }) async {
+    if (provider.isExample) {
+      _message('Example profiles cannot receive live messages.');
+      return;
+    }
+    if (!await _ensureSignedIn() || !mounted) return;
+    try {
+      final conversationId = await MemberNetworkService.startConversation(
+        providerId: provider.id,
+        opportunityId: deal?.isPreview == true ? null : deal?.id,
+      );
+      final conversations = await MemberNetworkService.loadConversations();
+      final conversation = conversations
+          .where((item) => item.id == conversationId)
+          .firstOrNull;
+      if (!mounted || conversation == null) return;
+      setState(() {
+        _conversations = Future.value(conversations);
+        _interactionPanelOpen = true;
+      });
+      await _openConversation(conversation);
+    } catch (error) {
+      if (mounted) _message(_friendlyError(error));
+    }
+  }
+
+  Future<MarketplaceProvider?> _providerForTeamMember(
+    MemberDealTeamMember member,
+  ) async {
+    final providers = await _professionals;
+    return providers
+        .where(
+          (provider) =>
+              provider.id == member.providerId || provider.name == member.name,
+        )
+        .firstOrNull;
+  }
+
+  Future<void> _openTeamMemberProfile(
+    MemberDealTeamMember member,
+    MemberDealOpportunity deal,
+  ) async {
+    final provider = await _providerForTeamMember(member);
+    if (!mounted) return;
+    if (provider == null) {
+      _message('That member profile is not available yet.');
+      return;
+    }
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => MemberProfilePage(
+          provider: provider,
+          onMessage: () => _startMemberChat(provider, deal: deal),
+          onRefer: () => _showReferralDialog(deal, preselected: provider),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showReferralDialog(
+    MemberDealOpportunity deal, {
+    MarketplaceProvider? preselected,
+  }) async {
+    if (!await _ensureSignedIn() || !mounted) return;
+    final providers = (await _professionals)
+        .where((provider) => !provider.isExample)
+        .toList();
+    if (!mounted) return;
+    final referral =
+        await showDialog<({MarketplaceProvider provider, String note})>(
+          context: context,
+          builder: (_) => _ReferralDialog(
+            deal: deal,
+            providers: providers,
+            preselected: preselected?.isExample == false ? preselected : null,
+          ),
+        );
+    if (referral == null || !mounted) return;
+    if (deal.isPreview) {
+      _message('Referrals become available on live Affinity-reviewed deals.');
+      return;
+    }
+    try {
+      await MemberNetworkService.referToDeal(
+        opportunityId: deal.id,
+        providerId: referral.provider.id,
+        note: referral.note,
+      );
+      if (mounted) {
+        _message('${referral.provider.name} was referred to this deal.');
+      }
+    } catch (error) {
+      if (mounted) _message(_friendlyError(error));
+    }
+  }
+
+  String _relativeMessageTime(DateTime value) {
+    final local = value.toLocal();
+    final difference = DateTime.now().difference(local);
+    if (difference.inMinutes < 1) return 'now';
+    if (difference.inHours < 1) return '${difference.inMinutes}m';
+    if (difference.inDays < 1) return '${difference.inHours}h';
+    if (difference.inDays < 7) return '${difference.inDays}d';
+    return '${local.month}/${local.day}/${local.year.toString().substring(2)}';
+  }
 
   Widget _introductionComposer(MemberDealOpportunity deal) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
@@ -809,24 +1339,6 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
         ),
       );
 
-  String _matchExplanation(MemberDealOpportunity deal) {
-    final parts = <String>[];
-    void add(String key, String label, int maximum) {
-      final value = deal.matchComponents[key];
-      if (value != null) parts.add('$label $value/$maximum');
-    }
-
-    add('profession', 'Profession', 25);
-    add('location', 'Location', 20);
-    add('background', 'Background', 20);
-    add('deal_type', 'Deal type', 10);
-    add('deal_quality', 'Deal score', 20);
-    add('member_profile', 'Member profile', 5);
-    return parts.isEmpty
-        ? deal.matchReason
-        : '${deal.matchReason}\n${parts.join(' · ')}';
-  }
-
   void _openOpportunity(MemberDealOpportunity deal) => setState(() {
     _selectedOpportunity = deal;
     _view = _StudioView.opportunityDetail;
@@ -843,6 +1355,59 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
         onTap: () => _selectView(_StudioView.opportunities),
       );
     }
+    String detail(String key, String fallback) {
+      final value = deal.publicDetails[key]?.trim() ?? '';
+      return value.isEmpty ? fallback : value;
+    }
+
+    final criteria = <({String label, String value, IconData icon})>[
+      (
+        label: 'BUYER OBJECTIVE',
+        value: detail(
+          'buyer_objective',
+          'The buyer is evaluating an acquisition that fits the profile summarized below.',
+        ),
+        icon: Icons.flag_outlined,
+      ),
+      (
+        label: 'TARGET BUSINESS PROFILE',
+        value: detail('target_business', deal.summary),
+        icon: Icons.business_center_outlined,
+      ),
+      (
+        label: 'OPERATING PROFILE',
+        value: detail(
+          'operating_profile',
+          'Operating and management expectations will be confirmed during diligence.',
+        ),
+        icon: Icons.settings_suggest_outlined,
+      ),
+      (
+        label: 'FINANCING PLAN',
+        value: detail(
+          'financing_plan',
+          '${deal.capitalRequiredBand} of capital is currently anticipated.',
+        ),
+        icon: Icons.account_balance_outlined,
+      ),
+      (
+        label: 'TIMELINE',
+        value: detail(
+          'timeline',
+          'Timing remains flexible at the ${deal.stage} stage.',
+        ),
+        icon: Icons.calendar_month_outlined,
+      ),
+      (
+        label: 'TRANSACTION PREFERENCES',
+        value: detail(
+          'transaction_preferences',
+          'Final structure remains subject to diligence and professional advice.',
+        ),
+        icon: Icons.handshake_outlined,
+      ),
+    ];
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -866,7 +1431,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'ANONYMOUS BUYER · AFFINITY REVIEWED',
+                    'ANONYMOUS ACQUISITION BRIEF · AFFINITY REVIEWED',
                     style: TextStyle(
                       color: _green,
                       fontSize: 9,
@@ -913,8 +1478,57 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const Row(
+                children: [
+                  Icon(Icons.shield_outlined, color: _green, size: 19),
+                  SizedBox(width: 9),
+                  Text(
+                    'IDENTITY-SAFE LISTING',
+                    style: TextStyle(
+                      color: _green,
+                      fontSize: 9,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
               const Text(
-                'WHAT THE BUYER IS TRYING TO ACQUIRE',
+                'The title is deliberately broad',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 7),
+              const Text(
+                'Affinity removes the company name, exact address, buyer identity, contact details, and other identifying information before members can view this brief.',
+                style: TextStyle(color: _muted, height: 1.5),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 24),
+        const Text(
+          'Opportunity overview',
+          style: TextStyle(
+            fontSize: 27,
+            fontWeight: FontWeight.w800,
+            letterSpacing: -.8,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            border: Border.all(color: _line),
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'BUYER-SUBMITTED DESCRIPTION',
                 style: TextStyle(
                   color: _green,
                   fontSize: 9,
@@ -937,37 +1551,93 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
           children: [
             _metricTile(deal.purchasePriceBand, 'PURCHASE PRICE'),
             _metricTile(deal.capitalRequiredBand, 'CAPITAL SOUGHT'),
-            _metricTile(deal.dealType, 'DEAL TYPE'),
             _metricTile(
-              '${deal.dealScore}/99 · ${deal.scoreLabel}',
-              'DEAL SCORE',
+              detail('revenue_profile', 'Not disclosed'),
+              'REVENUE PROFILE',
+            ),
+            _metricTile(
+              detail('earnings_profile', 'Not disclosed'),
+              'EARNINGS PROFILE',
             ),
             _metricTile(deal.stage, 'CURRENT STAGE'),
           ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 30),
+        const Text(
+          'Acquisition criteria',
+          style: TextStyle(
+            fontSize: 27,
+            fontWeight: FontWeight.w800,
+            letterSpacing: -.8,
+          ),
+        ),
+        const SizedBox(height: 7),
+        const Text(
+          'A reviewer-approved breakdown of the buyer’s submitted requirements.',
+          style: TextStyle(color: _muted),
+        ),
+        const SizedBox(height: 14),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final width = constraints.maxWidth >= 760
+                ? (constraints.maxWidth - 14) / 2
+                : constraints.maxWidth;
+            return Wrap(
+              spacing: 14,
+              runSpacing: 14,
+              children: [
+                for (final item in criteria)
+                  _BriefSection(
+                    width: width,
+                    icon: item.icon,
+                    label: item.label,
+                    value: item.value,
+                  ),
+              ],
+            );
+          },
+        ),
+        const SizedBox(height: 14),
+        _BriefSection(
+          width: double.infinity,
+          icon: Icons.fact_check_outlined,
+          label: 'DILIGENCE PRIORITIES',
+          value: detail(
+            'diligence_priorities',
+            'Financial, legal, commercial, and operational priorities will be refined with the selected deal team.',
+          ),
+        ),
+        const SizedBox(height: 30),
+        const Text(
+          'Professional mandate',
+          style: TextStyle(
+            fontSize: 27,
+            fontWeight: FontWeight.w800,
+            letterSpacing: -.8,
+          ),
+        ),
+        const SizedBox(height: 12),
         _studioPanel(
           Icons.groups_2_outlined,
-          'Where professional support is needed',
+          'Support requested by the buyer',
           deal.supportNeeded.isEmpty
               ? 'Affinity has not assigned professional requirements yet.'
               : deal.supportNeeded.join(' · '),
         ),
-        const SizedBox(height: 14),
-        _DealTeamStrip(members: deal.teamMembers),
-        if (deal.matchScore != null) ...[
-          const SizedBox(height: 14),
-          _studioPanel(
-            Icons.auto_awesome_outlined,
-            '${deal.matchScore}% recommendation fit',
-            _matchExplanation(deal),
-          ),
-        ],
-        const SizedBox(height: 14),
-        _studioPanel(
-          Icons.visibility_off_outlined,
-          'Buyer privacy boundary',
-          'The buyer’s name, contact details, exact business identity, address, raw assessment, and documents remain private. Your concise introduction is shared first; the buyer decides whether to connect.',
+        const SizedBox(height: 18),
+        _DealTeamStrip(
+          members: deal.teamMembers,
+          onOpen: (member) => _openTeamMemberProfile(member, deal),
+          onMessage: (member) async {
+            final provider = await _providerForTeamMember(member);
+            if (provider != null) await _startMemberChat(provider, deal: deal);
+          },
+          onRefer: (member) async {
+            final provider = await _providerForTeamMember(member);
+            if (provider != null) {
+              await _showReferralDialog(deal, preselected: provider);
+            }
+          },
         ),
         const SizedBox(height: 18),
         Wrap(
@@ -1049,6 +1719,20 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
               deal: deal,
               onOpen: () => _openOpportunity(deal),
               onPitch: () => _pitch(deal),
+              onRefer: () => _showReferralDialog(deal),
+              onTeamOpen: (member) => _openTeamMemberProfile(member, deal),
+              onTeamMessage: (member) async {
+                final provider = await _providerForTeamMember(member);
+                if (provider != null) {
+                  await _startMemberChat(provider, deal: deal);
+                }
+              },
+              onTeamRefer: (member) async {
+                final provider = await _providerForTeamMember(member);
+                if (provider != null) {
+                  await _showReferralDialog(deal, preselected: provider);
+                }
+              },
             ),
             const SizedBox(height: 16),
           ],
@@ -1086,6 +1770,20 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
               deal: deal,
               onOpen: () => _openOpportunity(deal),
               onPitch: () => _pitch(deal),
+              onRefer: () => _showReferralDialog(deal),
+              onTeamOpen: (member) => _openTeamMemberProfile(member, deal),
+              onTeamMessage: (member) async {
+                final provider = await _providerForTeamMember(member);
+                if (provider != null) {
+                  await _startMemberChat(provider, deal: deal);
+                }
+              },
+              onTeamRefer: (member) async {
+                final provider = await _providerForTeamMember(member);
+                if (provider != null) {
+                  await _showReferralDialog(deal, preselected: provider);
+                }
+              },
             ),
             const SizedBox(height: 16),
           ],
@@ -1471,6 +2169,20 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
               deal: deal,
               onOpen: () => _openOpportunity(deal),
               onPitch: () => _pitch(deal),
+              onRefer: () => _showReferralDialog(deal),
+              onTeamOpen: (member) => _openTeamMemberProfile(member, deal),
+              onTeamMessage: (member) async {
+                final provider = await _providerForTeamMember(member);
+                if (provider != null) {
+                  await _startMemberChat(provider, deal: deal);
+                }
+              },
+              onTeamRefer: (member) async {
+                final provider = await _providerForTeamMember(member);
+                if (provider != null) {
+                  await _showReferralDialog(deal, preselected: provider);
+                }
+              },
             ),
             const SizedBox(height: 18),
           ],
@@ -1635,7 +2347,19 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                     for (final provider in providers)
                       SizedBox(
                         width: width,
-                        child: _ProfessionalCard(provider: provider),
+                        child: _ProfessionalCard(
+                          provider: provider,
+                          onMessage: () => _startMemberChat(
+                            provider,
+                            deal: _selectedOpportunity,
+                          ),
+                          onRefer: _selectedOpportunity == null
+                              ? null
+                              : () => _showReferralDialog(
+                                  _selectedOpportunity!,
+                                  preselected: provider,
+                                ),
+                        ),
                       ),
                   ],
                 );
@@ -1771,52 +2495,62 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
   );
 }
 
-class _MatchComponents extends StatelessWidget {
-  const _MatchComponents({required this.components});
+class _BriefSection extends StatelessWidget {
+  const _BriefSection({
+    required this.width,
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
 
-  final Map<String, int> components;
+  final double width;
+  final IconData icon;
+  final String label;
+  final String value;
 
   @override
-  Widget build(BuildContext context) {
-    const definitions = [
-      ('profession', 'PROFESSION', 25),
-      ('location', 'LOCATION', 20),
-      ('background', 'BACKGROUND', 20),
-      ('deal_type', 'DEAL TYPE', 10),
-      ('deal_quality', 'DEAL SCORE', 20),
-      ('member_profile', 'YOUR PROFILE', 5),
-    ];
-    return Wrap(
-      spacing: 7,
-      runSpacing: 7,
+  Widget build(BuildContext context) => Container(
+    width: width,
+    constraints: const BoxConstraints(minHeight: 150),
+    padding: const EdgeInsets.all(21),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(18),
+      border: Border.all(color: _line),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        for (final definition in definitions)
-          if (components[definition.$1] case final value?)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF1F3EF),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                '${definition.$2} $value/${definition.$3}',
-                style: const TextStyle(
-                  color: _green,
-                  fontSize: 8,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: .4,
-                ),
-              ),
-            ),
+        Icon(icon, color: _green, size: 22),
+        const SizedBox(height: 14),
+        Text(
+          label,
+          style: const TextStyle(
+            color: _green,
+            fontSize: 9,
+            fontWeight: FontWeight.w900,
+            letterSpacing: .9,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(value, style: const TextStyle(fontSize: 14, height: 1.5)),
       ],
-    );
-  }
+    ),
+  );
 }
 
 class _DealTeamStrip extends StatelessWidget {
-  const _DealTeamStrip({required this.members});
+  const _DealTeamStrip({
+    required this.members,
+    required this.onOpen,
+    required this.onMessage,
+    required this.onRefer,
+  });
 
   final List<MemberDealTeamMember> members;
+  final ValueChanged<MemberDealTeamMember> onOpen;
+  final ValueChanged<MemberDealTeamMember> onMessage;
+  final ValueChanged<MemberDealTeamMember> onRefer;
 
   @override
   Widget build(BuildContext context) => Column(
@@ -1876,69 +2610,105 @@ class _DealTeamStrip extends StatelessWidget {
             separatorBuilder: (_, _) => const SizedBox(width: 9),
             itemBuilder: (context, index) {
               final member = members[index];
-              return Container(
-                width: 230,
-                padding: const EdgeInsets.all(11),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF1F3EF),
+              return Material(
+                color: const Color(0xFFF1F3EF),
+                borderRadius: BorderRadius.circular(14),
+                child: InkWell(
+                  onTap: () => onOpen(member),
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: const Color(0xFFE0E5DF)),
-                ),
-                child: Row(
-                  children: [
-                    ProfilePhoto(
-                      size: 46,
-                      photoUrl: member.photoUrl,
-                      exampleIndex: member.photoIndex,
+                  child: Container(
+                    width: 250,
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: const Color(0xFFE0E5DF)),
                     ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            member.name,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                          const SizedBox(height: 3),
-                          Text(
-                            member.jobTitle.isEmpty
-                                ? _roleLabel(member.providerType)
-                                : member.jobTitle,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: _green,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          if (member.company.isNotEmpty)
-                            Text(
-                              member.company,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                color: _muted,
-                                fontSize: 9,
+                    child: Row(
+                      children: [
+                        ProfilePhoto(
+                          size: 46,
+                          photoUrl: member.photoUrl,
+                          exampleIndex: member.photoIndex,
+                        ),
+                        const SizedBox(width: 9),
+                        Expanded(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                member.name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w800,
+                                ),
                               ),
+                              const SizedBox(height: 3),
+                              Text(
+                                member.jobTitle.isEmpty
+                                    ? _roleLabel(member.providerType)
+                                    : member.jobTitle,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: _green,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              if (member.company.isNotEmpty)
+                                Text(
+                                  member.company,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    color: _muted,
+                                    fontSize: 9,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            _teamAction(
+                              Icons.chat_bubble_outline_rounded,
+                              'Message member',
+                              () => onMessage(member),
                             ),
-                        ],
-                      ),
+                            _teamAction(
+                              Icons.person_add_alt_1_outlined,
+                              'Refer member',
+                              () => onRefer(member),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               );
             },
           ),
         ),
     ],
+  );
+
+  static Widget _teamAction(
+    IconData icon,
+    String tooltip,
+    VoidCallback onPressed,
+  ) => SizedBox.square(
+    dimension: 29,
+    child: IconButton(
+      padding: EdgeInsets.zero,
+      tooltip: tooltip,
+      onPressed: onPressed,
+      icon: Icon(icon, size: 15, color: _green),
+    ),
   );
 
   static String _roleLabel(String value) => value
@@ -1953,10 +2723,18 @@ class _DealPost extends StatelessWidget {
     required this.deal,
     required this.onOpen,
     required this.onPitch,
+    required this.onRefer,
+    required this.onTeamOpen,
+    required this.onTeamMessage,
+    required this.onTeamRefer,
   });
   final MemberDealOpportunity deal;
   final VoidCallback onOpen;
   final VoidCallback onPitch;
+  final VoidCallback onRefer;
+  final ValueChanged<MemberDealTeamMember> onTeamOpen;
+  final ValueChanged<MemberDealTeamMember> onTeamMessage;
+  final ValueChanged<MemberDealTeamMember> onTeamRefer;
 
   @override
   Widget build(BuildContext context) => Material(
@@ -2028,34 +2806,7 @@ class _DealPost extends StatelessWidget {
                 fontWeight: FontWeight.w700,
               ),
             ),
-            if (deal.matchScore != null) ...[
-              const SizedBox(height: 11),
-              Row(
-                children: [
-                  const Icon(
-                    Icons.auto_awesome_outlined,
-                    size: 16,
-                    color: _green,
-                  ),
-                  const SizedBox(width: 7),
-                  Expanded(
-                    child: Text(
-                      '${deal.matchScore}% professional match · ${deal.matchReason}',
-                      style: const TextStyle(
-                        color: _green,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
             const SizedBox(height: 18),
-            if (deal.matchComponents.isNotEmpty) ...[
-              _MatchComponents(components: deal.matchComponents),
-              const SizedBox(height: 18),
-            ],
             Text(
               deal.summary,
               style: const TextStyle(height: 1.6, fontSize: 15),
@@ -2065,32 +2816,19 @@ class _DealPost extends StatelessWidget {
               spacing: 20,
               runSpacing: 14,
               children: [
-                _Fact(label: 'PRICE BAND', value: deal.purchasePriceBand),
-                _Fact(label: 'CAPITAL SOUGHT', value: deal.capitalRequiredBand),
-                _Fact(label: 'DEAL TYPE', value: deal.dealType),
-                _Fact(
-                  label: 'DEAL SCORE',
-                  value: '${deal.dealScore}/99 · ${deal.scoreLabel}',
-                ),
+                _Fact(label: 'LOCATION', value: deal.region),
+                _Fact(label: 'INDUSTRY', value: deal.industry),
+                _Fact(label: 'PRICE RANGE', value: deal.purchasePriceBand),
+                _Fact(label: 'STAGE', value: deal.stage),
               ],
             ),
-            if (deal.supportNeeded.isNotEmpty) ...[
-              const SizedBox(height: 22),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  for (final need in deal.supportNeeded)
-                    Chip(
-                      label: Text(need),
-                      backgroundColor: const Color(0xFFE7ECE9),
-                      side: BorderSide.none,
-                    ),
-                ],
-              ),
-            ],
             const SizedBox(height: 22),
-            _DealTeamStrip(members: deal.teamMembers),
+            _DealTeamStrip(
+              members: deal.teamMembers,
+              onOpen: onTeamOpen,
+              onMessage: onTeamMessage,
+              onRefer: onTeamRefer,
+            ),
             const SizedBox(height: 22),
             Wrap(
               spacing: 14,
@@ -2119,6 +2857,14 @@ class _DealPost extends StatelessWidget {
                       onPressed: onOpen,
                       icon: const Icon(Icons.open_in_new_rounded, size: 17),
                       label: const Text('VIEW FULL DEAL'),
+                    ),
+                    TextButton.icon(
+                      onPressed: onRefer,
+                      icon: const Icon(
+                        Icons.person_add_alt_1_outlined,
+                        size: 17,
+                      ),
+                      label: const Text('REFER A MEMBER'),
                     ),
                     FilledButton.icon(
                       onPressed: deal.canContact ? onPitch : null,
@@ -2494,9 +3240,152 @@ class _MatchSettingsDialogState extends State<_MatchSettingsDialog> {
   );
 }
 
+class _ReferralDialog extends StatefulWidget {
+  const _ReferralDialog({
+    required this.deal,
+    required this.providers,
+    this.preselected,
+  });
+
+  final MemberDealOpportunity deal;
+  final List<MarketplaceProvider> providers;
+  final MarketplaceProvider? preselected;
+
+  @override
+  State<_ReferralDialog> createState() => _ReferralDialogState();
+}
+
+class _ReferralDialogState extends State<_ReferralDialog> {
+  final note = TextEditingController();
+  String? providerId;
+
+  @override
+  void initState() {
+    super.initState();
+    providerId = widget.preselected?.id;
+  }
+
+  @override
+  void dispose() {
+    note.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    title: const Text('Refer a member to this deal'),
+    content: SizedBox(
+      width: 540,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF1F3EF),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'ANONYMOUS OPPORTUNITY',
+                  style: TextStyle(
+                    color: _green,
+                    fontSize: 8,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: .8,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  widget.deal.headline,
+                  style: const TextStyle(fontWeight: FontWeight.w800),
+                ),
+                Text(
+                  widget.deal.region,
+                  style: const TextStyle(color: _muted, fontSize: 11),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          DropdownButtonFormField<String>(
+            initialValue: providerId,
+            isExpanded: true,
+            decoration: const InputDecoration(
+              labelText: 'Member to refer',
+              prefixIcon: Icon(Icons.person_search_outlined),
+            ),
+            items: [
+              for (final provider in widget.providers)
+                DropdownMenuItem(
+                  value: provider.id,
+                  child: Text(
+                    '${provider.name} · ${provider.jobTitle}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+            ],
+            onChanged: (value) => setState(() => providerId = value),
+          ),
+          const SizedBox(height: 14),
+          TextField(
+            controller: note,
+            minLines: 3,
+            maxLines: 5,
+            maxLength: 600,
+            decoration: const InputDecoration(
+              labelText: 'Why they are a good fit (optional)',
+              hintText: 'Add useful context for the member you are referring.',
+            ),
+          ),
+          const Text(
+            'The member sees the anonymous deal brief—not the buyer’s identity. A referral cannot override a professional role that is already filled.',
+            style: TextStyle(color: _muted, fontSize: 10, height: 1.45),
+          ),
+        ],
+      ),
+    ),
+    actions: [
+      TextButton(
+        onPressed: () => Navigator.pop(context),
+        child: const Text('CANCEL'),
+      ),
+      FilledButton.icon(
+        onPressed: providerId == null
+            ? null
+            : () {
+                final provider = widget.providers
+                    .where((item) => item.id == providerId)
+                    .firstOrNull;
+                if (provider != null) {
+                  Navigator.pop(context, (
+                    provider: provider,
+                    note: note.text.trim(),
+                  ));
+                }
+              },
+        style: FilledButton.styleFrom(backgroundColor: _green),
+        icon: const Icon(Icons.person_add_alt_1_outlined, size: 17),
+        label: const Text('SEND REFERRAL'),
+      ),
+    ],
+  );
+}
+
 class _ProfessionalCard extends StatelessWidget {
-  const _ProfessionalCard({required this.provider});
+  const _ProfessionalCard({
+    required this.provider,
+    required this.onMessage,
+    this.onRefer,
+  });
   final MarketplaceProvider provider;
+  final Future<void> Function() onMessage;
+  final Future<void> Function()? onRefer;
 
   @override
   Widget build(BuildContext context) => Material(
@@ -2506,7 +3395,11 @@ class _ProfessionalCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(20),
       onTap: () => Navigator.of(context).push(
         MaterialPageRoute<void>(
-          builder: (_) => MemberProfilePage(provider: provider),
+          builder: (_) => MemberProfilePage(
+            provider: provider,
+            onMessage: onMessage,
+            onRefer: onRefer,
+          ),
         ),
       ),
       child: Padding(
@@ -2605,6 +3498,25 @@ class _ProfessionalCard extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
+                IconButton(
+                  onPressed: onMessage,
+                  tooltip: 'Message ${provider.name}',
+                  icon: const Icon(
+                    Icons.chat_bubble_outline_rounded,
+                    size: 18,
+                    color: _green,
+                  ),
+                ),
+                if (onRefer != null)
+                  IconButton(
+                    onPressed: onRefer,
+                    tooltip: 'Refer to selected deal',
+                    icon: const Icon(
+                      Icons.person_add_alt_1_outlined,
+                      size: 18,
+                      color: _green,
+                    ),
+                  ),
                 const Text(
                   'VIEW PROFILE',
                   style: TextStyle(
