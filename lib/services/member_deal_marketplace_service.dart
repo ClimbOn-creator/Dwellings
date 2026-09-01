@@ -54,6 +54,10 @@ class MemberDealOpportunity {
     this.matchReason = '',
     this.matchComponents = const {},
     this.publicDetails = const {},
+    this.trafficCount = 0,
+    this.isOwner = false,
+    this.canRepost = false,
+    this.lastRepostedAt,
     this.canContact = true,
     this.isRecommended = true,
     this.teamMembers = const [],
@@ -80,6 +84,10 @@ class MemberDealOpportunity {
   /// Reviewer-approved acquisition criteria. Raw buyer inputs never enter the
   /// member feed; only this deliberately anonymized brief is returned.
   final Map<String, String> publicDetails;
+  final int trafficCount;
+  final bool isOwner;
+  final bool canRepost;
+  final DateTime? lastRepostedAt;
   final bool canContact;
   final bool isRecommended;
   final List<MemberDealTeamMember> teamMembers;
@@ -120,6 +128,10 @@ class MemberDealOpportunity {
             row['public_details'] as Map,
           ).map((key, value) => MapEntry(key, value?.toString() ?? ''))
         : const {},
+    trafficCount: (row['traffic_count'] as num?)?.toInt() ?? 0,
+    isOwner: row['is_owner'] as bool? ?? false,
+    canRepost: row['can_repost'] as bool? ?? false,
+    lastRepostedAt: DateTime.tryParse(row['last_reposted_at'] as String? ?? ''),
     canContact: row['can_contact'] as bool? ?? true,
     isRecommended: row['is_recommended'] as bool? ?? true,
     teamMembers: (row['team_members'] as List<dynamic>? ?? const [])
@@ -188,14 +200,17 @@ class MemberDealMarketplaceService {
     }
 
     try {
-      final admin = await AffinityAdminService.isAdmin();
       final rows = await _client.rpc(
-        admin ? 'browse_admin_member_deals' : 'browse_matched_member_deals',
+        'browse_member_marketplace_v2',
+        params: {'search_text': ''},
       );
       return _opportunityRows(rows);
     } catch (_) {
       try {
-        final rows = await _client.rpc('browse_member_deals');
+        final admin = await AffinityAdminService.isAdmin();
+        final rows = await _client.rpc(
+          admin ? 'browse_admin_member_deals' : 'browse_matched_member_deals',
+        );
         return _opportunityRows(rows);
       } catch (_) {
         // Preview briefs contain no buyer identity or private deal data. Keep
@@ -238,6 +253,66 @@ class MemberDealMarketplaceService {
       params: {'target_deal_room_id': dealRoomId},
     );
     await MemberBetaService.flushEmailOutbox();
+  }
+
+  static Future<void> recordEngagement(
+    String opportunityId,
+    String eventType,
+  ) async {
+    if (!BackendService.configured || BackendService.user == null) return;
+    try {
+      await _client.rpc(
+        'record_member_deal_engagement',
+        params: {
+          'target_opportunity_id': opportunityId,
+          'target_event_type': eventType,
+        },
+      );
+    } catch (_) {
+      // Engagement tracking must never block browsing on an older deployment.
+    }
+  }
+
+  static Future<Set<String>> loadSavedDealIds() async {
+    final user = BackendService.user;
+    if (!BackendService.configured || user == null) return {};
+    try {
+      final rows = await _client
+          .from('member_saved_deals')
+          .select('opportunity_id')
+          .eq('user_id', user.id);
+      return (rows as List<dynamic>)
+          .map((row) => Map<String, dynamic>.from(row as Map))
+          .map((row) => row['opportunity_id'] as String)
+          .toSet();
+    } catch (_) {
+      return {};
+    }
+  }
+
+  static Future<void> setSaved(String opportunityId, bool saved) async {
+    final user = BackendService.user;
+    if (!BackendService.configured || user == null) return;
+    if (saved) {
+      await _client.from('member_saved_deals').upsert({
+        'user_id': user.id,
+        'opportunity_id': opportunityId,
+      });
+    } else {
+      await _client
+          .from('member_saved_deals')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('opportunity_id', opportunityId);
+    }
+  }
+
+  static Future<void> repost(String opportunityId) async {
+    _requireUser();
+    await _client.rpc(
+      'repost_member_deal',
+      params: {'target_opportunity_id': opportunityId},
+    );
   }
 
   static Future<void> sendPitch({
@@ -349,6 +424,7 @@ class MemberDealMarketplaceService {
         ),
       ],
       isPreview: true,
+      trafficCount: 47,
     ),
     MemberDealOpportunity(
       id: 'preview-home-services',
@@ -393,6 +469,7 @@ class MemberDealMarketplaceService {
             'Asset purchase preferred, subject to tax and legal review.',
       },
       isPreview: true,
+      trafficCount: 31,
     ),
   ];
 }

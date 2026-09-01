@@ -61,6 +61,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
   _InteractionMode _interactionMode = _InteractionMode.inbox;
   Timer? _messageRefreshTimer;
   String _professionalQuery = '';
+  String _dealQuery = '';
   String _professionalRoleFilter = 'all';
   String _responseFilter = 'all';
   MemberDealOpportunity? _selectedOpportunity;
@@ -71,6 +72,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
   final _offer = TextEditingController();
   final _replyEmail = TextEditingController();
   final _professionalSearch = TextEditingController();
+  final _dealSearch = TextEditingController();
   final _chatMessage = TextEditingController();
   bool _sendingChat = false;
 
@@ -99,8 +101,13 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
     final saved = preferences.getStringList(
       'affinity_saved_opportunities_${user.id}',
     );
-    if (!mounted || saved == null) return;
-    setState(() => _savedOpportunityIds.addAll(saved));
+    final cloudSaved = await MemberDealMarketplaceService.loadSavedDealIds();
+    if (!mounted) return;
+    setState(() {
+      _savedOpportunityIds
+        ..addAll(saved ?? const [])
+        ..addAll(cloudSaved);
+    });
   }
 
   Future<void> _toggleSavedOpportunity(String id) async {
@@ -113,6 +120,13 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
       'affinity_saved_opportunities_${BackendService.user!.id}',
       _savedOpportunityIds.toList(),
     );
+    await MemberDealMarketplaceService.setSaved(
+      id,
+      _savedOpportunityIds.contains(id),
+    );
+    if (_savedOpportunityIds.contains(id)) {
+      await MemberDealMarketplaceService.recordEngagement(id, 'save');
+    }
   }
 
   @override
@@ -121,6 +135,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
     _offer.dispose();
     _replyEmail.dispose();
     _professionalSearch.dispose();
+    _dealSearch.dispose();
     _chatMessage.dispose();
     _messageRefreshTimer?.cancel();
     super.dispose();
@@ -1234,6 +1249,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
         offerSummary: _offer.text,
         contactEmail: email,
       );
+      await MemberDealMarketplaceService.recordEngagement(deal.id, 'pitch');
       _introduction.clear();
       _offer.clear();
       _reload();
@@ -1339,10 +1355,24 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
         ),
       );
 
-  void _openOpportunity(MemberDealOpportunity deal) => setState(() {
-    _selectedOpportunity = deal;
-    _view = _StudioView.opportunityDetail;
-  });
+  void _openOpportunity(MemberDealOpportunity deal) {
+    MemberDealMarketplaceService.recordEngagement(deal.id, 'open');
+    setState(() {
+      _selectedOpportunity = deal;
+      _view = _StudioView.opportunityDetail;
+    });
+  }
+
+  Future<void> _repostDeal(MemberDealOpportunity deal) async {
+    try {
+      await MemberDealMarketplaceService.repost(deal.id);
+      if (!mounted) return;
+      setState(_reload);
+      _message('Deal reposted and moved to the top of the marketplace.');
+    } catch (error) {
+      if (mounted) _message(_friendlyError(error));
+    }
+  }
 
   Widget _expandedOpportunity() {
     final deal = _selectedOpportunity;
@@ -1697,6 +1727,31 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
             'Recommended for you',
             'Affinity ranks reviewed opportunities against your services, regions, and deal-size preferences.',
           ),
+          FutureBuilder<bool>(
+            future: _creatorAccess,
+            builder: (context, creator) => creator.data == true
+                ? Container(
+                    margin: const EdgeInsets.only(bottom: 14),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE5EEE9),
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    child: const Text(
+                      'CREATOR FILTER · VICTORIA ONLY',
+                      style: TextStyle(
+                        color: _green,
+                        fontSize: 9,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: .8,
+                      ),
+                    ),
+                  )
+                : const SizedBox.shrink(),
+          ),
           Row(
             children: [
               Expanded(
@@ -1720,6 +1775,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
               onOpen: () => _openOpportunity(deal),
               onPitch: () => _pitch(deal),
               onRefer: () => _showReferralDialog(deal),
+              onRepost: deal.canRepost ? () => _repostDeal(deal) : null,
               onTeamOpen: (member) => _openTeamMemberProfile(member, deal),
               onTeamMessage: (member) async {
                 final provider = await _providerForTeamMember(member);
@@ -1771,6 +1827,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
               onOpen: () => _openOpportunity(deal),
               onPitch: () => _pitch(deal),
               onRefer: () => _showReferralDialog(deal),
+              onRepost: deal.canRepost ? () => _repostDeal(deal) : null,
               onTeamOpen: (member) => _openTeamMemberProfile(member, deal),
               onTeamMessage: (member) async {
                 final provider = await _providerForTeamMember(member);
@@ -2117,14 +2174,26 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
               : null,
         );
       }
-      final deals = snapshot.data ?? [];
-      if (deals.isEmpty) {
+      final allDeals = snapshot.data ?? [];
+      if (allDeals.isEmpty) {
         return const _AccessState(
           title: 'The review desk is active',
           message:
               'Approved opportunities will appear here after Affinity completes its evaluation and privacy review.',
         );
       }
+      final query = _dealQuery.trim().toLowerCase();
+      final deals = allDeals.where((deal) {
+        if (query.isEmpty) return true;
+        return '${deal.headline} ${deal.industry} ${deal.region} ${deal.summary} ${deal.stage} ${deal.dealType}'
+            .toLowerCase()
+            .contains(query);
+      }).toList();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        for (final deal in deals.take(12)) {
+          MemberDealMarketplaceService.recordEngagement(deal.id, 'impression');
+        }
+      });
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -2160,16 +2229,75 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
           ),
           const SizedBox(height: 6),
           const Text(
-            'Concise, anonymous briefs prepared by Affinity.',
+            'Current-month opportunities and highly viewed listings, prepared anonymously by Affinity.',
             style: TextStyle(color: _muted),
           ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _dealSearch,
+            onChanged: (value) => setState(() => _dealQuery = value),
+            decoration: InputDecoration(
+              hintText: 'Search deals by title, industry, location, or stage',
+              prefixIcon: const Icon(Icons.search_rounded),
+              suffixIcon: _dealQuery.isEmpty
+                  ? null
+                  : IconButton(
+                      onPressed: () => setState(() {
+                        _dealQuery = '';
+                        _dealSearch.clear();
+                      }),
+                      tooltip: 'Clear deal search',
+                      icon: const Icon(Icons.close_rounded),
+                    ),
+              fillColor: Colors.white,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: const BorderSide(color: _line),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: const BorderSide(color: _line),
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Text(
+                '${deals.length} DEAL${deals.length == 1 ? '' : 'S'}',
+                style: const TextStyle(
+                  color: _green,
+                  fontSize: 9,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: .8,
+                ),
+              ),
+              const Spacer(),
+              const Text(
+                'THIS MONTH + POPULAR',
+                style: TextStyle(
+                  color: _muted,
+                  fontSize: 8,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: .7,
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 20),
+          if (deals.isEmpty)
+            const _AccessState(
+              title: 'No deals match that search',
+              message:
+                  'Try an industry, a city such as Victoria, or a broader part of the deal title.',
+            ),
           for (final deal in deals) ...[
             _DealPost(
               deal: deal,
               onOpen: () => _openOpportunity(deal),
               onPitch: () => _pitch(deal),
               onRefer: () => _showReferralDialog(deal),
+              onRepost: deal.canRepost ? () => _repostDeal(deal) : null,
               onTeamOpen: (member) => _openTeamMemberProfile(member, deal),
               onTeamMessage: (member) async {
                 final provider = await _providerForTeamMember(member);
@@ -2724,6 +2852,7 @@ class _DealPost extends StatelessWidget {
     required this.onOpen,
     required this.onPitch,
     required this.onRefer,
+    this.onRepost,
     required this.onTeamOpen,
     required this.onTeamMessage,
     required this.onTeamRefer,
@@ -2732,6 +2861,7 @@ class _DealPost extends StatelessWidget {
   final VoidCallback onOpen;
   final VoidCallback onPitch;
   final VoidCallback onRefer;
+  final VoidCallback? onRepost;
   final ValueChanged<MemberDealTeamMember> onTeamOpen;
   final ValueChanged<MemberDealTeamMember> onTeamMessage;
   final ValueChanged<MemberDealTeamMember> onTeamRefer;
@@ -2830,6 +2960,27 @@ class _DealPost extends StatelessWidget {
               onRefer: onTeamRefer,
             ),
             const SizedBox(height: 22),
+            if (deal.trafficCount > 0) ...[
+              Row(
+                children: [
+                  const Icon(
+                    Icons.local_fire_department_outlined,
+                    size: 16,
+                    color: _green,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    '${deal.trafficCount} recent marketplace interaction${deal.trafficCount == 1 ? '' : 's'}',
+                    style: const TextStyle(
+                      color: _muted,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+            ],
             Wrap(
               spacing: 14,
               runSpacing: 14,
@@ -2866,6 +3017,12 @@ class _DealPost extends StatelessWidget {
                       ),
                       label: const Text('REFER A MEMBER'),
                     ),
+                    if (onRepost != null)
+                      FilledButton.tonalIcon(
+                        onPressed: onRepost,
+                        icon: const Icon(Icons.refresh_rounded, size: 17),
+                        label: const Text('REPOST TO TOP'),
+                      ),
                     FilledButton.icon(
                       onPressed: deal.canContact ? onPitch : null,
                       style: FilledButton.styleFrom(backgroundColor: _green),

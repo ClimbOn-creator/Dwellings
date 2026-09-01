@@ -42,6 +42,10 @@ void main() {
       },
       'can_contact': false,
       'is_recommended': false,
+      'traffic_count': 42,
+      'is_owner': true,
+      'can_repost': true,
+      'last_reposted_at': '2026-07-01T12:00:00Z',
       'team_members': [
         {
           'provider_id': 'provider-1',
@@ -66,6 +70,9 @@ void main() {
     expect(opportunity.dealType, 'business');
     expect(opportunity.canContact, isFalse);
     expect(opportunity.isRecommended, isFalse);
+    expect(opportunity.trafficCount, 42);
+    expect(opportunity.isOwner, isTrue);
+    expect(opportunity.canRepost, isTrue);
     expect(opportunity.matchComponents['deal_quality'], 16);
     expect(
       opportunity.publicDetails['buyer_objective'],
