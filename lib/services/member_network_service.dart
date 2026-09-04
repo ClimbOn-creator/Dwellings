@@ -93,7 +93,7 @@ class MemberNetworkService {
 
   static Future<List<MemberConversationSummary>> loadConversations() async {
     if (!BackendService.configured || BackendService.user == null) {
-      return _previewConversations;
+      return const [];
     }
     final rows = await _client.rpc('list_member_conversations');
     return (rows as List<dynamic>)
@@ -109,12 +109,24 @@ class MemberNetworkService {
     String conversationId,
   ) async {
     if (!BackendService.configured || BackendService.user == null) {
-      return _previewMessages[conversationId] ?? const [];
+      return const [];
     }
-    final rows = await _client.rpc(
-      'load_member_messages_with_receipts',
-      params: {'target_conversation_id': conversationId},
-    );
+    dynamic rows;
+    try {
+      rows = await _client.rpc(
+        'load_member_messages_with_receipts',
+        params: {'target_conversation_id': conversationId},
+      );
+    } on PostgrestException catch (error) {
+      if (error.code != 'PGRST202' &&
+          !error.message.contains('load_member_messages_with_receipts')) {
+        rethrow;
+      }
+      rows = await _client.rpc(
+        'load_member_messages',
+        params: {'target_conversation_id': conversationId},
+      );
+    }
     await markRead(conversationId);
     return (rows as List<dynamic>)
         .map(
@@ -179,67 +191,4 @@ class MemberNetworkService {
       throw StateError('Sign in with a verified member profile to continue.');
     }
   }
-
-  static final _previewConversations = <MemberConversationSummary>[
-    MemberConversationSummary(
-      id: 'preview-chat-unread',
-      otherProviderId: 'preview-team-qoe',
-      name: 'Grace Okafor',
-      company: 'ClearLedger Advisory',
-      jobTitle: 'Quality of Earnings Director',
-      providerType: 'quality_of_earnings',
-      lastMessage: 'I can share the diligence checklist this afternoon.',
-      lastMessageAt: DateTime(2026, 9, 1, 10, 42),
-      unreadCount: 2,
-      photoIndex: 4,
-      opportunityId: 'preview-industrial-services',
-      opportunityHeadline: 'Established industrial services acquisition',
-      isPreview: true,
-    ),
-    MemberConversationSummary(
-      id: 'preview-chat-read',
-      otherProviderId: 'preview-member-lender',
-      name: 'Marcus Chen',
-      company: 'North Shore Commercial Capital',
-      jobTitle: 'Commercial Lending Director',
-      providerType: 'commercial_lender',
-      lastMessage:
-          'Thanks — let’s reconnect after the financial package is ready.',
-      lastMessageAt: DateTime(2026, 8, 31, 16, 18),
-      unreadCount: 0,
-      photoIndex: 1,
-      isPreview: true,
-    ),
-  ];
-
-  static final _previewMessages = <String, List<MemberChatMessage>>{
-    'preview-chat-unread': [
-      MemberChatMessage(
-        id: 'preview-message-1',
-        senderProviderId: 'me',
-        senderName: 'You',
-        body: 'Would you be available to help scope the initial QOE work?',
-        createdAt: DateTime(2026, 9, 1, 10, 31),
-        isMine: true,
-        readAt: DateTime(2026, 9, 1, 10, 39),
-      ),
-      MemberChatMessage(
-        id: 'preview-message-2',
-        senderProviderId: 'preview-team-qoe',
-        senderName: 'Grace Okafor',
-        body:
-            'Yes. The first step is confirming the reporting period and data access.',
-        createdAt: DateTime(2026, 9, 1, 10, 39),
-        isMine: false,
-      ),
-      MemberChatMessage(
-        id: 'preview-message-3',
-        senderProviderId: 'preview-team-qoe',
-        senderName: 'Grace Okafor',
-        body: 'I can share the diligence checklist this afternoon.',
-        createdAt: DateTime(2026, 9, 1, 10, 42),
-        isMine: false,
-      ),
-    ],
-  };
 }

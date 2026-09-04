@@ -3,10 +3,14 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import '../models/buyer_comparison_profile.dart';
 import '../models/platform_side.dart';
+import '../services/account_service.dart';
 import '../services/backend_service.dart';
 import '../services/affinity_admin_service.dart';
+import '../services/business_sale_bulletin_service.dart';
 import '../services/deal_room_service.dart';
 import '../services/marketplace_service.dart';
 import '../services/member_deal_marketplace_service.dart';
@@ -42,7 +46,9 @@ enum _StudioView {
 enum _InteractionMode { inbox, chat, deal }
 
 class MemberDealMarketplacePage extends StatefulWidget {
-  const MemberDealMarketplacePage({super.key});
+  const MemberDealMarketplacePage({super.key, this.initialChatProvider});
+
+  final MarketplaceProvider? initialChatProvider;
 
   @override
   State<MemberDealMarketplacePage> createState() =>
@@ -83,6 +89,12 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
     _reload();
     _loadSavedOpportunities();
     _replyEmail.text = BackendService.user?.email ?? '';
+    final initialChatProvider = widget.initialChatProvider;
+    if (initialChatProvider != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _startMemberChat(initialChatProvider);
+      });
+    }
     _messageRefreshTimer = Timer.periodic(const Duration(seconds: 15), (_) {
       if (mounted && BackendService.user != null) {
         setState(() {
@@ -630,7 +642,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
     child: Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(Icons.lock_person_outlined, size: 36, color: _green),
+        Icon(Icons.business_center_outlined, size: 36, color: _green),
         SizedBox(height: 16),
         Text(
           'Choose an opportunity',
@@ -647,47 +659,62 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
     ),
   );
 
-  Widget _conversationInbox() => FutureBuilder<List<MemberConversationSummary>>(
-    future: _conversations,
-    builder: (context, snapshot) {
-      if (snapshot.connectionState == ConnectionState.waiting) {
-        return const Center(child: CircularProgressIndicator(color: _green));
-      }
-      if (snapshot.hasError) {
-        return _AccessState(
-          title: 'Messages are unavailable',
-          message: _friendlyError(snapshot.error!),
-          action: 'TRY AGAIN',
-          onTap: () => setState(
-            () => _conversations = MemberNetworkService.loadConversations(),
+  Widget _conversationInbox() => BackendService.user == null
+      ? const Center(
+          child: Text(
+            'Message board',
+            style: TextStyle(
+              color: _green,
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+            ),
           ),
+        )
+      : FutureBuilder<List<MemberConversationSummary>>(
+          future: _conversations,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(
+                child: CircularProgressIndicator(color: _green),
+              );
+            }
+            if (snapshot.hasError) {
+              return _AccessState(
+                title: 'Messages are unavailable',
+                message: _friendlyError(snapshot.error!),
+                action: 'TRY AGAIN',
+                onTap: () => setState(
+                  () =>
+                      _conversations = MemberNetworkService.loadConversations(),
+                ),
+              );
+            }
+            final conversations = snapshot.data ?? const [];
+            if (conversations.isEmpty) {
+              return const _AccessState(
+                title: 'Start a conversation',
+                message:
+                    'Open a verified member profile or choose a professional from a deal team, then select Message.',
+              );
+            }
+            return RefreshIndicator(
+              color: _green,
+              onRefresh: () async {
+                final future = MemberNetworkService.loadConversations();
+                setState(() => _conversations = future);
+                await future;
+              },
+              child: ListView.separated(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                itemCount: conversations.length,
+                separatorBuilder: (_, _) =>
+                    const Divider(height: 1, color: _line),
+                itemBuilder: (context, index) =>
+                    _conversationTile(conversations[index]),
+              ),
+            );
+          },
         );
-      }
-      final conversations = snapshot.data ?? const [];
-      if (conversations.isEmpty) {
-        return const _AccessState(
-          title: 'Start a conversation',
-          message:
-              'Open a verified member profile or choose a professional from a deal team, then select Message.',
-        );
-      }
-      return RefreshIndicator(
-        color: _green,
-        onRefresh: () async {
-          final future = MemberNetworkService.loadConversations();
-          setState(() => _conversations = future);
-          await future;
-        },
-        child: ListView.separated(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          itemCount: conversations.length,
-          separatorBuilder: (_, _) => const Divider(height: 1, color: _line),
-          itemBuilder: (context, index) =>
-              _conversationTile(conversations[index]),
-        ),
-      );
-    },
-  );
 
   Widget _conversationTile(MemberConversationSummary conversation) => InkWell(
     onTap: () => _openConversation(conversation),
@@ -1038,6 +1065,11 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
     }
     if (!await _ensureSignedIn() || !mounted) return;
     try {
+      final myProfile = await _myProfessionalProfile;
+      if (myProfile?.id == provider.id) {
+        _message('This is your profile. Choose another member to message.');
+        return;
+      }
       final conversationId = await MemberNetworkService.startConversation(
         providerId: provider.id,
         opportunityId: deal?.isPreview == true ? null : deal?.id,
@@ -1472,7 +1504,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
             const CircleAvatar(
               radius: 27,
               backgroundColor: _green,
-              child: Icon(Icons.lock_person_outlined, color: Colors.white),
+              child: Icon(Icons.business_center_outlined, color: Colors.white),
             ),
             const SizedBox(width: 15),
             Expanded(
@@ -2496,10 +2528,12 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                         width: width,
                         child: _ProfessionalCard(
                           provider: provider,
-                          onMessage: () => _startMemberChat(
-                            provider,
-                            deal: _selectedOpportunity,
-                          ),
+                          onMessage: provider.isExample
+                              ? null
+                              : () => _startMemberChat(
+                                  provider,
+                                  deal: _selectedOpportunity,
+                                ),
                           onRefer: _selectedOpportunity == null
                               ? null
                               : () => _showReferralDialog(
@@ -2908,7 +2942,10 @@ class _DealPost extends StatelessWidget {
                 const CircleAvatar(
                   radius: 25,
                   backgroundColor: _green,
-                  child: Icon(Icons.lock_person_outlined, color: Colors.white),
+                  child: Icon(
+                    Icons.person_outline_rounded,
+                    color: Colors.white,
+                  ),
                 ),
                 const SizedBox(width: 14),
                 const Expanded(
@@ -3560,7 +3597,7 @@ class _ProfessionalCard extends StatelessWidget {
     this.onRefer,
   });
   final MarketplaceProvider provider;
-  final Future<void> Function() onMessage;
+  final Future<void> Function()? onMessage;
   final Future<void> Function()? onRefer;
 
   @override
@@ -3674,15 +3711,16 @@ class _ProfessionalCard extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
-                IconButton(
-                  onPressed: onMessage,
-                  tooltip: 'Message ${provider.name}',
-                  icon: const Icon(
-                    Icons.chat_bubble_outline_rounded,
-                    size: 18,
-                    color: _green,
+                if (onMessage != null)
+                  IconButton(
+                    onPressed: onMessage,
+                    tooltip: 'Message ${provider.name}',
+                    icon: const Icon(
+                      Icons.chat_bubble_outline_rounded,
+                      size: 18,
+                      color: _green,
+                    ),
                   ),
-                ),
                 if (onRefer != null)
                   IconButton(
                     onPressed: onRefer,
@@ -3784,6 +3822,384 @@ class _Fact extends StatelessWidget {
   );
 }
 
+class BusinessSaleBulletinPage extends StatefulWidget {
+  const BusinessSaleBulletinPage({super.key});
+
+  @override
+  State<BusinessSaleBulletinPage> createState() =>
+      _BusinessSaleBulletinPageState();
+}
+
+class _BusinessSaleBulletinPageState extends State<BusinessSaleBulletinPage> {
+  late Future<List<BusinessSaleBulletin>> _bulletins;
+  late Future<bool> _isAdmin;
+  late Future<Map<String, dynamic>> _buyerFoundation;
+  final _bulletinSearch = TextEditingController();
+  String _searchQuery = '';
+  String _priceFilter = 'all';
+
+  @override
+  void initState() {
+    super.initState();
+    _reload();
+  }
+
+  void _reload() {
+    _bulletins = BusinessSaleBulletinService.load();
+    _isAdmin = AffinityAdminService.isAdmin();
+    _buyerFoundation = AccountService.loadAcquisitionFoundation().then(
+      (value) => value ?? const <String, dynamic>{},
+    );
+  }
+
+  @override
+  void dispose() {
+    _bulletinSearch.dispose();
+    super.dispose();
+  }
+
+  void _message(String text) =>
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
+
+  Future<void> _addBusiness() async {
+    final draft = await showDialog<_BulletinDraft>(
+      context: context,
+      builder: (_) => const _BulletinPostDialog(),
+    );
+    if (draft == null || !mounted) return;
+    try {
+      await BusinessSaleBulletinService.create(
+        title: draft.title,
+        industry: draft.industry,
+        region: draft.region,
+        askingPriceBand: draft.askingPriceBand,
+        summary: draft.summary,
+        sourceLabel: draft.sourceLabel,
+        sourceUrl: draft.sourceUrl,
+      );
+      if (!mounted) return;
+      setState(_reload);
+      _message('Business-for-sale post added.');
+    } catch (error) {
+      if (mounted) _message(_bulletinError(error));
+    }
+  }
+
+  Future<void> _makeAnonymousDeal(BusinessSaleBulletin bulletin) async {
+    final draft = await showDialog<_AnonymousDealDraft>(
+      context: context,
+      builder: (_) => _AnonymousDealDialog(bulletin: bulletin),
+    );
+    if (draft == null || !mounted) return;
+    try {
+      await BusinessSaleBulletinService.makeAnonymousDeal(
+        bulletinId: bulletin.id,
+        headline: draft.headline,
+        summary: draft.summary,
+      );
+      if (!mounted) return;
+      setState(_reload);
+      _message('Anonymous deal draft created in Review Desk.');
+    } catch (error) {
+      if (mounted) _message(_bulletinError(error));
+    }
+  }
+
+  Future<void> _openSource(String sourceUrl) async {
+    final uri = Uri.tryParse(sourceUrl);
+    if (uri == null ||
+        !await launchUrl(uri, mode: LaunchMode.platformDefault)) {
+      if (mounted) _message('Could not open that source link.');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    backgroundColor: const Color(0xFFF1F3EF),
+    appBar: AppBar(
+      toolbarHeight: 72,
+      backgroundColor: const Color(0xFFF7F5F0),
+      surfaceTintColor: Colors.transparent,
+      title: const HomeBrandButton(size: 52, dark: false),
+      actions: [
+        IconButton(
+          onPressed: () => setState(_reload),
+          tooltip: 'Refresh bulletin board',
+          icon: const Icon(Icons.refresh_rounded),
+        ),
+        const AppNavigationMenu(side: PlatformSide.business, dark: false),
+        const SizedBox(width: 10),
+      ],
+    ),
+    body: FutureBuilder<List<BusinessSaleBulletin>>(
+      future: _bulletins,
+      builder: (context, snapshot) => FutureBuilder<Map<String, dynamic>>(
+        future: _buyerFoundation,
+        builder: (context, foundationSnapshot) {
+          final foundation = foundationSnapshot.data ?? const {};
+          final blueprint = foundation['blueprint'] is Map
+              ? Map<String, dynamic>.from(foundation['blueprint'] as Map)
+              : const <String, dynamic>{};
+          final rawProfile = blueprint['comparisonProfile'];
+          final profile = rawProfile is Map
+              ? BuyerComparisonProfile.fromJson(
+                  Map<String, dynamic>.from(rawProfile),
+                )
+              : const BuyerComparisonProfile();
+          final matcher = BuyerDealMatcher(
+            profile: profile,
+            blueprint: blueprint,
+          );
+          final hasPreferences =
+              profile.answeredCount > 0 ||
+              [
+                'industries',
+                'geography',
+                'minPrice',
+                'maxPrice',
+              ].any((key) => '${blueprint[key] ?? ''}'.trim().isNotEmpty);
+          final query = _searchQuery.trim().toLowerCase();
+          final visible = (snapshot.data ?? const <BusinessSaleBulletin>[]).where((
+            bulletin,
+          ) {
+            final text =
+                '${bulletin.title} ${bulletin.industry} ${bulletin.region} ${bulletin.summary}'
+                    .toLowerCase();
+            return (query.isEmpty || text.contains(query)) &&
+                BuyerDealMatcher.matchesPriceFilter(
+                  bulletin.askingPriceBand,
+                  _priceFilter,
+                );
+          }).toList();
+          if (hasPreferences) {
+            visible.sort(
+              (a, b) => matcher
+                  .score(
+                    title: b.title,
+                    industry: b.industry,
+                    region: b.region,
+                    askingPriceBand: b.askingPriceBand,
+                    summary: b.summary,
+                  )
+                  .compareTo(
+                    matcher.score(
+                      title: a.title,
+                      industry: a.industry,
+                      region: a.region,
+                      askingPriceBand: a.askingPriceBand,
+                      summary: a.summary,
+                    ),
+                  ),
+            );
+          }
+          return SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20, 38, 20, 70),
+            child: Center(
+              child: SizedBox(
+                width: 1040,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    LayoutBuilder(
+                      builder: (context, box) {
+                        const heading = Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'BUSINESSES FOR SALE',
+                              style: TextStyle(
+                                color: _green,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 1.3,
+                              ),
+                            ),
+                            SizedBox(height: 10),
+                            Text(
+                              'Bulletin board',
+                              style: TextStyle(
+                                fontSize: 42,
+                                height: 1,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: -1.6,
+                              ),
+                            ),
+                            SizedBox(height: 12),
+                            Text(
+                              'Browse new businesses for sale. This board is free and open to everyone—no membership or sign-in required.',
+                              style: TextStyle(
+                                color: _muted,
+                                fontSize: 16,
+                                height: 1.5,
+                              ),
+                            ),
+                          ],
+                        );
+                        final addButton = FutureBuilder<bool>(
+                          future: _isAdmin,
+                          builder: (context, admin) => admin.data == true
+                              ? FilledButton.icon(
+                                  onPressed: _addBusiness,
+                                  style: FilledButton.styleFrom(
+                                    backgroundColor: _green,
+                                  ),
+                                  icon: const Icon(Icons.add_rounded),
+                                  label: const Text('ADD BUSINESS'),
+                                )
+                              : const SizedBox.shrink(),
+                        );
+                        if (box.maxWidth < 650) {
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              heading,
+                              const SizedBox(height: 18),
+                              addButton,
+                            ],
+                          );
+                        }
+                        return Row(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            const Expanded(child: heading),
+                            const SizedBox(width: 20),
+                            addButton,
+                          ],
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 32),
+                    _bulletinFilters(),
+                    const SizedBox(height: 18),
+                    if (BackendService.user != null && hasPreferences)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'PERSONALIZED FOR YOUR SAVED BUYER PROFILE · BEST MATCHES FIRST',
+                              style: TextStyle(
+                                color: _green,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: .8,
+                              ),
+                            ),
+                            const SizedBox(height: 5),
+                            const Text(
+                              'Deal scores estimate interest fit from the listing details available. Financial diligence still determines whether a business is viable.',
+                              style: TextStyle(color: _muted, fontSize: 13),
+                            ),
+                          ],
+                        ),
+                      ),
+                    if (snapshot.connectionState == ConnectionState.waiting)
+                      const _LoadingBlock()
+                    else if (snapshot.hasError)
+                      _AccessState(
+                        title: 'Bulletin board unavailable',
+                        message: _bulletinError(snapshot.error!),
+                      )
+                    else if (visible.isEmpty)
+                      _AccessState(
+                        title: query.isEmpty && _priceFilter == 'all'
+                            ? 'No businesses posted yet'
+                            : 'No businesses match those filters',
+                        message: query.isEmpty && _priceFilter == 'all'
+                            ? 'New business-for-sale listings will appear here as they are added.'
+                            : 'Try a broader name, theme, location, or price range.',
+                      )
+                    else
+                      for (final bulletin in visible) ...[
+                        _BusinessSaleBulletinCard(
+                          bulletin: bulletin,
+                          dealScore: hasPreferences
+                              ? matcher.score(
+                                  title: bulletin.title,
+                                  industry: bulletin.industry,
+                                  region: bulletin.region,
+                                  askingPriceBand: bulletin.askingPriceBand,
+                                  summary: bulletin.summary,
+                                )
+                              : null,
+                          onSource: bulletin.sourceUrl.isEmpty
+                              ? null
+                              : () => _openSource(bulletin.sourceUrl),
+                          onConvert: bulletin.canConvert
+                              ? () => _makeAnonymousDeal(bulletin)
+                              : null,
+                        ),
+                        const SizedBox(height: 14),
+                      ],
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    ),
+  );
+
+  Widget _bulletinFilters() => LayoutBuilder(
+    builder: (context, box) {
+      final search = TextField(
+        controller: _bulletinSearch,
+        onChanged: (value) => setState(() => _searchQuery = value),
+        decoration: InputDecoration(
+          labelText: 'Search businesses',
+          hintText: 'Business name, location, industry, or theme',
+          prefixIcon: const Icon(Icons.search_rounded),
+          suffixIcon: _searchQuery.isEmpty
+              ? null
+              : IconButton(
+                  onPressed: () => setState(() {
+                    _searchQuery = '';
+                    _bulletinSearch.clear();
+                  }),
+                  tooltip: 'Clear search',
+                  icon: const Icon(Icons.close_rounded),
+                ),
+        ),
+      );
+      final price = DropdownButtonFormField<String>(
+        initialValue: _priceFilter,
+        decoration: const InputDecoration(labelText: 'Price range'),
+        items: const [
+          DropdownMenuItem(value: 'all', child: Text('All prices')),
+          DropdownMenuItem(value: 'under-500k', child: Text(r'Under $500K')),
+          DropdownMenuItem(value: '500k-1m', child: Text(r'$500K–$1M')),
+          DropdownMenuItem(value: '1m-2m', child: Text(r'$1M–$2M')),
+          DropdownMenuItem(value: '2m-5m', child: Text(r'$2M–$5M')),
+          DropdownMenuItem(value: '5m-plus', child: Text(r'$5M+')),
+          DropdownMenuItem(value: 'unlisted', child: Text('Price not listed')),
+        ],
+        onChanged: (value) => setState(() => _priceFilter = value ?? 'all'),
+      );
+      if (box.maxWidth < 680) {
+        return Column(children: [search, const SizedBox(height: 12), price]);
+      }
+      return Row(
+        children: [
+          Expanded(flex: 2, child: search),
+          const SizedBox(width: 12),
+          Expanded(child: price),
+        ],
+      );
+    },
+  );
+}
+
+String _bulletinError(Object error) {
+  final text = error.toString().replaceFirst('Exception: ', '');
+  if (text.contains('Could not find the function') ||
+      text.contains('does not exist')) {
+    return 'The bulletin board database migration still needs to be applied.';
+  }
+  return text;
+}
+
 class _StatusPill extends StatelessWidget {
   const _StatusPill(this.status);
   final String status;
@@ -3800,6 +4216,393 @@ class _StatusPill extends StatelessWidget {
       status.toUpperCase(),
       style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w900),
     ),
+  );
+}
+
+class _BusinessSaleBulletinCard extends StatelessWidget {
+  const _BusinessSaleBulletinCard({
+    required this.bulletin,
+    this.dealScore,
+    this.onSource,
+    this.onConvert,
+  });
+
+  final BusinessSaleBulletin bulletin;
+  final int? dealScore;
+  final VoidCallback? onSource;
+  final VoidCallback? onConvert;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: double.infinity,
+    padding: const EdgeInsets.all(22),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      border: Border.all(color: _line),
+      borderRadius: BorderRadius.circular(18),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Align(
+          alignment: Alignment.centerRight,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: dealScore == null
+                  ? const Color(0xFFF1F0EC)
+                  : const Color(0xFFDDF2E8),
+              borderRadius: BorderRadius.circular(30),
+            ),
+            child: Text(
+              dealScore == null
+                  ? BackendService.user == null
+                        ? 'SIGN IN FOR YOUR DEAL SCORE'
+                        : 'ANSWER 8 QUESTIONS FOR YOUR DEAL SCORE'
+                  : 'YOUR DEAL SCORE · $dealScore/100',
+              style: TextStyle(
+                color: dealScore == null ? _muted : _green,
+                fontSize: 10,
+                fontWeight: FontWeight.w900,
+                letterSpacing: .6,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            _BulletinTag(bulletin.industry),
+            _BulletinTag(bulletin.region),
+            _BulletinTag(bulletin.askingPriceBand),
+            if (bulletin.converted) const _BulletinTag('ANONYMOUS DRAFT MADE'),
+          ],
+        ),
+        const SizedBox(height: 14),
+        Text(
+          bulletin.title,
+          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          bulletin.summary,
+          style: const TextStyle(color: _muted, height: 1.5),
+        ),
+        const SizedBox(height: 17),
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            Text(
+              'POSTED ${DateFormat.yMMMd().format(bulletin.postedAt.toLocal()).toUpperCase()}',
+              style: const TextStyle(
+                color: _muted,
+                fontSize: 9,
+                fontWeight: FontWeight.w800,
+                letterSpacing: .7,
+              ),
+            ),
+            if (onSource != null)
+              OutlinedButton.icon(
+                onPressed: onSource,
+                icon: const Icon(Icons.open_in_new_rounded, size: 16),
+                label: Text(
+                  bulletin.sourceLabel.isEmpty
+                      ? 'OPEN SOURCE'
+                      : bulletin.sourceLabel.toUpperCase(),
+                ),
+              ),
+            if (onConvert != null)
+              FilledButton.icon(
+                onPressed: onConvert,
+                style: FilledButton.styleFrom(backgroundColor: _green),
+                icon: const Icon(Icons.content_copy_rounded, size: 16),
+                label: const Text('MAKE ANONYMOUS DEAL'),
+              ),
+          ],
+        ),
+      ],
+    ),
+  );
+}
+
+class _BulletinTag extends StatelessWidget {
+  const _BulletinTag(this.label);
+  final String label;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+    decoration: BoxDecoration(
+      color: const Color(0xFFE7EEE9),
+      borderRadius: BorderRadius.circular(30),
+    ),
+    child: Text(
+      label.isEmpty ? 'NOT LISTED' : label.toUpperCase(),
+      style: const TextStyle(
+        color: _green,
+        fontSize: 8,
+        fontWeight: FontWeight.w900,
+        letterSpacing: .6,
+      ),
+    ),
+  );
+}
+
+class _BulletinDraft {
+  const _BulletinDraft({
+    required this.title,
+    required this.industry,
+    required this.region,
+    required this.askingPriceBand,
+    required this.summary,
+    required this.sourceLabel,
+    required this.sourceUrl,
+  });
+
+  final String title;
+  final String industry;
+  final String region;
+  final String askingPriceBand;
+  final String summary;
+  final String sourceLabel;
+  final String sourceUrl;
+}
+
+class _BulletinPostDialog extends StatefulWidget {
+  const _BulletinPostDialog();
+
+  @override
+  State<_BulletinPostDialog> createState() => _BulletinPostDialogState();
+}
+
+class _BulletinPostDialogState extends State<_BulletinPostDialog> {
+  final _formKey = GlobalKey<FormState>();
+  final _title = TextEditingController();
+  final _industry = TextEditingController();
+  final _region = TextEditingController();
+  final _price = TextEditingController();
+  final _summary = TextEditingController();
+  final _sourceLabel = TextEditingController();
+  final _sourceUrl = TextEditingController();
+
+  @override
+  void dispose() {
+    for (final controller in [
+      _title,
+      _industry,
+      _region,
+      _price,
+      _summary,
+      _sourceLabel,
+      _sourceUrl,
+    ]) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  void _submit() {
+    if (!_formKey.currentState!.validate()) return;
+    Navigator.pop(
+      context,
+      _BulletinDraft(
+        title: _title.text,
+        industry: _industry.text,
+        region: _region.text,
+        askingPriceBand: _price.text,
+        summary: _summary.text,
+        sourceLabel: _sourceLabel.text,
+        sourceUrl: _sourceUrl.text,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    title: const Text('Add a business for sale'),
+    content: SizedBox(
+      width: 560,
+      child: Form(
+        key: _formKey,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _field(_title, 'Business or listing title', requiredLength: 3),
+              _field(_industry, 'Industry'),
+              _field(_region, 'Region'),
+              _field(_price, 'Asking price or range'),
+              _field(
+                _summary,
+                'What is being offered',
+                requiredLength: 20,
+                maxLines: 4,
+              ),
+              _field(_sourceLabel, 'Source name (optional)'),
+              _field(
+                _sourceUrl,
+                'Source link (optional)',
+                validator: (value) {
+                  final text = value?.trim() ?? '';
+                  if (text.isNotEmpty &&
+                      !(text.startsWith('https://') ||
+                          text.startsWith('http://'))) {
+                    return 'Use a complete http:// or https:// link';
+                  }
+                  return null;
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+    actions: [
+      TextButton(
+        onPressed: () => Navigator.pop(context),
+        child: const Text('CANCEL'),
+      ),
+      FilledButton(
+        onPressed: _submit,
+        style: FilledButton.styleFrom(backgroundColor: _green),
+        child: const Text('POST TO BOARD'),
+      ),
+    ],
+  );
+
+  Widget _field(
+    TextEditingController controller,
+    String label, {
+    int requiredLength = 0,
+    int maxLines = 1,
+    String? Function(String?)? validator,
+  }) => Padding(
+    padding: const EdgeInsets.only(bottom: 12),
+    child: TextFormField(
+      controller: controller,
+      maxLines: maxLines,
+      decoration: InputDecoration(
+        labelText: label,
+        border: const OutlineInputBorder(),
+      ),
+      validator:
+          validator ??
+          (value) => (value?.trim().length ?? 0) < requiredLength
+              ? 'Enter at least $requiredLength characters'
+              : null,
+    ),
+  );
+}
+
+class _AnonymousDealDraft {
+  const _AnonymousDealDraft({required this.headline, required this.summary});
+  final String headline;
+  final String summary;
+}
+
+class _AnonymousDealDialog extends StatefulWidget {
+  const _AnonymousDealDialog({required this.bulletin});
+  final BusinessSaleBulletin bulletin;
+
+  @override
+  State<_AnonymousDealDialog> createState() => _AnonymousDealDialogState();
+}
+
+class _AnonymousDealDialogState extends State<_AnonymousDealDialog> {
+  final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _headline;
+  late final TextEditingController _summary;
+
+  @override
+  void initState() {
+    super.initState();
+    final industry = widget.bulletin.industry.trim().isEmpty
+        ? 'business'
+        : widget.bulletin.industry.trim();
+    final region = widget.bulletin.region.trim().isEmpty
+        ? 'an undisclosed region'
+        : widget.bulletin.region.trim();
+    _headline = TextEditingController(
+      text: 'Established $industry opportunity',
+    );
+    _summary = TextEditingController(
+      text:
+          'An established $industry business in $region is available for acquisition. Affinity is preparing this opportunity for private member review and further diligence.',
+    );
+  }
+
+  @override
+  void dispose() {
+    _headline.dispose();
+    _summary.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    if (!_formKey.currentState!.validate()) return;
+    Navigator.pop(
+      context,
+      _AnonymousDealDraft(headline: _headline.text, summary: _summary.text),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    title: const Text('Make an anonymous deal'),
+    content: SizedBox(
+      width: 580,
+      child: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Review this public copy carefully. Do not include the business name, source, address, or identifying details. The result stays private in Review Desk until approved.',
+              style: TextStyle(color: _muted, height: 1.45),
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _headline,
+              decoration: const InputDecoration(
+                labelText: 'Anonymous headline',
+                border: OutlineInputBorder(),
+              ),
+              validator: (value) => (value?.trim().length ?? 0) < 8
+                  ? 'Enter at least 8 characters'
+                  : null,
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _summary,
+              maxLines: 5,
+              decoration: const InputDecoration(
+                labelText: 'Anonymous summary',
+                border: OutlineInputBorder(),
+              ),
+              validator: (value) => (value?.trim().length ?? 0) < 40
+                  ? 'Enter at least 40 characters'
+                  : null,
+            ),
+          ],
+        ),
+      ),
+    ),
+    actions: [
+      TextButton(
+        onPressed: () => Navigator.pop(context),
+        child: const Text('CANCEL'),
+      ),
+      FilledButton(
+        onPressed: _submit,
+        style: FilledButton.styleFrom(backgroundColor: _green),
+        child: const Text('CREATE REVIEW DRAFT'),
+      ),
+    ],
   );
 }
 
@@ -3833,7 +4636,7 @@ class _AccessState extends StatelessWidget {
     ),
     child: Column(
       children: [
-        const Icon(Icons.lock_outline, color: _green, size: 32),
+        const Icon(Icons.info_outline_rounded, color: _green, size: 32),
         const SizedBox(height: 14),
         Text(
           title,
@@ -3861,12 +4664,16 @@ class _AccessState extends StatelessWidget {
 
 String _friendlyError(Object error) {
   final text = error.toString().replaceFirst('Exception: ', '');
-  if (text.contains('verified Affinity member')) {
+  if (text.contains('verified Affinity member') ||
+      text.contains('Verified member access required')) {
     return 'A verified, active professional membership is required to browse and pitch opportunities.';
   }
   if (text.contains('professional role is already filled') ||
       text.contains('already has a')) {
     return 'That buyer already has someone in your professional role for this deal. You can still contact them about a different opportunity.';
+  }
+  if (text.contains('You cannot message yourself')) {
+    return 'This is your profile. Choose another member to message.';
   }
   if (text.contains('Could not find the function') ||
       text.contains('does not exist')) {

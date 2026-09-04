@@ -6,20 +6,18 @@ import '../services/site_content_service.dart';
 import '../screens/acquisition_support_page.dart';
 import '../screens/assistant_workspace_page.dart';
 import '../screens/auth_page.dart';
-import '../screens/business_acquisition_page.dart';
-import '../screens/deal_rooms_page.dart';
 import '../screens/local_network_page.dart';
+import '../screens/member_deal_marketplace_page.dart';
 import '../screens/profile_page.dart';
 import '../screens/content_studio_page.dart';
+import '../screens/deal_comparison_page.dart';
 import '../screens/notification_center_page.dart';
 import '../services/member_beta_service.dart';
 
 enum AppNavigationDestination {
   overview,
-  blueprint,
-  readiness,
-  dealScreen,
-  pipeline,
+  dealComparison,
+  bulletinBoard,
   memberStudio,
   network,
   consulting,
@@ -54,11 +52,9 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
   }
 
   String _label(AppNavigationDestination destination) => switch (destination) {
-    AppNavigationDestination.overview => 'Acquisition path overview',
-    AppNavigationDestination.blueprint => 'Step 1 · Blueprint',
-    AppNavigationDestination.readiness => 'Step 2 · Readiness',
-    AppNavigationDestination.dealScreen => 'Step 3 · Deal screen',
-    AppNavigationDestination.pipeline => 'Step 4 · Pipeline',
+    AppNavigationDestination.overview => 'Acquisition workspace',
+    AppNavigationDestination.dealComparison => 'Compare business deals',
+    AppNavigationDestination.bulletinBoard => 'Businesses for sale',
     AppNavigationDestination.memberStudio => 'Professional Member Studio',
     AppNavigationDestination.network => 'Members & experts',
     AppNavigationDestination.consulting => 'Personal consulting',
@@ -70,12 +66,8 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
     AppNavigationDestination destination,
   ) => switch (destination) {
     AppNavigationDestination.overview => const AcquisitionSupportPage(),
-    AppNavigationDestination.blueprint => const AcquisitionBlueprintPage(),
-    AppNavigationDestination.readiness => const BuyerReadinessPage(),
-    AppNavigationDestination.dealScreen => const BusinessAcquisitionPage(),
-    AppNavigationDestination.pipeline => const DealRoomsPage(
-      initialSide: PlatformSide.business,
-    ),
+    AppNavigationDestination.dealComparison => const DealComparisonPage(),
+    AppNavigationDestination.bulletinBoard => const BusinessSaleBulletinPage(),
     AppNavigationDestination.memberStudio => const MemberStudioPage(),
     AppNavigationDestination.network => const LocalNetworkPage(
       side: PlatformSide.business,

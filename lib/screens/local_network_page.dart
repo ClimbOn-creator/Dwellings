@@ -14,6 +14,7 @@ import '../widgets/topo_background.dart';
 import 'auth_page.dart';
 import 'business_acquisition_page.dart';
 import 'home_screen.dart';
+import 'member_deal_marketplace_page.dart';
 import 'member_profile_page.dart';
 
 const _ink = brandInk;
@@ -714,7 +715,13 @@ class _ProviderRowState extends State<_ProviderRow> {
                     InkWell(
                       onTap: () => Navigator.of(context).push(
                         MaterialPageRoute<void>(
-                          builder: (_) => MemberProfilePage(provider: provider),
+                          builder: (_) => MemberProfilePage(
+                            provider: provider,
+                            messageDestinationBuilder: (_) =>
+                                MemberDealMarketplacePage(
+                                  initialChatProvider: provider,
+                                ),
+                          ),
                         ),
                       ),
                       child: Text(

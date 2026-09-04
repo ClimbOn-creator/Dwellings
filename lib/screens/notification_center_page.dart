@@ -99,7 +99,7 @@ class _NotificationCenterPageState extends State<NotificationCenterPage> {
                     ),
                     SizedBox(height: 14),
                     Text(
-                      'Deal reviews, professional pitches, and buyer decisions—visible only to the account involved.',
+                      'Deal changes, saved-deal updates, professional pitches, and buyer decisions—visible only to the account involved.',
                       style: TextStyle(color: Color(0xFFD8E4DE), height: 1.5),
                     ),
                   ],

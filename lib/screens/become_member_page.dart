@@ -309,7 +309,7 @@ class _BecomeMemberPageState extends State<BecomeMemberPage> {
                       'For realtors, lenders, lawyers, accountants, consultants, and other transaction professionals.',
                       const [
                         'Reviewed professional profile',
-                        'Consented introductions and lead inbox',
+                        'Consented professional connections',
                         'Marketing Studio and client templates',
                       ],
                     ),

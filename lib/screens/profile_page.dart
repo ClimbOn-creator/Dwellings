@@ -17,7 +17,7 @@ import '../widgets/membership_footer.dart';
 import 'auth_page.dart';
 import 'connection_brief_page.dart';
 import 'deal_rooms_page.dart';
-import 'member_workspace_pages.dart';
+import 'member_deal_marketplace_page.dart';
 import 'member_profile_page.dart';
 import 'acquisition_support_page.dart';
 import 'business_acquisition_page.dart';
@@ -39,9 +39,7 @@ class _ProfilePageState extends State<ProfilePage> {
   DashboardStats? _stats;
   List<MarketplaceProvider> _team = [];
   List<IntroductionRequest> _outgoingIntroductions = [];
-  List<IntroductionRequest> _incomingIntroductions = [];
   List<DealRoom> _deals = [];
-  ProfessionalWorkspaceStats? _professionalStats;
   Map<String, dynamic>? _acquisition;
   bool _loading = true;
   bool _saving = false;
@@ -89,8 +87,6 @@ class _ProfilePageState extends State<ProfilePage> {
         AccountService.loadStats(),
         AccountService.loadTeam(),
         AccountService.loadOutgoingIntroductions(),
-        AccountService.loadIncomingIntroductions(),
-        AccountService.loadProfessionalStats(),
         DealRoomService.loadRooms(),
       ]);
       if (!mounted) return;
@@ -98,9 +94,7 @@ class _ProfilePageState extends State<ProfilePage> {
         _stats = values[0] as DashboardStats;
         _team = values[1] as List<MarketplaceProvider>;
         _outgoingIntroductions = values[2] as List<IntroductionRequest>;
-        _incomingIntroductions = values[3] as List<IntroductionRequest>;
-        _professionalStats = values[4] as ProfessionalWorkspaceStats?;
-        _deals = values[5] as List<DealRoom>;
+        _deals = values[3] as List<DealRoom>;
       });
     } catch (_) {
       // Keep the existing dashboard visible and try again on the next refresh.
@@ -118,8 +112,6 @@ class _ProfilePageState extends State<ProfilePage> {
         AccountService.loadStats(),
         AccountService.loadTeam(),
         AccountService.loadOutgoingIntroductions(),
-        AccountService.loadIncomingIntroductions(),
-        AccountService.loadProfessionalStats(),
         DealRoomService.loadRooms(),
       ]);
       final profile = values[0] as AccountProfile?;
@@ -129,9 +121,7 @@ class _ProfilePageState extends State<ProfilePage> {
         _stats = values[1] as DashboardStats;
         _team = values[2] as List<MarketplaceProvider>;
         _outgoingIntroductions = values[3] as List<IntroductionRequest>;
-        _incomingIntroductions = values[4] as List<IntroductionRequest>;
-        _professionalStats = values[5] as ProfessionalWorkspaceStats?;
-        _deals = values[6] as List<DealRoom>;
+        _deals = values[4] as List<DealRoom>;
         _loading = false;
         _name.text = profile?.fullName ?? '';
         _job.text = profile?.jobTitle ?? '';
@@ -265,10 +255,6 @@ class _ProfilePageState extends State<ProfilePage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (_professionalStats != null) ...[
-                        _professionalWorkspace(_professionalStats!),
-                        const SizedBox(height: 24),
-                      ],
                       LayoutBuilder(
                         builder: (context, constraints) {
                           final width = constraints.maxWidth >= 980
@@ -635,217 +621,11 @@ class _ProfilePageState extends State<ProfilePage> {
     return parts.isEmpty ? _roleLabel(profile.role) : parts.join(' · ');
   }
 
-  Widget _professionalWorkspace(ProfessionalWorkspaceStats stats) => TopoCard(
-    width: double.infinity,
-    padding: const EdgeInsets.all(24),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            const Expanded(
-              child: Text(
-                'Member performance',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: _purple.withValues(alpha: .25),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                stats.verified
-                    ? 'VERIFIED · ${stats.membershipTier.toUpperCase()}'
-                    : stats.onboardingStatus.toUpperCase().replaceAll('_', ' '),
-                style: const TextStyle(
-                  color: Color(0xFFD8D0FF),
-                  fontSize: 9,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Text(
-          stats.verified
-              ? 'Your verified marketplace listing and client opportunity pipeline.'
-              : 'Your application is ${stats.onboardingStatus.replaceAll('_', ' ')}. Your listing stays private until Affinity verifies it.',
-          style: const TextStyle(color: Color(0xFFB8B8C5), fontSize: 12),
-        ),
-        const SizedBox(height: 18),
-        Wrap(
-          spacing: 10,
-          runSpacing: 10,
-          children: [
-            _professionalMetric('${stats.teamSaves}', 'TEAM SAVES'),
-            _professionalMetric('${stats.introductions}', 'CONNECTIONS'),
-            _professionalMetric('${stats.dealRooms}', 'DEAL ROOMS'),
-            _professionalMetric(
-              '${stats.profileCompleteness}%',
-              'PROFILE READY',
-            ),
-          ],
-        ),
-        const SizedBox(height: 22),
-        const Divider(color: Color(0xFF2A2A3A), height: 1),
-        const SizedBox(height: 18),
-        const Text(
-          'WORKSPACE TOOLS',
-          style: TextStyle(
-            color: _lilac,
-            fontSize: 9,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 1.2,
-          ),
-        ),
-        const SizedBox(height: 12),
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final width = constraints.maxWidth >= 760
-                ? (constraints.maxWidth - 20) / 3
-                : constraints.maxWidth;
-            return Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: [
-                _workspaceLaunchButton(
-                  width: width,
-                  icon: Icons.inbox_outlined,
-                  title: 'Lead inbox',
-                  detail: 'Review and move new client connections forward.',
-                  page: const MemberLeadInboxPage(),
-                ),
-                _workspaceLaunchButton(
-                  width: width,
-                  icon: Icons.mail_outline,
-                  title: 'Email composer',
-                  detail: 'Create a reviewable client email draft.',
-                  page: MemberEmailComposerPage(
-                    senderName: _profile?.fullName ?? '',
-                  ),
-                ),
-                _workspaceLaunchButton(
-                  width: width,
-                  icon: Icons.newspaper_outlined,
-                  title: 'Newsletter builder',
-                  detail: 'Build your monthly client update.',
-                  page: MemberNewsletterBuilderPage(
-                    memberName: _profile?.fullName ?? '',
-                  ),
-                ),
-              ],
-            );
-          },
-        ),
-        if (!stats.verified) ...[
-          const SizedBox(height: 16),
-          const Text(
-            'Verification checklist · real name and company · direct contact details · service markets · specialties · licence details when applicable. Platform review is required before public placement.',
-            style: TextStyle(
-              color: Color(0xFFD5D5DE),
-              fontSize: 11,
-              height: 1.5,
-            ),
-          ),
-        ],
-      ],
-    ),
-  );
-
-  Widget _workspaceLaunchButton({
-    required double width,
-    required IconData icon,
-    required String title,
-    required String detail,
-    required Widget page,
-  }) => SizedBox(
-    width: width,
-    child: Material(
-      color: Colors.white.withValues(alpha: .07),
-      borderRadius: BorderRadius.circular(15),
-      child: InkWell(
-        onTap: () => Navigator.of(
-          context,
-        ).push(MaterialPageRoute<void>(builder: (_) => page)),
-        borderRadius: BorderRadius.circular(15),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Icon(icon, color: _lilac, size: 21),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 13,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      detail,
-                      style: const TextStyle(
-                        color: Color(0xFFAAAAB8),
-                        fontSize: 10,
-                        height: 1.35,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const Icon(
-                Icons.arrow_forward_rounded,
-                color: Colors.white,
-                size: 17,
-              ),
-            ],
-          ),
-        ),
-      ),
-    ),
-  );
-
-  Widget _professionalMetric(String value, String label) => Container(
-    width: 150,
-    padding: const EdgeInsets.all(15),
-    decoration: BoxDecoration(
-      color: Colors.white.withValues(alpha: .07),
-      borderRadius: BorderRadius.circular(14),
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          value,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 23,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-        const SizedBox(height: 5),
-        Text(label, style: const TextStyle(color: _lilac, fontSize: 8)),
-      ],
-    ),
-  );
-
   Widget _introductionCentre() => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Text(
-        _incomingIntroductions.isEmpty ? 'Connections' : 'Lead inbox',
+      const Text(
+        'Connections',
         style: TextStyle(
           fontSize: 30,
           fontWeight: FontWeight.w700,
@@ -854,36 +634,10 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
       const SizedBox(height: 8),
       const Text(
-        'Track consented connection briefs from first response through consultation and outcome.',
+        'Keep track of the connection briefs you have sent to professionals.',
         style: TextStyle(color: Color(0xFF666674)),
       ),
       const SizedBox(height: 18),
-      if (_incomingIntroductions.isNotEmpty) ...[
-        Wrap(
-          spacing: 10,
-          runSpacing: 10,
-          children: [
-            _leadCount('NEW', {'new'}),
-            _leadCount('ACTIVE', {
-              'accepted',
-              'qualified',
-              'contacted',
-              'consultation',
-            }),
-            _leadCount('WON', {'won'}),
-            _leadCount('CLOSED', {'lost', 'declined', 'closed'}),
-          ],
-        ),
-        const SizedBox(height: 18),
-        const _SectionLabel('CLIENT LEADS'),
-        const SizedBox(height: 8),
-        ..._incomingIntroductions.map(
-          (request) => _introductionRow(request, incoming: true),
-        ),
-        const SizedBox(height: 18),
-      ],
-      const _SectionLabel('YOUR REQUESTS'),
-      const SizedBox(height: 8),
       if (_outgoingIntroductions.isEmpty)
         Container(
           width: double.infinity,
@@ -901,19 +655,6 @@ class _ProfilePageState extends State<ProfilePage> {
           (request) => _introductionRow(request, incoming: false),
         ),
     ],
-  );
-
-  Widget _leadCount(String label, Set<String> statuses) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(13),
-      border: Border.all(color: const Color(0xFFE3E3E9)),
-    ),
-    child: Text(
-      '${_incomingIntroductions.where((lead) => statuses.contains(lead.status)).length}  $label',
-      style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900),
-    ),
   );
 
   Widget _introductionRow(
@@ -1118,8 +859,9 @@ class _ProfilePageState extends State<ProfilePage> {
                         firstDate: DateTime.now(),
                         lastDate: DateTime.now().add(const Duration(days: 730)),
                       );
-                      if (picked != null)
+                      if (picked != null) {
                         setModalState(() => followUp = picked);
+                      }
                     },
                     icon: const Icon(Icons.event_outlined),
                     label: Text(
@@ -1330,7 +1072,11 @@ class _ProfilePageState extends State<ProfilePage> {
           child: TextButton.icon(
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute<void>(
-                builder: (_) => MemberProfilePage(provider: provider),
+                builder: (_) => MemberProfilePage(
+                  provider: provider,
+                  messageDestinationBuilder: (_) =>
+                      MemberDealMarketplacePage(initialChatProvider: provider),
+                ),
               ),
             ),
             icon: const Icon(Icons.open_in_new, size: 16),
@@ -1382,22 +1128,6 @@ class _ProfilePageState extends State<ProfilePage> {
     'lender' => 'Bank or lender',
     _ => 'Buyer or investor',
   };
-}
-
-class _SectionLabel extends StatelessWidget {
-  const _SectionLabel(this.text);
-  final String text;
-
-  @override
-  Widget build(BuildContext context) => Text(
-    text,
-    style: const TextStyle(
-      color: _purple,
-      fontSize: 10,
-      fontWeight: FontWeight.w900,
-      letterSpacing: 1,
-    ),
-  );
 }
 
 class _StatCard extends StatelessWidget {

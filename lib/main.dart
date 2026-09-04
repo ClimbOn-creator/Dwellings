@@ -3,9 +3,9 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'models/platform_side.dart';
 import 'screens/deal_rooms_page.dart';
+import 'screens/deal_comparison_page.dart';
 import 'screens/business_acquisition_page.dart';
 import 'screens/local_network_page.dart';
-import 'screens/member_workspace_pages.dart';
 import 'screens/member_deal_marketplace_page.dart';
 import 'screens/affinity_review_desk_page.dart';
 import 'screens/content_studio_page.dart';
@@ -112,14 +112,13 @@ class AffinityApp extends StatelessWidget {
       'property-calculator' => const AcquisitionSupportPage(),
       'network' => LocalNetworkPage(side: side),
       'deal-rooms' => const DealRoomsPage(initialSide: PlatformSide.business),
-      'member-leads' => const MemberLeadInboxPage(),
+      'deal-comparison' => const DealComparisonPage(),
+      'bulletin-board' => const BusinessSaleBulletinPage(),
       'member-studio' => const MemberDealMarketplacePage(),
       'review-desk' => const AffinityReviewDeskPage(),
       'content-studio' => const ContentStudioPage(),
       'notifications' => const NotificationCenterPage(),
       'professional-onboarding' => const ProfessionalOnboardingPage(),
-      'email-composer' => const MemberEmailComposerPage(),
-      'newsletter-builder' => const MemberNewsletterBuilderPage(),
       'landing' => const AcquisitionSupportPage(),
       'acquisition-support' => const AcquisitionSupportPage(),
       _ => const AcquisitionSupportPage(),

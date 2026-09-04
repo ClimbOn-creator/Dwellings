@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../screens/acquisition_support_page.dart';
+import '../services/account_service.dart';
+import '../services/backend_service.dart';
 import 'brand_logo.dart';
+import 'profile_photo.dart';
 
 class HomeBrandButton extends StatelessWidget {
   const HomeBrandButton({
@@ -22,16 +25,32 @@ class HomeBrandButton extends StatelessWidget {
       );
 
   @override
-  Widget build(BuildContext context) => Semantics(
-    button: true,
-    label: 'Affinity home',
-    child: InkWell(
-      onTap: () => open(context),
-      borderRadius: BorderRadius.circular(14),
-      child: Padding(
-        padding: const EdgeInsets.all(2),
-        child: AffinityLogo(size: size, showWordmark: showWordmark, dark: dark),
+  Widget build(BuildContext context) {
+    final signedIn = BackendService.user != null;
+    return Semantics(
+      button: true,
+      label: signedIn ? 'Your profile photo, Affinity home' : 'Affinity home',
+      child: InkWell(
+        onTap: () => open(context),
+        borderRadius: BorderRadius.circular(14),
+        child: Padding(
+          padding: const EdgeInsets.all(2),
+          child: signedIn
+              ? FutureBuilder<AccountProfile?>(
+                  future: AccountService.loadProfile(),
+                  builder: (context, snapshot) => ProfilePhoto(
+                    size: size,
+                    photoUrl: snapshot.data?.photoUrl ?? '',
+                    borderRadius: BorderRadius.circular(size * .3),
+                  ),
+                )
+              : AffinityLogo(
+                  size: size,
+                  showWordmark: showWordmark,
+                  dark: dark,
+                ),
+        ),
       ),
-    ),
-  );
+    );
+  }
 }

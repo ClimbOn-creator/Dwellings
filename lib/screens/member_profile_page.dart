@@ -19,11 +19,13 @@ class MemberProfilePage extends StatefulWidget {
     super.key,
     required this.provider,
     this.onMessage,
+    this.messageDestinationBuilder,
     this.onRefer,
   });
 
   final MarketplaceProvider provider;
   final Future<void> Function()? onMessage;
+  final WidgetBuilder? messageDestinationBuilder;
   final Future<void> Function()? onRefer;
 
   @override
@@ -36,6 +38,9 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
   late Future<List<ProviderReview>> _reviews;
 
   MarketplaceProvider get provider => widget.provider;
+  bool get _canMessage =>
+      !provider.isExample &&
+      (widget.onMessage != null || widget.messageDestinationBuilder != null);
 
   @override
   void initState() {
@@ -209,7 +214,32 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
   }
 
   Future<void> _messageMember() async {
-    if (widget.onMessage == null) return;
+    if (!_canMessage) return;
+    if (BackendService.user == null) {
+      await Navigator.of(
+        context,
+      ).push(MaterialPageRoute<void>(builder: (_) => const AuthPage()));
+      if (!mounted || BackendService.user == null) return;
+    }
+    final myProfile = await MarketplaceService.loadMyProfessionalProfile();
+    if (!mounted) return;
+    if (myProfile?.id == provider.id) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'This is your profile. Choose another member to message.',
+          ),
+        ),
+      );
+      return;
+    }
+    final destinationBuilder = widget.messageDestinationBuilder;
+    if (destinationBuilder != null) {
+      await Navigator.of(
+        context,
+      ).push(MaterialPageRoute<void>(builder: destinationBuilder));
+      return;
+    }
     await widget.onMessage!();
     if (mounted) Navigator.pop(context);
   }
@@ -337,7 +367,7 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
                         spacing: 9,
                         runSpacing: 9,
                         children: [
-                          if (widget.onMessage != null)
+                          if (_canMessage)
                             OutlinedButton.icon(
                               onPressed: _messageMember,
                               style: OutlinedButton.styleFrom(
@@ -457,6 +487,14 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
           icon: const Icon(Icons.handshake_outlined, size: 18),
           label: const Text('BUILD A CONNECTION BRIEF'),
         ),
+        if (_canMessage && MediaQuery.sizeOf(context).width < 700) ...[
+          const SizedBox(height: 10),
+          OutlinedButton.icon(
+            onPressed: _messageMember,
+            icon: const Icon(Icons.chat_bubble_outline_rounded, size: 18),
+            label: const Text('MESSAGE'),
+          ),
+        ],
         const SizedBox(height: 10),
         if (provider.phone.isNotEmpty)
           _contactButton(

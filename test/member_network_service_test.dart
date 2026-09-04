@@ -23,12 +23,10 @@ void main() {
     expect(conversation.lastMessage, contains('proposed structure'));
   });
 
-  test('preview inbox puts unread conversations first', () async {
+  test('signed-out inbox does not expose example conversations', () async {
     final conversations = await MemberNetworkService.loadConversations();
 
-    expect(conversations, isNotEmpty);
-    expect(conversations.first.unreadCount, greaterThan(0));
-    expect(conversations.first.isPreview, isTrue);
+    expect(conversations, isEmpty);
   });
 
   test('chat messages preserve sender ownership', () {
