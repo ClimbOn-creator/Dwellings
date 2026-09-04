@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/platform_side.dart';
@@ -84,9 +85,14 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
     _replyEmail.text = BackendService.user?.email ?? '';
     _messageRefreshTimer = Timer.periodic(const Duration(seconds: 15), (_) {
       if (mounted && BackendService.user != null) {
-        setState(
-          () => _conversations = MemberNetworkService.loadConversations(),
-        );
+        setState(() {
+          _conversations = MemberNetworkService.loadConversations();
+          final conversation = _selectedConversation;
+          if (_interactionMode == _InteractionMode.chat &&
+              conversation != null) {
+            _chatMessages = MemberNetworkService.loadMessages(conversation.id);
+          }
+        });
       }
     });
   }
@@ -979,6 +985,19 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
               fontSize: 8,
             ),
           ),
+          if (message.isMine) ...[
+            const SizedBox(height: 2),
+            Text(
+              message.readAt == null
+                  ? 'Sent'
+                  : 'Read ${DateFormat.jm().format(message.readAt!.toLocal())}',
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.78),
+                fontSize: 8,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
         ],
       ),
     ),

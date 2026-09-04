@@ -63,6 +63,7 @@ class MemberChatMessage {
     required this.body,
     required this.createdAt,
     required this.isMine,
+    this.readAt,
   });
 
   final String id;
@@ -71,6 +72,7 @@ class MemberChatMessage {
   final String body;
   final DateTime createdAt;
   final bool isMine;
+  final DateTime? readAt;
 
   factory MemberChatMessage.fromJson(Map<String, dynamic> row) =>
       MemberChatMessage(
@@ -82,6 +84,7 @@ class MemberChatMessage {
             DateTime.tryParse(row['created_at'] as String? ?? '') ??
             DateTime.now(),
         isMine: row['is_mine'] as bool? ?? false,
+        readAt: DateTime.tryParse(row['read_at'] as String? ?? ''),
       );
 }
 
@@ -109,7 +112,7 @@ class MemberNetworkService {
       return _previewMessages[conversationId] ?? const [];
     }
     final rows = await _client.rpc(
-      'load_member_messages',
+      'load_member_messages_with_receipts',
       params: {'target_conversation_id': conversationId},
     );
     await markRead(conversationId);
@@ -218,6 +221,7 @@ class MemberNetworkService {
         body: 'Would you be available to help scope the initial QOE work?',
         createdAt: DateTime(2026, 9, 1, 10, 31),
         isMine: true,
+        readAt: DateTime(2026, 9, 1, 10, 39),
       ),
       MemberChatMessage(
         id: 'preview-message-2',

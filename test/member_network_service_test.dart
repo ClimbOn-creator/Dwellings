@@ -39,9 +39,11 @@ void main() {
       'body': 'Thanks for the referral.',
       'created_at': '2026-09-01T17:35:00Z',
       'is_mine': true,
+      'read_at': '2026-09-01T17:40:00Z',
     });
 
     expect(message.isMine, isTrue);
     expect(message.body, 'Thanks for the referral.');
+    expect(message.readAt, DateTime.parse('2026-09-01T17:40:00Z'));
   });
 }

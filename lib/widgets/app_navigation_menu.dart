@@ -26,7 +26,7 @@ enum AppNavigationDestination {
   profile,
 }
 
-class AppNavigationMenu extends StatelessWidget {
+class AppNavigationMenu extends StatefulWidget {
   const AppNavigationMenu({
     super.key,
     this.side = PlatformSide.business,
@@ -38,6 +38,20 @@ class AppNavigationMenu extends StatelessWidget {
   final PlatformSide side;
   final bool dark;
   final ValueChanged<PlatformSide>? onSideChanged;
+
+  @override
+  State<AppNavigationMenu> createState() => _AppNavigationMenuState();
+}
+
+class _AppNavigationMenuState extends State<AppNavigationMenu> {
+  Future<void> _openNotifications() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => const NotificationCenterPage()),
+    );
+    if (mounted) {
+      setState(() {});
+    }
+  }
 
   String _label(AppNavigationDestination destination) => switch (destination) {
     AppNavigationDestination.overview => 'Acquisition path overview',
@@ -99,7 +113,7 @@ class AppNavigationMenu extends StatelessWidget {
                 ),
                 icon: Icon(
                   Icons.edit_note_rounded,
-                  color: dark ? Colors.white : const Color(0xFF161616),
+                  color: widget.dark ? Colors.white : const Color(0xFF161616),
                 ),
               )
             : const SizedBox.shrink(),
@@ -112,14 +126,10 @@ class AppNavigationMenu extends StatelessWidget {
             label: Text('${snapshot.data ?? 0}'),
             child: IconButton(
               tooltip: 'Private updates',
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (_) => const NotificationCenterPage(),
-                ),
-              ),
+              onPressed: _openNotifications,
               icon: Icon(
                 Icons.notifications_none_rounded,
-                color: dark ? Colors.white : const Color(0xFF161616),
+                color: widget.dark ? Colors.white : const Color(0xFF161616),
               ),
             ),
           ),
@@ -131,12 +141,12 @@ class AppNavigationMenu extends StatelessWidget {
           BackendService.user == null
               ? Icons.person_outline_rounded
               : Icons.account_circle_outlined,
-          color: dark ? Colors.white : const Color(0xFF161616),
+          color: widget.dark ? Colors.white : const Color(0xFF161616),
         ),
       ),
       PopupMenuButton<AppNavigationDestination>(
         tooltip: 'Open navigation',
-        color: dark ? const Color(0xFF171728) : Colors.white,
+        color: widget.dark ? const Color(0xFF171728) : Colors.white,
         offset: const Offset(0, 44),
         onSelected: (destination) => _open(context, destination),
         itemBuilder: (_) => [
@@ -149,7 +159,7 @@ class AppNavigationMenu extends StatelessWidget {
               child: Text(
                 _label(destination),
                 style: TextStyle(
-                  color: dark ? Colors.white : const Color(0xFF161616),
+                  color: widget.dark ? Colors.white : const Color(0xFF161616),
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                 ),
@@ -161,7 +171,7 @@ class AppNavigationMenu extends StatelessWidget {
           dimension: 44,
           child: Icon(
             Icons.menu_rounded,
-            color: dark ? Colors.white : const Color(0xFF161616),
+            color: widget.dark ? Colors.white : const Color(0xFF161616),
             size: 28,
           ),
         ),

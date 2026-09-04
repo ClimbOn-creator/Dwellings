@@ -33,6 +33,11 @@ class _NotificationCenterPageState extends State<NotificationCenterPage> {
   Future<void> _open(AffinityNotification item) async {
     await MemberBetaService.markRead(item.id);
     if (!mounted) return;
+    setState(() {
+      _notifications = _notifications.then(
+        (items) => items.where((candidate) => candidate.id != item.id).toList(),
+      );
+    });
     final page = switch (item.actionModule) {
       'review-desk' => const AffinityReviewDeskPage(),
       'profile' => const ProfilePage(),
@@ -41,8 +46,9 @@ class _NotificationCenterPageState extends State<NotificationCenterPage> {
     await Navigator.of(
       context,
     ).push(MaterialPageRoute<void>(builder: (_) => page));
-    if (mounted)
+    if (mounted) {
       setState(() => _notifications = MemberBetaService.loadNotifications());
+    }
   }
 
   @override
@@ -109,20 +115,23 @@ class _NotificationCenterPageState extends State<NotificationCenterPage> {
               child: FutureBuilder<List<AffinityNotification>>(
                 future: _notifications,
                 builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting)
+                  if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(
                       child: CircularProgressIndicator(color: _green),
                     );
-                  if (snapshot.hasError)
+                  }
+                  if (snapshot.hasError) {
                     return Text('Could not load updates: ${snapshot.error}');
+                  }
                   final items = snapshot.data ?? [];
-                  if (items.isEmpty)
+                  if (items.isEmpty) {
                     return const Center(
                       child: Text(
                         'No private updates yet.',
                         style: TextStyle(color: _muted),
                       ),
                     );
+                  }
                   return Column(
                     children: [
                       for (final item in items)

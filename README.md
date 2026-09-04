@@ -83,6 +83,11 @@ last-message ordering, deal-context chat, member referrals, buyer/referral
 notifications, and enforcement that referrals cannot bypass a filled deal
 role.
 
+Apply `supabase/migrations/202609030022_message_read_receipts.sql` after the
+networking migration so profile-owned conversations follow members across
+devices, message notifications clear when their conversation is viewed, and
+outgoing messages show timestamped read receipts.
+
 Apply `supabase/migrations/202609010021_creator_marketplace_access.sql` to
 provision the Affinity creator account as an owner/member, restrict its
 recommendations to Victoria, and enable deal search, traffic-aware monthly

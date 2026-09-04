@@ -65,6 +65,7 @@ class MemberBetaService {
     final rows = await _client
         .from('affinity_notifications')
         .select()
+        .isFilter('read_at', null)
         .order('created_at', ascending: false)
         .limit(80);
     return rows.map(AffinityNotification.fromJson).toList();
