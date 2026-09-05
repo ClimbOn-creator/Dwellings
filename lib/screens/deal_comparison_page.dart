@@ -12,17 +12,37 @@ import 'member_deal_marketplace_page.dart';
 const _green = Color(0xFF086B4C);
 const _ink = Color(0xFF203435);
 const _muted = Color(0xFF607172);
-const _line = Color(0xFFDCE3E2);
 
-/// A complete choice exercise independent of the user's deal pipeline.
+/// Every route into the quiz requires an authenticated account.
 class DealComparisonPage extends StatefulWidget {
   const DealComparisonPage({super.key});
-
   @override
-  State<DealComparisonPage> createState() => _DealComparisonPageState();
+  State<DealComparisonPage> createState() => _QuizAccessState();
 }
 
-class _DealComparisonPageState extends State<DealComparisonPage>
+class _QuizAccessState extends State<DealComparisonPage> {
+  @override
+  Widget build(BuildContext context) => StreamBuilder(
+    stream: BackendService.authChanges,
+    builder: (context, _) => BackendService.user == null
+        ? AuthPage(
+            onAuthenticated: () {
+              if (mounted) setState(() {});
+            },
+          )
+        : BusinessComparisonQuiz(key: ValueKey(BackendService.user!.id)),
+  );
+}
+
+/// Quiz surface, mounted by DealComparisonPage after authentication.
+class BusinessComparisonQuiz extends StatefulWidget {
+  const BusinessComparisonQuiz({super.key});
+
+  @override
+  State<BusinessComparisonQuiz> createState() => _DealComparisonPageState();
+}
+
+class _DealComparisonPageState extends State<BusinessComparisonQuiz>
     with SingleTickerProviderStateMixin {
   AcquisitionFoundation? _foundation;
   final Map<String, dynamic> _answers = {};
@@ -31,6 +51,9 @@ class _DealComparisonPageState extends State<DealComparisonPage>
   QuizBusiness _right = quizBusinesses[1];
   late final AnimationController _motion;
   bool _entering = false;
+  bool? _motionOverride;
+  bool get _fullMotion =>
+      _motionOverride ?? !MediaQuery.of(context).disableAnimations;
   int get _step => _choices.length;
   int? _selected;
   bool _loading = true;
@@ -43,7 +66,8 @@ class _DealComparisonPageState extends State<DealComparisonPage>
     super.initState();
     _motion = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1200),
+      duration: const Duration(milliseconds: 1800),
+      animationBehavior: AnimationBehavior.preserve,
     );
     _load();
   }
@@ -77,13 +101,12 @@ class _DealComparisonPageState extends State<DealComparisonPage>
     if (_selected != null || _saving) return;
     final winner = index == 0 ? _left : _right;
     final choice = QuizChoice(_left, _right, winner);
-    final reduced = MediaQuery.of(context).disableAnimations;
     setState(() {
       _selected = index;
       _entering = false;
     });
     _motion.value = 0;
-    if (!reduced) {
+    {
       try {
         await _motion.animateTo(.6).orCancel;
       } on TickerCanceled {
@@ -102,7 +125,7 @@ class _DealComparisonPageState extends State<DealComparisonPage>
         }
         _entering = true;
       });
-      if (!reduced) {
+      {
         try {
           await _motion.forward().orCancel;
         } on TickerCanceled {
@@ -138,6 +161,8 @@ class _DealComparisonPageState extends State<DealComparisonPage>
       _error = null;
     });
     try {
+      if (BackendService.user == null)
+        throw StateError('Sign in to save your quiz.');
       final foundation = _foundation ?? await AcquisitionFoundation.load();
       foundation.blueprint['comparisonProfile'] = inferQuizProfile(
         _choices,
@@ -169,7 +194,7 @@ class _DealComparisonPageState extends State<DealComparisonPage>
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: const Color(0xFFF0F4F3),
+    backgroundColor: const Color(0xFFE7F0FF),
     appBar: AppBar(
       toolbarHeight: 76,
       backgroundColor: Colors.white,
@@ -189,21 +214,34 @@ class _DealComparisonPageState extends State<DealComparisonPage>
               ],
             ),
           )
-        : LayoutBuilder(
-            builder: (context, viewport) => SingleChildScrollView(
-              padding: EdgeInsets.all(viewport.maxWidth < 600 ? 16 : 28),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxWidth: 1380,
-                    minHeight: (viewport.maxHeight - 56).clamp(
-                      0,
-                      double.infinity,
+        : DecoratedBox(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFFDDEBFF),
+                  Color(0xFFEAE0FF),
+                  Color(0xFFD4F3EC),
+                ],
+              ),
+            ),
+            child: LayoutBuilder(
+              builder: (context, viewport) => SingleChildScrollView(
+                padding: EdgeInsets.all(viewport.maxWidth < 600 ? 16 : 28),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth: 1380,
+                      minHeight: (viewport.maxHeight - 56).clamp(
+                        0,
+                        double.infinity,
+                      ),
                     ),
+                    child: _step == quizBusinesses.length - 1
+                        ? _complete()
+                        : _quiz(),
                   ),
-                  child: _step == quizBusinesses.length - 1
-                      ? _complete()
-                      : _quiz(),
                 ),
               ),
             ),
@@ -227,6 +265,17 @@ class _DealComparisonPageState extends State<DealComparisonPage>
                 ),
               ),
             ),
+            ActionChip(
+              avatar: Icon(
+                _fullMotion ? Icons.animation : Icons.blur_on,
+                size: 18,
+              ),
+              label: Text(_fullMotion ? 'Full motion' : 'Gentle motion'),
+              onPressed: _selected == null
+                  ? () => setState(() => _motionOverride = !_fullMotion)
+                  : null,
+            ),
+            const SizedBox(width: 12),
             Text(
               '${_step + 1} / 8',
               style: const TextStyle(
@@ -246,7 +295,9 @@ class _DealComparisonPageState extends State<DealComparisonPage>
                 height: 4,
                 margin: const EdgeInsets.only(right: 5),
                 decoration: BoxDecoration(
-                  color: i <= _step ? _green : _line,
+                  color: i <= _step
+                      ? const Color(0xFF6953D9)
+                      : const Color(0xFFC5CEE5),
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
@@ -289,21 +340,34 @@ class _DealComparisonPageState extends State<DealComparisonPage>
                     );
                     final pulse = (t / .6).clamp(0.0, 1.0);
                     return Transform.translate(
+                      key: ValueKey('slide-${business.id}'),
                       offset: Offset(
-                        loser && _entering
+                        _fullMotion && loser && _entering
                             ? MediaQuery.sizeOf(context).width * (1 - arrival)
                             : 0,
                         0,
                       ),
                       child: Transform.scale(
-                        scale: loser && !_entering ? 1 - .99 * shrink : 1,
+                        key: ValueKey('scale-${business.id}'),
+                        scale: _fullMotion && loser && !_entering
+                            ? 1 - .99 * shrink
+                            : 1,
                         child: Opacity(
-                          opacity: loser && !_entering ? 1 - shrink : 1,
+                          opacity: loser
+                              ? (_entering && !_fullMotion
+                                    ? arrival
+                                    : !_entering
+                                    ? 1 - shrink
+                                    : 1)
+                              : 1,
                           child: Stack(
                             children: [
                               _BusinessDocument(
                                 key: ValueKey(business.id),
                                 letter: business.id,
+                                accent: index == 0
+                                    ? const Color(0xFF245DD8)
+                                    : const Color(0xFF7A42CE),
                                 option: business,
                                 selected: winner && !_entering,
                                 enabled: _selected == null,
@@ -315,7 +379,9 @@ class _DealComparisonPageState extends State<DealComparisonPage>
                                     child: Opacity(
                                       opacity: 1 - pulse,
                                       child: Transform.scale(
-                                        scale: 1 + .04 * pulse,
+                                        scale: _fullMotion
+                                            ? 1 + .04 * pulse
+                                            : 1,
                                         child: DecoratedBox(
                                           decoration: BoxDecoration(
                                             borderRadius: BorderRadius.circular(
@@ -501,12 +567,14 @@ class _BusinessDocument extends StatelessWidget {
   const _BusinessDocument({
     super.key,
     required this.letter,
+    required this.accent,
     required this.option,
     required this.selected,
     required this.enabled,
     required this.onChoose,
   });
   final String letter;
+  final Color accent;
   final QuizBusiness option;
   final bool selected;
   final bool enabled;
@@ -530,9 +598,14 @@ class _BusinessDocument extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.all(22),
           decoration: BoxDecoration(
-            color: selected ? const Color(0xFFE1F4E9) : Colors.white,
+            color: selected
+                ? const Color(0xFF97EDBB)
+                : Color.lerp(Colors.white, accent, .045),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: selected ? _green : _line, width: 2),
+            border: Border.all(
+              color: selected ? _green : accent.withValues(alpha: .5),
+              width: selected ? 4 : 2,
+            ),
             boxShadow: const [
               BoxShadow(
                 color: Color(0x0C203435),
@@ -568,7 +641,17 @@ class _BusinessDocument extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 22),
+              const SizedBox(height: 16),
+              Container(
+                height: 7,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [accent, accent.withValues(alpha: .25)],
+                  ),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+              ),
+              const SizedBox(height: 18),
               Text(
                 option.name,
                 style: const TextStyle(
@@ -588,8 +671,10 @@ class _BusinessDocument extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEAF4EF),
-                  border: Border(left: BorderSide(color: _green, width: 3)),
+                  color: const Color(0xFFFFE9AE),
+                  border: Border(
+                    left: BorderSide(color: Color(0xFFCB861A), width: 3),
+                  ),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -675,8 +760,8 @@ class _BusinessDocument extends StatelessWidget {
                 child: FilledButton.icon(
                   onPressed: enabled ? onChoose : null,
                   style: FilledButton.styleFrom(
-                    backgroundColor: _green,
-                    disabledBackgroundColor: _green,
+                    backgroundColor: accent,
+                    disabledBackgroundColor: selected ? _green : accent,
                     disabledForegroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
@@ -734,7 +819,7 @@ class _BusinessDocument extends StatelessWidget {
   }) => TableRow(
     decoration: BoxDecoration(
       color: header
-          ? const Color(0xFF45666C)
+          ? accent
           : total
           ? const Color(0xFFE4F2EB)
           : shaded
