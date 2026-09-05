@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/platform_side.dart';
+import '../services/account_service.dart';
 import '../services/backend_service.dart';
 import '../services/site_content_service.dart';
 import '../screens/acquisition_support_page.dart';
@@ -13,6 +14,7 @@ import '../screens/content_studio_page.dart';
 import '../screens/deal_comparison_page.dart';
 import '../screens/notification_center_page.dart';
 import '../services/member_beta_service.dart';
+import 'profile_photo.dart';
 
 enum AppNavigationDestination {
   overview,
@@ -126,16 +128,47 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
             ),
           ),
         ),
-      IconButton(
-        tooltip: BackendService.user == null ? 'Sign in' : 'My profile',
-        onPressed: () => _open(context, AppNavigationDestination.profile),
-        icon: Icon(
-          BackendService.user == null
-              ? Icons.person_outline_rounded
-              : Icons.account_circle_outlined,
-          color: widget.dark ? Colors.white : const Color(0xFF161616),
+      if (BackendService.user == null)
+        IconButton(
+          tooltip: 'Sign in',
+          onPressed: () => _open(context, AppNavigationDestination.profile),
+          icon: Icon(
+            Icons.person_outline_rounded,
+            color: widget.dark ? Colors.white : const Color(0xFF161616),
+          ),
+        )
+      else
+        FutureBuilder<AccountProfile?>(
+          future: AccountService.loadProfile(),
+          builder: (context, snapshot) => Tooltip(
+            message: 'My profile',
+            child: Semantics(
+              button: true,
+              label: 'Open my profile',
+              child: InkWell(
+                onTap: () => _open(context, AppNavigationDestination.profile),
+                customBorder: const CircleBorder(),
+                child: Container(
+                  width: 38,
+                  height: 38,
+                  padding: const EdgeInsets.all(2),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: widget.dark
+                          ? Colors.white.withValues(alpha: .55)
+                          : const Color(0xFFD2D0C9),
+                    ),
+                  ),
+                  child: ProfilePhoto(
+                    size: 32,
+                    photoUrl: snapshot.data?.photoUrl ?? '',
+                  ),
+                ),
+              ),
+            ),
+          ),
         ),
-      ),
       PopupMenuButton<AppNavigationDestination>(
         tooltip: 'Open navigation',
         color: widget.dark ? const Color(0xFF171728) : Colors.white,

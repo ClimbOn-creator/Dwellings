@@ -210,10 +210,18 @@ class _DealComparisonPageState extends State<DealComparisonPage> {
 
   Widget _parameterStrip() => Container(
     width: double.infinity,
-    padding: const EdgeInsets.all(20),
+    padding: const EdgeInsets.fromLTRB(22, 20, 22, 22),
     decoration: BoxDecoration(
-      color: _ink,
-      borderRadius: BorderRadius.circular(18),
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(22),
+      border: Border.all(color: _line),
+      boxShadow: const [
+        BoxShadow(
+          color: Color(0x0D000000),
+          blurRadius: 24,
+          offset: Offset(0, 10),
+        ),
+      ],
     ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -224,7 +232,7 @@ class _DealComparisonPageState extends State<DealComparisonPage> {
               child: Text(
                 'YOUR BUYING PARAMETERS',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: _ink,
                   fontSize: 13,
                   fontWeight: FontWeight.w900,
                   letterSpacing: 1,
@@ -234,14 +242,24 @@ class _DealComparisonPageState extends State<DealComparisonPage> {
             Text(
               '${_profile.answeredCount}/8 ANSWERED',
               style: const TextStyle(
-                color: Color(0xFF8DDFC1),
+                color: _green,
                 fontSize: 12,
                 fontWeight: FontWeight.w800,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 10),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: LinearProgressIndicator(
+            value: _profile.answeredCount / 8,
+            minHeight: 6,
+            backgroundColor: const Color(0xFFE8E6DF),
+            valueColor: const AlwaysStoppedAnimation<Color>(_green),
+          ),
+        ),
+        const SizedBox(height: 16),
         Wrap(
           spacing: 8,
           runSpacing: 8,
@@ -377,28 +395,66 @@ class _DealComparisonPageState extends State<DealComparisonPage> {
     );
   }
 
-  Widget _dealPicker(bool left, DealRoom selected) =>
-      DropdownButtonFormField<String>(
-        initialValue: selected.id,
-        decoration: InputDecoration(
-          labelText: left ? 'LEFT DOCUMENT' : 'RIGHT DOCUMENT',
+  Widget _dealPicker(bool left, DealRoom selected) => Container(
+    padding: const EdgeInsets.all(14),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      border: Border.all(color: _line),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          left ? 'DEAL A' : 'DEAL B',
+          style: const TextStyle(
+            color: _green,
+            fontSize: 11,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.1,
+          ),
         ),
-        items: _deals
-            .where((deal) => deal.id != (left ? _rightId : _leftId))
-            .map(
-              (deal) =>
-                  DropdownMenuItem(value: deal.id, child: Text(deal.title)),
-            )
-            .toList(),
-        onChanged: (id) => setState(() {
-          if (left) {
-            _leftId = id;
-          } else {
-            _rightId = id;
-          }
-          _focusedDocument = null;
-        }),
-      );
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: _deals
+              .where((deal) => deal.id != (left ? _rightId : _leftId))
+              .map((deal) {
+                final active = deal.id == selected.id;
+                return ChoiceChip(
+                  selected: active,
+                  showCheckmark: false,
+                  avatar: Icon(
+                    Icons.description_outlined,
+                    size: 18,
+                    color: active ? Colors.white : _green,
+                  ),
+                  label: Text(deal.title),
+                  labelStyle: TextStyle(
+                    color: active ? Colors.white : _ink,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  selectedColor: _green,
+                  backgroundColor: const Color(0xFFF5F4F0),
+                  side: BorderSide(
+                    color: active ? _green : const Color(0xFFE2E0D9),
+                  ),
+                  onSelected: (_) => setState(() {
+                    if (left) {
+                      _leftId = deal.id;
+                    } else {
+                      _rightId = deal.id;
+                    }
+                    _focusedDocument = null;
+                  }),
+                );
+              })
+              .toList(),
+        ),
+      ],
+    ),
+  );
 }
 
 class _ParameterChip extends StatelessWidget {
@@ -411,14 +467,15 @@ class _ParameterChip extends StatelessWidget {
     constraints: const BoxConstraints(maxWidth: 280),
     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
     decoration: BoxDecoration(
-      color: const Color(0xFF292929),
-      borderRadius: BorderRadius.circular(10),
+      color: const Color(0xFFF5F4F0),
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: const Color(0xFFE5E2DB)),
     ),
     child: Text(
       '$label · ${value.trim().isEmpty ? 'Not answered' : value}',
       maxLines: 2,
       overflow: TextOverflow.ellipsis,
-      style: const TextStyle(color: Colors.white, fontSize: 13),
+      style: const TextStyle(color: _ink, fontSize: 13),
     ),
   );
 }
@@ -824,15 +881,15 @@ class _ComparisonQuestionsDialog extends StatefulWidget {
 
 class _ComparisonQuestionsDialogState
     extends State<_ComparisonQuestionsDialog> {
-  final _formKey = GlobalKey<FormState>();
+  int _step = 0;
   late String _goal;
   late String _role;
   late String _horizon;
   late String _weeklyTime;
   late String _risk;
-  late final TextEditingController _cashFlow;
-  late final TextEditingController _return;
-  late final TextEditingController _limits;
+  late String _cashFlow;
+  late String _return;
+  late String _limits;
 
   @override
   void initState() {
@@ -842,177 +899,469 @@ class _ComparisonQuestionsDialogState
     _horizon = widget.initial.horizon;
     _weeklyTime = widget.initial.weeklyTime;
     _risk = widget.initial.riskTolerance;
-    _cashFlow = TextEditingController(text: widget.initial.minimumCashFlow);
-    _return = TextEditingController(text: widget.initial.minimumReturn);
-    _limits = TextEditingController(text: widget.initial.nonNegotiables);
+    _cashFlow = widget.initial.minimumCashFlow;
+    _return = widget.initial.minimumReturn;
+    _limits = widget.initial.nonNegotiables;
   }
 
-  @override
-  void dispose() {
-    _cashFlow.dispose();
-    _return.dispose();
-    _limits.dispose();
-    super.dispose();
+  static const _questions = <_AnimatedQuestion>[
+    _AnimatedQuestion(
+      title: 'What kind of win are you buying?',
+      detail: 'Choose the deal outcome that matters most to you.',
+      icon: Icons.flag_outlined,
+      options: [
+        (
+          'Long-term profit and independence',
+          'Build durable wealth and keep the business.',
+        ),
+        (
+          'Short-term improvement and resale',
+          'Improve operations, then sell on a shorter horizon.',
+        ),
+        (
+          'Reliable personal income',
+          'Prioritize steady cash flow over aggressive growth.',
+        ),
+        (
+          'Strategic add-on acquisition',
+          'Add capabilities or customers to an existing company.',
+        ),
+      ],
+    ),
+    _AnimatedQuestion(
+      title: 'How should the right deal run?',
+      detail: 'Picture your role after the handover is complete.',
+      icon: Icons.groups_2_outlined,
+      options: [
+        ('Run it myself', 'You lead the operation and make daily decisions.'),
+        (
+          'Oversee a hired manager',
+          'A manager runs the team while you steer performance.',
+        ),
+        (
+          'Mostly passive ownership',
+          'The business operates with limited weekly involvement.',
+        ),
+        (
+          'Transition from operator to manager',
+          'Start hands-on, then replace yourself over time.',
+        ),
+      ],
+    ),
+    _AnimatedQuestion(
+      title: 'How long should this deal stay in your portfolio?',
+      detail: 'Your holding period changes which risks and returns matter.',
+      icon: Icons.calendar_month_outlined,
+      options: [
+        ('Long term · 10+ years', 'Optimize for resilience and compounding.'),
+        ('Medium term · 5–10 years', 'Balance cash flow with a future exit.'),
+        (
+          'Short term · under 5 years',
+          'Prioritize a clear improvement and resale plan.',
+        ),
+        ('Not sure yet', 'Keep the exit timeline flexible.'),
+      ],
+    ),
+    _AnimatedQuestion(
+      title: 'How much of your week can the deal use?',
+      detail: 'Choose the operating demand that fits your real life.',
+      icon: Icons.schedule_outlined,
+      options: [
+        ('Full time · 40+ hours', 'You can be the full-time operator.'),
+        (
+          'Active oversight · 15–30 hours',
+          'You can lead priorities and review execution.',
+        ),
+        (
+          'Light oversight · under 10 hours',
+          'The team must handle most operating work.',
+        ),
+        (
+          'Manager-led from day one',
+          'A capable manager must already be in place.',
+        ),
+      ],
+    ),
+    _AnimatedQuestion(
+      title: 'What annual cash flow makes a deal worthwhile?',
+      detail: 'Use cash remaining after a fair owner or manager salary.',
+      icon: Icons.payments_outlined,
+      options: [
+        (r'$75,000', 'A smaller, accessible acquisition target.'),
+        (r'$125,000', 'Meaningful income with room to reinvest.'),
+        (r'$200,000', 'A stronger earnings floor for the acquisition.'),
+        (r'$300,000', 'Focus on larger, established cash-flow businesses.'),
+      ],
+    ),
+    _AnimatedQuestion(
+      title: 'What return should your invested equity earn?',
+      detail: 'Set the minimum annual return you want the deal to support.',
+      icon: Icons.trending_up_rounded,
+      options: [
+        ('15%', 'A lower return threshold for a stable deal.'),
+        ('20%', 'A balanced return target.'),
+        ('25%', 'A stronger return hurdle.'),
+        ('30%', 'Only advance high-return opportunities.'),
+      ],
+    ),
+    _AnimatedQuestion(
+      title: 'Which deal risk feels right?',
+      detail: 'Choose the amount of uncertainty you are prepared to manage.',
+      icon: Icons.shield_outlined,
+      options: [
+        (
+          'Stable and proven only',
+          'Predictable history and limited operational repair.',
+        ),
+        (
+          'Balanced risk and growth',
+          'Some upside and manageable execution risk.',
+        ),
+        (
+          'Open to a turnaround',
+          'You will accept complexity for greater upside.',
+        ),
+        ('Not sure yet', 'Let the evidence guide the risk decision.'),
+      ],
+    ),
+    _AnimatedQuestion(
+      title: 'What must the winning deal have?',
+      detail: 'Pick the non-negotiable that should eliminate a poor fit.',
+      icon: Icons.rule_folder_outlined,
+      options: [
+        (
+          'Manager already in place',
+          'The company cannot depend on you as daily operator.',
+        ),
+        (
+          'Recurring or repeat revenue',
+          'Revenue quality matters more than one-off sales.',
+        ),
+        (
+          'Low seller dependence',
+          'Customers and decisions must transfer cleanly.',
+        ),
+        (
+          'No turnaround required',
+          'The company must be healthy before acquisition.',
+        ),
+      ],
+    ),
+  ];
+
+  String get _answer => switch (_step) {
+    0 => _goal,
+    1 => _role,
+    2 => _horizon,
+    3 => _weeklyTime,
+    4 => _cashFlow,
+    5 => _return,
+    6 => _risk,
+    _ => _limits,
+  };
+
+  void _setAnswer(String value) {
+    setState(() {
+      switch (_step) {
+        case 0:
+          _goal = value;
+        case 1:
+          _role = value;
+        case 2:
+          _horizon = value;
+        case 3:
+          _weeklyTime = value;
+        case 4:
+          _cashFlow = value;
+        case 5:
+          _return = value;
+        case 6:
+          _risk = value;
+        case 7:
+          _limits = value;
+      }
+    });
   }
 
+  BuyerComparisonProfile get _result => BuyerComparisonProfile(
+    goal: _goal,
+    role: _role,
+    horizon: _horizon,
+    weeklyTime: _weeklyTime,
+    minimumCashFlow: _cashFlow,
+    minimumReturn: _return,
+    riskTolerance: _risk,
+    nonNegotiables: _limits,
+  );
+
   @override
-  Widget build(BuildContext context) => AlertDialog(
-    title: const Text('Your 8 comparison questions'),
-    content: SizedBox(
-      width: 680,
-      child: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
+  Widget build(BuildContext context) {
+    final question = _questions[_step];
+    final compact = MediaQuery.sizeOf(context).width < 700;
+    return Dialog(
+      insetPadding: EdgeInsets.all(compact ? 12 : 28),
+      backgroundColor: const Color(0xFFF7F6F2),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 880, maxHeight: 720),
+        child: Padding(
+          padding: EdgeInsets.all(compact ? 20 : 32),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _choice(
-                1,
-                'What is the main outcome you want?',
-                _goal,
-                const [
-                  'Long-term profit and independence',
-                  'Short-term improvement and resale',
-                  'Reliable personal income',
-                  'Strategic add-on acquisition',
+              Row(
+                children: [
+                  const Text(
+                    'BUILD YOUR BUYER PROFILE',
+                    style: TextStyle(
+                      color: _green,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1.1,
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    '${_step + 1} OF 8',
+                    style: const TextStyle(
+                      color: _muted,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    tooltip: 'Close questionnaire',
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close_rounded),
+                  ),
                 ],
-                (value) => _goal = value,
               ),
-              _choice(
-                2,
-                'How do you want the business operated?',
-                _role,
-                const [
-                  'Run it myself',
-                  'Oversee a hired manager',
-                  'Mostly passive ownership',
-                  'Transition from operator to manager',
+              const SizedBox(height: 10),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: LinearProgressIndicator(
+                  value: (_step + 1) / 8,
+                  minHeight: 7,
+                  backgroundColor: const Color(0xFFE2E0D9),
+                  valueColor: const AlwaysStoppedAnimation<Color>(_green),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Expanded(
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 360),
+                  switchInCurve: Curves.easeOutCubic,
+                  switchOutCurve: Curves.easeInCubic,
+                  transitionBuilder: (child, animation) => FadeTransition(
+                    opacity: animation,
+                    child: SlideTransition(
+                      position: Tween<Offset>(
+                        begin: const Offset(.08, 0),
+                        end: Offset.zero,
+                      ).animate(animation),
+                      child: child,
+                    ),
+                  ),
+                  child: SingleChildScrollView(
+                    key: ValueKey(_step),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(question.icon, color: _green, size: 34),
+                        const SizedBox(height: 14),
+                        Text(
+                          question.title,
+                          style: TextStyle(
+                            color: _ink,
+                            fontSize: compact ? 27 : 34,
+                            height: 1.08,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -1,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          question.detail,
+                          style: const TextStyle(
+                            color: _muted,
+                            fontSize: 16,
+                            height: 1.45,
+                          ),
+                        ),
+                        const SizedBox(height: 22),
+                        LayoutBuilder(
+                          builder: (context, box) {
+                            final width = box.maxWidth < 620
+                                ? box.maxWidth
+                                : (box.maxWidth - 12) / 2;
+                            return Wrap(
+                              spacing: 12,
+                              runSpacing: 12,
+                              children: question.options.map((option) {
+                                final selected = _answer == option.$1;
+                                return SizedBox(
+                                  width: width,
+                                  child: _AnswerCard(
+                                    title: option.$1,
+                                    detail: option.$2,
+                                    selected: selected,
+                                    onTap: () => _setAnswer(option.$1),
+                                  ),
+                                );
+                              }).toList(),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Row(
+                children: [
+                  if (_step > 0)
+                    TextButton.icon(
+                      onPressed: () => setState(() => _step--),
+                      icon: const Icon(Icons.arrow_back_rounded),
+                      label: const Text('BACK'),
+                    )
+                  else
+                    const SizedBox.shrink(),
+                  const Spacer(),
+                  FilledButton.icon(
+                    onPressed: _answer.isEmpty
+                        ? null
+                        : () {
+                            if (_step < 7) {
+                              setState(() => _step++);
+                            } else {
+                              Navigator.pop(context, _result);
+                            }
+                          },
+                    style: FilledButton.styleFrom(
+                      backgroundColor: _green,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 22,
+                        vertical: 17,
+                      ),
+                    ),
+                    label: Text(_step == 7 ? 'SAVE MY PROFILE' : 'NEXT'),
+                    icon: Icon(
+                      _step == 7
+                          ? Icons.check_rounded
+                          : Icons.arrow_forward_rounded,
+                    ),
+                  ),
                 ],
-                (value) => _role = value,
-              ),
-              _choice(
-                3,
-                'How long do you expect to own it?',
-                _horizon,
-                const [
-                  'Long term · 10+ years',
-                  'Medium term · 5–10 years',
-                  'Short term · under 5 years',
-                  'Not sure yet',
-                ],
-                (value) => _horizon = value,
-              ),
-              _choice(
-                4,
-                'How much time can you give it each week?',
-                _weeklyTime,
-                const [
-                  'Full time · 40+ hours',
-                  'Active oversight · 15–30 hours',
-                  'Light oversight · under 10 hours',
-                  'Manager-led from day one',
-                ],
-                (value) => _weeklyTime = value,
-              ),
-              _text(
-                5,
-                'Minimum annual cash flow after owner or manager pay',
-                _cashFlow,
-                prefix: r'$',
-              ),
-              _text(
-                6,
-                'Minimum annual return on your invested equity',
-                _return,
-                suffix: '%',
-              ),
-              _choice(7, 'What level of risk fits you?', _risk, const [
-                'Stable and proven only',
-                'Balanced risk and growth',
-                'Open to a turnaround',
-                'Not sure yet',
-              ], (value) => _risk = value),
-              _text(
-                8,
-                'What are your deal-breaking non-negotiables?',
-                _limits,
-                lines: 3,
               ),
             ],
           ),
         ),
       ),
-    ),
-    actions: [
-      TextButton(
-        onPressed: () => Navigator.pop(context),
-        child: const Text('CANCEL'),
-      ),
-      FilledButton(
-        onPressed: () {
-          if (!_formKey.currentState!.validate()) return;
-          Navigator.pop(
-            context,
-            BuyerComparisonProfile(
-              goal: _goal,
-              role: _role,
-              horizon: _horizon,
-              weeklyTime: _weeklyTime,
-              minimumCashFlow: _cashFlow.text.trim(),
-              minimumReturn: _return.text.trim(),
-              riskTolerance: _risk,
-              nonNegotiables: _limits.text.trim(),
+    );
+  }
+}
+
+class _AnimatedQuestion {
+  const _AnimatedQuestion({
+    required this.title,
+    required this.detail,
+    required this.icon,
+    required this.options,
+  });
+  final String title;
+  final String detail;
+  final IconData icon;
+  final List<(String, String)> options;
+}
+
+class _AnswerCard extends StatelessWidget {
+  const _AnswerCard({
+    required this.title,
+    required this.detail,
+    required this.selected,
+    required this.onTap,
+  });
+  final String title;
+  final String detail;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    button: true,
+    selected: selected,
+    child: InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(18),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOutCubic,
+        constraints: const BoxConstraints(minHeight: 114),
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: selected ? const Color(0xFFE5F4ED) : Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: selected ? _green : _line,
+            width: selected ? 2 : 1,
+          ),
+          boxShadow: selected
+              ? const [
+                  BoxShadow(
+                    color: Color(0x1A086B4C),
+                    blurRadius: 18,
+                    offset: Offset(0, 8),
+                  ),
+                ]
+              : const [],
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 220),
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                color: selected ? _green : const Color(0xFFF0EEE8),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                selected ? Icons.check_rounded : Icons.add_rounded,
+                color: selected ? Colors.white : _muted,
+                size: 18,
+              ),
             ),
-          );
-        },
-        style: FilledButton.styleFrom(backgroundColor: _green),
-        child: const Text('SAVE MY PARAMETERS'),
+            const SizedBox(width: 13),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      color: _ink,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    detail,
+                    style: const TextStyle(
+                      color: _muted,
+                      fontSize: 14,
+                      height: 1.35,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
-    ],
-  );
-
-  Widget _choice(
-    int number,
-    String label,
-    String value,
-    List<String> options,
-    ValueChanged<String> onChanged,
-  ) => Padding(
-    padding: const EdgeInsets.only(bottom: 14),
-    child: DropdownButtonFormField<String>(
-      initialValue: options.contains(value) ? value : null,
-      decoration: InputDecoration(labelText: '$number. $label'),
-      items: options
-          .map((option) => DropdownMenuItem(value: option, child: Text(option)))
-          .toList(),
-      onChanged: (selected) {
-        if (selected != null) onChanged(selected);
-      },
-      validator: (selected) => selected == null ? 'Choose an answer' : null,
-    ),
-  );
-
-  Widget _text(
-    int number,
-    String label,
-    TextEditingController controller, {
-    String? prefix,
-    String? suffix,
-    int lines = 1,
-  }) => Padding(
-    padding: const EdgeInsets.only(bottom: 14),
-    child: TextFormField(
-      controller: controller,
-      maxLines: lines,
-      keyboardType: prefix != null || suffix != null
-          ? TextInputType.number
-          : TextInputType.text,
-      decoration: InputDecoration(
-        labelText: '$number. $label',
-        prefixText: prefix,
-        suffixText: suffix,
-      ),
-      validator: (value) =>
-          (value?.trim().isEmpty ?? true) ? 'Add an answer' : null,
     ),
   );
 }
