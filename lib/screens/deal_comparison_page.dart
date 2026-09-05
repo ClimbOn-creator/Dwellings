@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-import '../models/buyer_comparison_profile.dart';
+import '../models/deal_quiz.dart';
 import '../services/backend_service.dart';
 import '../widgets/app_navigation_menu.dart';
 import '../widgets/home_brand_button.dart';
@@ -22,10 +22,16 @@ class DealComparisonPage extends StatefulWidget {
   State<DealComparisonPage> createState() => _DealComparisonPageState();
 }
 
-class _DealComparisonPageState extends State<DealComparisonPage> {
+class _DealComparisonPageState extends State<DealComparisonPage>
+    with SingleTickerProviderStateMixin {
   AcquisitionFoundation? _foundation;
   final Map<String, dynamic> _answers = {};
-  int _step = 0;
+  final List<QuizChoice> _choices = [];
+  QuizBusiness _left = quizBusinesses[0];
+  QuizBusiness _right = quizBusinesses[1];
+  late final AnimationController _motion;
+  bool _entering = false;
+  int get _step => _choices.length;
   int? _selected;
   bool _loading = true;
   bool _saving = false;
@@ -35,7 +41,17 @@ class _DealComparisonPageState extends State<DealComparisonPage> {
   @override
   void initState() {
     super.initState();
+    _motion = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    );
     _load();
+  }
+
+  @override
+  void dispose() {
+    _motion.dispose();
+    super.dispose();
   }
 
   Future<void> _load() async {
@@ -59,20 +75,61 @@ class _DealComparisonPageState extends State<DealComparisonPage> {
 
   Future<void> _choose(int index) async {
     if (_selected != null || _saving) return;
-    final round = _rounds[_step];
+    final winner = index == 0 ? _left : _right;
+    final choice = QuizChoice(_left, _right, winner);
+    final reduced = MediaQuery.of(context).disableAnimations;
     setState(() {
       _selected = index;
-      _answers[round.field] = round.options[index].answer;
+      _entering = false;
     });
-    if (!MediaQuery.of(context).disableAnimations) {
-      await Future<void>.delayed(const Duration(milliseconds: 680));
+    _motion.value = 0;
+    if (!reduced) {
+      try {
+        await _motion.animateTo(.6).orCancel;
+      } on TickerCanceled {
+        return;
+      }
+    }
+    if (!mounted) return;
+    _choices.add(choice);
+    if (_step < quizBusinesses.length - 1) {
+      setState(() {
+        final challenger = quizBusinesses[_step + 1];
+        if (index == 0) {
+          _right = challenger;
+        } else {
+          _left = challenger;
+        }
+        _entering = true;
+      });
+      if (!reduced) {
+        try {
+          await _motion.forward().orCancel;
+        } on TickerCanceled {
+          return;
+        }
+      }
+    } else {
+      _answers
+        ..clear()
+        ..addAll(inferQuizProfile(_choices).toJson());
     }
     if (!mounted) return;
     setState(() {
       _selected = null;
-      _step++;
+      _entering = false;
     });
-    if (_step == _rounds.length) await _save();
+    if (_step == quizBusinesses.length - 1) await _save();
+  }
+
+  void _back() {
+    if (_selected != null || _choices.isEmpty) return;
+    setState(() {
+      final previous = _choices.removeLast();
+      _left = previous.left;
+      _right = previous.right;
+      _motion.value = 0;
+    });
   }
 
   Future<void> _save() async {
@@ -82,8 +139,15 @@ class _DealComparisonPageState extends State<DealComparisonPage> {
     });
     try {
       final foundation = _foundation ?? await AcquisitionFoundation.load();
-      foundation.blueprint['comparisonProfile'] =
-          BuyerComparisonProfile.fromJson(_answers).toJson();
+      foundation.blueprint['comparisonProfile'] = inferQuizProfile(
+        _choices,
+      ).toJson();
+      foundation.blueprint['comparisonQuiz'] = {
+        'version': 2,
+        'source': 'inferred_business_choices',
+        'choices': _choices.map((choice) => choice.toJson()).toList(),
+        'winner': _choices.last.winner.id,
+      };
       await foundation.save();
       final signedIn = BackendService.user != null;
       if (signedIn) await foundation.saveForAccount('deal_comparison');
@@ -137,7 +201,9 @@ class _DealComparisonPageState extends State<DealComparisonPage> {
                       double.infinity,
                     ),
                   ),
-                  child: _step == _rounds.length ? _complete() : _quiz(),
+                  child: _step == quizBusinesses.length - 1
+                      ? _complete()
+                      : _quiz(),
                 ),
               ),
             ),
@@ -145,8 +211,6 @@ class _DealComparisonPageState extends State<DealComparisonPage> {
   );
 
   Widget _quiz() {
-    final round = _rounds[_step];
-    final reducedMotion = MediaQuery.of(context).disableAnimations;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -191,7 +255,7 @@ class _DealComparisonPageState extends State<DealComparisonPage> {
         ),
         const SizedBox(height: 24),
         Text(
-          round.question,
+          'Which business would you rather own?',
           style: const TextStyle(
             color: _ink,
             fontSize: 30,
@@ -202,32 +266,89 @@ class _DealComparisonPageState extends State<DealComparisonPage> {
         ),
         const SizedBox(height: 8),
         const Text(
-          'Choose the business you would rather own. The highlighted rows show the trade-off.',
+          'Compare the whole business. Your favourite stays; a new challenger takes the other spot.',
           style: TextStyle(color: _muted, fontSize: 16, height: 1.5),
         ),
         const SizedBox(height: 24),
-        AnimatedSwitcher(
-          duration: Duration(milliseconds: reducedMotion ? 0 : 350),
+        ClipRect(
           child: LayoutBuilder(
-            key: ValueKey(_step),
             builder: (context, box) {
-              Widget document(int index) => AnimatedScale(
-                scale: _selected != null && _selected != index ? .02 : 1,
-                duration: Duration(milliseconds: reducedMotion ? 0 : 480),
-                curve: Curves.easeInOutCubic,
-                child: AnimatedOpacity(
-                  opacity: _selected != null && _selected != index ? 0 : 1,
-                  duration: Duration(milliseconds: reducedMotion ? 0 : 380),
-                  child: _BusinessDocument(
-                    letter: index == 0 ? 'A' : 'B',
-                    option: round.options[index],
-                    focus: round.focus,
-                    selected: _selected == index,
-                    enabled: _selected == null,
-                    onChoose: () => _choose(index),
-                  ),
-                ),
-              );
+              Widget document(int index) {
+                final business = index == 0 ? _left : _right;
+                return AnimatedBuilder(
+                  animation: _motion,
+                  builder: (context, _) {
+                    final winner = _selected == index;
+                    final loser = _selected != null && !winner;
+                    final t = _motion.value;
+                    final shrink = Curves.easeInCubic.transform(
+                      ((t - .22) / .38).clamp(0.0, 1.0),
+                    );
+                    final arrival = Curves.easeOutCubic.transform(
+                      ((t - .6) / .4).clamp(0.0, 1.0),
+                    );
+                    final pulse = (t / .6).clamp(0.0, 1.0);
+                    return Transform.translate(
+                      offset: Offset(
+                        loser && _entering
+                            ? MediaQuery.sizeOf(context).width * (1 - arrival)
+                            : 0,
+                        0,
+                      ),
+                      child: Transform.scale(
+                        scale: loser && !_entering ? 1 - .99 * shrink : 1,
+                        child: Opacity(
+                          opacity: loser && !_entering ? 1 - shrink : 1,
+                          child: Stack(
+                            children: [
+                              _BusinessDocument(
+                                key: ValueKey(business.id),
+                                letter: business.id,
+                                option: business,
+                                selected: winner && !_entering,
+                                enabled: _selected == null,
+                                onChoose: () => _choose(index),
+                              ),
+                              if (winner && !_entering)
+                                Positioned.fill(
+                                  child: IgnorePointer(
+                                    child: Opacity(
+                                      opacity: 1 - pulse,
+                                      child: Transform.scale(
+                                        scale: 1 + .04 * pulse,
+                                        child: DecoratedBox(
+                                          decoration: BoxDecoration(
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                            border: Border.all(
+                                              color: _green,
+                                              width: 4,
+                                            ),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: _green.withValues(
+                                                  alpha: .25 * (1 - pulse),
+                                                ),
+                                                blurRadius: 24 * pulse,
+                                                spreadRadius: 6 * pulse,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                );
+              }
+
               const versus = Padding(
                 padding: EdgeInsets.all(12),
                 child: Text(
@@ -258,9 +379,7 @@ class _DealComparisonPageState extends State<DealComparisonPage> {
           children: [
             if (_step > 0)
               TextButton.icon(
-                onPressed: _selected == null
-                    ? () => setState(() => _step--)
-                    : null,
+                onPressed: _selected == null ? _back : null,
                 icon: const Icon(Icons.arrow_back_rounded),
                 label: const Text('Previous comparison'),
               ),
@@ -283,7 +402,7 @@ class _DealComparisonPageState extends State<DealComparisonPage> {
       const Icon(Icons.check_circle_outline, color: _green, size: 44),
       const SizedBox(height: 18),
       const Text(
-        'Your buying preferences, defined.',
+        'Your preferences, learned from your choices.',
         style: TextStyle(
           color: _ink,
           fontSize: 32,
@@ -300,15 +419,20 @@ class _DealComparisonPageState extends State<DealComparisonPage> {
         style: const TextStyle(color: _muted, fontSize: 16),
       ),
       const SizedBox(height: 24),
-      for (final round in _rounds)
+      const Text(
+        'These are inferred preferences from the businesses you chose, not fixed requirements.',
+        style: TextStyle(color: _muted, fontSize: 16),
+      ),
+      const SizedBox(height: 12),
+      for (final trait in quizTraitLabels.entries)
         ListTile(
           contentPadding: EdgeInsets.zero,
           title: Text(
-            round.focus,
+            trait.value,
             style: const TextStyle(color: _muted, fontSize: 14),
           ),
           subtitle: Text(
-            '${_answers[round.field] ?? ''}',
+            '${_answers[trait.key] ?? ''}',
             style: const TextStyle(color: _ink, fontSize: 18),
           ),
         ),
@@ -357,7 +481,11 @@ class _DealComparisonPageState extends State<DealComparisonPage> {
             onPressed: _saving
                 ? null
                 : () => setState(() {
-                    _step = 0;
+                    _choices.clear();
+                    _answers.clear();
+                    _left = quizBusinesses[0];
+                    _right = quizBusinesses[1];
+                    _savedToAccount = false;
                     _selected = null;
                     _error = null;
                   }),
@@ -371,16 +499,15 @@ class _DealComparisonPageState extends State<DealComparisonPage> {
 
 class _BusinessDocument extends StatelessWidget {
   const _BusinessDocument({
+    super.key,
     required this.letter,
     required this.option,
-    required this.focus,
     required this.selected,
     required this.enabled,
     required this.onChoose,
   });
   final String letter;
-  final _Option option;
-  final String focus;
+  final QuizBusiness option;
   final bool selected;
   final bool enabled;
   final VoidCallback onChoose;
@@ -468,7 +595,7 @@ class _BusinessDocument extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      focus.toUpperCase(),
+                      'BUSINESS STRENGTH',
                       style: const TextStyle(
                         color: _green,
                         fontSize: 12,
@@ -477,7 +604,7 @@ class _BusinessDocument extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      option.highlight,
+                      option.strength,
                       style: const TextStyle(
                         color: _ink,
                         fontSize: 17,
@@ -490,9 +617,11 @@ class _BusinessDocument extends StatelessWidget {
               ),
               const SizedBox(height: 20),
               _row('Acquisition price', money(option.equity)),
-              _row('Ownership plan', option.plan),
+              _row('Buying outcome', option.goal),
+              _row('Holding period', option.horizon),
               _row('Your operating role', option.role),
-              _row('Weekly involvement', option.hours),
+              _row('Weekly involvement', option.time),
+              _row('Operating risk', option.risk),
               const SizedBox(height: 20),
               Table(
                 columnWidths: const {
@@ -632,174 +761,3 @@ class _BusinessDocument extends StatelessWidget {
         .toList(),
   );
 }
-
-class _Option {
-  const _Option(
-    this.answer,
-    this.highlight, {
-    this.name = 'Evergreen Maintenance',
-    this.plan = 'Hold for 10+ years',
-    this.role = 'Oversee a hired manager',
-    this.hours = '8 hours',
-    this.revenue = 900000,
-    this.expenses = 600000,
-    this.salary = 100000,
-    this.equity = 1000000,
-  });
-  final String answer, highlight, name, plan, role, hours;
-  final double revenue, expenses, salary, equity;
-  double get cash => revenue - expenses - salary;
-}
-
-class _Round {
-  const _Round(this.field, this.focus, this.question, this.options);
-  final String field, focus, question;
-  final List<_Option> options;
-}
-
-const _rounds = <_Round>[
-  _Round(
-    'goal',
-    'Buying outcome',
-    'Build lasting income or improve and resell?',
-    [
-      _Option(
-        'Long-term profit and independence',
-        'Keep the business and collect recurring cash flow.',
-      ),
-      _Option(
-        'Short-term improvement and resale',
-        'Improve operations, then pursue a resale.',
-        name: 'Summit Maintenance',
-        plan: 'Improve and sell in 3 years',
-      ),
-    ],
-  ),
-  _Round(
-    'role',
-    'Your role',
-    'Run the business yourself or lead through a manager?',
-    [
-      _Option(
-        'Run it myself',
-        'You take the operating role and earn the owner salary.',
-        role: 'Owner-operator',
-        hours: '40+ hours',
-      ),
-      _Option(
-        'Oversee a hired manager',
-        'A hired manager earns the salary and runs daily operations.',
-        name: 'Summit Maintenance',
-      ),
-    ],
-  ),
-  _Round(
-    'horizon',
-    'Holding period',
-    'Commit for a decade or plan an earlier exit?',
-    [
-      _Option(
-        'Long term · 10+ years',
-        'Build value over a ten-year ownership period.',
-      ),
-      _Option(
-        'Short term · under 5 years',
-        'Aim for an exit within three years.',
-        name: 'Summit Maintenance',
-        plan: 'Sell in 3 years',
-      ),
-    ],
-  ),
-  _Round(
-    'weeklyTime',
-    'Time commitment',
-    'More involvement or more time back?',
-    [
-      _Option(
-        'Active oversight · 15–30 hours',
-        'Spend about 25 hours each week guiding the team.',
-        hours: '25 hours',
-        salary: 75000,
-      ),
-      _Option(
-        'Light oversight · under 10 hours',
-        'Pay for stronger management and keep involvement under 10 hours.',
-        name: 'Summit Maintenance',
-        salary: 125000,
-      ),
-    ],
-  ),
-  _Round(
-    'minimumCashFlow',
-    'Cash-flow target',
-    'A smaller investment or a larger income target?',
-    [
-      _Option(
-        r'$100,000',
-        r'Target $100,000 annual cash after management pay.',
-        revenue: 600000,
-        expenses: 400000,
-        equity: 500000,
-      ),
-      _Option(
-        r'$200,000',
-        r'Target $200,000 annual cash with twice the investment.',
-        name: 'Summit Maintenance',
-      ),
-    ],
-  ),
-  _Round(
-    'minimumReturn',
-    'Return target',
-    'A 15% return floor or a 25% return hurdle?',
-    [
-      _Option(
-        '15%',
-        'Accept a 15% annual equity return from the illustrated cash flow.',
-        expenses: 650000,
-      ),
-      _Option(
-        '25%',
-        'Require a 25% annual equity return to advance this deal.',
-        name: 'Summit Maintenance',
-        expenses: 550000,
-      ),
-    ],
-  ),
-  _Round(
-    'riskTolerance',
-    'Operating risk',
-    'Proven operations or a turnaround opportunity?',
-    [
-      _Option(
-        'Stable and proven only',
-        'Established processes and steady recent earnings.',
-      ),
-      _Option(
-        'Open to a turnaround',
-        'Uneven earnings; operations need repair before growth.',
-        name: 'Summit Maintenance',
-        equity: 750000,
-        plan: 'Repair and grow',
-        role: 'Lead the turnaround',
-        hours: '30+ hours',
-      ),
-    ],
-  ),
-  _Round(
-    'nonNegotiables',
-    'Your non-negotiable',
-    'Prioritize repeat revenue or low seller dependence?',
-    [
-      _Option(
-        'Recurring or repeat revenue',
-        '80% repeat revenue; the seller holds key customer relationships.',
-      ),
-      _Option(
-        'Low seller dependence',
-        'Team-owned relationships; only 30% of revenue repeats.',
-        name: 'Summit Maintenance',
-      ),
-    ],
-  ),
-];
