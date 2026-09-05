@@ -4258,7 +4258,7 @@ class _BusinessSaleBulletinCard extends StatelessWidget {
               dealScore == null
                   ? BackendService.user == null
                         ? 'SIGN IN FOR YOUR DEAL SCORE'
-                        : 'ANSWER 8 QUESTIONS FOR YOUR DEAL SCORE'
+                        : 'TAKE THE QUIZ FOR YOUR DEAL SCORE'
                   : 'YOUR DEAL SCORE · $dealScore/100',
               style: TextStyle(
                 color: dealScore == null ? _muted : _green,

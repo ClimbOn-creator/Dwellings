@@ -55,7 +55,7 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
 
   String _label(AppNavigationDestination destination) => switch (destination) {
     AppNavigationDestination.overview => 'Acquisition workspace',
-    AppNavigationDestination.dealComparison => 'Compare business deals',
+    AppNavigationDestination.dealComparison => 'Deal comparison quiz',
     AppNavigationDestination.bulletinBoard => 'Businesses for sale',
     AppNavigationDestination.memberStudio => 'Professional Member Studio',
     AppNavigationDestination.network => 'Members & experts',
