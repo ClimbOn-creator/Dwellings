@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -96,12 +97,17 @@ class SiteContentService {
     },
   };
 
+  static int _generation = 0;
+
   static Future<void> initialize() async {
+    final generation = _generation;
     if (!BackendService.configured) return;
     try {
       final rows = await Supabase.instance.client
           .from('site_content')
           .select('content_key, content_value');
+      if (generation != _generation) return;
+      _values.clear();
       for (final raw in rows) {
         final row = Map<String, dynamic>.from(raw);
         _values[row['content_key'] as String] =
@@ -113,7 +119,23 @@ class SiteContentService {
     }
   }
 
-  static String text(String key, String fallback) => _values[key] ?? fallback;
+  static final Map<String, String> _legacyAliases = {};
+
+  static String text(String key, String fallback) {
+    final value = _values[key] ?? fallback;
+    if (sections.values.any((section) => section.containsKey(key))) {
+      _legacyAliases[fallback] = key;
+      _legacyAliases[value] = key;
+    }
+    return value;
+  }
+
+  static String? originalCopy(String key) {
+    for (final section in sections.values) {
+      if (section.containsKey(key)) return section[key];
+    }
+    return null;
+  }
 
   static Future<bool> canEdit() async {
     if (!BackendService.configured || BackendService.user == null) return false;
@@ -126,15 +148,123 @@ class SiteContentService {
     }
   }
 
-  static Future<void> save(String key, String value) async {
+  static final ValueNotifier<bool> editing = ValueNotifier<bool>(false);
+  static String? legacyKey(String value) {
+    for (final section in sections.values) {
+      for (final entry in section.entries) {
+        if (value == entry.value || value == _values[entry.key])
+          return entry.key;
+      }
+    }
+    return _legacyAliases[value];
+  }
+
+  static String? published(String key) => _values[key];
+
+  // Stable across releases, browsers and platforms, without uploading defaults.
+  static String copyId(String text) {
+    var hash = 2166136261;
+    for (final unit in text.codeUnits) {
+      hash = ((hash ^ unit) * 16777619) & 0xffffffff;
+    }
+    return hash.toRadixString(16);
+  }
+
+  static Future<void> save(String key, String value) =>
+      saveExpected(key, value, expected: _values[key]);
+
+  static Future<void> saveExpected(
+    String key,
+    String value, {
+    required String? expected,
+  }) async {
     if (!BackendService.configured || BackendService.user == null) {
       throw StateError('Sign in with an Affinity content editor account.');
     }
+    await Supabase.instance.client.rpc(
+      'save_site_content_v2',
+      params: {
+        'target_key': key,
+        'target_value': value,
+        'expected_value': expected,
+      },
+    );
+    _generation++;
     _values[key] = value;
     revision.value++;
+  }
+
+  static Future<void> reset(String key, {required String? expected}) async {
     await Supabase.instance.client.rpc(
-      'save_site_content',
-      params: {'target_key': key, 'target_value': value},
+      'save_site_content_v2',
+      params: {
+        'target_key': key,
+        'target_value': null,
+        'expected_value': expected,
+      },
     );
+    _generation++;
+    _values.remove(key);
+    revision.value++;
+  }
+
+  static bool isConflict(Object error) =>
+      error is PostgrestException && error.message.contains('changed');
+
+  static String saveError(Object error) {
+    if (error is PostgrestException && error.message.contains('changed')) {
+      return 'Your partner changed this item. Close the editor and reopen it to load the latest version.';
+    }
+    return 'Check your connection and editor access, then try again.';
+  }
+
+  static void validateImage(Uint8List? bytes, String extension) {
+    if (bytes == null || bytes.length < 12 || bytes.length > 10 * 1024 * 1024) {
+      throw ArgumentError('Image must be smaller than 10 MB.');
+    }
+    final ext = extension.toLowerCase();
+    final jpeg = bytes[0] == 0xff && bytes[1] == 0xd8 && bytes[2] == 0xff;
+    final png =
+        bytes[0] == 137 && bytes[1] == 80 && bytes[2] == 78 && bytes[3] == 71;
+    final webp =
+        String.fromCharCodes(bytes.sublist(0, 4)) == 'RIFF' &&
+        String.fromCharCodes(bytes.sublist(8, 12)) == 'WEBP';
+    if (!((['jpg', 'jpeg'].contains(ext) && jpeg) ||
+        (ext == 'png' && png) ||
+        (ext == 'webp' && webp))) {
+      throw ArgumentError('Choose a JPG, PNG or WebP image.');
+    }
+  }
+
+  static Future<String> uploadImage(Uint8List bytes, String extension) async {
+    validateImage(bytes, extension);
+    final user = BackendService.user;
+    if (user == null) throw StateError('Sign in to upload.');
+    final ext = extension.toLowerCase();
+    final path =
+        '${user.id}/${DateTime.now().microsecondsSinceEpoch}-${Random.secure().nextInt(1 << 30)}.$ext';
+    final bucket = Supabase.instance.client.storage.from('site-media');
+    await bucket.uploadBinary(
+      path,
+      bytes,
+      fileOptions: FileOptions(
+        contentType: ext == 'jpg' || ext == 'jpeg'
+            ? 'image/jpeg'
+            : 'image/$ext',
+        upsert: false,
+      ),
+    );
+    return bucket.getPublicUrl(path);
+  }
+
+  static Future<void> discardUpload(String url) async {
+    final bucket = Supabase.instance.client.storage.from('site-media');
+    final prefix = bucket.getPublicUrl('');
+    if (!url.startsWith(prefix)) return;
+    try {
+      await bucket.remove([url.substring(prefix.length)]);
+    } catch (_) {
+      /* Retry is safe; unpublished media is never displayed. */
+    }
   }
 }

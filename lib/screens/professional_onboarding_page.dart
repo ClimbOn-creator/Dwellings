@@ -1,3 +1,4 @@
+import '../widgets/site_text.dart';
 import 'package:flutter/material.dart';
 
 import '../models/platform_side.dart';
@@ -71,7 +72,9 @@ class _ProfessionalOnboardingPageState
     if (!_form.currentState!.validate() || !_attested) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text(
+          content: SiteText(
+            contentKey: 'copy.professional_onboarding_page.m1',
+            literal: true,
             'Complete the required fields and professional attestation.',
           ),
         ),
@@ -105,9 +108,16 @@ class _ProfessionalOnboardingPageState
       if (mounted) setState(() => _sent = true);
     } catch (error) {
       if (mounted)
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Could not submit: $error')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: SiteText(
+              templateValues: {'value1': '${error}'},
+              contentKey: 'copy.professional_onboarding_page.m2',
+              literal: false,
+              "Could not submit: {{value1}}",
+            ),
+          ),
+        );
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -145,7 +155,9 @@ class _ProfessionalOnboardingPageState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    SiteText(
+                      contentKey: 'copy.professional_onboarding_page.m3',
+                      literal: true,
                       'FOUNDING PROFESSIONAL NETWORK',
                       style: TextStyle(
                         color: Color(0xFFB8CEC4),
@@ -155,7 +167,9 @@ class _ProfessionalOnboardingPageState
                       ),
                     ),
                     SizedBox(height: 14),
-                    Text(
+                    SiteText(
+                      contentKey: 'copy.professional_onboarding_page.m4',
+                      literal: true,
                       'Put your expertise where buyers need it.',
                       style: TextStyle(
                         color: Colors.white,
@@ -168,7 +182,9 @@ class _ProfessionalOnboardingPageState
                     SizedBox(height: 16),
                     SizedBox(
                       width: 720,
-                      child: Text(
+                      child: SiteText(
+                        contentKey: 'copy.professional_onboarding_page.m5',
+                        literal: true,
                         'Build a verified professional profile, choose the opportunities you want to see, and pitch anonymous buyers without exposing their identity.',
                         style: TextStyle(
                           color: Color(0xFFD8E4DE),
@@ -204,12 +220,16 @@ class _ProfessionalOnboardingPageState
       children: [
         Icon(Icons.verified_outlined, size: 42, color: _green),
         SizedBox(height: 18),
-        Text(
+        SiteText(
+          contentKey: 'copy.professional_onboarding_page.m6',
+          literal: true,
           'Application received',
           style: TextStyle(fontSize: 30, fontWeight: FontWeight.w800),
         ),
         SizedBox(height: 12),
-        Text(
+        SiteText(
+          contentKey: 'copy.professional_onboarding_page.m7',
+          literal: true,
           'Affinity will verify your profile before it appears in the directory or can pitch opportunities. We will notify you when access changes.',
           textAlign: TextAlign.center,
           style: TextStyle(color: _muted, height: 1.5),
@@ -223,7 +243,9 @@ class _ProfessionalOnboardingPageState
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        const SiteText(
+          contentKey: 'copy.professional_onboarding_page.1',
+          literal: true,
           '01 · Professional identity',
           style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
         ),
@@ -232,12 +254,24 @@ class _ProfessionalOnboardingPageState
           TextFormField(
             controller: _name,
             validator: _required,
-            decoration: const InputDecoration(labelText: 'Full name'),
+            decoration: const InputDecoration(
+              label: SiteText(
+                'Full name',
+                contentKey: 'copy.professional_onboarding_page.field1',
+                literal: true,
+              ),
+            ),
           ),
           TextFormField(
             controller: _company,
             validator: _required,
-            decoration: const InputDecoration(labelText: 'Company'),
+            decoration: const InputDecoration(
+              label: SiteText(
+                'Company',
+                contentKey: 'copy.professional_onboarding_page.field2',
+                literal: true,
+              ),
+            ),
           ),
         ),
         const SizedBox(height: 14),
@@ -245,22 +279,41 @@ class _ProfessionalOnboardingPageState
           TextFormField(
             controller: _role,
             validator: _required,
-            decoration: const InputDecoration(labelText: 'Role / title'),
+            decoration: const InputDecoration(
+              label: SiteText(
+                'Role / title',
+                contentKey: 'copy.professional_onboarding_page.field3',
+                literal: true,
+              ),
+            ),
           ),
           DropdownButtonFormField<MemberType>(
             initialValue: _type,
             decoration: const InputDecoration(
-              labelText: 'Professional category',
+              label: SiteText(
+                'Professional category',
+                contentKey: 'copy.professional_onboarding_page.field4',
+                literal: true,
+              ),
             ),
             items: [
               for (final type in _types)
-                DropdownMenuItem(value: type, child: Text(type.label)),
+                DropdownMenuItem(
+                  value: type,
+                  child: SiteText(
+                    contentKey: 'copy.professional_onboarding_page.m8',
+                    literal: false,
+                    type.label,
+                  ),
+                ),
             ],
             onChanged: (value) => setState(() => _type = value ?? _type),
           ),
         ),
         const SizedBox(height: 36),
-        const Text(
+        const SiteText(
+          contentKey: 'copy.professional_onboarding_page.2',
+          literal: true,
           '02 · Expertise and reach',
           style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
         ),
@@ -271,9 +324,16 @@ class _ProfessionalOnboardingPageState
           minLines: 4,
           maxLines: 7,
           decoration: const InputDecoration(
-            labelText: 'Short professional introduction',
-            hintText:
-                'What do you do, who do you help, and what makes your approach useful in an acquisition?',
+            label: SiteText(
+              'Short professional introduction',
+              contentKey: 'copy.professional_onboarding_page.field5',
+              literal: true,
+            ),
+            hint: SiteText(
+              'What do you do, who do you help, and what makes your approach useful in an acquisition?',
+              contentKey: 'copy.professional_onboarding_page.field6',
+              literal: true,
+            ),
           ),
         ),
         const SizedBox(height: 14),
@@ -283,8 +343,16 @@ class _ProfessionalOnboardingPageState
             validator: _required,
             maxLines: 2,
             decoration: const InputDecoration(
-              labelText: 'Specialties',
-              hintText: 'Commercial lending, SBA, acquisition finance',
+              label: SiteText(
+                'Specialties',
+                contentKey: 'copy.professional_onboarding_page.field7',
+                literal: true,
+              ),
+              hint: SiteText(
+                'Commercial lending, SBA, acquisition finance',
+                contentKey: 'copy.professional_onboarding_page.field8',
+                literal: true,
+              ),
             ),
           ),
           TextFormField(
@@ -292,8 +360,16 @@ class _ProfessionalOnboardingPageState
             validator: _required,
             maxLines: 2,
             decoration: const InputDecoration(
-              labelText: 'Service regions',
-              hintText: 'British Columbia, Alberta',
+              label: SiteText(
+                'Service regions',
+                contentKey: 'copy.professional_onboarding_page.field9',
+                literal: true,
+              ),
+              hint: SiteText(
+                'British Columbia, Alberta',
+                contentKey: 'copy.professional_onboarding_page.field10',
+                literal: true,
+              ),
             ),
           ),
         ),
@@ -301,11 +377,17 @@ class _ProfessionalOnboardingPageState
         TextFormField(
           controller: _license,
           decoration: const InputDecoration(
-            labelText: 'Licence / designation (if applicable)',
+            label: SiteText(
+              'Licence / designation (if applicable)',
+              contentKey: 'copy.professional_onboarding_page.field11',
+              literal: true,
+            ),
           ),
         ),
         const SizedBox(height: 36),
-        const Text(
+        const SiteText(
+          contentKey: 'copy.professional_onboarding_page.3',
+          literal: true,
           '03 · Contact and verification',
           style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
         ),
@@ -316,11 +398,23 @@ class _ProfessionalOnboardingPageState
             validator: (value) => value != null && value.contains('@')
                 ? null
                 : 'Valid email required',
-            decoration: const InputDecoration(labelText: 'Professional email'),
+            decoration: const InputDecoration(
+              label: SiteText(
+                'Professional email',
+                contentKey: 'copy.professional_onboarding_page.field12',
+                literal: true,
+              ),
+            ),
           ),
           TextFormField(
             controller: _phone,
-            decoration: const InputDecoration(labelText: 'Phone'),
+            decoration: const InputDecoration(
+              label: SiteText(
+                'Phone',
+                contentKey: 'copy.professional_onboarding_page.field13',
+                literal: true,
+              ),
+            ),
           ),
         ),
         const SizedBox(height: 14),
@@ -329,7 +423,9 @@ class _ProfessionalOnboardingPageState
           value: _attested,
           onChanged: (value) => setState(() => _attested = value ?? false),
           controlAffinity: ListTileControlAffinity.leading,
-          title: const Text(
+          title: const SiteText(
+            contentKey: 'copy.professional_onboarding_page.4',
+            literal: true,
             'I confirm this information is accurate and Affinity may verify my professional standing.',
             style: TextStyle(fontSize: 13, height: 1.4),
           ),
@@ -339,7 +435,9 @@ class _ProfessionalOnboardingPageState
           width: double.infinity,
           padding: const EdgeInsets.all(18),
           color: const Color(0xFFE4EBE7),
-          child: const Text(
+          child: const SiteText(
+            contentKey: 'copy.professional_onboarding_page.5',
+            literal: true,
             'FOUNDING MEMBER BETA · No payment today. Your professional tier is activated only after Affinity verifies your profile. Future paid billing will require your separate approval.',
             style: TextStyle(
               color: _green,
@@ -356,7 +454,11 @@ class _ProfessionalOnboardingPageState
             backgroundColor: _green,
             padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 18),
           ),
-          child: Text(_saving ? 'SUBMITTING…' : 'SUBMIT FOR VERIFICATION'),
+          child: SiteText(
+            contentKey: 'copy.professional_onboarding_page.m9',
+            literal: false,
+            _saving ? 'SUBMITTING…' : 'SUBMIT FOR VERIFICATION',
+          ),
         ),
       ],
     ),

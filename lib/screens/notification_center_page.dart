@@ -1,3 +1,4 @@
+import '../widgets/site_text.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -9,6 +10,7 @@ import '../widgets/membership_footer.dart';
 import 'affinity_review_desk_page.dart';
 import 'member_deal_marketplace_page.dart';
 import 'profile_page.dart';
+import 'bulletin_listing_pages.dart';
 
 const _green = Color(0xFF053827);
 const _muted = Color(0xFF68635D);
@@ -41,6 +43,10 @@ class _NotificationCenterPageState extends State<NotificationCenterPage> {
     final page = switch (item.actionModule) {
       'review-desk' => const AffinityReviewDeskPage(),
       'profile' => const ProfilePage(),
+      'bulletin-board' =>
+        item.entityId == null
+            ? const BusinessSaleBulletinPage()
+            : BusinessListingDetailPage(bulletinId: item.entityId!),
       _ => const MemberDealMarketplacePage(),
     };
     await Navigator.of(
@@ -77,7 +83,9 @@ class _NotificationCenterPageState extends State<NotificationCenterPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    SiteText(
+                      contentKey: 'copy.notification_center_page.m1',
+                      literal: true,
                       'PRIVATE ACTIVITY',
                       style: TextStyle(
                         color: Color(0xFFB8CEC4),
@@ -87,7 +95,9 @@ class _NotificationCenterPageState extends State<NotificationCenterPage> {
                       ),
                     ),
                     SizedBox(height: 12),
-                    Text(
+                    SiteText(
+                      contentKey: 'copy.notification_center_page.m2',
+                      literal: true,
                       'Your Affinity updates',
                       style: TextStyle(
                         color: Colors.white,
@@ -98,7 +108,9 @@ class _NotificationCenterPageState extends State<NotificationCenterPage> {
                       ),
                     ),
                     SizedBox(height: 14),
-                    Text(
+                    SiteText(
+                      contentKey: 'copy.notification_center_page.m3',
+                      literal: true,
                       'Deal changes, saved-deal updates, professional pitches, and buyer decisions—visible only to the account involved.',
                       style: TextStyle(color: Color(0xFFD8E4DE), height: 1.5),
                     ),
@@ -121,12 +133,19 @@ class _NotificationCenterPageState extends State<NotificationCenterPage> {
                     );
                   }
                   if (snapshot.hasError) {
-                    return Text('Could not load updates: ${snapshot.error}');
+                    return SiteText(
+                      templateValues: {'value1': '${snapshot.error}'},
+                      contentKey: 'copy.notification_center_page.m4',
+                      literal: false,
+                      "Could not load updates: {{value1}}",
+                    );
                   }
                   final items = snapshot.data ?? [];
                   if (items.isEmpty) {
                     return const Center(
-                      child: Text(
+                      child: SiteText(
+                        contentKey: 'copy.notification_center_page.m5',
+                        literal: true,
                         'No private updates yet.',
                         style: TextStyle(color: _muted),
                       ),
@@ -156,7 +175,9 @@ class _NotificationCenterPageState extends State<NotificationCenterPage> {
                                   color: _green,
                                 ),
                               ),
-                              title: Text(
+                              title: SiteText(
+                                contentKey: 'copy.notification_center_page.m6',
+                                literal: false,
                                 item.title,
                                 style: TextStyle(
                                   fontWeight: item.read
@@ -166,7 +187,10 @@ class _NotificationCenterPageState extends State<NotificationCenterPage> {
                               ),
                               subtitle: Padding(
                                 padding: const EdgeInsets.only(top: 6),
-                                child: Text(
+                                child: SiteText(
+                                  contentKey:
+                                      'copy.notification_center_page.m7',
+                                  literal: false,
                                   '${item.message}\n${DateFormat.yMMMd().add_jm().format(item.createdAt.toLocal())}',
                                   style: const TextStyle(
                                     color: _muted,

@@ -1,3 +1,4 @@
+import 'site_text.dart';
 import 'package:flutter/material.dart';
 
 import 'acquisition_step_bar.dart';
@@ -44,7 +45,9 @@ class AcquisitionEditorialHeader extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  SiteText(
+                    contentKey: 'copy.acquisition_editorial_header.m1',
+                    literal: false,
                     kicker,
                     style: TextStyle(
                       color: accent,
@@ -54,7 +57,9 @@ class AcquisitionEditorialHeader extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 14),
-                  Text(
+                  SiteText(
+                    contentKey: 'copy.acquisition_editorial_header.m2',
+                    literal: false,
                     title,
                     style: TextStyle(
                       color: const Color(0xFF171717),
@@ -67,7 +72,9 @@ class AcquisitionEditorialHeader extends StatelessWidget {
                   const SizedBox(height: 18),
                   ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 590),
-                    child: Text(
+                    child: SiteText(
+                      contentKey: 'copy.acquisition_editorial_header.m3',
+                      literal: false,
                       subtitle,
                       style: const TextStyle(
                         color: Color(0xFF625E58),
@@ -85,7 +92,9 @@ class AcquisitionEditorialHeader extends StatelessWidget {
               color: const Color(0xFFF6F3ED),
               padding: const EdgeInsets.all(22),
               alignment: compact ? Alignment.centerLeft : Alignment.bottomLeft,
-              child: Text(
+              child: SiteText(
+                contentKey: 'copy.acquisition_editorial_header.m4',
+                literal: false,
                 '0${currentStep + 1}',
                 style: TextStyle(
                   color: accent,

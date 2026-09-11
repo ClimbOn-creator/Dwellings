@@ -41,7 +41,7 @@ Flutter is built locally and the static `dist/` bundle is committed for Cloudfla
 - Production branch: `main`
 - Build command: `npm run build`
 - Output directory: `dist`
-- Pages project: `dwellings-iq`
+- Pages project: `dwelling-iq-app`
 - R2 binding: `PROPERTY_FILES` → `dwellings`
 
 The Cloudflare build command verifies the committed Flutter bundle. Before pushing a Flutter source change, run `npm run build:flutter` so `dist/` stays synchronized.
@@ -126,3 +126,34 @@ Add the deployed Pages URL under Supabase Authentication URL Configuration for m
 The included location profiles are illustrative seed data. Production use requires current and licensed sources for comparable sales, listings, zoning, permits, hazards, insurance, mortgage rates, demographics, employment, transit and rents. Model weights require historical calibration and out-of-sample testing.
 
 DwellingIQ is a research and decision-support tool, not financial, mortgage, legal, tax, appraisal or insurance advice.
+
+
+## Visual page editor
+
+Verified `rw0882308@gmail.com` and `dfisch5@gmail.com` accounts can use **Edit this page** on every route, including the public pages, buyer tools, property pages and member screens. Click an outlined text block or image, choose **Edit**, then **Save**. Switch to **Done editing** to follow links and use ordinary controls. Content Studio now opens this visual workflow.
+
+- Changes are published in Supabase and load on other devices, including a refresh every 30 seconds for open pages.
+- Text edits support complete rewrites and line breaks. Live-value sentences expose placeholders rather than copying account data into public content. Empty text stays selectable in editing mode.
+- JPG, PNG and WebP uploads are limited to 10 MB. Backgrounds have an **Edit background** control. **Restore original** removes the override.
+- Saving checks the previously published value. A stale draft cannot overwrite another editor's change. Failed saves keep the draft and never appear as successful local publication.
+- Business listing content uses its existing listing editor and permissions. Private records, messages, actual profile photos and calculated values retain their normal data workflows.
+
+### Activate on the live app
+
+Apply `supabase/migrations/202609110025_visual_site_editor.sql` after `202608190016_site_content_editor.sql`, then publish the rebuilt `dist/` through the existing Cloudflare Pages project. The migration creates the site-media bucket, restricts writes to content editors, and checks verified accounts at sign-in so future first-time sign-ins work too. Never put a service-role key in the web bundle.
+
+### Verify
+
+Run `flutter test --no-pub`. The persistence tests additionally run with a mock backend:
+
+```sh
+flutter test --no-pub --dart-define=SUPABASE_URL=https://editor.test --dart-define=SUPABASE_PUBLISHABLE_KEY=test-public-key test/site_editor_persistence_test.dart
+```
+
+Run `test/sql/site_visual_editor_test.mjs` with `PGLITE_MODULE` pointing to an installed `@electric-sql/pglite` module. This checks permissions, concurrent edits, resets and media policies without touching live data. Optional `EDITOR_SCREENSHOT_DIR` and `EDITOR_FONT_PATH` enable visual snapshots in the layout tests.
+
+Copy keys embedded in `SiteText`, `SiteCopyText`, `SiteImage` and `SiteBackground` are persistent IDs; do not renumber them. When adding data-driven interface labels, add source-owned fallback strings to `lib/services/site_copy_catalog.dart`. Do not add user-entered content to that catalog.
+
+### Owner edits survive redesigns
+
+Text keys and image slot keys are permanent and do not depend on wording, filenames or image bytes. Saved Supabase values always override bundled defaults. Changes to copy, layout or bundled assets must carry forward those same IDs. The persistence suite tests new text defaults, new asset paths and remounting the app while preserving the owner's saved text and image URL. See `AGENTS.md` for the standing owner instruction governing all future changes.

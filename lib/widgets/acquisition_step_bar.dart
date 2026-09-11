@@ -1,3 +1,4 @@
+import 'site_text.dart';
 import 'package:flutter/material.dart';
 
 class AcquisitionStepBar extends StatelessWidget {
@@ -26,8 +27,15 @@ class AcquisitionStepBar extends StatelessWidget {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'STEP ${currentStep + 1} OF ${_steps.length} · ${_steps[currentStep].toUpperCase()}',
+        SiteText(
+          templateValues: {
+            'value1': '${currentStep + 1}',
+            'value2': '${_steps.length}',
+            'value3': '${_steps[currentStep].toUpperCase()}',
+          },
+          contentKey: 'copy.acquisition_step_bar.m1',
+          literal: false,
+          "STEP {{value1}} OF {{value2}} · {{value3}}",
           style: const TextStyle(
             color: Color(0xFF5F5B56),
             fontSize: 10,
@@ -62,7 +70,9 @@ class AcquisitionStepBar extends StatelessWidget {
                           ),
                         ),
                       ),
-                      child: Text(
+                      child: SiteText(
+                        contentKey: 'copy.acquisition_step_bar.m2',
+                        literal: false,
                         '${index + 1}. ${_steps[index]}',
                         style: TextStyle(
                           color: index == currentStep
@@ -83,7 +93,11 @@ class AcquisitionStepBar extends StatelessWidget {
                   TextButton.icon(
                     onPressed: () => onSelected(currentStep - 1),
                     icon: const Icon(Icons.arrow_back, size: 17),
-                    label: const Text('Previous'),
+                    label: const SiteText(
+                      contentKey: 'copy.acquisition_step_bar.1',
+                      literal: true,
+                      'Previous',
+                    ),
                   ),
                 if (currentStep < _steps.length - 1)
                   FilledButton.icon(
@@ -94,7 +108,11 @@ class AcquisitionStepBar extends StatelessWidget {
                     ),
                     iconAlignment: IconAlignment.end,
                     icon: const Icon(Icons.arrow_forward, size: 17),
-                    label: const Text('Next step'),
+                    label: const SiteText(
+                      contentKey: 'copy.acquisition_step_bar.2',
+                      literal: true,
+                      'Next step',
+                    ),
                   ),
               ],
             );

@@ -1,3 +1,4 @@
+import 'site_text.dart';
 import 'package:flutter/material.dart';
 
 import '../models/platform_side.dart';
@@ -35,7 +36,9 @@ class CurrentDealsButton extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
     ),
     icon: const Icon(Icons.track_changes_outlined, size: 17),
-    label: Text(
+    label: SiteText(
+      contentKey: 'copy.current_deals_button.m1',
+      literal: false,
       compact ? 'DEALS' : 'CURRENT DEALS',
       style: const TextStyle(
         fontSize: 9,

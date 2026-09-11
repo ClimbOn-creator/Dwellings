@@ -13,6 +13,7 @@ class AffinityNotification {
     required this.actionModule,
     required this.createdAt,
     required this.read,
+    this.entityId,
   });
 
   final String id;
@@ -21,6 +22,7 @@ class AffinityNotification {
   final String actionModule;
   final DateTime createdAt;
   final bool read;
+  final String? entityId;
 
   factory AffinityNotification.fromJson(Map<String, dynamic> row) =>
       AffinityNotification(
@@ -32,6 +34,7 @@ class AffinityNotification {
             DateTime.tryParse(row['created_at'] as String? ?? '') ??
             DateTime.now(),
         read: row['read_at'] != null,
+        entityId: row['entity_id'] as String?,
       );
 }
 

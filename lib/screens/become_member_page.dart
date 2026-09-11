@@ -1,3 +1,4 @@
+import '../widgets/site_text.dart';
 import 'package:flutter/material.dart';
 
 import '../services/marketplace_service.dart';
@@ -113,14 +114,24 @@ class _BecomeMemberPageState extends State<BecomeMemberPage> {
     if (!_formKey.currentState!.validate()) return;
     if (!_consent) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please consent to being contacted.')),
+        const SnackBar(
+          content: SiteText(
+            contentKey: 'copy.become_member_page.m1',
+            literal: true,
+            'Please consent to being contacted.',
+          ),
+        ),
       );
       return;
     }
     if (_type.isProfessional && !_professionalAttestation) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please confirm your professional information.'),
+          content: SiteText(
+            contentKey: 'copy.become_member_page.m2',
+            literal: true,
+            'Please confirm your professional information.',
+          ),
         ),
       );
       return;
@@ -164,9 +175,16 @@ class _BecomeMemberPageState extends State<BecomeMemberPage> {
       if (mounted) setState(() => _complete = true);
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Could not submit: $error')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: SiteText(
+              templateValues: {'value1': '${error}'},
+              contentKey: 'copy.become_member_page.m3',
+              literal: false,
+              "Could not submit: {{value1}}",
+            ),
+          ),
+        );
       }
     } finally {
       if (mounted) setState(() => _submitting = false);
@@ -213,7 +231,9 @@ class _BecomeMemberPageState extends State<BecomeMemberPage> {
             ],
           ),
           const SizedBox(height: 92),
-          const Text(
+          const SiteText(
+            contentKey: 'copy.become_member_page.1',
+            literal: true,
             'BECOME A MEMBER',
             style: TextStyle(
               color: _lilac,
@@ -223,7 +243,9 @@ class _BecomeMemberPageState extends State<BecomeMemberPage> {
             ),
           ),
           const SizedBox(height: 18),
-          Text(
+          SiteText(
+            contentKey: 'copy.become_member_page.m4',
+            literal: true,
             'One network.\nEvery side of the deal.',
             style: TextStyle(
               color: Colors.white,
@@ -236,7 +258,9 @@ class _BecomeMemberPageState extends State<BecomeMemberPage> {
           const SizedBox(height: 24),
           ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 650),
-            child: const Text(
+            child: const SiteText(
+              contentKey: 'copy.become_member_page.2',
+              literal: true,
               'Tell us whether you are buying property, acquiring a business or advising a Canadian transaction. Your answers shape the experience we build for you.',
               style: TextStyle(
                 color: Color(0xFFC5C5D0),
@@ -259,7 +283,9 @@ class _BecomeMemberPageState extends State<BecomeMemberPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            const SiteText(
+              contentKey: 'copy.become_member_page.3',
+              literal: true,
               'CHOOSE YOUR PLACE IN THE NETWORK',
               style: TextStyle(
                 color: _lilac,
@@ -269,7 +295,9 @@ class _BecomeMemberPageState extends State<BecomeMemberPage> {
               ),
             ),
             const SizedBox(height: 14),
-            const Text(
+            const SiteText(
+              contentKey: 'copy.become_member_page.4',
+              literal: true,
               'Membership built around useful participation.',
               style: TextStyle(
                 color: Colors.white,
@@ -279,7 +307,9 @@ class _BecomeMemberPageState extends State<BecomeMemberPage> {
               ),
             ),
             const SizedBox(height: 10),
-            const Text(
+            const SiteText(
+              contentKey: 'copy.become_member_page.5',
+              literal: true,
               'Apply for the role that fits today. The MVP does not collect payment during this application.',
               style: TextStyle(color: Color(0xFFB8B8C5), height: 1.5),
             ),
@@ -350,7 +380,9 @@ class _BecomeMemberPageState extends State<BecomeMemberPage> {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        SiteText(
+          contentKey: 'copy.become_member_page.m5',
+          literal: false,
           title,
           style: const TextStyle(
             color: Colors.white,
@@ -359,7 +391,9 @@ class _BecomeMemberPageState extends State<BecomeMemberPage> {
           ),
         ),
         const SizedBox(height: 9),
-        Text(
+        SiteText(
+          contentKey: 'copy.become_member_page.m6',
+          literal: false,
           description,
           style: const TextStyle(color: Color(0xFFA5A5B5), height: 1.45),
         ),
@@ -373,7 +407,9 @@ class _BecomeMemberPageState extends State<BecomeMemberPage> {
                 const Icon(Icons.check_rounded, color: _lilac, size: 17),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Text(
+                  child: SiteText(
+                    contentKey: 'copy.become_member_page.m7',
+                    literal: false,
                     benefit,
                     style: const TextStyle(
                       color: Color(0xFFD8D8E0),
@@ -473,7 +509,9 @@ class _BecomeMemberPageState extends State<BecomeMemberPage> {
                 onChanged: (value) => setState(() => _consent = value ?? false),
                 contentPadding: EdgeInsets.zero,
                 activeColor: _purple,
-                title: const Text(
+                title: const SiteText(
+                  contentKey: 'copy.become_member_page.6',
+                  literal: true,
                   'I agree that Affinity may contact me about this application.',
                   style: TextStyle(fontSize: 13),
                 ),
@@ -487,11 +525,15 @@ class _BecomeMemberPageState extends State<BecomeMemberPage> {
                   contentPadding: EdgeInsets.zero,
                   activeColor: _purple,
                   controlAffinity: ListTileControlAffinity.leading,
-                  title: const Text(
+                  title: const SiteText(
+                    contentKey: 'copy.become_member_page.7',
+                    literal: true,
                     'I confirm this information is accurate and that I hold any licence required for the services I offer.',
                     style: TextStyle(fontSize: 13),
                   ),
-                  subtitle: const Text(
+                  subtitle: const SiteText(
+                    contentKey: 'copy.become_member_page.8',
+                    literal: true,
                     'Applications are reviewed. Verification cannot be purchased and may be suspended if information becomes inaccurate.',
                     style: TextStyle(fontSize: 11),
                   ),
@@ -516,7 +558,9 @@ class _BecomeMemberPageState extends State<BecomeMemberPage> {
                         ),
                       )
                     : const Icon(Icons.arrow_outward),
-                label: Text(
+                label: SiteText(
+                  contentKey: 'copy.become_member_page.m8',
+                  literal: false,
                   _submitting ? 'SUBMITTING' : 'SUBMIT APPLICATION',
                   style: const TextStyle(
                     fontSize: 10,
@@ -545,7 +589,9 @@ class _BecomeMemberPageState extends State<BecomeMemberPage> {
       _Field(controller: _license, label: 'Licence number (if applicable)'),
       _provincePicker('Primary licence province or territory'),
       const SizedBox(height: 20),
-      const Text(
+      const SiteText(
+        contentKey: 'copy.become_member_page.9',
+        literal: true,
         'Choose the workspace you want to start with',
         style: TextStyle(fontWeight: FontWeight.w700),
       ),
@@ -589,14 +635,18 @@ class _BecomeMemberPageState extends State<BecomeMemberPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text(
+                            SiteText(
+                              contentKey: 'copy.become_member_page.m9',
+                              literal: false,
                               tier.$2,
                               style: const TextStyle(
                                 fontWeight: FontWeight.w800,
                               ),
                             ),
                             const SizedBox(height: 5),
-                            Text(
+                            SiteText(
+                              contentKey: 'copy.become_member_page.m10',
+                              literal: false,
                               tier.$3,
                               style: const TextStyle(
                                 fontSize: 10,
@@ -614,7 +664,9 @@ class _BecomeMemberPageState extends State<BecomeMemberPage> {
         },
       ),
       const SizedBox(height: 20),
-      const Text(
+      const SiteText(
+        contentKey: 'copy.become_member_page.10',
+        literal: true,
         'What do you specialize in?',
         style: TextStyle(fontWeight: FontWeight.w700),
       ),
@@ -632,11 +684,15 @@ class _BecomeMemberPageState extends State<BecomeMemberPage> {
         contentPadding: EdgeInsets.zero,
         activeColor: _purple,
         controlAffinity: ListTileControlAffinity.leading,
-        title: const Text(
+        title: const SiteText(
+          contentKey: 'copy.become_member_page.11',
+          literal: true,
           'I would like information about clearly disclosed sponsored placement.',
           style: TextStyle(fontSize: 13),
         ),
-        subtitle: const Text(
+        subtitle: const SiteText(
+          contentKey: 'copy.become_member_page.12',
+          literal: true,
           'Payment does not provide verification or guarantee ranking.',
           style: TextStyle(fontSize: 11),
         ),
@@ -655,7 +711,9 @@ class _BecomeMemberPageState extends State<BecomeMemberPage> {
       ),
       _provincePicker('Province or territory'),
       const SizedBox(height: 20),
-      Text(
+      SiteText(
+        contentKey: 'copy.become_member_page.m11',
+        literal: false,
         _type == MemberType.businessBuyer
             ? 'Industries of interest'
             : 'Property type',
@@ -681,7 +739,14 @@ class _BecomeMemberPageState extends State<BecomeMemberPage> {
                   'Just researching',
                 ]
                 .map(
-                  (value) => DropdownMenuItem(value: value, child: Text(value)),
+                  (value) => DropdownMenuItem(
+                    value: value,
+                    child: SiteText(
+                      contentKey: 'copy.become_member_page.m12',
+                      literal: false,
+                      value,
+                    ),
+                  ),
                 )
                 .toList(),
         onChanged: (value) => setState(() => _timeline = value ?? _timeline),
@@ -692,7 +757,9 @@ class _BecomeMemberPageState extends State<BecomeMemberPage> {
         contentPadding: EdgeInsets.zero,
         activeColor: _purple,
         controlAffinity: ListTileControlAffinity.leading,
-        title: Text(
+        title: SiteText(
+          contentKey: 'copy.become_member_page.m13',
+          literal: false,
           _type == MemberType.businessBuyer
               ? 'I would like help comparing acquisition financing options.'
               : 'I would like help comparing mortgage or financing options.',
@@ -709,7 +776,11 @@ class _BecomeMemberPageState extends State<BecomeMemberPage> {
         .map(
           (province) => DropdownMenuItem(
             value: province.code,
-            child: Text('${province.name} (${province.code})'),
+            child: SiteText(
+              contentKey: 'copy.become_member_page.m14',
+              literal: false,
+              '${province.name} (${province.code})',
+            ),
           ),
         )
         .toList(),
@@ -722,7 +793,11 @@ class _BecomeMemberPageState extends State<BecomeMemberPage> {
     children: options
         .map(
           (value) => FilterChip(
-            label: Text(value),
+            label: SiteText(
+              contentKey: 'copy.become_member_page.m15',
+              literal: false,
+              value,
+            ),
             selected: selected.contains(value),
             selectedColor: _lilac,
             onSelected: (isSelected) => setState(
@@ -734,7 +809,10 @@ class _BecomeMemberPageState extends State<BecomeMemberPage> {
   );
 
   InputDecoration _decoration(String label) => InputDecoration(
-    labelText: label,
+    label: siteInputCopy(
+      label,
+      contentKey: 'copy.become_member_page.field.dynamic1',
+    ),
     filled: true,
     fillColor: Colors.white,
     border: OutlineInputBorder(
@@ -766,7 +844,9 @@ class _BecomeMemberPageState extends State<BecomeMemberPage> {
               child: const Icon(Icons.check, color: Colors.white, size: 38),
             ),
             const SizedBox(height: 28),
-            const Text(
+            const SiteText(
+              contentKey: 'copy.become_member_page.13',
+              literal: true,
               'Application received.',
               textAlign: TextAlign.center,
               style: TextStyle(
@@ -777,8 +857,14 @@ class _BecomeMemberPageState extends State<BecomeMemberPage> {
               ),
             ),
             const SizedBox(height: 16),
-            Text(
-              'Thanks, ${_name.text.trim()}. We’ll review your details and contact you at ${_email.text.trim()}.',
+            SiteText(
+              templateValues: {
+                'value1': '${_name.text.trim()}',
+                'value2': '${_email.text.trim()}',
+              },
+              contentKey: 'copy.become_member_page.m16',
+              literal: false,
+              "Thanks, {{value1}}. We’ll review your details and contact you at {{value2}}.",
               textAlign: TextAlign.center,
               style: const TextStyle(
                 color: Color(0xFF666674),
@@ -796,7 +882,11 @@ class _BecomeMemberPageState extends State<BecomeMemberPage> {
                   vertical: 18,
                 ),
               ),
-              child: const Text('RETURN HOME'),
+              child: const SiteText(
+                contentKey: 'copy.become_member_page.14',
+                literal: true,
+                'RETURN HOME',
+              ),
             ),
           ],
         ),
@@ -827,7 +917,10 @@ class _Field extends StatelessWidget {
       keyboardType: keyboardType,
       maxLines: maxLines,
       decoration: InputDecoration(
-        labelText: label,
+        label: siteInputCopy(
+          label,
+          contentKey: 'copy.become_member_page.field.dynamic2',
+        ),
         filled: true,
         fillColor: Colors.white,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
@@ -851,7 +944,9 @@ class _SectionTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Row(
     children: [
-      Text(
+      SiteText(
+        contentKey: 'copy.become_member_page.m17',
+        literal: false,
         number,
         style: const TextStyle(
           color: _purple,
@@ -861,7 +956,9 @@ class _SectionTitle extends StatelessWidget {
       ),
       const SizedBox(width: 14),
       Expanded(
-        child: Text(
+        child: SiteText(
+          contentKey: 'copy.become_member_page.m18',
+          literal: false,
           title,
           style: const TextStyle(
             color: _ink,
@@ -901,7 +998,9 @@ class _RoleCard extends StatelessWidget {
         children: [
           Icon(type.icon, color: selected ? _lilac : _purple),
           const SizedBox(height: 18),
-          Text(
+          SiteText(
+            contentKey: 'copy.become_member_page.m19',
+            literal: false,
             type.label,
             style: TextStyle(
               color: selected ? Colors.white : _ink,

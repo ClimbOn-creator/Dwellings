@@ -1,9 +1,9 @@
+import '../widgets/site_text.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../models/buyer_comparison_profile.dart';
 import '../models/platform_side.dart';
@@ -22,6 +22,7 @@ import '../widgets/home_brand_button.dart';
 import '../widgets/profile_photo.dart';
 import '../widgets/site_copy_text.dart';
 import 'auth_page.dart';
+import 'bulletin_listing_pages.dart';
 import 'deal_rooms_page.dart';
 import 'affinity_review_desk_page.dart';
 import 'member_profile_page.dart';
@@ -227,18 +228,32 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
         final open = await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('Complete a deal assessment first'),
-            content: const Text(
+            title: const SiteText(
+              contentKey: 'copy.member_deal_marketplace_page.1',
+              literal: true,
+              'Complete a deal assessment first',
+            ),
+            content: const SiteText(
+              contentKey: 'copy.member_deal_marketplace_page.2',
+              literal: true,
               'Your Deal Screen and Pipeline create the private source record Affinity reviews. Nothing is published automatically.',
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: const Text('NOT NOW'),
+                child: const SiteText(
+                  contentKey: 'copy.member_deal_marketplace_page.3',
+                  literal: true,
+                  'NOT NOW',
+                ),
               ),
               FilledButton(
                 onPressed: () => Navigator.pop(context, true),
-                child: const Text('OPEN PIPELINE'),
+                child: const SiteText(
+                  contentKey: 'copy.member_deal_marketplace_page.4',
+                  literal: true,
+                  'OPEN PIPELINE',
+                ),
               ),
             ],
           ),
@@ -263,12 +278,16 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                const SiteText(
+                  contentKey: 'copy.member_deal_marketplace_page.5',
+                  literal: true,
                   'Send a deal to Affinity',
                   style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
                 ),
                 const SizedBox(height: 8),
-                const Text(
+                const SiteText(
+                  contentKey: 'copy.member_deal_marketplace_page.6',
+                  literal: true,
                   'Affinity receives the private assessment. Members see nothing until we create and approve an anonymous summary.',
                   style: TextStyle(color: _muted, height: 1.45),
                 ),
@@ -276,8 +295,14 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                 for (final room in rooms)
                   ListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: Text(room.title),
-                    subtitle: Text(
+                    title: SiteText(
+                      contentKey: 'copy.member_deal_marketplace_page.m1',
+                      literal: false,
+                      room.title,
+                    ),
+                    subtitle: SiteText(
+                      contentKey: 'copy.member_deal_marketplace_page.m2',
+                      literal: false,
                       '${room.city.isEmpty ? 'Location private' : room.city} · ${room.currentStage}',
                     ),
                     trailing: const Icon(Icons.arrow_forward),
@@ -296,18 +321,32 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
         final edit = await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('Add a short deal description'),
-            content: const Text(
+            title: const SiteText(
+              contentKey: 'copy.member_deal_marketplace_page.7',
+              literal: true,
+              'Add a short deal description',
+            ),
+            content: const SiteText(
+              contentKey: 'copy.member_deal_marketplace_page.8',
+              literal: true,
               'Every submitted deal needs a short paragraph explaining the business, what interests you, and what you are trying to accomplish. This remains private until Affinity creates the anonymous member brief.',
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: const Text('NOT NOW'),
+                child: const SiteText(
+                  contentKey: 'copy.member_deal_marketplace_page.9',
+                  literal: true,
+                  'NOT NOW',
+                ),
               ),
               FilledButton(
                 onPressed: () => Navigator.pop(context, true),
-                child: const Text('EDIT DEAL'),
+                child: const SiteText(
+                  contentKey: 'copy.member_deal_marketplace_page.10',
+                  literal: true,
+                  'EDIT DEAL',
+                ),
               ),
             ],
           ),
@@ -347,8 +386,15 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
     }
   }
 
-  void _message(String text) =>
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
+  void _message(String text) => ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: SiteText(
+        contentKey: 'copy.member_deal_marketplace_page.m3',
+        literal: false,
+        text,
+      ),
+    ),
+  );
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -363,7 +409,9 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
           const HomeBrandButton(size: 52, dark: false),
           if (MediaQuery.sizeOf(context).width >= 620) ...[
             const SizedBox(width: 14),
-            const Text(
+            const SiteText(
+              contentKey: 'copy.member_deal_marketplace_page.11',
+              literal: true,
               'MEMBER STUDIO',
               style: TextStyle(
                 fontSize: 11,
@@ -548,7 +596,9 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
         const SizedBox(height: 8),
         const RotatedBox(
           quarterTurns: 1,
-          child: Text(
+          child: SiteText(
+            contentKey: 'copy.member_deal_marketplace_page.m4',
+            literal: true,
             'MESSAGES',
             style: TextStyle(
               color: _green,
@@ -579,12 +629,17 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
               ),
               const SizedBox(width: 10),
               Expanded(
-                child: Text(switch (_interactionMode) {
-                  _InteractionMode.inbox => 'Messages',
-                  _InteractionMode.chat =>
-                    _selectedConversation?.name ?? 'Conversation',
-                  _InteractionMode.deal => 'Anonymous buyer',
-                }, style: const TextStyle(fontWeight: FontWeight.w800)),
+                child: SiteText(
+                  contentKey: 'copy.member_deal_marketplace_page.m5',
+                  literal: false,
+                  switch (_interactionMode) {
+                    _InteractionMode.inbox => 'Messages',
+                    _InteractionMode.chat =>
+                      _selectedConversation?.name ?? 'Conversation',
+                    _InteractionMode.deal => 'Anonymous buyer',
+                  },
+                  style: const TextStyle(fontWeight: FontWeight.w800),
+                ),
               ),
               IconButton(
                 onPressed: () => setState(() {
@@ -644,13 +699,17 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
       children: [
         Icon(Icons.business_center_outlined, size: 36, color: _green),
         SizedBox(height: 16),
-        Text(
+        SiteText(
+          contentKey: 'copy.member_deal_marketplace_page.m6',
+          literal: true,
           'Choose an opportunity',
           textAlign: TextAlign.center,
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
         ),
         SizedBox(height: 9),
-        Text(
+        SiteText(
+          contentKey: 'copy.member_deal_marketplace_page.m7',
+          literal: true,
           'Open an Affinity-reviewed deal and make one concise, relevant introduction. The buyer remains anonymous unless they choose to connect.',
           textAlign: TextAlign.center,
           style: TextStyle(color: _muted, fontSize: 12, height: 1.5),
@@ -661,7 +720,9 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
 
   Widget _conversationInbox() => BackendService.user == null
       ? const Center(
-          child: Text(
+          child: SiteText(
+            contentKey: 'copy.member_deal_marketplace_page.m8',
+            literal: true,
             'Message board',
             style: TextStyle(
               color: _green,
@@ -755,7 +816,9 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                 Row(
                   children: [
                     Expanded(
-                      child: Text(
+                      child: SiteText(
+                        contentKey: 'copy.member_deal_marketplace_page.m9',
+                        literal: false,
                         conversation.name,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -767,7 +830,9 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                         ),
                       ),
                     ),
-                    Text(
+                    SiteText(
+                      contentKey: 'copy.member_deal_marketplace_page.m10',
+                      literal: false,
                       _relativeMessageTime(conversation.lastMessageAt),
                       style: TextStyle(
                         color: conversation.unreadCount > 0 ? _green : _muted,
@@ -781,7 +846,9 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                 Row(
                   children: [
                     Expanded(
-                      child: Text(
+                      child: SiteText(
+                        contentKey: 'copy.member_deal_marketplace_page.m11',
+                        literal: false,
                         conversation.lastMessage.isEmpty
                             ? 'New conversation'
                             : conversation.lastMessage,
@@ -808,7 +875,9 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                           color: _green,
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        child: Text(
+                        child: SiteText(
+                          contentKey: 'copy.member_deal_marketplace_page.m12',
+                          literal: false,
                           '${conversation.unreadCount}',
                           textAlign: TextAlign.center,
                           style: const TextStyle(
@@ -823,7 +892,9 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                 ),
                 if (conversation.opportunityHeadline.isNotEmpty) ...[
                   const SizedBox(height: 5),
-                  Text(
+                  SiteText(
+                    contentKey: 'copy.member_deal_marketplace_page.m13',
+                    literal: false,
                     conversation.opportunityHeadline,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -881,14 +952,18 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    SiteText(
+                      contentKey: 'copy.member_deal_marketplace_page.m14',
+                      literal: false,
                       conversation.name,
                       style: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
-                    Text(
+                    SiteText(
+                      contentKey: 'copy.member_deal_marketplace_page.m15',
+                      literal: false,
                       conversation.jobTitle,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -905,8 +980,11 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             color: const Color(0xFFE7EEE9),
-            child: Text(
-              'DEAL · ${conversation.opportunityHeadline}',
+            child: SiteText(
+              templateValues: {'value1': '${conversation.opportunityHeadline}'},
+              contentKey: 'copy.member_deal_marketplace_page.m16',
+              literal: false,
+              "DEAL · {{value1}}",
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(
@@ -955,7 +1033,11 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                           maxLength,
                         }) => null,
                     decoration: const InputDecoration(
-                      hintText: 'Message…',
+                      hint: SiteText(
+                        'Message…',
+                        contentKey: 'copy.member_deal_marketplace_page.field1',
+                        literal: true,
+                      ),
                       isDense: true,
                     ),
                     onSubmitted: (_) => _sendChatMessage(),
@@ -996,7 +1078,9 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          Text(
+          SiteText(
+            contentKey: 'copy.member_deal_marketplace_page.m17',
+            literal: false,
             message.body,
             style: TextStyle(
               color: message.isMine ? Colors.white : _ink,
@@ -1005,7 +1089,9 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
             ),
           ),
           const SizedBox(height: 3),
-          Text(
+          SiteText(
+            contentKey: 'copy.member_deal_marketplace_page.m18',
+            literal: false,
             _relativeMessageTime(message.createdAt),
             style: TextStyle(
               color: message.isMine ? Colors.white70 : _muted,
@@ -1014,7 +1100,9 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
           ),
           if (message.isMine) ...[
             const SizedBox(height: 2),
-            Text(
+            SiteText(
+              contentKey: 'copy.member_deal_marketplace_page.m19',
+              literal: false,
               message.readAt == null
                   ? 'Sent'
                   : 'Read ${DateFormat.jm().format(message.readAt!.toLocal())}',
@@ -1182,7 +1270,9 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            const SiteText(
+              contentKey: 'copy.member_deal_marketplace_page.12',
+              literal: true,
               'ANONYMOUS OPPORTUNITY',
               style: TextStyle(
                 color: _green,
@@ -1192,12 +1282,16 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
               ),
             ),
             const SizedBox(height: 6),
-            Text(
+            SiteText(
+              contentKey: 'copy.member_deal_marketplace_page.m20',
+              literal: false,
               deal.headline,
               style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 4),
-            Text(
+            SiteText(
+              contentKey: 'copy.member_deal_marketplace_page.m21',
+              literal: false,
               '${deal.industry} · ${deal.region}',
               style: const TextStyle(color: _muted, fontSize: 10),
             ),
@@ -1215,7 +1309,9 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                 : Icons.bookmark_border_rounded,
             size: 17,
           ),
-          label: Text(
+          label: SiteText(
+            contentKey: 'copy.member_deal_marketplace_page.m22',
+            literal: false,
             _savedOpportunityIds.contains(deal.id)
                 ? 'SAVED TO WATCHLIST'
                 : 'SAVE TO WATCHLIST',
@@ -1223,12 +1319,16 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
         ),
       ),
       const SizedBox(height: 18),
-      const Text(
+      const SiteText(
+        contentKey: 'copy.member_deal_marketplace_page.13',
+        literal: true,
         'Your introduction',
         style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
       ),
       const SizedBox(height: 5),
-      const Text(
+      const SiteText(
+        contentKey: 'copy.member_deal_marketplace_page.14',
+        literal: true,
         'Explain specifically how you can help this deal.',
         style: TextStyle(color: _muted, fontSize: 11),
       ),
@@ -1239,7 +1339,11 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
         maxLines: 7,
         maxLength: 420,
         decoration: const InputDecoration(
-          hintText: 'We can support this acquisition by…',
+          hint: SiteText(
+            'We can support this acquisition by…',
+            contentKey: 'copy.member_deal_marketplace_page.field2',
+            literal: true,
+          ),
         ),
       ),
       const SizedBox(height: 10),
@@ -1247,15 +1351,29 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
         controller: _offer,
         maxLength: 120,
         decoration: const InputDecoration(
-          labelText: 'Offer summary',
-          hintText: 'Example: Acquisition loan from 8%',
+          label: SiteText(
+            'Offer summary',
+            contentKey: 'copy.member_deal_marketplace_page.field3',
+            literal: true,
+          ),
+          hint: SiteText(
+            'Example: Acquisition loan from 8%',
+            contentKey: 'copy.member_deal_marketplace_page.field4',
+            literal: true,
+          ),
         ),
       ),
       const SizedBox(height: 10),
       TextField(
         controller: _replyEmail,
         keyboardType: TextInputType.emailAddress,
-        decoration: const InputDecoration(labelText: 'Contact email'),
+        decoration: const InputDecoration(
+          label: SiteText(
+            'Contact email',
+            contentKey: 'copy.member_deal_marketplace_page.field5',
+            literal: true,
+          ),
+        ),
       ),
       const SizedBox(height: 16),
       SizedBox(
@@ -1270,13 +1388,17 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
               : const Icon(Icons.send_outlined, size: 17),
-          label: Text(
+          label: SiteText(
+            contentKey: 'copy.member_deal_marketplace_page.m23',
+            literal: false,
             _sendingIntroduction ? 'SENDING…' : 'SEND PRIVATE INTRODUCTION',
           ),
         ),
       ),
       const SizedBox(height: 12),
-      const Text(
+      const SiteText(
+        contentKey: 'copy.member_deal_marketplace_page.15',
+        literal: true,
         'Your contact information is shown to the buyer. Their identity and contact information remain private until they accept.',
         style: TextStyle(color: _muted, fontSize: 10, height: 1.45),
       ),
@@ -1329,7 +1451,11 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
   );
 
   Widget _viewChip(_StudioView view, String label) => ChoiceChip(
-    label: Text(label),
+    label: SiteText(
+      contentKey: 'copy.member_deal_marketplace_page.m24',
+      literal: false,
+      label,
+    ),
     selected: _view == view,
     selectedColor: _green,
     backgroundColor: Colors.white,
@@ -1378,7 +1504,9 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            SiteText(
+              contentKey: 'copy.member_deal_marketplace_page.m25',
+              literal: false,
               eyebrow,
               style: const TextStyle(
                 color: _green,
@@ -1388,7 +1516,9 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
               ),
             ),
             const SizedBox(height: 8),
-            Text(
+            SiteText(
+              contentKey: 'copy.member_deal_marketplace_page.m26',
+              literal: false,
               title,
               style: const TextStyle(
                 fontSize: 32,
@@ -1398,7 +1528,9 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
               ),
             ),
             const SizedBox(height: 9),
-            Text(
+            SiteText(
+              contentKey: 'copy.member_deal_marketplace_page.m27',
+              literal: false,
               description,
               style: const TextStyle(color: _muted, height: 1.45),
             ),
@@ -1495,7 +1627,11 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
         TextButton.icon(
           onPressed: () => _selectView(_StudioView.opportunities),
           icon: const Icon(Icons.arrow_back_rounded, size: 17),
-          label: const Text('ALL OPPORTUNITIES'),
+          label: const SiteText(
+            contentKey: 'copy.member_deal_marketplace_page.16',
+            literal: true,
+            'ALL OPPORTUNITIES',
+          ),
         ),
         const SizedBox(height: 12),
         Row(
@@ -1511,7 +1647,9 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  const SiteText(
+                    contentKey: 'copy.member_deal_marketplace_page.17',
+                    literal: true,
                     'ANONYMOUS ACQUISITION BRIEF · AFFINITY REVIEWED',
                     style: TextStyle(
                       color: _green,
@@ -1521,7 +1659,9 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Text(
+                  SiteText(
+                    contentKey: 'copy.member_deal_marketplace_page.m28',
+                    literal: false,
                     deal.headline,
                     style: const TextStyle(
                       fontSize: 36,
@@ -1531,7 +1671,9 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                     ),
                   ),
                   const SizedBox(height: 9),
-                  Text(
+                  SiteText(
+                    contentKey: 'copy.member_deal_marketplace_page.m29',
+                    literal: false,
                     '${deal.industry} · ${deal.region} · ${deal.stage}',
                     style: const TextStyle(
                       color: _green,
@@ -1563,7 +1705,9 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                 children: [
                   Icon(Icons.shield_outlined, color: _green, size: 19),
                   SizedBox(width: 9),
-                  Text(
+                  SiteText(
+                    contentKey: 'copy.member_deal_marketplace_page.m30',
+                    literal: true,
                     'IDENTITY-SAFE LISTING',
                     style: TextStyle(
                       color: _green,
@@ -1575,12 +1719,16 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                 ],
               ),
               const SizedBox(height: 12),
-              const Text(
+              const SiteText(
+                contentKey: 'copy.member_deal_marketplace_page.18',
+                literal: true,
                 'The title is deliberately broad',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
               ),
               const SizedBox(height: 7),
-              const Text(
+              const SiteText(
+                contentKey: 'copy.member_deal_marketplace_page.19',
+                literal: true,
                 'Affinity removes the company name, exact address, buyer identity, contact details, and other identifying information before members can view this brief.',
                 style: TextStyle(color: _muted, height: 1.5),
               ),
@@ -1588,7 +1736,9 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
           ),
         ),
         const SizedBox(height: 24),
-        const Text(
+        const SiteText(
+          contentKey: 'copy.member_deal_marketplace_page.20',
+          literal: true,
           'Opportunity overview',
           style: TextStyle(
             fontSize: 27,
@@ -1608,7 +1758,9 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              const SiteText(
+                contentKey: 'copy.member_deal_marketplace_page.21',
+                literal: true,
                 'BUYER-SUBMITTED DESCRIPTION',
                 style: TextStyle(
                   color: _green,
@@ -1618,7 +1770,9 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                 ),
               ),
               const SizedBox(height: 12),
-              Text(
+              SiteText(
+                contentKey: 'copy.member_deal_marketplace_page.m31',
+                literal: false,
                 deal.summary,
                 style: const TextStyle(fontSize: 17, height: 1.65),
               ),
@@ -1644,7 +1798,9 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
           ],
         ),
         const SizedBox(height: 30),
-        const Text(
+        const SiteText(
+          contentKey: 'copy.member_deal_marketplace_page.22',
+          literal: true,
           'Acquisition criteria',
           style: TextStyle(
             fontSize: 27,
@@ -1653,7 +1809,9 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
           ),
         ),
         const SizedBox(height: 7),
-        const Text(
+        const SiteText(
+          contentKey: 'copy.member_deal_marketplace_page.23',
+          literal: true,
           'A reviewer-approved breakdown of the buyer’s submitted requirements.',
           style: TextStyle(color: _muted),
         ),
@@ -1689,7 +1847,9 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
           ),
         ),
         const SizedBox(height: 30),
-        const Text(
+        const SiteText(
+          contentKey: 'copy.member_deal_marketplace_page.24',
+          literal: true,
           'Professional mandate',
           style: TextStyle(
             fontSize: 27,
@@ -1732,7 +1892,9 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                     ? Icons.bookmark_rounded
                     : Icons.bookmark_border_rounded,
               ),
-              label: Text(
+              label: SiteText(
+                contentKey: 'copy.member_deal_marketplace_page.m32',
+                literal: false,
                 _savedOpportunityIds.contains(deal.id)
                     ? 'SAVED'
                     : 'SAVE OPPORTUNITY',
@@ -1751,7 +1913,9 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                     : Icons.person_off_outlined,
                 size: 17,
               ),
-              label: Text(
+              label: SiteText(
+                contentKey: 'copy.member_deal_marketplace_page.m33',
+                literal: false,
                 deal.canContact
                     ? 'INTRODUCE YOUR SERVICES'
                     : 'YOUR ROLE IS FILLED',
@@ -1791,7 +1955,9 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                       color: const Color(0xFFE5EEE9),
                       borderRadius: BorderRadius.circular(30),
                     ),
-                    child: const Text(
+                    child: const SiteText(
+                      contentKey: 'copy.member_deal_marketplace_page.25',
+                      literal: true,
                       'CREATOR FILTER · VICTORIA ONLY',
                       style: TextStyle(
                         color: _green,
@@ -1930,7 +2096,9 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                   CircleAvatar(
                     radius: 28,
                     backgroundColor: const Color(0xFFE5EEE9),
-                    child: Text(
+                    child: SiteText(
+                      contentKey: 'copy.member_deal_marketplace_page.m34',
+                      literal: false,
                       _accountInitial,
                       style: const TextStyle(
                         color: _green,
@@ -1944,7 +2112,9 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
+                        SiteText(
+                          contentKey: 'copy.member_deal_marketplace_page.m35',
+                          literal: false,
                           provider?.name ?? 'Affinity member',
                           style: const TextStyle(
                             fontSize: 20,
@@ -1952,7 +2122,9 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                           ),
                         ),
                         const SizedBox(height: 3),
-                        Text(
+                        SiteText(
+                          contentKey: 'copy.member_deal_marketplace_page.m36',
+                          literal: false,
                           BackendService.user?.email ?? 'Signed-in account',
                           style: const TextStyle(color: _muted),
                         ),
@@ -2001,14 +2173,20 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
+                            SiteText(
+                              contentKey:
+                                  'copy.member_deal_marketplace_page.m37',
+                              literal: false,
                               provider.name,
                               style: const TextStyle(
                                 fontSize: 21,
                                 fontWeight: FontWeight.w800,
                               ),
                             ),
-                            Text(
+                            SiteText(
+                              contentKey:
+                                  'copy.member_deal_marketplace_page.m38',
+                              literal: false,
                               '${provider.jobTitle} · ${provider.company}',
                               style: const TextStyle(color: _muted),
                             ),
@@ -2057,7 +2235,11 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                   FilledButton.icon(
                     onPressed: _openProfessionalOnboarding,
                     icon: const Icon(Icons.edit_outlined, size: 17),
-                    label: const Text('UPDATE PROFILE DETAILS'),
+                    label: const SiteText(
+                      contentKey: 'copy.member_deal_marketplace_page.26',
+                      literal: true,
+                      'UPDATE PROFILE DETAILS',
+                    ),
                   ),
                 ],
               ),
@@ -2088,7 +2270,9 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
       children: [
         SizedBox(
           width: 150,
-          child: Text(
+          child: SiteText(
+            contentKey: 'copy.member_deal_marketplace_page.m39',
+            literal: false,
             label,
             style: const TextStyle(
               color: _green,
@@ -2098,7 +2282,14 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
             ),
           ),
         ),
-        Expanded(child: Text(value, style: const TextStyle(fontSize: 13))),
+        Expanded(
+          child: SiteText(
+            contentKey: 'copy.member_deal_marketplace_page.m40',
+            literal: false,
+            value,
+            style: const TextStyle(fontSize: 13),
+          ),
+        ),
       ],
     ),
   );
@@ -2123,12 +2314,16 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        SiteText(
+          contentKey: 'copy.member_deal_marketplace_page.m41',
+          literal: false,
           value,
           style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800),
         ),
         const SizedBox(height: 5),
-        Text(
+        SiteText(
+          contentKey: 'copy.member_deal_marketplace_page.m42',
+          literal: false,
           label,
           style: const TextStyle(
             color: _green,
@@ -2167,7 +2362,9 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
+              SiteText(
+                contentKey: 'copy.member_deal_marketplace_page.m43',
+                literal: false,
                 title,
                 style: const TextStyle(
                   fontSize: 18,
@@ -2175,13 +2372,22 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                 ),
               ),
               const SizedBox(height: 7),
-              Text(
+              SiteText(
+                contentKey: 'copy.member_deal_marketplace_page.m44',
+                literal: false,
                 description,
                 style: const TextStyle(color: _muted, height: 1.5),
               ),
               if (action != null) ...[
                 const SizedBox(height: 12),
-                TextButton(onPressed: onTap, child: Text(action)),
+                TextButton(
+                  onPressed: onTap,
+                  child: SiteText(
+                    contentKey: 'copy.member_deal_marketplace_page.m45',
+                    literal: false,
+                    action,
+                  ),
+                ),
               ],
             ],
           ),
@@ -2196,7 +2402,9 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
       color: const Color(0xFFE5EEE9),
       borderRadius: BorderRadius.circular(30),
     ),
-    child: Text(
+    child: SiteText(
+      contentKey: 'copy.member_deal_marketplace_page.m46',
+      literal: false,
       status.toUpperCase(),
       style: const TextStyle(
         color: _green,
@@ -2262,7 +2470,11 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
               final settings = OutlinedButton.icon(
                 onPressed: _openMatchSettings,
                 icon: const Icon(Icons.tune_rounded, size: 17),
-                label: const Text('MATCH SETTINGS'),
+                label: const SiteText(
+                  contentKey: 'copy.member_deal_marketplace_page.27',
+                  literal: true,
+                  'MATCH SETTINGS',
+                ),
               );
               if (box.maxWidth < 560) {
                 return Column(
@@ -2279,7 +2491,9 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
             },
           ),
           const SizedBox(height: 6),
-          const Text(
+          const SiteText(
+            contentKey: 'copy.member_deal_marketplace_page.28',
+            literal: true,
             'Current-month opportunities and highly viewed listings, prepared anonymously by Affinity.',
             style: TextStyle(color: _muted),
           ),
@@ -2288,7 +2502,11 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
             controller: _dealSearch,
             onChanged: (value) => setState(() => _dealQuery = value),
             decoration: InputDecoration(
-              hintText: 'Search deals by title, industry, location, or stage',
+              hint: SiteText(
+                'Search deals by title, industry, location, or stage',
+                contentKey: 'copy.member_deal_marketplace_page.mfield1',
+                literal: true,
+              ),
               prefixIcon: const Icon(Icons.search_rounded),
               suffixIcon: _dealQuery.isEmpty
                   ? null
@@ -2314,8 +2532,14 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
           const SizedBox(height: 10),
           Row(
             children: [
-              Text(
-                '${deals.length} DEAL${deals.length == 1 ? '' : 'S'}',
+              SiteText(
+                templateValues: {
+                  'value1': '${deals.length}',
+                  'value2': '${deals.length == 1 ? '' : 'S'}',
+                },
+                contentKey: 'copy.member_deal_marketplace_page.m47',
+                literal: false,
+                "{{value1}} DEAL{{value2}}",
                 style: const TextStyle(
                   color: _green,
                   fontSize: 9,
@@ -2324,7 +2548,9 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                 ),
               ),
               const Spacer(),
-              const Text(
+              const SiteText(
+                contentKey: 'copy.member_deal_marketplace_page.29',
+                literal: true,
                 'THIS MONTH + POPULAR',
                 style: TextStyle(
                   color: _muted,
@@ -2419,7 +2645,11 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                 onChanged: (value) =>
                     setState(() => _professionalQuery = value),
                 decoration: InputDecoration(
-                  hintText: 'Search a person or company',
+                  hint: SiteText(
+                    'Search a person or company',
+                    contentKey: 'copy.member_deal_marketplace_page.mfield2',
+                    literal: true,
+                  ),
                   prefixIcon: const Icon(Icons.search_rounded),
                   suffixIcon: _professionalQuery.isEmpty
                       ? null
@@ -2446,7 +2676,11 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                 initialValue: _professionalRoleFilter,
                 isExpanded: true,
                 decoration: InputDecoration(
-                  labelText: 'Professional role',
+                  label: SiteText(
+                    'Professional role',
+                    contentKey: 'copy.member_deal_marketplace_page.mfield3',
+                    literal: true,
+                  ),
                   prefixIcon: const Icon(Icons.filter_list_rounded),
                   fillColor: Colors.white,
                   enabledBorder: OutlineInputBorder(
@@ -2457,12 +2691,20 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                 items: [
                   const DropdownMenuItem(
                     value: 'all',
-                    child: Text('All professional roles'),
+                    child: SiteText(
+                      contentKey: 'copy.member_deal_marketplace_page.m48',
+                      literal: true,
+                      'All professional roles',
+                    ),
                   ),
                   for (final role in availableRoles)
                     DropdownMenuItem(
                       value: role.databaseValue,
-                      child: Text(role.label),
+                      child: SiteText(
+                        contentKey: 'copy.member_deal_marketplace_page.m49',
+                        literal: false,
+                        role.label,
+                      ),
                     ),
                 ],
                 onChanged: (value) =>
@@ -2485,8 +2727,14 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
           const SizedBox(height: 12),
           Row(
             children: [
-              Text(
-                '${providers.length} VERIFIED PROFESSIONAL${providers.length == 1 ? '' : 'S'}',
+              SiteText(
+                templateValues: {
+                  'value1': '${providers.length}',
+                  'value2': '${providers.length == 1 ? '' : 'S'}',
+                },
+                contentKey: 'copy.member_deal_marketplace_page.m50',
+                literal: false,
+                "{{value1}} VERIFIED PROFESSIONAL{{value2}}",
                 style: const TextStyle(
                   color: _green,
                   fontSize: 9,
@@ -2502,7 +2750,11 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                     _professionalSearch.clear();
                     _professionalRoleFilter = 'all';
                   }),
-                  child: const Text('CLEAR FILTERS'),
+                  child: const SiteText(
+                    contentKey: 'copy.member_deal_marketplace_page.30',
+                    literal: true,
+                    'CLEAR FILTERS',
+                  ),
                 ),
             ],
           ),
@@ -2596,7 +2848,9 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (buyerView) ...[
-            const Text(
+            const SiteText(
+              contentKey: 'copy.member_deal_marketplace_page.31',
+              literal: true,
               'Compare private pitches',
               style: TextStyle(
                 fontSize: 28,
@@ -2605,7 +2859,9 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
               ),
             ),
             const SizedBox(height: 7),
-            const Text(
+            const SiteText(
+              contentKey: 'copy.member_deal_marketplace_page.32',
+              literal: true,
               'Shortlist promising professionals before sharing your identity. Only acceptance releases your account email.',
               style: TextStyle(color: _muted, height: 1.45),
             ),
@@ -2663,7 +2919,11 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
   );
 
   Widget _responseChip(String value, String label) => ChoiceChip(
-    label: Text(label),
+    label: SiteText(
+      contentKey: 'copy.member_deal_marketplace_page.m51',
+      literal: false,
+      label,
+    ),
     selected: _responseFilter == value,
     selectedColor: _green,
     backgroundColor: Colors.white,
@@ -2704,7 +2964,9 @@ class _BriefSection extends StatelessWidget {
       children: [
         Icon(icon, color: _green, size: 22),
         const SizedBox(height: 14),
-        Text(
+        SiteText(
+          contentKey: 'copy.member_deal_marketplace_page.m52',
+          literal: false,
           label,
           style: const TextStyle(
             color: _green,
@@ -2714,7 +2976,12 @@ class _BriefSection extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 8),
-        Text(value, style: const TextStyle(fontSize: 14, height: 1.5)),
+        SiteText(
+          contentKey: 'copy.member_deal_marketplace_page.m53',
+          literal: false,
+          value,
+          style: const TextStyle(fontSize: 14, height: 1.5),
+        ),
       ],
     ),
   );
@@ -2739,7 +3006,9 @@ class _DealTeamStrip extends StatelessWidget {
     children: [
       Row(
         children: [
-          const Text(
+          const SiteText(
+            contentKey: 'copy.member_deal_marketplace_page.33',
+            literal: true,
             'CURRENT DEAL TEAM',
             style: TextStyle(
               color: _green,
@@ -2752,7 +3021,9 @@ class _DealTeamStrip extends StatelessWidget {
           if (members.isNotEmpty)
             const Row(
               children: [
-                Text(
+                SiteText(
+                  contentKey: 'copy.member_deal_marketplace_page.m54',
+                  literal: true,
                   'SCROLL',
                   style: TextStyle(
                     color: _muted,
@@ -2776,7 +3047,9 @@ class _DealTeamStrip extends StatelessWidget {
             color: const Color(0xFFF1F3EF),
             borderRadius: BorderRadius.circular(13),
           ),
-          child: const Text(
+          child: const SiteText(
+            contentKey: 'copy.member_deal_marketplace_page.34',
+            literal: true,
             'No professionals have joined this deal yet.',
             style: TextStyle(color: _muted, fontSize: 12),
           ),
@@ -2817,7 +3090,10 @@ class _DealTeamStrip extends StatelessWidget {
                             mainAxisAlignment: MainAxisAlignment.center,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
+                              SiteText(
+                                contentKey:
+                                    'copy.member_deal_marketplace_page.m55',
+                                literal: false,
                                 member.name,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
@@ -2827,7 +3103,10 @@ class _DealTeamStrip extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(height: 3),
-                              Text(
+                              SiteText(
+                                contentKey:
+                                    'copy.member_deal_marketplace_page.m56',
+                                literal: false,
                                 member.jobTitle.isEmpty
                                     ? _roleLabel(member.providerType)
                                     : member.jobTitle,
@@ -2840,7 +3119,10 @@ class _DealTeamStrip extends StatelessWidget {
                                 ),
                               ),
                               if (member.company.isNotEmpty)
-                                Text(
+                                SiteText(
+                                  contentKey:
+                                      'copy.member_deal_marketplace_page.m57',
+                                  literal: false,
                                   member.company,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
@@ -2952,7 +3234,9 @@ class _DealPost extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      SiteText(
+                        contentKey: 'copy.member_deal_marketplace_page.m58',
+                        literal: true,
                         'ANONYMOUS BUYER',
                         style: TextStyle(
                           fontWeight: FontWeight.w900,
@@ -2961,7 +3245,9 @@ class _DealPost extends StatelessWidget {
                         ),
                       ),
                       SizedBox(height: 4),
-                      Text(
+                      SiteText(
+                        contentKey: 'copy.member_deal_marketplace_page.m59',
+                        literal: true,
                         'Identity protected · Affinity reviewed',
                         style: TextStyle(color: _muted, fontSize: 12),
                       ),
@@ -2975,7 +3261,9 @@ class _DealPost extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 24),
-            Text(
+            SiteText(
+              contentKey: 'copy.member_deal_marketplace_page.m60',
+              literal: false,
               deal.headline,
               style: const TextStyle(
                 fontSize: 28,
@@ -2985,7 +3273,9 @@ class _DealPost extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 9),
-            Text(
+            SiteText(
+              contentKey: 'copy.member_deal_marketplace_page.m61',
+              literal: false,
               '${deal.industry} · ${deal.region} · ${deal.stage}',
               style: const TextStyle(
                 color: _green,
@@ -2993,7 +3283,9 @@ class _DealPost extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 18),
-            Text(
+            SiteText(
+              contentKey: 'copy.member_deal_marketplace_page.m62',
+              literal: false,
               deal.summary,
               style: const TextStyle(height: 1.6, fontSize: 15),
             ),
@@ -3025,8 +3317,14 @@ class _DealPost extends StatelessWidget {
                     color: _green,
                   ),
                   const SizedBox(width: 6),
-                  Text(
-                    '${deal.trafficCount} recent marketplace interaction${deal.trafficCount == 1 ? '' : 's'}',
+                  SiteText(
+                    templateValues: {
+                      'value1': '${deal.trafficCount}',
+                      'value2': '${deal.trafficCount == 1 ? '' : 's'}',
+                    },
+                    contentKey: 'copy.member_deal_marketplace_page.m63',
+                    literal: false,
+                    "{{value1}} recent marketplace interaction{{value2}}",
                     style: const TextStyle(
                       color: _muted,
                       fontSize: 10,
@@ -3045,7 +3343,9 @@ class _DealPost extends StatelessWidget {
               children: [
                 SizedBox(
                   width: 210,
-                  child: Text(
+                  child: SiteText(
+                    contentKey: 'copy.member_deal_marketplace_page.m64',
+                    literal: false,
                     deal.isPreview
                         ? 'PRIVACY-SAFE PREVIEW'
                         : 'ONLY YOUR PITCH IS SHARED',
@@ -3063,7 +3363,11 @@ class _DealPost extends StatelessWidget {
                     TextButton.icon(
                       onPressed: onOpen,
                       icon: const Icon(Icons.open_in_new_rounded, size: 17),
-                      label: const Text('VIEW FULL DEAL'),
+                      label: const SiteText(
+                        contentKey: 'copy.member_deal_marketplace_page.35',
+                        literal: true,
+                        'VIEW FULL DEAL',
+                      ),
                     ),
                     TextButton.icon(
                       onPressed: onRefer,
@@ -3071,13 +3375,21 @@ class _DealPost extends StatelessWidget {
                         Icons.person_add_alt_1_outlined,
                         size: 17,
                       ),
-                      label: const Text('REFER A MEMBER'),
+                      label: const SiteText(
+                        contentKey: 'copy.member_deal_marketplace_page.36',
+                        literal: true,
+                        'REFER A MEMBER',
+                      ),
                     ),
                     if (onRepost != null)
                       FilledButton.tonalIcon(
                         onPressed: onRepost,
                         icon: const Icon(Icons.refresh_rounded, size: 17),
-                        label: const Text('REPOST TO TOP'),
+                        label: const SiteText(
+                          contentKey: 'copy.member_deal_marketplace_page.37',
+                          literal: true,
+                          'REPOST TO TOP',
+                        ),
                       ),
                     FilledButton.icon(
                       onPressed: deal.canContact ? onPitch : null,
@@ -3088,7 +3400,9 @@ class _DealPost extends StatelessWidget {
                             : Icons.person_off_outlined,
                         size: 18,
                       ),
-                      label: Text(
+                      label: SiteText(
+                        contentKey: 'copy.member_deal_marketplace_page.m65',
+                        literal: false,
                         deal.canContact
                             ? 'PITCH THIS DEAL'
                             : 'ROLE ALREADY FILLED',
@@ -3140,7 +3454,9 @@ class _PitchDialogState extends State<_PitchDialog> {
         !_confirmed) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text(
+          content: SiteText(
+            contentKey: 'copy.member_deal_marketplace_page.m66',
+            literal: true,
             'Write a specific pitch, include a valid reply email, and confirm the privacy rule.',
           ),
         ),
@@ -3159,32 +3475,54 @@ class _PitchDialogState extends State<_PitchDialog> {
     } catch (error) {
       if (mounted) {
         setState(() => _sending = false);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(_friendlyError(error))));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: SiteText(
+              contentKey: 'copy.member_deal_marketplace_page.m67',
+              literal: false,
+              _friendlyError(error),
+            ),
+          ),
+        );
       }
     }
   }
 
   @override
   Widget build(BuildContext context) => AlertDialog(
-    title: const Text('Pitch the anonymous buyer'),
+    title: const SiteText(
+      contentKey: 'copy.member_deal_marketplace_page.38',
+      literal: true,
+      'Pitch the anonymous buyer',
+    ),
     content: SizedBox(
       width: 560,
       child: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(widget.deal.headline, style: const TextStyle(color: _muted)),
+            SiteText(
+              contentKey: 'copy.member_deal_marketplace_page.m68',
+              literal: false,
+              widget.deal.headline,
+              style: const TextStyle(color: _muted),
+            ),
             const SizedBox(height: 18),
             TextField(
               controller: _pitch,
               maxLength: 420,
               maxLines: 5,
               decoration: const InputDecoration(
-                labelText: 'Your pitch',
-                hintText:
-                    'Explain what you can offer, why it fits this deal, and the next useful step.',
+                label: SiteText(
+                  'Your pitch',
+                  contentKey: 'copy.member_deal_marketplace_page.field6',
+                  literal: true,
+                ),
+                hint: SiteText(
+                  'Explain what you can offer, why it fits this deal, and the next useful step.',
+                  contentKey: 'copy.member_deal_marketplace_page.field7',
+                  literal: true,
+                ),
               ),
             ),
             const SizedBox(height: 12),
@@ -3192,21 +3530,37 @@ class _PitchDialogState extends State<_PitchDialog> {
               controller: _offer,
               maxLength: 120,
               decoration: const InputDecoration(
-                labelText: 'Offer summary',
-                hintText: 'Example: Indicative loan from 8%, subject to review',
+                label: SiteText(
+                  'Offer summary',
+                  contentKey: 'copy.member_deal_marketplace_page.field8',
+                  literal: true,
+                ),
+                hint: SiteText(
+                  'Example: Indicative loan from 8%, subject to review',
+                  contentKey: 'copy.member_deal_marketplace_page.field9',
+                  literal: true,
+                ),
               ),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _email,
               keyboardType: TextInputType.emailAddress,
-              decoration: const InputDecoration(labelText: 'Your reply email'),
+              decoration: const InputDecoration(
+                label: SiteText(
+                  'Your reply email',
+                  contentKey: 'copy.member_deal_marketplace_page.field10',
+                  literal: true,
+                ),
+              ),
             ),
             CheckboxListTile(
               contentPadding: EdgeInsets.zero,
               value: _confirmed,
               onChanged: (value) => setState(() => _confirmed = value ?? false),
-              title: const Text(
+              title: const SiteText(
+                contentKey: 'copy.member_deal_marketplace_page.39',
+                literal: true,
                 'I will not ask Affinity to reveal the buyer. The buyer decides whether to share contact details.',
                 style: TextStyle(fontSize: 12, height: 1.4),
               ),
@@ -3219,12 +3573,20 @@ class _PitchDialogState extends State<_PitchDialog> {
     actions: [
       TextButton(
         onPressed: _sending ? null : () => Navigator.pop(context),
-        child: const Text('CANCEL'),
+        child: const SiteText(
+          contentKey: 'copy.member_deal_marketplace_page.40',
+          literal: true,
+          'CANCEL',
+        ),
       ),
       FilledButton(
         onPressed: _sending ? null : _send,
         style: FilledButton.styleFrom(backgroundColor: _green),
-        child: Text(_sending ? 'SENDING…' : 'SEND PRIVATE PITCH'),
+        child: SiteText(
+          contentKey: 'copy.member_deal_marketplace_page.m69',
+          literal: false,
+          _sending ? 'SENDING…' : 'SEND PRIVATE PITCH',
+        ),
       ),
     ],
   );
@@ -3255,7 +3617,9 @@ class _PitchCard extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: Text(
+              child: SiteText(
+                contentKey: 'copy.member_deal_marketplace_page.m70',
+                literal: false,
                 buyerView
                     ? '${pitch.providerName}${pitch.companyName.isEmpty ? '' : ' · ${pitch.companyName}'}'
                     : pitch.opportunityHeadline,
@@ -3269,15 +3633,24 @@ class _PitchCard extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 6),
-        Text(
+        SiteText(
+          contentKey: 'copy.member_deal_marketplace_page.m71',
+          literal: false,
           buyerView ? pitch.providerType : 'Anonymous buyer',
           style: const TextStyle(color: _muted, fontSize: 12),
         ),
         const SizedBox(height: 16),
-        Text(pitch.pitch, style: const TextStyle(height: 1.55)),
+        SiteText(
+          contentKey: 'copy.member_deal_marketplace_page.m72',
+          literal: false,
+          pitch.pitch,
+          style: const TextStyle(height: 1.55),
+        ),
         if (pitch.offerSummary.isNotEmpty) ...[
           const SizedBox(height: 14),
-          Text(
+          SiteText(
+            contentKey: 'copy.member_deal_marketplace_page.m73',
+            literal: false,
             pitch.offerSummary,
             style: const TextStyle(color: _green, fontWeight: FontWeight.w800),
           ),
@@ -3303,16 +3676,28 @@ class _PitchCard extends StatelessWidget {
                 OutlinedButton.icon(
                   onPressed: () => onRespond?.call('shortlisted'),
                   icon: const Icon(Icons.bookmark_add_outlined, size: 17),
-                  label: const Text('SHORTLIST'),
+                  label: const SiteText(
+                    contentKey: 'copy.member_deal_marketplace_page.41',
+                    literal: true,
+                    'SHORTLIST',
+                  ),
                 ),
               FilledButton(
                 onPressed: () => onRespond?.call('accepted'),
                 style: FilledButton.styleFrom(backgroundColor: _green),
-                child: const Text('ACCEPT & SHARE MY EMAIL'),
+                child: const SiteText(
+                  contentKey: 'copy.member_deal_marketplace_page.42',
+                  literal: true,
+                  'ACCEPT & SHARE MY EMAIL',
+                ),
               ),
               OutlinedButton(
                 onPressed: () => onRespond?.call('declined'),
-                child: const Text('DECLINE'),
+                child: const SiteText(
+                  contentKey: 'copy.member_deal_marketplace_page.43',
+                  literal: true,
+                  'DECLINE',
+                ),
               ),
             ],
           ),
@@ -3376,23 +3761,35 @@ class _MatchSettingsDialogState extends State<_MatchSettingsDialog> {
     } catch (error) {
       if (mounted) {
         setState(() => saving = false);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(_friendlyError(error))));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: SiteText(
+              contentKey: 'copy.member_deal_marketplace_page.m74',
+              literal: false,
+              _friendlyError(error),
+            ),
+          ),
+        );
       }
     }
   }
 
   @override
   Widget build(BuildContext context) => AlertDialog(
-    title: const Text('Opportunity match settings'),
+    title: const SiteText(
+      contentKey: 'copy.member_deal_marketplace_page.44',
+      literal: true,
+      'Opportunity match settings',
+    ),
     content: SizedBox(
       width: 560,
       child: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            const SiteText(
+              contentKey: 'copy.member_deal_marketplace_page.45',
+              literal: true,
               'Affinity uses these preferences to rank and filter anonymous opportunities. They are never shown to buyers.',
               style: TextStyle(color: _muted, height: 1.45),
             ),
@@ -3401,8 +3798,16 @@ class _MatchSettingsDialogState extends State<_MatchSettingsDialog> {
               controller: specialties,
               maxLines: 2,
               decoration: const InputDecoration(
-                labelText: 'Expertise',
-                hintText: 'Commercial lending, QOE, M&A legal',
+                label: SiteText(
+                  'Expertise',
+                  contentKey: 'copy.member_deal_marketplace_page.field11',
+                  literal: true,
+                ),
+                hint: SiteText(
+                  'Commercial lending, QOE, M&A legal',
+                  contentKey: 'copy.member_deal_marketplace_page.field12',
+                  literal: true,
+                ),
               ),
             ),
             const SizedBox(height: 13),
@@ -3410,13 +3815,24 @@ class _MatchSettingsDialogState extends State<_MatchSettingsDialog> {
               controller: regions,
               maxLines: 2,
               decoration: const InputDecoration(
-                labelText: 'Regions',
-                hintText: 'British Columbia, Alberta',
+                label: SiteText(
+                  'Regions',
+                  contentKey: 'copy.member_deal_marketplace_page.field13',
+                  literal: true,
+                ),
+                hint: SiteText(
+                  'British Columbia, Alberta',
+                  contentKey: 'copy.member_deal_marketplace_page.field14',
+                  literal: true,
+                ),
               ),
             ),
             const SizedBox(height: 18),
-            Text(
-              'Minimum Affinity score · ${minimumScore.round()}',
+            SiteText(
+              templateValues: {'value1': '${minimumScore.round()}'},
+              contentKey: 'copy.member_deal_marketplace_page.m75',
+              literal: false,
+              "Minimum Affinity score · {{value1}}",
               style: const TextStyle(fontWeight: FontWeight.w700),
             ),
             Slider(
@@ -3431,8 +3847,16 @@ class _MatchSettingsDialogState extends State<_MatchSettingsDialog> {
               contentPadding: EdgeInsets.zero,
               value: emailNotifications,
               activeThumbColor: _green,
-              title: const Text('Email me about private activity'),
-              subtitle: const Text('Deal matches and pitch decisions only.'),
+              title: const SiteText(
+                contentKey: 'copy.member_deal_marketplace_page.46',
+                literal: true,
+                'Email me about private activity',
+              ),
+              subtitle: const SiteText(
+                contentKey: 'copy.member_deal_marketplace_page.47',
+                literal: true,
+                'Deal matches and pitch decisions only.',
+              ),
               onChanged: (value) => setState(() => emailNotifications = value),
             ),
           ],
@@ -3442,12 +3866,20 @@ class _MatchSettingsDialogState extends State<_MatchSettingsDialog> {
     actions: [
       TextButton(
         onPressed: saving ? null : () => Navigator.pop(context),
-        child: const Text('CANCEL'),
+        child: const SiteText(
+          contentKey: 'copy.member_deal_marketplace_page.48',
+          literal: true,
+          'CANCEL',
+        ),
       ),
       FilledButton(
         onPressed: saving ? null : _save,
         style: FilledButton.styleFrom(backgroundColor: _green),
-        child: Text(saving ? 'SAVING…' : 'SAVE MATCH SETTINGS'),
+        child: SiteText(
+          contentKey: 'copy.member_deal_marketplace_page.m76',
+          literal: false,
+          saving ? 'SAVING…' : 'SAVE MATCH SETTINGS',
+        ),
       ),
     ],
   );
@@ -3486,7 +3918,11 @@ class _ReferralDialogState extends State<_ReferralDialog> {
 
   @override
   Widget build(BuildContext context) => AlertDialog(
-    title: const Text('Refer a member to this deal'),
+    title: const SiteText(
+      contentKey: 'copy.member_deal_marketplace_page.49',
+      literal: true,
+      'Refer a member to this deal',
+    ),
     content: SizedBox(
       width: 540,
       child: Column(
@@ -3503,7 +3939,9 @@ class _ReferralDialogState extends State<_ReferralDialog> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                const SiteText(
+                  contentKey: 'copy.member_deal_marketplace_page.50',
+                  literal: true,
                   'ANONYMOUS OPPORTUNITY',
                   style: TextStyle(
                     color: _green,
@@ -3513,11 +3951,15 @@ class _ReferralDialogState extends State<_ReferralDialog> {
                   ),
                 ),
                 const SizedBox(height: 5),
-                Text(
+                SiteText(
+                  contentKey: 'copy.member_deal_marketplace_page.m77',
+                  literal: false,
                   widget.deal.headline,
                   style: const TextStyle(fontWeight: FontWeight.w800),
                 ),
-                Text(
+                SiteText(
+                  contentKey: 'copy.member_deal_marketplace_page.m78',
+                  literal: false,
                   widget.deal.region,
                   style: const TextStyle(color: _muted, fontSize: 11),
                 ),
@@ -3529,14 +3971,20 @@ class _ReferralDialogState extends State<_ReferralDialog> {
             initialValue: providerId,
             isExpanded: true,
             decoration: const InputDecoration(
-              labelText: 'Member to refer',
+              label: SiteText(
+                'Member to refer',
+                contentKey: 'copy.member_deal_marketplace_page.field15',
+                literal: true,
+              ),
               prefixIcon: Icon(Icons.person_search_outlined),
             ),
             items: [
               for (final provider in widget.providers)
                 DropdownMenuItem(
                   value: provider.id,
-                  child: Text(
+                  child: SiteText(
+                    contentKey: 'copy.member_deal_marketplace_page.m79',
+                    literal: false,
                     '${provider.name} · ${provider.jobTitle}',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -3552,11 +4000,21 @@ class _ReferralDialogState extends State<_ReferralDialog> {
             maxLines: 5,
             maxLength: 600,
             decoration: const InputDecoration(
-              labelText: 'Why they are a good fit (optional)',
-              hintText: 'Add useful context for the member you are referring.',
+              label: SiteText(
+                'Why they are a good fit (optional)',
+                contentKey: 'copy.member_deal_marketplace_page.field16',
+                literal: true,
+              ),
+              hint: SiteText(
+                'Add useful context for the member you are referring.',
+                contentKey: 'copy.member_deal_marketplace_page.field17',
+                literal: true,
+              ),
             ),
           ),
-          const Text(
+          const SiteText(
+            contentKey: 'copy.member_deal_marketplace_page.51',
+            literal: true,
             'The member sees the anonymous deal brief—not the buyer’s identity. A referral cannot override a professional role that is already filled.',
             style: TextStyle(color: _muted, fontSize: 10, height: 1.45),
           ),
@@ -3566,7 +4024,11 @@ class _ReferralDialogState extends State<_ReferralDialog> {
     actions: [
       TextButton(
         onPressed: () => Navigator.pop(context),
-        child: const Text('CANCEL'),
+        child: const SiteText(
+          contentKey: 'copy.member_deal_marketplace_page.52',
+          literal: true,
+          'CANCEL',
+        ),
       ),
       FilledButton.icon(
         onPressed: providerId == null
@@ -3584,7 +4046,11 @@ class _ReferralDialogState extends State<_ReferralDialog> {
               },
         style: FilledButton.styleFrom(backgroundColor: _green),
         icon: const Icon(Icons.person_add_alt_1_outlined, size: 17),
-        label: const Text('SEND REFERRAL'),
+        label: const SiteText(
+          contentKey: 'copy.member_deal_marketplace_page.53',
+          literal: true,
+          'SEND REFERRAL',
+        ),
       ),
     ],
   );
@@ -3636,7 +4102,10 @@ class _ProfessionalCard extends StatelessWidget {
                       Row(
                         children: [
                           Flexible(
-                            child: Text(
+                            child: SiteText(
+                              contentKey:
+                                  'copy.member_deal_marketplace_page.m80',
+                              literal: false,
                               provider.name,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -3657,7 +4126,9 @@ class _ProfessionalCard extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 3),
-                      Text(
+                      SiteText(
+                        contentKey: 'copy.member_deal_marketplace_page.m81',
+                        literal: false,
                         provider.jobTitle,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -3669,7 +4140,9 @@ class _ProfessionalCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 16),
-            Text(
+            SiteText(
+              contentKey: 'copy.member_deal_marketplace_page.m82',
+              literal: false,
               provider.company.isEmpty
                   ? provider.category.label
                   : provider.company,
@@ -3677,7 +4150,9 @@ class _ProfessionalCard extends StatelessWidget {
             ),
             if (provider.specialty.isNotEmpty) ...[
               const SizedBox(height: 7),
-              Text(
+              SiteText(
+                contentKey: 'copy.member_deal_marketplace_page.m83',
+                literal: false,
                 provider.specialty,
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis,
@@ -3700,7 +4175,9 @@ class _ProfessionalCard extends StatelessWidget {
                     color: const Color(0xFFE7EEE9),
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: Text(
+                  child: SiteText(
+                    contentKey: 'copy.member_deal_marketplace_page.m84',
+                    literal: false,
                     provider.category.label.toUpperCase(),
                     style: const TextStyle(
                       color: _green,
@@ -3731,7 +4208,9 @@ class _ProfessionalCard extends StatelessWidget {
                       color: _green,
                     ),
                   ),
-                const Text(
+                const SiteText(
+                  contentKey: 'copy.member_deal_marketplace_page.54',
+                  literal: true,
                   'VIEW PROFILE',
                   style: TextStyle(
                     fontSize: 9,
@@ -3772,7 +4251,9 @@ class _Score extends StatelessWidget {
         ),
         child: Column(
           children: [
-            Text(
+            SiteText(
+              contentKey: 'copy.member_deal_marketplace_page.m85',
+              literal: false,
               '$boundedScore',
               style: const TextStyle(
                 color: Colors.white,
@@ -3780,7 +4261,9 @@ class _Score extends StatelessWidget {
                 fontWeight: FontWeight.w900,
               ),
             ),
-            Text(
+            SiteText(
+              contentKey: 'copy.member_deal_marketplace_page.m86',
+              literal: false,
               label,
               style: const TextStyle(
                 color: Colors.white,
@@ -3806,7 +4289,9 @@ class _Fact extends StatelessWidget {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        SiteText(
+          contentKey: 'copy.member_deal_marketplace_page.m87',
+          literal: false,
           label,
           style: const TextStyle(
             color: _muted,
@@ -3816,7 +4301,12 @@ class _Fact extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 5),
-        Text(value, style: const TextStyle(fontWeight: FontWeight.w700)),
+        SiteText(
+          contentKey: 'copy.member_deal_marketplace_page.m88',
+          literal: false,
+          value,
+          style: const TextStyle(fontWeight: FontWeight.w700),
+        ),
       ],
     ),
   );
@@ -3837,6 +4327,9 @@ class _BusinessSaleBulletinPageState extends State<BusinessSaleBulletinPage> {
   final _bulletinSearch = TextEditingController();
   String _searchQuery = '';
   String _priceFilter = 'all';
+  String _sort = 'match';
+  bool _savedOnly = false;
+  final Set<String> _savingIds = {};
 
   @override
   void initState() {
@@ -3858,30 +4351,61 @@ class _BusinessSaleBulletinPageState extends State<BusinessSaleBulletinPage> {
     super.dispose();
   }
 
-  void _message(String text) =>
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
+  void _message(String text) => ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: SiteText(
+        contentKey: 'copy.member_deal_marketplace_page.m89',
+        literal: false,
+        text,
+      ),
+    ),
+  );
 
-  Future<void> _addBusiness() async {
-    final draft = await showDialog<_BulletinDraft>(
-      context: context,
-      builder: (_) => const _BulletinPostDialog(),
+  Future<void> _addBusiness() => _editBusiness();
+
+  Future<void> _editBusiness([BusinessSaleBulletin? bulletin]) async {
+    final id = await Navigator.of(context).push<String>(
+      MaterialPageRoute(
+        builder: (_) => BulletinListingEditor(initial: bulletin),
+      ),
     );
-    if (draft == null || !mounted) return;
-    try {
-      await BusinessSaleBulletinService.create(
-        title: draft.title,
-        industry: draft.industry,
-        region: draft.region,
-        askingPriceBand: draft.askingPriceBand,
-        summary: draft.summary,
-        sourceLabel: draft.sourceLabel,
-        sourceUrl: draft.sourceUrl,
-      );
-      if (!mounted) return;
+    if (id != null && mounted) {
       setState(_reload);
-      _message('Business-for-sale post added.');
-    } catch (error) {
-      if (mounted) _message(_bulletinError(error));
+      _message(
+        bulletin == null
+            ? 'Business published.'
+            : 'Listing updated. Only accounts that saved it receive an update.',
+      );
+    }
+  }
+
+  Future<void> _openListing(BusinessSaleBulletin b) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => BusinessListingDetailPage(bulletinId: b.id),
+      ),
+    );
+    if (mounted) setState(_reload);
+  }
+
+  Future<void> _toggleSaved(BusinessSaleBulletin b) async {
+    if (_savingIds.contains(b.id)) return;
+    if (BackendService.user == null) {
+      await Navigator.of(
+        context,
+      ).push(MaterialPageRoute<void>(builder: (_) => const AuthPage()));
+      if (!mounted || BackendService.user == null) return;
+    }
+    setState(() => _savingIds.add(b.id));
+    try {
+      final fresh = await BusinessSaleBulletinService.loadOne(b.id);
+      if (fresh == null) throw StateError('This listing is unavailable.');
+      await BusinessSaleBulletinService.setSaved(b.id, !fresh.isSaved);
+      if (mounted) setState(_reload);
+    } catch (e) {
+      if (mounted) _message(_bulletinError(e));
+    } finally {
+      if (mounted) setState(() => _savingIds.remove(b.id));
     }
   }
 
@@ -3905,17 +4429,9 @@ class _BusinessSaleBulletinPageState extends State<BusinessSaleBulletinPage> {
     }
   }
 
-  Future<void> _openSource(String sourceUrl) async {
-    final uri = Uri.tryParse(sourceUrl);
-    if (uri == null ||
-        !await launchUrl(uri, mode: LaunchMode.platformDefault)) {
-      if (mounted) _message('Could not open that source link.');
-    }
-  }
-
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: const Color(0xFFF1F3EF),
+    backgroundColor: const Color(0xFFE7ECFF),
     appBar: AppBar(
       toolbarHeight: 72,
       backgroundColor: const Color(0xFFF7F5F0),
@@ -3965,13 +4481,15 @@ class _BusinessSaleBulletinPageState extends State<BusinessSaleBulletinPage> {
             final text =
                 '${bulletin.title} ${bulletin.industry} ${bulletin.region} ${bulletin.summary}'
                     .toLowerCase();
-            return (query.isEmpty || text.contains(query)) &&
+            return (!_savedOnly || bulletin.isSaved) &&
+                (query.isEmpty ||
+                    query.split(RegExp(r'\s+')).every(text.contains)) &&
                 BuyerDealMatcher.matchesPriceFilter(
                   bulletin.askingPriceBand,
                   _priceFilter,
                 );
           }).toList();
-          if (hasPreferences) {
+          if (hasPreferences && _sort == 'match') {
             visible.sort(
               (a, b) => matcher
                   .score(
@@ -3992,6 +4510,16 @@ class _BusinessSaleBulletinPageState extends State<BusinessSaleBulletinPage> {
                   ),
             );
           }
+          if (_sort == 'newest') {
+            visible.sort((a, b) => b.postedAt.compareTo(a.postedAt));
+          }
+          if (_sort == 'updated') {
+            visible.sort(
+              (a, b) => (b.updatedAt ?? b.postedAt).compareTo(
+                a.updatedAt ?? a.postedAt,
+              ),
+            );
+          }
           return SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(20, 38, 20, 70),
             child: Center(
@@ -4005,7 +4533,10 @@ class _BusinessSaleBulletinPageState extends State<BusinessSaleBulletinPage> {
                         const heading = Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
+                            SiteText(
+                              contentKey:
+                                  'copy.member_deal_marketplace_page.m90',
+                              literal: true,
                               'BUSINESSES FOR SALE',
                               style: TextStyle(
                                 color: _green,
@@ -4015,7 +4546,10 @@ class _BusinessSaleBulletinPageState extends State<BusinessSaleBulletinPage> {
                               ),
                             ),
                             SizedBox(height: 10),
-                            Text(
+                            SiteText(
+                              contentKey:
+                                  'copy.member_deal_marketplace_page.m91',
+                              literal: true,
                               'Bulletin board',
                               style: TextStyle(
                                 fontSize: 42,
@@ -4025,8 +4559,11 @@ class _BusinessSaleBulletinPageState extends State<BusinessSaleBulletinPage> {
                               ),
                             ),
                             SizedBox(height: 12),
-                            Text(
-                              'Browse new businesses for sale. This board is free and open to everyone—no membership or sign-in required.',
+                            SiteText(
+                              contentKey:
+                                  'copy.member_deal_marketplace_page.m92',
+                              literal: true,
+                              'Find your next business. Browse freely, save your favourites, and follow only the updates that matter to you.',
                               style: TextStyle(
                                 color: _muted,
                                 fontSize: 16,
@@ -4044,7 +4581,12 @@ class _BusinessSaleBulletinPageState extends State<BusinessSaleBulletinPage> {
                                     backgroundColor: _green,
                                   ),
                                   icon: const Icon(Icons.add_rounded),
-                                  label: const Text('ADD BUSINESS'),
+                                  label: const SiteText(
+                                    contentKey:
+                                        'copy.member_deal_marketplace_page.55',
+                                    literal: true,
+                                    'ADD BUSINESS',
+                                  ),
                                 )
                               : const SizedBox.shrink(),
                         );
@@ -4069,7 +4611,90 @@ class _BusinessSaleBulletinPageState extends State<BusinessSaleBulletinPage> {
                       },
                     ),
                     const SizedBox(height: 32),
-                    _bulletinFilters(),
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(22),
+                        border: Border.all(color: const Color(0xFFD5DDF8)),
+                      ),
+                      child: _bulletinFilters(),
+                    ),
+                    const SizedBox(height: 14),
+                    Wrap(
+                      spacing: 14,
+                      runSpacing: 10,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        SiteText(
+                          templateValues: {'value1': '${visible.length}'},
+                          contentKey: 'copy.member_deal_marketplace_page.m93',
+                          literal: false,
+                          "{{value1}} businesses",
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        if (BackendService.user != null)
+                          FilterChip(
+                            label: const SiteText(
+                              contentKey:
+                                  'copy.member_deal_marketplace_page.56',
+                              literal: true,
+                              'Saved businesses',
+                            ),
+                            selected: _savedOnly,
+                            onSelected: (value) =>
+                                setState(() => _savedOnly = value),
+                          ),
+                        SizedBox(
+                          width: 240,
+                          child: DropdownButtonFormField<String>(
+                            initialValue: _sort,
+                            decoration: const InputDecoration(
+                              label: SiteText(
+                                'Sort by',
+                                contentKey:
+                                    'copy.member_deal_marketplace_page.field18',
+                                literal: true,
+                              ),
+                            ),
+                            items: const [
+                              DropdownMenuItem(
+                                value: 'match',
+                                child: SiteText(
+                                  contentKey:
+                                      'copy.member_deal_marketplace_page.m94',
+                                  literal: true,
+                                  'Best matches',
+                                ),
+                              ),
+                              DropdownMenuItem(
+                                value: 'newest',
+                                child: SiteText(
+                                  contentKey:
+                                      'copy.member_deal_marketplace_page.m95',
+                                  literal: true,
+                                  'Newest listings',
+                                ),
+                              ),
+                              DropdownMenuItem(
+                                value: 'updated',
+                                child: SiteText(
+                                  contentKey:
+                                      'copy.member_deal_marketplace_page.m96',
+                                  literal: true,
+                                  'Recently updated',
+                                ),
+                              ),
+                            ],
+                            onChanged: (value) =>
+                                setState(() => _sort = value ?? 'match'),
+                          ),
+                        ),
+                      ],
+                    ),
                     const SizedBox(height: 18),
                     if (BackendService.user != null && hasPreferences)
                       Padding(
@@ -4077,7 +4702,10 @@ class _BusinessSaleBulletinPageState extends State<BusinessSaleBulletinPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
+                            const SiteText(
+                              contentKey:
+                                  'copy.member_deal_marketplace_page.57',
+                              literal: true,
                               'PERSONALIZED FOR YOUR SAVED BUYER PROFILE · BEST MATCHES FIRST',
                               style: TextStyle(
                                 color: _green,
@@ -4087,7 +4715,10 @@ class _BusinessSaleBulletinPageState extends State<BusinessSaleBulletinPage> {
                               ),
                             ),
                             const SizedBox(height: 5),
-                            const Text(
+                            const SiteText(
+                              contentKey:
+                                  'copy.member_deal_marketplace_page.58',
+                              literal: true,
                               'Deal scores estimate interest fit from the listing details available. Financial diligence still determines whether a business is viable.',
                               style: TextStyle(color: _muted, fontSize: 13),
                             ),
@@ -4112,7 +4743,7 @@ class _BusinessSaleBulletinPageState extends State<BusinessSaleBulletinPage> {
                       )
                     else
                       for (final bulletin in visible) ...[
-                        _BusinessSaleBulletinCard(
+                        BulletinMarketplaceCard(
                           bulletin: bulletin,
                           dealScore: hasPreferences
                               ? matcher.score(
@@ -4123,9 +4754,13 @@ class _BusinessSaleBulletinPageState extends State<BusinessSaleBulletinPage> {
                                   summary: bulletin.summary,
                                 )
                               : null,
-                          onSource: bulletin.sourceUrl.isEmpty
+                          onOpen: () => _openListing(bulletin),
+                          onSave: _savingIds.contains(bulletin.id)
                               ? null
-                              : () => _openSource(bulletin.sourceUrl),
+                              : () => _toggleSaved(bulletin),
+                          onEdit: bulletin.canEdit
+                              ? () => _editBusiness(bulletin)
+                              : null,
                           onConvert: bulletin.canConvert
                               ? () => _makeAnonymousDeal(bulletin)
                               : null,
@@ -4148,8 +4783,16 @@ class _BusinessSaleBulletinPageState extends State<BusinessSaleBulletinPage> {
         controller: _bulletinSearch,
         onChanged: (value) => setState(() => _searchQuery = value),
         decoration: InputDecoration(
-          labelText: 'Search businesses',
-          hintText: 'Business name, location, industry, or theme',
+          label: SiteText(
+            'Search businesses',
+            contentKey: 'copy.member_deal_marketplace_page.mfield4',
+            literal: true,
+          ),
+          hint: SiteText(
+            'Business name, location, industry, or theme',
+            contentKey: 'copy.member_deal_marketplace_page.mfield5',
+            literal: true,
+          ),
           prefixIcon: const Icon(Icons.search_rounded),
           suffixIcon: _searchQuery.isEmpty
               ? null
@@ -4165,15 +4808,70 @@ class _BusinessSaleBulletinPageState extends State<BusinessSaleBulletinPage> {
       );
       final price = DropdownButtonFormField<String>(
         initialValue: _priceFilter,
-        decoration: const InputDecoration(labelText: 'Price range'),
+        decoration: const InputDecoration(
+          label: SiteText(
+            'Price range',
+            contentKey: 'copy.member_deal_marketplace_page.field19',
+            literal: true,
+          ),
+        ),
         items: const [
-          DropdownMenuItem(value: 'all', child: Text('All prices')),
-          DropdownMenuItem(value: 'under-500k', child: Text(r'Under $500K')),
-          DropdownMenuItem(value: '500k-1m', child: Text(r'$500K–$1M')),
-          DropdownMenuItem(value: '1m-2m', child: Text(r'$1M–$2M')),
-          DropdownMenuItem(value: '2m-5m', child: Text(r'$2M–$5M')),
-          DropdownMenuItem(value: '5m-plus', child: Text(r'$5M+')),
-          DropdownMenuItem(value: 'unlisted', child: Text('Price not listed')),
+          DropdownMenuItem(
+            value: 'all',
+            child: SiteText(
+              contentKey: 'copy.member_deal_marketplace_page.m97',
+              literal: true,
+              'All prices',
+            ),
+          ),
+          DropdownMenuItem(
+            value: 'under-500k',
+            child: SiteText(
+              contentKey: 'copy.member_deal_marketplace_page.m98',
+              literal: true,
+              r'Under $500K',
+            ),
+          ),
+          DropdownMenuItem(
+            value: '500k-1m',
+            child: SiteText(
+              contentKey: 'copy.member_deal_marketplace_page.m99',
+              literal: true,
+              r'$500K–$1M',
+            ),
+          ),
+          DropdownMenuItem(
+            value: '1m-2m',
+            child: SiteText(
+              contentKey: 'copy.member_deal_marketplace_page.m100',
+              literal: true,
+              r'$1M–$2M',
+            ),
+          ),
+          DropdownMenuItem(
+            value: '2m-5m',
+            child: SiteText(
+              contentKey: 'copy.member_deal_marketplace_page.m101',
+              literal: true,
+              r'$2M–$5M',
+            ),
+          ),
+          DropdownMenuItem(
+            value: '5m-plus',
+            child: SiteText(
+              contentKey: 'copy.member_deal_marketplace_page.m102',
+              literal: true,
+              r'$5M+',
+            ),
+          ),
+          DropdownMenuItem(
+            value: 'unlisted',
+            child: SiteText(
+              contentKey: 'copy.member_deal_marketplace_page.m103',
+              literal: true,
+              'Price not listed',
+            ),
+          ),
         ],
         onChanged: (value) => setState(() => _priceFilter = value ?? 'all'),
       );
@@ -4212,288 +4910,11 @@ class _StatusPill extends StatelessWidget {
           : const Color(0xFFEDEAE4),
       borderRadius: BorderRadius.circular(30),
     ),
-    child: Text(
+    child: SiteText(
+      contentKey: 'copy.member_deal_marketplace_page.m104',
+      literal: false,
       status.toUpperCase(),
       style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w900),
-    ),
-  );
-}
-
-class _BusinessSaleBulletinCard extends StatelessWidget {
-  const _BusinessSaleBulletinCard({
-    required this.bulletin,
-    this.dealScore,
-    this.onSource,
-    this.onConvert,
-  });
-
-  final BusinessSaleBulletin bulletin;
-  final int? dealScore;
-  final VoidCallback? onSource;
-  final VoidCallback? onConvert;
-
-  @override
-  Widget build(BuildContext context) => Container(
-    width: double.infinity,
-    padding: const EdgeInsets.all(22),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      border: Border.all(color: _line),
-      borderRadius: BorderRadius.circular(18),
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Align(
-          alignment: Alignment.centerRight,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: dealScore == null
-                  ? const Color(0xFFF1F0EC)
-                  : const Color(0xFFDDF2E8),
-              borderRadius: BorderRadius.circular(30),
-            ),
-            child: Text(
-              dealScore == null
-                  ? BackendService.user == null
-                        ? 'SIGN IN FOR YOUR DEAL SCORE'
-                        : 'TAKE THE QUIZ FOR YOUR DEAL SCORE'
-                  : 'YOUR DEAL SCORE · $dealScore/100',
-              style: TextStyle(
-                color: dealScore == null ? _muted : _green,
-                fontSize: 10,
-                fontWeight: FontWeight.w900,
-                letterSpacing: .6,
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            _BulletinTag(bulletin.industry),
-            _BulletinTag(bulletin.region),
-            _BulletinTag(bulletin.askingPriceBand),
-            if (bulletin.converted) const _BulletinTag('ANONYMOUS DRAFT MADE'),
-          ],
-        ),
-        const SizedBox(height: 14),
-        Text(
-          bulletin.title,
-          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          bulletin.summary,
-          style: const TextStyle(color: _muted, height: 1.5),
-        ),
-        const SizedBox(height: 17),
-        Wrap(
-          spacing: 10,
-          runSpacing: 10,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          children: [
-            Text(
-              'POSTED ${DateFormat.yMMMd().format(bulletin.postedAt.toLocal()).toUpperCase()}',
-              style: const TextStyle(
-                color: _muted,
-                fontSize: 9,
-                fontWeight: FontWeight.w800,
-                letterSpacing: .7,
-              ),
-            ),
-            if (onSource != null)
-              OutlinedButton.icon(
-                onPressed: onSource,
-                icon: const Icon(Icons.open_in_new_rounded, size: 16),
-                label: Text(
-                  bulletin.sourceLabel.isEmpty
-                      ? 'OPEN SOURCE'
-                      : bulletin.sourceLabel.toUpperCase(),
-                ),
-              ),
-            if (onConvert != null)
-              FilledButton.icon(
-                onPressed: onConvert,
-                style: FilledButton.styleFrom(backgroundColor: _green),
-                icon: const Icon(Icons.content_copy_rounded, size: 16),
-                label: const Text('MAKE ANONYMOUS DEAL'),
-              ),
-          ],
-        ),
-      ],
-    ),
-  );
-}
-
-class _BulletinTag extends StatelessWidget {
-  const _BulletinTag(this.label);
-  final String label;
-
-  @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
-    decoration: BoxDecoration(
-      color: const Color(0xFFE7EEE9),
-      borderRadius: BorderRadius.circular(30),
-    ),
-    child: Text(
-      label.isEmpty ? 'NOT LISTED' : label.toUpperCase(),
-      style: const TextStyle(
-        color: _green,
-        fontSize: 8,
-        fontWeight: FontWeight.w900,
-        letterSpacing: .6,
-      ),
-    ),
-  );
-}
-
-class _BulletinDraft {
-  const _BulletinDraft({
-    required this.title,
-    required this.industry,
-    required this.region,
-    required this.askingPriceBand,
-    required this.summary,
-    required this.sourceLabel,
-    required this.sourceUrl,
-  });
-
-  final String title;
-  final String industry;
-  final String region;
-  final String askingPriceBand;
-  final String summary;
-  final String sourceLabel;
-  final String sourceUrl;
-}
-
-class _BulletinPostDialog extends StatefulWidget {
-  const _BulletinPostDialog();
-
-  @override
-  State<_BulletinPostDialog> createState() => _BulletinPostDialogState();
-}
-
-class _BulletinPostDialogState extends State<_BulletinPostDialog> {
-  final _formKey = GlobalKey<FormState>();
-  final _title = TextEditingController();
-  final _industry = TextEditingController();
-  final _region = TextEditingController();
-  final _price = TextEditingController();
-  final _summary = TextEditingController();
-  final _sourceLabel = TextEditingController();
-  final _sourceUrl = TextEditingController();
-
-  @override
-  void dispose() {
-    for (final controller in [
-      _title,
-      _industry,
-      _region,
-      _price,
-      _summary,
-      _sourceLabel,
-      _sourceUrl,
-    ]) {
-      controller.dispose();
-    }
-    super.dispose();
-  }
-
-  void _submit() {
-    if (!_formKey.currentState!.validate()) return;
-    Navigator.pop(
-      context,
-      _BulletinDraft(
-        title: _title.text,
-        industry: _industry.text,
-        region: _region.text,
-        askingPriceBand: _price.text,
-        summary: _summary.text,
-        sourceLabel: _sourceLabel.text,
-        sourceUrl: _sourceUrl.text,
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) => AlertDialog(
-    title: const Text('Add a business for sale'),
-    content: SizedBox(
-      width: 560,
-      child: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _field(_title, 'Business or listing title', requiredLength: 3),
-              _field(_industry, 'Industry'),
-              _field(_region, 'Region'),
-              _field(_price, 'Asking price or range'),
-              _field(
-                _summary,
-                'What is being offered',
-                requiredLength: 20,
-                maxLines: 4,
-              ),
-              _field(_sourceLabel, 'Source name (optional)'),
-              _field(
-                _sourceUrl,
-                'Source link (optional)',
-                validator: (value) {
-                  final text = value?.trim() ?? '';
-                  if (text.isNotEmpty &&
-                      !(text.startsWith('https://') ||
-                          text.startsWith('http://'))) {
-                    return 'Use a complete http:// or https:// link';
-                  }
-                  return null;
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
-    ),
-    actions: [
-      TextButton(
-        onPressed: () => Navigator.pop(context),
-        child: const Text('CANCEL'),
-      ),
-      FilledButton(
-        onPressed: _submit,
-        style: FilledButton.styleFrom(backgroundColor: _green),
-        child: const Text('POST TO BOARD'),
-      ),
-    ],
-  );
-
-  Widget _field(
-    TextEditingController controller,
-    String label, {
-    int requiredLength = 0,
-    int maxLines = 1,
-    String? Function(String?)? validator,
-  }) => Padding(
-    padding: const EdgeInsets.only(bottom: 12),
-    child: TextFormField(
-      controller: controller,
-      maxLines: maxLines,
-      decoration: InputDecoration(
-        labelText: label,
-        border: const OutlineInputBorder(),
-      ),
-      validator:
-          validator ??
-          (value) => (value?.trim().length ?? 0) < requiredLength
-              ? 'Enter at least $requiredLength characters'
-              : null,
     ),
   );
 }
@@ -4552,7 +4973,11 @@ class _AnonymousDealDialogState extends State<_AnonymousDealDialog> {
 
   @override
   Widget build(BuildContext context) => AlertDialog(
-    title: const Text('Make an anonymous deal'),
+    title: const SiteText(
+      contentKey: 'copy.member_deal_marketplace_page.59',
+      literal: true,
+      'Make an anonymous deal',
+    ),
     content: SizedBox(
       width: 580,
       child: Form(
@@ -4561,7 +4986,9 @@ class _AnonymousDealDialogState extends State<_AnonymousDealDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            const SiteText(
+              contentKey: 'copy.member_deal_marketplace_page.60',
+              literal: true,
               'Review this public copy carefully. Do not include the business name, source, address, or identifying details. The result stays private in Review Desk until approved.',
               style: TextStyle(color: _muted, height: 1.45),
             ),
@@ -4569,7 +4996,11 @@ class _AnonymousDealDialogState extends State<_AnonymousDealDialog> {
             TextFormField(
               controller: _headline,
               decoration: const InputDecoration(
-                labelText: 'Anonymous headline',
+                label: SiteText(
+                  'Anonymous headline',
+                  contentKey: 'copy.member_deal_marketplace_page.field20',
+                  literal: true,
+                ),
                 border: OutlineInputBorder(),
               ),
               validator: (value) => (value?.trim().length ?? 0) < 8
@@ -4581,7 +5012,11 @@ class _AnonymousDealDialogState extends State<_AnonymousDealDialog> {
               controller: _summary,
               maxLines: 5,
               decoration: const InputDecoration(
-                labelText: 'Anonymous summary',
+                label: SiteText(
+                  'Anonymous summary',
+                  contentKey: 'copy.member_deal_marketplace_page.field21',
+                  literal: true,
+                ),
                 border: OutlineInputBorder(),
               ),
               validator: (value) => (value?.trim().length ?? 0) < 40
@@ -4595,12 +5030,20 @@ class _AnonymousDealDialogState extends State<_AnonymousDealDialog> {
     actions: [
       TextButton(
         onPressed: () => Navigator.pop(context),
-        child: const Text('CANCEL'),
+        child: const SiteText(
+          contentKey: 'copy.member_deal_marketplace_page.61',
+          literal: true,
+          'CANCEL',
+        ),
       ),
       FilledButton(
         onPressed: _submit,
         style: FilledButton.styleFrom(backgroundColor: _green),
-        child: const Text('CREATE REVIEW DRAFT'),
+        child: const SiteText(
+          contentKey: 'copy.member_deal_marketplace_page.62',
+          literal: true,
+          'CREATE REVIEW DRAFT',
+        ),
       ),
     ],
   );
@@ -4638,13 +5081,17 @@ class _AccessState extends StatelessWidget {
       children: [
         const Icon(Icons.info_outline_rounded, color: _green, size: 32),
         const SizedBox(height: 14),
-        Text(
+        SiteText(
+          contentKey: 'copy.member_deal_marketplace_page.m105',
+          literal: false,
           title,
           textAlign: TextAlign.center,
           style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
         ),
         const SizedBox(height: 9),
-        Text(
+        SiteText(
+          contentKey: 'copy.member_deal_marketplace_page.m106',
+          literal: false,
           message,
           textAlign: TextAlign.center,
           style: const TextStyle(color: _muted, height: 1.5),
@@ -4654,7 +5101,11 @@ class _AccessState extends StatelessWidget {
           FilledButton(
             onPressed: onTap,
             style: FilledButton.styleFrom(backgroundColor: _green),
-            child: Text(action!),
+            child: SiteText(
+              contentKey: 'copy.member_deal_marketplace_page.m107',
+              literal: false,
+              action!,
+            ),
           ),
         ],
       ],

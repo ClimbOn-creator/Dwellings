@@ -1,3 +1,5 @@
+import '../widgets/site_text.dart';
+import '../widgets/site_image.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -289,7 +291,9 @@ class _PillButtonState extends State<_PillButton> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
+            SiteText(
+              contentKey: 'copy.landing_screen.m1',
+              literal: false,
               widget.label,
               style: TextStyle(
                 color: widget.light && !_hovered ? _ink : Colors.white,
@@ -343,7 +347,9 @@ class _HeroCopy extends StatelessWidget {
             borderRadius: BorderRadius.circular(24),
             border: Border.all(color: _lilac.withValues(alpha: .35)),
           ),
-          child: const Text(
+          child: const SiteText(
+            contentKey: 'copy.landing_screen.1',
+            literal: true,
             'PROPERTY DECISION INTELLIGENCE',
             style: TextStyle(
               color: _lilac,
@@ -354,7 +360,9 @@ class _HeroCopy extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 26),
-        Text(
+        SiteText(
+          contentKey: 'copy.landing_screen.m2',
+          literal: true,
           'See the deal\nbefore you\nlive with it.',
           style: TextStyle(
             color: Colors.white,
@@ -367,7 +375,9 @@ class _HeroCopy extends StatelessWidget {
         const SizedBox(height: 28),
         const SizedBox(
           width: 560,
-          child: Text(
+          child: SiteText(
+            contentKey: 'copy.landing_screen.m3',
+            literal: true,
             'One intelligent workspace for homebuyers and property investors. Model the income, debt, risk, location and exit—then make the call with confidence.',
             style: TextStyle(color: _muted, fontSize: 16, height: 1.55),
           ),
@@ -428,7 +438,13 @@ class _DealPreviewState extends State<_DealPreview> {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              Image.asset('assets/images/hero-city.jpg', fit: BoxFit.cover),
+              SiteImage(
+                contentKey: 'image.landing_screen.m1',
+                original: Image.asset(
+                  'assets/images/hero-city.jpg',
+                  fit: BoxFit.cover,
+                ),
+              ),
               const DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -452,7 +468,9 @@ class _DealPreviewState extends State<_DealPreview> {
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(color: Colors.white24),
                   ),
-                  child: const Text(
+                  child: const SiteText(
+                    contentKey: 'copy.landing_screen.2',
+                    literal: true,
                     'LIVE ANALYSIS',
                     style: TextStyle(
                       color: Colors.white,
@@ -509,7 +527,9 @@ class _DealCard extends StatelessWidget {
         const Row(
           children: [
             Expanded(
-              child: Text(
+              child: SiteText(
+                contentKey: 'copy.landing_screen.m4',
+                literal: true,
                 'West 12th Avenue',
                 style: TextStyle(
                   color: Colors.white,
@@ -518,7 +538,9 @@ class _DealCard extends StatelessWidget {
                 ),
               ),
             ),
-            Text(
+            SiteText(
+              contentKey: 'copy.landing_screen.m5',
+              literal: true,
               'BASE CASE',
               style: TextStyle(
                 color: _lilac,
@@ -555,7 +577,9 @@ class _DealCard extends StatelessWidget {
         const SizedBox(height: 9),
         const Row(
           children: [
-            Text(
+            SiteText(
+              contentKey: 'copy.landing_screen.m6',
+              literal: true,
               'INVESTMENT SCORE',
               style: TextStyle(
                 color: _muted,
@@ -564,7 +588,9 @@ class _DealCard extends StatelessWidget {
               ),
             ),
             Spacer(),
-            Text(
+            SiteText(
+              contentKey: 'copy.landing_screen.m7',
+              literal: true,
               '78 / 100',
               style: TextStyle(
                 color: Colors.white,
@@ -587,7 +613,9 @@ class _Metric extends StatelessWidget {
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Text(
+      SiteText(
+        contentKey: 'copy.landing_screen.m8',
+        literal: false,
         label,
         style: const TextStyle(
           color: _muted,
@@ -596,7 +624,9 @@ class _Metric extends StatelessWidget {
         ),
       ),
       const SizedBox(height: 5),
-      Text(
+      SiteText(
+        contentKey: 'copy.landing_screen.m9',
+        literal: false,
         value,
         style: const TextStyle(
           color: Colors.white,
@@ -621,7 +651,9 @@ class _HeroFooter extends StatelessWidget {
           children: [
             Icon(Icons.south, color: Colors.white70, size: 16),
             SizedBox(width: 9),
-            Text(
+            SiteText(
+              contentKey: 'copy.landing_screen.m10',
+              literal: true,
               'EXPLORE THE PLATFORM',
               style: TextStyle(
                 color: Colors.white70,
@@ -635,7 +667,9 @@ class _HeroFooter extends StatelessWidget {
       ),
       const Spacer(),
       if (MediaQuery.sizeOf(context).width > 700)
-        const Text(
+        const SiteText(
+          contentKey: 'copy.landing_screen.3',
+          literal: true,
           'RESIDENTIAL  /  COMMERCIAL  /  DEVELOPMENT',
           style: TextStyle(
             color: Colors.white38,
@@ -693,7 +727,9 @@ class _Proof extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Column(
     children: [
-      Text(
+      SiteText(
+        contentKey: 'copy.landing_screen.m11',
+        literal: false,
         value,
         style: const TextStyle(
           color: _ink,
@@ -703,7 +739,9 @@ class _Proof extends StatelessWidget {
         ),
       ),
       const SizedBox(height: 5),
-      Text(
+      SiteText(
+        contentKey: 'copy.landing_screen.m12',
+        literal: false,
         label,
         style: const TextStyle(
           color: Color(0xFF656573),
@@ -749,7 +787,8 @@ class _AssetGrid extends StatelessWidget {
                   spacing: gap,
                   runSpacing: gap,
                   children: [
-                    _AssetCard(
+                    _AssetCard /* persistent card identity */ (
+                      contentId: 'asset-card-1',
                       width: cardWidth,
                       height: 500,
                       title: 'A home to live in',
@@ -759,7 +798,8 @@ class _AssetGrid extends StatelessWidget {
                       accent: _purple,
                       onOpen: onOpen,
                     ),
-                    _AssetCard(
+                    _AssetCard /* persistent card identity */ (
+                      contentId: 'asset-card-2',
                       width: cardWidth,
                       height: desktop ? 390 : 500,
                       title: 'Buy an operating business',
@@ -770,7 +810,8 @@ class _AssetGrid extends StatelessWidget {
                       accent: const Color(0xFF8B5CF6),
                       onOpen: onBusiness,
                     ),
-                    _AssetCard(
+                    _AssetCard /* persistent card identity */ (
+                      contentId: 'asset-card-3',
                       width: cardWidth,
                       height: desktop ? 390 : 500,
                       title: 'Income property',
@@ -780,7 +821,8 @@ class _AssetGrid extends StatelessWidget {
                       accent: _blue,
                       onOpen: onOpen,
                     ),
-                    _AssetCard(
+                    _AssetCard /* persistent card identity */ (
+                      contentId: 'asset-card-4',
                       width: cardWidth,
                       height: desktop ? 390 : 500,
                       title: 'Commercial real estate',
@@ -790,7 +832,8 @@ class _AssetGrid extends StatelessWidget {
                       accent: const Color(0xFF5F3DC4),
                       onOpen: onOpen,
                     ),
-                    _AssetCard(
+                    _AssetCard /* persistent card identity */ (
+                      contentId: 'asset-card-5',
                       width: cardWidth,
                       height: 500,
                       title: 'Development potential',
@@ -827,7 +870,9 @@ class _SectionHeader extends StatelessWidget {
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {
       final narrow = constraints.maxWidth < 760;
-      final titleWidget = Text(
+      final titleWidget = SiteText(
+        contentKey: 'copy.landing_screen.m13',
+        literal: false,
         title,
         style: TextStyle(
           color: dark ? Colors.white : _ink,
@@ -837,7 +882,9 @@ class _SectionHeader extends StatelessWidget {
           letterSpacing: -2.6,
         ),
       );
-      final bodyWidget = Text(
+      final bodyWidget = SiteText(
+        contentKey: 'copy.landing_screen.m14',
+        literal: false,
         body,
         style: TextStyle(
           color: dark ? _muted : const Color(0xFF666674),
@@ -848,7 +895,9 @@ class _SectionHeader extends StatelessWidget {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          SiteText(
+            contentKey: 'copy.landing_screen.m15',
+            literal: false,
             eyebrow,
             style: const TextStyle(
               color: _purple,
@@ -879,6 +928,7 @@ class _SectionHeader extends StatelessWidget {
 
 class _AssetCard extends StatefulWidget {
   const _AssetCard({
+    required this.contentId,
     required this.width,
     required this.height,
     required this.title,
@@ -890,6 +940,7 @@ class _AssetCard extends StatefulWidget {
   });
   final double width;
   final double height;
+  final String contentId;
   final String title;
   final String tag;
   final String detail;
@@ -934,7 +985,10 @@ class _AssetCardState extends State<_AssetCard> {
               AnimatedScale(
                 duration: const Duration(milliseconds: 650),
                 scale: _hovered ? 1.055 : 1,
-                child: Image.asset(widget.asset, fit: BoxFit.cover),
+                child: SiteImage(
+                  contentKey: 'image.landing_screen.m2.${widget.contentId}',
+                  original: Image.asset(widget.asset, fit: BoxFit.cover),
+                ),
               ),
               AnimatedContainer(
                 duration: const Duration(milliseconds: 350),
@@ -967,7 +1021,9 @@ class _AssetCardState extends State<_AssetCard> {
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(color: Colors.white24),
                           ),
-                          child: Text(
+                          child: SiteText(
+                            contentKey: 'copy.landing_screen.m16',
+                            literal: false,
                             widget.tag,
                             style: const TextStyle(
                               color: Colors.white,
@@ -998,7 +1054,9 @@ class _AssetCardState extends State<_AssetCard> {
                       ],
                     ),
                     const Spacer(),
-                    Text(
+                    SiteText(
+                      contentKey: 'copy.landing_screen.m17',
+                      literal: false,
                       widget.title,
                       style: const TextStyle(
                         color: Colors.white,
@@ -1009,7 +1067,9 @@ class _AssetCardState extends State<_AssetCard> {
                       ),
                     ),
                     const SizedBox(height: 11),
-                    Text(
+                    SiteText(
+                      contentKey: 'copy.landing_screen.m18',
+                      literal: false,
                       widget.detail,
                       style: const TextStyle(
                         color: Color(0xFFD1D1DB),
@@ -1045,7 +1105,9 @@ class _IntelligenceSection extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text(
+                const SiteText(
+                  contentKey: 'copy.landing_screen.4',
+                  literal: true,
                   'ONE MODEL. COMPLETE CONTEXT.',
                   style: TextStyle(
                     color: _lilac,
@@ -1055,7 +1117,9 @@ class _IntelligenceSection extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 20),
-                Text(
+                SiteText(
+                  contentKey: 'copy.landing_screen.m19',
+                  literal: true,
                   'The numbers are only the beginning.',
                   style: TextStyle(
                     color: Colors.white,
@@ -1066,7 +1130,9 @@ class _IntelligenceSection extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 24),
-                const Text(
+                const SiteText(
+                  contentKey: 'copy.landing_screen.5',
+                  literal: true,
                   'See operating performance, financing pressure and future value together. Then stress the assumptions before the market does.',
                   style: TextStyle(color: _muted, fontSize: 15, height: 1.6),
                 ),
@@ -1128,7 +1194,9 @@ class _SignalPanelState extends State<_SignalPanel> {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        const SiteText(
+          contentKey: 'copy.landing_screen.6',
+          literal: true,
           'SCENARIO INTELLIGENCE',
           style: TextStyle(
             color: _lilac,
@@ -1155,7 +1223,9 @@ class _SignalPanelState extends State<_SignalPanel> {
                     borderRadius: BorderRadius.circular(20),
                   ),
                   alignment: Alignment.center,
-                  child: Text(
+                  child: SiteText(
+                    contentKey: 'copy.landing_screen.m20',
+                    literal: false,
                     labels[index],
                     style: TextStyle(
                       color: index == _active ? _ink : Colors.white60,
@@ -1179,7 +1249,9 @@ class _SignalPanelState extends State<_SignalPanel> {
             child: Column(
               key: ValueKey(_active),
               children: [
-                Text(
+                SiteText(
+                  contentKey: 'copy.landing_screen.m21',
+                  literal: false,
                   '${values[_active]}',
                   style: const TextStyle(
                     color: Colors.white,
@@ -1190,7 +1262,9 @@ class _SignalPanelState extends State<_SignalPanel> {
                   ),
                 ),
                 const SizedBox(height: 9),
-                const Text(
+                const SiteText(
+                  contentKey: 'copy.landing_screen.7',
+                  literal: true,
                   'DECISION SCORE',
                   style: TextStyle(
                     color: _muted,
@@ -1238,7 +1312,9 @@ class _Signal extends StatelessWidget {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        SiteText(
+          contentKey: 'copy.landing_screen.m22',
+          literal: false,
           label,
           style: const TextStyle(
             color: _muted,
@@ -1247,7 +1323,9 @@ class _Signal extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 7),
-        Text(
+        SiteText(
+          contentKey: 'copy.landing_screen.m23',
+          literal: false,
           value,
           style: const TextStyle(
             color: Colors.white,
@@ -1346,7 +1424,9 @@ class _Step extends StatelessWidget {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        SiteText(
+          contentKey: 'copy.landing_screen.m24',
+          literal: false,
           number,
           style: const TextStyle(
             color: _purple,
@@ -1355,7 +1435,9 @@ class _Step extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 42),
-        Text(
+        SiteText(
+          contentKey: 'copy.landing_screen.m25',
+          literal: false,
           title,
           style: const TextStyle(
             color: _ink,
@@ -1365,7 +1447,9 @@ class _Step extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        Text(
+        SiteText(
+          contentKey: 'copy.landing_screen.m26',
+          literal: false,
           body,
           style: const TextStyle(
             color: Color(0xFF666674),
@@ -1408,7 +1492,9 @@ class _ClosingSection extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text(
+                    const SiteText(
+                      contentKey: 'copy.landing_screen.8',
+                      literal: true,
                       'YOUR NEXT PROPERTY DESERVES A BETTER QUESTION.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
@@ -1419,7 +1505,9 @@ class _ClosingSection extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 22),
-                    Text(
+                    SiteText(
+                      contentKey: 'copy.landing_screen.m27',
+                      literal: true,
                       'What if you could know\nbefore you commit?',
                       textAlign: TextAlign.center,
                       style: TextStyle(
@@ -1441,7 +1529,9 @@ class _ClosingSection extends StatelessWidget {
             const Positioned(
               left: 28,
               bottom: 25,
-              child: Text(
+              child: SiteText(
+                contentKey: 'copy.landing_screen.m28',
+                literal: true,
                 'AFFINITY',
                 style: TextStyle(
                   color: Colors.white70,
@@ -1454,7 +1544,9 @@ class _ClosingSection extends StatelessWidget {
             const Positioned(
               right: 28,
               bottom: 25,
-              child: Text(
+              child: SiteText(
+                contentKey: 'copy.landing_screen.m29',
+                literal: true,
                 'PROPERTY DECISION INTELLIGENCE',
                 style: TextStyle(
                   color: Colors.white38,

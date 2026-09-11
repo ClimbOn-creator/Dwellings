@@ -1,3 +1,4 @@
+import 'site_text.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -59,7 +60,9 @@ class _AuthButtonState extends State<AuthButton> {
       ),
       label: widget.compact
           ? const SizedBox.shrink()
-          : Text(
+          : SiteText(
+              contentKey: 'copy.auth_button.m1',
+              literal: false,
               signedIn ? 'PROFILE' : 'SIGN IN',
               style: const TextStyle(
                 fontSize: 9,

@@ -1,3 +1,4 @@
+import 'site_text.dart';
 import 'package:flutter/material.dart';
 
 import 'brand_logo.dart';
@@ -62,7 +63,9 @@ class SiteFooter extends StatelessWidget {
             const Row(
               children: [
                 Expanded(
-                  child: Text(
+                  child: SiteText(
+                    contentKey: 'copy.site_footer.m1',
+                    literal: true,
                     '© 2026 AFFINITY',
                     style: TextStyle(
                       color: Color(0xFF777787),
@@ -71,7 +74,9 @@ class SiteFooter extends StatelessWidget {
                     ),
                   ),
                 ),
-                Text(
+                SiteText(
+                  contentKey: 'copy.site_footer.m2',
+                  literal: true,
                   'BUSINESS ACQUISITION · CANADA',
                   style: TextStyle(
                     color: Color(0xFF777787),
@@ -136,7 +141,9 @@ class _FooterButton extends StatelessWidget {
       side: const BorderSide(color: Colors.white24),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
     ),
-    child: Text(
+    child: SiteText(
+      contentKey: 'copy.site_footer.m3',
+      literal: false,
       label,
       style: const TextStyle(
         fontSize: 9,

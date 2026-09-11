@@ -1,3 +1,5 @@
+import '../widgets/site_text.dart';
+import '../widgets/site_image.dart';
 import 'package:flutter/material.dart';
 
 import '../models/platform_side.dart';
@@ -153,7 +155,9 @@ class _NavItem extends StatelessWidget {
       borderRadius: BorderRadius.circular(18),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 12),
-        child: Text(
+        child: SiteText(
+          contentKey: 'copy.marketing_pages.m1',
+          literal: false,
           label,
           style: TextStyle(
             color: selected ? _lilac : const Color(0xFFD6D6E0),
@@ -193,7 +197,9 @@ class _ModelButtonState extends State<_ModelButton> {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (MediaQuery.sizeOf(context).width > 560)
-              Text(
+              SiteText(
+                contentKey: 'copy.marketing_pages.m2',
+                literal: true,
                 'OPEN RISK MODEL',
                 style: TextStyle(
                   color: hovered ? Colors.white : _ink,
@@ -383,7 +389,9 @@ class _CapabilityState extends State<_Capability> {
         children: [
           Row(
             children: [
-              Text(
+              SiteText(
+                contentKey: 'copy.marketing_pages.m3',
+                literal: false,
                 widget.number,
                 style: const TextStyle(
                   color: _purple,
@@ -396,7 +404,9 @@ class _CapabilityState extends State<_Capability> {
             ],
           ),
           const Spacer(),
-          Text(
+          SiteText(
+            contentKey: 'copy.marketing_pages.m4',
+            literal: false,
             widget.title,
             style: TextStyle(
               color: hovered ? Colors.white : _ink,
@@ -406,7 +416,9 @@ class _CapabilityState extends State<_Capability> {
             ),
           ),
           const SizedBox(height: 13),
-          Text(
+          SiteText(
+            contentKey: 'copy.marketing_pages.m5',
+            literal: false,
             widget.body,
             style: TextStyle(
               color: hovered ? _muted : const Color(0xFF666674),
@@ -498,7 +510,9 @@ class _WorkflowRow extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
+            SiteText(
+              contentKey: 'copy.marketing_pages.m6',
+              literal: false,
               '$number / $label',
               style: const TextStyle(
                 color: _purple,
@@ -508,7 +522,9 @@ class _WorkflowRow extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 18),
-            Text(
+            SiteText(
+              contentKey: 'copy.marketing_pages.m7',
+              literal: false,
               title,
               style: const TextStyle(
                 color: _ink,
@@ -519,7 +535,9 @@ class _WorkflowRow extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 18),
-            Text(
+            SiteText(
+              contentKey: 'copy.marketing_pages.m8',
+              literal: false,
               body,
               style: const TextStyle(
                 color: Color(0xFF666674),
@@ -592,7 +610,9 @@ class _StepVisual extends StatelessWidget {
           Positioned(
             right: 22,
             bottom: 18,
-            child: Text(
+            child: SiteText(
+              contentKey: 'copy.marketing_pages.m9',
+              literal: false,
               number,
               style: const TextStyle(
                 color: Colors.white24,
@@ -643,7 +663,9 @@ class _ScenarioSectionState extends State<_ScenarioSection> {
           constraints: const BoxConstraints(maxWidth: 1120),
           child: Column(
             children: [
-              const Text(
+              const SiteText(
+                contentKey: 'copy.marketing_pages.1',
+                literal: true,
                 'ONE PROPERTY / THREE FUTURES',
                 style: TextStyle(
                   color: _lilac,
@@ -653,7 +675,9 @@ class _ScenarioSectionState extends State<_ScenarioSection> {
                 ),
               ),
               const SizedBox(height: 18),
-              const Text(
+              const SiteText(
+                contentKey: 'copy.marketing_pages.2',
+                literal: true,
                 'Pressure-test before you commit.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
@@ -682,7 +706,9 @@ class _ScenarioSectionState extends State<_ScenarioSection> {
                           borderRadius: BorderRadius.circular(24),
                         ),
                         alignment: Alignment.center,
-                        child: Text(
+                        child: SiteText(
+                          contentKey: 'copy.marketing_pages.m10',
+                          literal: false,
                           scenarios[index].$1,
                           style: TextStyle(
                             color: active == index ? _ink : Colors.white60,
@@ -711,7 +737,9 @@ class _ScenarioSectionState extends State<_ScenarioSection> {
                   ),
                   child: Column(
                     children: [
-                      Text(
+                      SiteText(
+                        contentKey: 'copy.marketing_pages.m11',
+                        literal: false,
                         scenarios[active].$2,
                         style: const TextStyle(
                           color: Colors.white,
@@ -720,7 +748,9 @@ class _ScenarioSectionState extends State<_ScenarioSection> {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      Text(
+                      SiteText(
+                        contentKey: 'copy.marketing_pages.m12',
+                        literal: false,
                         scenarios[active].$3,
                         textAlign: TextAlign.center,
                         style: const TextStyle(
@@ -778,7 +808,9 @@ class _Manifesto extends StatelessWidget {
         child: LayoutBuilder(
           builder: (context, constraints) {
             final narrow = constraints.maxWidth < 760;
-            final statement = const Text(
+            final statement = const SiteText(
+              contentKey: 'copy.marketing_pages.3',
+              literal: true,
               'A property is never just a price. It is debt, time, risk, place, income, optionality—and for many people, home.',
               style: TextStyle(
                 color: _ink,
@@ -788,7 +820,9 @@ class _Manifesto extends StatelessWidget {
                 letterSpacing: -2,
               ),
             );
-            final copy = const Text(
+            final copy = const SiteText(
+              contentKey: 'copy.marketing_pages.4',
+              literal: true,
               'Affinity exists to bring those dimensions into one honest picture. We believe sophisticated analysis can still be understandable, that assumptions should remain visible, and that software should help people think—not simply hand them a score.',
               style: TextStyle(
                 color: Color(0xFF666674),
@@ -851,7 +885,9 @@ class _Principles extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                const SiteText(
+                  contentKey: 'copy.marketing_pages.5',
+                  literal: true,
                   'WHAT WE BELIEVE',
                   style: TextStyle(
                     color: _lilac,
@@ -861,7 +897,9 @@ class _Principles extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 18),
-                const Text(
+                const SiteText(
+                  contentKey: 'copy.marketing_pages.6',
+                  literal: true,
                   'Four principles. No fine print.',
                   style: TextStyle(
                     color: Colors.white,
@@ -885,7 +923,9 @@ class _Principles extends StatelessWidget {
                           ? Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
+                                SiteText(
+                                  contentKey: 'copy.marketing_pages.m13',
+                                  literal: false,
                                   item.$1,
                                   style: const TextStyle(
                                     color: _purple,
@@ -894,7 +934,9 @@ class _Principles extends StatelessWidget {
                                   ),
                                 ),
                                 const SizedBox(height: 12),
-                                Text(
+                                SiteText(
+                                  contentKey: 'copy.marketing_pages.m14',
+                                  literal: false,
                                   item.$2,
                                   style: const TextStyle(
                                     color: Colors.white,
@@ -903,7 +945,9 @@ class _Principles extends StatelessWidget {
                                   ),
                                 ),
                                 const SizedBox(height: 10),
-                                Text(
+                                SiteText(
+                                  contentKey: 'copy.marketing_pages.m15',
+                                  literal: false,
                                   item.$3,
                                   style: const TextStyle(
                                     color: _muted,
@@ -916,7 +960,9 @@ class _Principles extends StatelessWidget {
                               children: [
                                 SizedBox(
                                   width: 150,
-                                  child: Text(
+                                  child: SiteText(
+                                    contentKey: 'copy.marketing_pages.m16',
+                                    literal: false,
                                     item.$1,
                                     style: const TextStyle(
                                       color: _purple,
@@ -927,7 +973,9 @@ class _Principles extends StatelessWidget {
                                 ),
                                 Expanded(
                                   flex: 4,
-                                  child: Text(
+                                  child: SiteText(
+                                    contentKey: 'copy.marketing_pages.m17',
+                                    literal: false,
                                     item.$2,
                                     style: const TextStyle(
                                       color: Colors.white,
@@ -938,7 +986,9 @@ class _Principles extends StatelessWidget {
                                 ),
                                 Expanded(
                                   flex: 5,
-                                  child: Text(
+                                  child: SiteText(
+                                    contentKey: 'copy.marketing_pages.m18',
+                                    literal: false,
                                     item.$3,
                                     style: const TextStyle(
                                       color: _muted,
@@ -1096,7 +1146,9 @@ class _RoleCardState extends State<_RoleCard> {
             ),
           ),
           const SizedBox(height: 26),
-          Text(
+          SiteText(
+            contentKey: 'copy.marketing_pages.m19',
+            literal: false,
             widget.role.$1,
             style: const TextStyle(
               color: _purple,
@@ -1106,7 +1158,9 @@ class _RoleCardState extends State<_RoleCard> {
             ),
           ),
           const SizedBox(height: 10),
-          Text(
+          SiteText(
+            contentKey: 'copy.marketing_pages.m20',
+            literal: false,
             widget.role.$2,
             style: TextStyle(
               color: hovered ? Colors.white : _ink,
@@ -1116,7 +1170,9 @@ class _RoleCardState extends State<_RoleCard> {
             ),
           ),
           const SizedBox(height: 12),
-          Text(
+          SiteText(
+            contentKey: 'copy.marketing_pages.m21',
+            literal: false,
             widget.role.$3,
             style: TextStyle(
               color: hovered ? _muted : const Color(0xFF666674),
@@ -1143,7 +1199,9 @@ class _TeamNote extends StatelessWidget {
           children: [
             AffinityLogo(size: 58, showWordmark: false),
             SizedBox(height: 28),
-            Text(
+            SiteText(
+              contentKey: 'copy.marketing_pages.m22',
+              literal: true,
               'Small by design. Ambitious by necessity.',
               textAlign: TextAlign.center,
               style: TextStyle(
@@ -1155,7 +1213,9 @@ class _TeamNote extends StatelessWidget {
               ),
             ),
             SizedBox(height: 18),
-            Text(
+            SiteText(
+              contentKey: 'copy.marketing_pages.m23',
+              literal: true,
               'Affinity is being shaped as a focused, multidisciplinary company. Every discipline works from the same principle: make complex property decisions clearer, more rigorous and more human.',
               textAlign: TextAlign.center,
               style: TextStyle(color: _muted, fontSize: 15, height: 1.65),
@@ -1256,7 +1316,10 @@ class _PageHero extends StatelessWidget {
             width: desktop
                 ? MediaQuery.sizeOf(context).width * .47
                 : MediaQuery.sizeOf(context).width,
-            child: Image.asset(asset, fit: BoxFit.cover),
+            child: SiteImage(
+              contentKey: 'image.marketing_pages.m1.${active.name}',
+              original: Image.asset(asset, fit: BoxFit.cover),
+            ),
           ),
           DecoratedBox(
             decoration: BoxDecoration(
@@ -1301,7 +1364,9 @@ class _PageHero extends StatelessWidget {
               children: [
                 MarketingNavigation(active: active),
                 const Spacer(),
-                Text(
+                SiteText(
+                  contentKey: 'copy.marketing_pages.m24',
+                  literal: false,
                   eyebrow,
                   style: const TextStyle(
                     color: _lilac,
@@ -1313,7 +1378,9 @@ class _PageHero extends StatelessWidget {
                 const SizedBox(height: 20),
                 ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 780),
-                  child: Text(
+                  child: SiteText(
+                    contentKey: 'copy.marketing_pages.m25',
+                    literal: false,
                     title,
                     style: TextStyle(
                       color: Colors.white,
@@ -1327,7 +1394,9 @@ class _PageHero extends StatelessWidget {
                 const SizedBox(height: 24),
                 ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 590),
-                  child: Text(
+                  child: SiteText(
+                    contentKey: 'copy.marketing_pages.m26',
+                    literal: false,
                     body,
                     style: const TextStyle(
                       color: Color(0xFFC4C4CF),
@@ -1373,7 +1442,9 @@ class _DarkFeature extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
+                SiteText(
+                  contentKey: 'copy.marketing_pages.m27',
+                  literal: false,
                   eyebrow,
                   style: const TextStyle(
                     color: _lilac,
@@ -1383,7 +1454,9 @@ class _DarkFeature extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 20),
-                Text(
+                SiteText(
+                  contentKey: 'copy.marketing_pages.m28',
+                  literal: false,
                   title,
                   style: const TextStyle(
                     color: Colors.white,
@@ -1394,7 +1467,12 @@ class _DarkFeature extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 22),
-                Text(body, style: const TextStyle(color: _muted, height: 1.6)),
+                SiteText(
+                  contentKey: 'copy.marketing_pages.m29',
+                  literal: false,
+                  body,
+                  style: const TextStyle(color: _muted, height: 1.6),
+                ),
                 const SizedBox(height: 28),
                 _ModelButton(onTap: onOpen),
               ],
@@ -1416,7 +1494,9 @@ class _DarkFeature extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
+                          SiteText(
+                            contentKey: 'copy.marketing_pages.m30',
+                            literal: false,
                             stat.$1,
                             style: const TextStyle(
                               color: Colors.white,
@@ -1425,7 +1505,9 @@ class _DarkFeature extends StatelessWidget {
                             ),
                           ),
                           const Spacer(),
-                          Text(
+                          SiteText(
+                            contentKey: 'copy.marketing_pages.m31',
+                            literal: false,
                             stat.$2,
                             style: const TextStyle(
                               color: _muted,
@@ -1490,7 +1572,9 @@ class _PageCta extends StatelessWidget {
               const SizedBox(height: 24),
               ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 780),
-                child: Text(
+                child: SiteText(
+                  contentKey: 'copy.marketing_pages.m32',
+                  literal: false,
                   title,
                   textAlign: TextAlign.center,
                   style: TextStyle(

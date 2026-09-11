@@ -2,6 +2,27 @@ import 'package:dwelling_iq/services/business_sale_bulletin_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test(
+    'rich listings preserve edit, saved and financial details with safe photos',
+    () {
+      final b = BusinessSaleBulletin.fromJson({
+        'id': 'rich',
+        'can_edit': true,
+        'is_saved': true,
+        'updated_at': '2026-09-05T01:00:00Z',
+        'details': {
+          'revenue': r'$900,000',
+          'real_estate': 'Lease',
+          'photos': ['https://example.com/photo.jpg', 'javascript:alert(1)'],
+        },
+      });
+      expect(b.canEdit, true);
+      expect(b.isSaved, true);
+      expect(b.detail('revenue'), r'$900,000');
+      expect(b.updatedAt!.isUtc, true);
+      expect(b.photos, ['https://example.com/photo.jpg']);
+    },
+  );
   test('business sale bulletin parses source and conversion state', () {
     final bulletin = BusinessSaleBulletin.fromJson({
       'id': 'bulletin-1',

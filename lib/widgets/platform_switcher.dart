@@ -1,3 +1,4 @@
+import 'site_text.dart';
 import 'package:flutter/material.dart';
 
 import '../models/platform_side.dart';
@@ -41,7 +42,9 @@ class PlatformSwitcher extends StatelessWidget {
                   color: selected == side ? Colors.white : Colors.transparent,
                   borderRadius: BorderRadius.circular(19),
                 ),
-                child: Text(
+                child: SiteText(
+                  contentKey: 'copy.platform_switcher.m1',
+                  literal: false,
                   compact ? side.shortLabel : side.label.toUpperCase(),
                   style: TextStyle(
                     color: selected == side

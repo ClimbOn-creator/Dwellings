@@ -1,3 +1,5 @@
+import '../widgets/site_text.dart';
+import '../widgets/site_image.dart';
 import 'package:flutter/material.dart';
 
 import '../models/platform_side.dart';
@@ -150,9 +152,12 @@ class _NetworkHero extends StatelessWidget {
             width: desktop
                 ? MediaQuery.sizeOf(context).width * .48
                 : MediaQuery.sizeOf(context).width,
-            child: Image.asset(
-              'assets/images/affinity-city-hero.jpg',
-              fit: BoxFit.cover,
+            child: SiteImage(
+              contentKey: 'image.local_network_page.m1',
+              original: Image.asset(
+                'assets/images/affinity-city-hero.jpg',
+                fit: BoxFit.cover,
+              ),
             ),
           ),
           DecoratedBox(
@@ -205,7 +210,9 @@ class _NetworkHero extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Spacer(),
-                Text(
+                SiteText(
+                  contentKey: 'copy.local_network_page.m1',
+                  literal: false,
                   side == PlatformSide.property
                       ? 'YOUR LOCAL PROPERTY TEAM'
                       : 'YOUR BUSINESS ACQUISITION TEAM',
@@ -217,7 +224,9 @@ class _NetworkHero extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 20),
-                Text(
+                SiteText(
+                  contentKey: 'copy.local_network_page.m2',
+                  literal: false,
                   side == PlatformSide.property
                       ? 'The right people.\nIn the right city.'
                       : 'Specialists for\nevery deal stage.',
@@ -232,7 +241,9 @@ class _NetworkHero extends StatelessWidget {
                 const SizedBox(height: 22),
                 SizedBox(
                   width: 560,
-                  child: Text(
+                  child: SiteText(
+                    contentKey: 'copy.local_network_page.m3',
+                    literal: false,
                     side == PlatformSide.property
                         ? 'Find local realtors, mortgage brokers, property lawyers, accountants and lenders around the market you are analyzing.'
                         : 'Build a transaction team across search, legal, quality of earnings, financing, tax, insurance, people, cybersecurity and wealth planning.',
@@ -276,7 +287,9 @@ class _CitySelector extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                const SiteText(
+                  contentKey: 'copy.local_network_page.1',
+                  literal: true,
                   'SEARCH ANYWHERE IN CANADA',
                   style: TextStyle(
                     color: Color(0xFF7A7A87),
@@ -286,7 +299,9 @@ class _CitySelector extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 3),
-                Text(
+                SiteText(
+                  contentKey: 'copy.local_network_page.m4',
+                  literal: false,
                   city.label,
                   style: const TextStyle(
                     color: _ink,
@@ -315,14 +330,20 @@ Future<void> _showCanadianCityDialog(
     context: context,
     builder: (dialogContext) => StatefulBuilder(
       builder: (context, setModalState) => AlertDialog(
-        title: const Text('Where in Canada are you looking?'),
+        title: const SiteText(
+          contentKey: 'copy.local_network_page.2',
+          literal: true,
+          'Where in Canada are you looking?',
+        ),
         content: SizedBox(
           width: 460,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              const SiteText(
+                contentKey: 'copy.local_network_page.3',
+                literal: true,
                 'Enter any city, town, municipality or community.',
                 style: TextStyle(color: Color(0xFF666674), fontSize: 13),
               ),
@@ -337,13 +358,21 @@ Future<void> _showCanadianCityDialog(
               DropdownButtonFormField<String>(
                 initialValue: provinceCode,
                 decoration: const InputDecoration(
-                  labelText: 'Province or territory',
+                  label: SiteText(
+                    'Province or territory',
+                    contentKey: 'copy.local_network_page.field1',
+                    literal: true,
+                  ),
                 ),
                 items: MarketplaceService.provinces
                     .map(
                       (province) => DropdownMenuItem(
                         value: province.code,
-                        child: Text('${province.name} (${province.code})'),
+                        child: SiteText(
+                          contentKey: 'copy.local_network_page.m5',
+                          literal: false,
+                          '${province.name} (${province.code})',
+                        ),
                       ),
                     )
                     .toList(),
@@ -357,7 +386,11 @@ Future<void> _showCanadianCityDialog(
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancel'),
+            child: const SiteText(
+              contentKey: 'copy.local_network_page.4',
+              literal: true,
+              'Cancel',
+            ),
           ),
           FilledButton(
             onPressed: () {
@@ -368,7 +401,11 @@ Future<void> _showCanadianCityDialog(
               if (city == null) return;
               Navigator.pop(dialogContext, city);
             },
-            child: const Text('Find professionals'),
+            child: const SiteText(
+              contentKey: 'copy.local_network_page.5',
+              literal: true,
+              'Find professionals',
+            ),
           ),
         ],
       ),
@@ -402,8 +439,11 @@ class _DirectorySection extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              '${city.city.toUpperCase()} NETWORK',
+            SiteText(
+              templateValues: {'value1': '${city.city.toUpperCase()}'},
+              contentKey: 'copy.local_network_page.m6',
+              literal: false,
+              "{{value1}} NETWORK",
               style: const TextStyle(
                 color: _purple,
                 fontSize: 10,
@@ -412,7 +452,9 @@ class _DirectorySection extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            Text(
+            SiteText(
+              contentKey: 'copy.local_network_page.m7',
+              literal: false,
               side == PlatformSide.property
                   ? 'Build your property team.'
                   : 'Build your acquisition team.',
@@ -425,7 +467,9 @@ class _DirectorySection extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 15),
-            const Text(
+            const SiteText(
+              contentKey: 'copy.local_network_page.6',
+              literal: true,
               'Up to five providers per category. Sponsored placements are always disclosed.',
               style: TextStyle(color: Color(0xFF666674), fontSize: 14),
             ),
@@ -512,8 +556,14 @@ class _EmptyDirectory extends StatelessWidget {
           child: const Icon(Icons.person_search_outlined, color: _purple),
         ),
         const SizedBox(height: 18),
-        Text(
-          'No verified ${category.label.toLowerCase()} in ${city.city} yet.',
+        SiteText(
+          templateValues: {
+            'value1': '${category.label.toLowerCase()}',
+            'value2': '${city.city}',
+          },
+          contentKey: 'copy.local_network_page.m8',
+          literal: false,
+          "No verified {{value1}} in {{value2}} yet.",
           textAlign: TextAlign.center,
           style: const TextStyle(
             color: _ink,
@@ -522,7 +572,9 @@ class _EmptyDirectory extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 9),
-        const Text(
+        const SiteText(
+          contentKey: 'copy.local_network_page.7',
+          literal: true,
           'The live directory is connected. Providers will appear here after onboarding and credential verification.',
           textAlign: TextAlign.center,
           style: TextStyle(color: Color(0xFF666674), fontSize: 13, height: 1.5),
@@ -555,7 +607,9 @@ class _CategoryTab extends StatelessWidget {
           borderRadius: BorderRadius.circular(24),
           border: Border.all(color: active ? _ink : const Color(0xFFE0E0E7)),
         ),
-        child: Text(
+        child: SiteText(
+          contentKey: 'copy.local_network_page.m9',
+          literal: false,
           value.label.toUpperCase(),
           style: TextStyle(
             color: active ? Colors.white : _ink,
@@ -585,7 +639,9 @@ class _DemoBanner extends StatelessWidget {
         Icon(Icons.science_outlined, color: _purple, size: 19),
         SizedBox(width: 11),
         Expanded(
-          child: Text(
+          child: SiteText(
+            contentKey: 'copy.local_network_page.m10',
+            literal: true,
             'EXAMPLE PROFESSIONALS · Fictional profiles for previewing team building. They are not verified or available for contact.',
             style: TextStyle(
               color: Color(0xFF4C348F),
@@ -660,7 +716,9 @@ class _ProviderRowState extends State<_ProviderRow> {
       setState(() => _added = !_added);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
+          content: SiteText(
+            contentKey: 'copy.local_network_page.m11',
+            literal: false,
             _added
                 ? '${widget.provider.name} added to your team.'
                 : '${widget.provider.name} removed from your team.',
@@ -669,9 +727,15 @@ class _ProviderRowState extends State<_ProviderRow> {
       );
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('$error')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: SiteText(
+              contentKey: 'copy.local_network_page.m12',
+              literal: false,
+              '$error',
+            ),
+          ),
+        );
       }
     } finally {
       if (mounted) setState(() => _changingTeam = false);
@@ -724,7 +788,9 @@ class _ProviderRowState extends State<_ProviderRow> {
                           ),
                         ),
                       ),
-                      child: Text(
+                      child: SiteText(
+                        contentKey: 'copy.local_network_page.m13',
+                        literal: false,
                         provider.name,
                         style: TextStyle(
                           color: hovered ? Colors.white : _ink,
@@ -745,7 +811,9 @@ class _ProviderRowState extends State<_ProviderRow> {
                   ],
                 ),
                 const SizedBox(height: 5),
-                Text(
+                SiteText(
+                  contentKey: 'copy.local_network_page.m14',
+                  literal: false,
                   '${provider.jobTitle} · ${provider.company}',
                   style: TextStyle(
                     color: hovered ? _muted : const Color(0xFF60606D),
@@ -754,7 +822,9 @@ class _ProviderRowState extends State<_ProviderRow> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                Text(
+                SiteText(
+                  contentKey: 'copy.local_network_page.m15',
+                  literal: false,
                   provider.specialty,
                   style: TextStyle(
                     color: hovered
@@ -806,7 +876,9 @@ class _ProviderRowState extends State<_ProviderRow> {
                   vertical: 17,
                 ),
               ),
-              child: Text(
+              child: SiteText(
+                contentKey: 'copy.local_network_page.m16',
+                literal: false,
                 provider.isExample ? 'EXAMPLE ONLY' : 'CONNECT',
                 style: const TextStyle(
                   fontSize: 9,
@@ -838,7 +910,9 @@ class _ProviderRowState extends State<_ProviderRow> {
                 _added ? Icons.check_circle : Icons.add_circle_outline,
                 size: 16,
               ),
-              label: Text(
+              label: SiteText(
+                contentKey: 'copy.local_network_page.m17',
+                literal: false,
                 _changingTeam
                     ? 'UPDATING…'
                     : (_added ? 'ADDED!' : 'ADD TO TEAM'),
@@ -918,7 +992,9 @@ class _ProviderPhoto extends StatelessWidget {
             border: Border.all(color: Colors.white, width: 2),
           ),
           alignment: Alignment.center,
-          child: Text(
+          child: SiteText(
+            contentKey: 'copy.local_network_page.m18',
+            literal: false,
             '$rank',
             style: const TextStyle(
               color: Colors.white,
@@ -944,7 +1020,9 @@ class _Badge extends StatelessWidget {
       borderRadius: BorderRadius.circular(10),
       border: Border.all(color: color.withValues(alpha: .45)),
     ),
-    child: Text(
+    child: SiteText(
+      contentKey: 'copy.local_network_page.m19',
+      literal: false,
       label,
       style: TextStyle(
         color: color,
@@ -967,7 +1045,9 @@ class _Signal extends StatelessWidget {
     children: [
       Icon(icon, size: 15, color: dark ? _lilac : _purple),
       const SizedBox(width: 5),
-      Text(
+      SiteText(
+        contentKey: 'copy.local_network_page.m20',
+        literal: false,
         text,
         style: TextStyle(
           color: dark ? Colors.white70 : const Color(0xFF555562),
@@ -993,7 +1073,12 @@ Future<void> _showConnectionDialog(
     context: context,
     builder: (dialogContext) => StatefulBuilder(
       builder: (context, setModalState) => AlertDialog(
-        title: Text('Connect with ${provider.name}'),
+        title: SiteText(
+          templateValues: {'value1': '${provider.name}'},
+          contentKey: 'copy.local_network_page.m21',
+          literal: false,
+          "Connect with {{value1}}",
+        ),
         content: SizedBox(
           width: 440,
           child: SingleChildScrollView(
@@ -1003,7 +1088,9 @@ Future<void> _showConnectionDialog(
                 if (isDemo)
                   const Padding(
                     padding: EdgeInsets.only(bottom: 16),
-                    child: Text(
+                    child: SiteText(
+                      contentKey: 'copy.local_network_page.m22',
+                      literal: true,
                       'This is an example listing. The request will be demonstrated but not sent.',
                       style: TextStyle(
                         color: _purple,
@@ -1014,20 +1101,36 @@ Future<void> _showConnectionDialog(
                   ),
                 TextField(
                   controller: name,
-                  decoration: const InputDecoration(labelText: 'Your name'),
+                  decoration: const InputDecoration(
+                    label: SiteText(
+                      'Your name',
+                      contentKey: 'copy.local_network_page.field2',
+                      literal: true,
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: email,
                   keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(labelText: 'Email'),
+                  decoration: const InputDecoration(
+                    label: SiteText(
+                      'Email',
+                      contentKey: 'copy.local_network_page.field3',
+                      literal: true,
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: phone,
                   keyboardType: TextInputType.phone,
                   decoration: const InputDecoration(
-                    labelText: 'Phone (optional)',
+                    label: SiteText(
+                      'Phone (optional)',
+                      contentKey: 'copy.local_network_page.field4',
+                      literal: true,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -1037,7 +1140,9 @@ Future<void> _showConnectionDialog(
                       setModalState(() => consent = value ?? false),
                   contentPadding: EdgeInsets.zero,
                   controlAffinity: ListTileControlAffinity.leading,
-                  title: Text(
+                  title: SiteText(
+                    contentKey: 'copy.local_network_page.m23',
+                    literal: false,
                     provider.category.side == PlatformSide.business
                         ? 'I consent to this provider contacting me about my business acquisition request.'
                         : 'I consent to this provider contacting me about my property request.',
@@ -1051,7 +1156,11 @@ Future<void> _showConnectionDialog(
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancel'),
+            child: const SiteText(
+              contentKey: 'copy.local_network_page.8',
+              literal: true,
+              'Cancel',
+            ),
           ),
           FilledButton(
             onPressed:
@@ -1071,7 +1180,9 @@ Future<void> _showConnectionDialog(
                     Navigator.pop(dialogContext);
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text(
+                        content: SiteText(
+                          contentKey: 'copy.local_network_page.m24',
+                          literal: false,
                           isDemo
                               ? 'Demo connection complete. No request was sent.'
                               : 'Request sent. The provider can now contact you.',
@@ -1079,7 +1190,11 @@ Future<void> _showConnectionDialog(
                       ),
                     );
                   },
-            child: const Text('Send request'),
+            child: const SiteText(
+              contentKey: 'copy.local_network_page.9',
+              literal: true,
+              'Send request',
+            ),
           ),
         ],
       ),
@@ -1101,7 +1216,9 @@ class _MarketplaceTrust extends StatelessWidget {
         constraints: const BoxConstraints(maxWidth: 1050),
         child: Column(
           children: [
-            const Text(
+            const SiteText(
+              contentKey: 'copy.local_network_page.10',
+              literal: true,
               'TRUST BEFORE PLACEMENT',
               style: TextStyle(
                 color: _lilac,
@@ -1111,7 +1228,9 @@ class _MarketplaceTrust extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 18),
-            const Text(
+            const SiteText(
+              contentKey: 'copy.local_network_page.11',
+              literal: true,
               'Paid visibility. Clear disclosure.',
               textAlign: TextAlign.center,
               style: TextStyle(
@@ -1125,7 +1244,9 @@ class _MarketplaceTrust extends StatelessWidget {
             const SizedBox(height: 20),
             const SizedBox(
               width: 720,
-              child: Text(
+              child: SiteText(
+                contentKey: 'copy.local_network_page.m25',
+                literal: true,
                 'Providers may pay for placement, but sponsorship does not change verification status, professional credentials, rate accuracy or user reviews. Mortgage pricing is qualification-dependent and must display its effective date when live rate data is available.',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: _muted, fontSize: 14, height: 1.65),
@@ -1170,7 +1291,9 @@ class _TrustPill extends StatelessWidget {
       children: [
         Icon(icon, color: _lilac, size: 17),
         const SizedBox(width: 8),
-        Text(
+        SiteText(
+          contentKey: 'copy.local_network_page.m26',
+          literal: false,
           label,
           style: const TextStyle(
             color: Colors.white,

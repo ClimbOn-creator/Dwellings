@@ -1,3 +1,5 @@
+import '../services/site_content_service.dart';
+import 'site_inline_editor.dart';
 import 'package:flutter/material.dart';
 
 class ProfilePhoto extends StatelessWidget {
@@ -29,7 +31,31 @@ class ProfilePhoto extends StatelessWidget {
                 errorBuilder: (_, _, _) => _fallback(),
               )
             : exampleIndex != null
-            ? _ExampleSprite(index: exampleIndex!, size: size)
+            ? ValueListenableBuilder<int>(
+                valueListenable: SiteContentService.revision,
+                builder: (context, _, _) {
+                  final key = 'image.example_profile.$exampleIndex';
+                  final url = SiteContentService.published(key);
+                  final fallback = _ExampleSprite(
+                    index: exampleIndex!,
+                    size: size,
+                  );
+                  return SiteEditTarget(
+                    contentKey: key,
+                    fallback: '',
+                    image: true,
+                    child: url == null
+                        ? fallback
+                        : Image.network(
+                            url,
+                            width: size,
+                            height: size,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, _, _) => fallback,
+                          ),
+                  );
+                },
+              )
             : _fallback(),
       ),
     );

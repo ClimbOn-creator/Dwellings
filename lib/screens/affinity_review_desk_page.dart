@@ -1,3 +1,4 @@
+import '../widgets/site_text.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -155,13 +156,17 @@ class _AffinityReviewDeskPageState extends State<AffinityReviewDeskPage> {
                 children: [
                   const Icon(Icons.admin_panel_settings_outlined, size: 42),
                   const SizedBox(height: 18),
-                  const Text(
+                  const SiteText(
+                    contentKey: 'copy.affinity_review_desk_page.1',
+                    literal: true,
                     'Private Affinity Review Desk',
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 30, fontWeight: FontWeight.w800),
                   ),
                   const SizedBox(height: 12),
-                  Text(
+                  SiteText(
+                    contentKey: 'copy.affinity_review_desk_page.m1',
+                    literal: false,
                     BackendService.user == null
                         ? 'Sign in with the account that will own Affinity administration.'
                         : 'This signed-in account has not been added to the Affinity administrator allow-list.',
@@ -172,7 +177,9 @@ class _AffinityReviewDeskPageState extends State<AffinityReviewDeskPage> {
                   FilledButton(
                     onPressed: _signIn,
                     style: FilledButton.styleFrom(backgroundColor: _green),
-                    child: Text(
+                    child: SiteText(
+                      contentKey: 'copy.affinity_review_desk_page.m2',
+                      literal: false,
                       BackendService.user == null
                           ? 'SIGN IN'
                           : 'USE ANOTHER ACCOUNT',
@@ -198,7 +205,9 @@ class _AffinityReviewDeskPageState extends State<AffinityReviewDeskPage> {
         child: const Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            SiteText(
+              contentKey: 'copy.affinity_review_desk_page.m3',
+              literal: true,
               'PRIVATE OPERATIONS',
               style: TextStyle(
                 color: Color(0xFFB8CEC4),
@@ -208,7 +217,9 @@ class _AffinityReviewDeskPageState extends State<AffinityReviewDeskPage> {
               ),
             ),
             SizedBox(height: 12),
-            Text(
+            SiteText(
+              contentKey: 'copy.affinity_review_desk_page.m4',
+              literal: true,
               'Affinity Review Desk',
               style: TextStyle(
                 color: Colors.white,
@@ -219,7 +230,9 @@ class _AffinityReviewDeskPageState extends State<AffinityReviewDeskPage> {
               ),
             ),
             SizedBox(height: 14),
-            Text(
+            SiteText(
+              contentKey: 'copy.affinity_review_desk_page.m5',
+              literal: true,
               'Review private assessments, create safe anonymous listings, approve professional members, and control what enters the Member Studio.',
               style: TextStyle(color: Color(0xFFD8E4DE), height: 1.5),
             ),
@@ -230,7 +243,11 @@ class _AffinityReviewDeskPageState extends State<AffinityReviewDeskPage> {
   );
 
   Widget _tabChip(int tab, String label) => ChoiceChip(
-    label: Text(label),
+    label: SiteText(
+      contentKey: 'copy.affinity_review_desk_page.m6',
+      literal: false,
+      label,
+    ),
     selected: _tab == tab,
     selectedColor: _green,
     backgroundColor: Colors.white,
@@ -341,15 +358,23 @@ class _AffinityReviewDeskPageState extends State<AffinityReviewDeskPage> {
             },
             style: FilledButton.styleFrom(backgroundColor: _green),
             icon: const Icon(Icons.outgoing_mail, size: 18),
-            label: const Text('PROCESS NOTIFICATION EMAILS'),
+            label: const SiteText(
+              contentKey: 'copy.affinity_review_desk_page.2',
+              literal: true,
+              'PROCESS NOTIFICATION EMAILS',
+            ),
           ),
           const SizedBox(height: 34),
-          const Text(
+          const SiteText(
+            contentKey: 'copy.affinity_review_desk_page.3',
+            literal: true,
             'Private audit trail',
             style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 7),
-          const Text(
+          const SiteText(
+            contentKey: 'copy.affinity_review_desk_page.4',
+            literal: true,
             'A reviewer-only record of deal, pitch, and access decisions.',
             style: TextStyle(color: _muted),
           ),
@@ -397,7 +422,9 @@ class _OperationsMetric extends StatelessWidget {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        SiteText(
+          contentKey: 'copy.affinity_review_desk_page.m7',
+          literal: false,
           label,
           style: const TextStyle(
             color: _muted,
@@ -407,7 +434,9 @@ class _OperationsMetric extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 10),
-        Text(
+        SiteText(
+          contentKey: 'copy.affinity_review_desk_page.m8',
+          literal: false,
           value,
           style: const TextStyle(fontSize: 30, fontWeight: FontWeight.w900),
         ),
@@ -437,12 +466,16 @@ class _AuditRow extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
+              SiteText(
+                contentKey: 'copy.affinity_review_desk_page.m9',
+                literal: false,
                 event.eventType.replaceAll('_', ' '),
                 style: const TextStyle(fontWeight: FontWeight.w800),
               ),
               const SizedBox(height: 3),
-              Text(
+              SiteText(
+                contentKey: 'copy.affinity_review_desk_page.m10',
+                literal: false,
                 '${event.entityType} · ${event.actorEmail} · ${event.metadata}',
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
@@ -451,7 +484,9 @@ class _AuditRow extends StatelessWidget {
             ],
           ),
         ),
-        Text(
+        SiteText(
+          contentKey: 'copy.affinity_review_desk_page.m11',
+          literal: false,
           DateFormat.MMMd().add_jm().format(event.createdAt.toLocal()),
           style: const TextStyle(color: _muted, fontSize: 10),
         ),
@@ -480,7 +515,9 @@ class _ReviewCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  SiteText(
+                    contentKey: 'copy.affinity_review_desk_page.m12',
+                    literal: false,
                     item.businessName.isEmpty
                         ? item.dealTitle
                         : item.businessName,
@@ -490,7 +527,9 @@ class _ReviewCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 5),
-                  Text(
+                  SiteText(
+                    contentKey: 'copy.affinity_review_desk_page.m13',
+                    literal: false,
                     '${item.industry.isEmpty ? 'Industry not supplied' : item.industry} · ${item.region.isEmpty ? 'Region private' : item.region}',
                     style: const TextStyle(color: _muted),
                   ),
@@ -523,15 +562,24 @@ class _ReviewCard extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: Text(
-                'Submitted ${DateFormat.yMMMd().format(item.submittedAt)} · Buyer identity restricted to reviewers',
+              child: SiteText(
+                templateValues: {
+                  'value1': '${DateFormat.yMMMd().format(item.submittedAt)}',
+                },
+                contentKey: 'copy.affinity_review_desk_page.m14',
+                literal: false,
+                "Submitted {{value1}} · Buyer identity restricted to reviewers",
                 style: const TextStyle(color: _muted, fontSize: 11),
               ),
             ),
             FilledButton(
               onPressed: onOpen,
               style: FilledButton.styleFrom(backgroundColor: _green),
-              child: const Text('OPEN REVIEW'),
+              child: const SiteText(
+                contentKey: 'copy.affinity_review_desk_page.5',
+                literal: true,
+                'OPEN REVIEW',
+              ),
             ),
           ],
         ),
@@ -628,19 +676,33 @@ class _ReviewEditorState extends State<_ReviewEditor> {
       final confirmed = await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('Publish anonymous opportunity?'),
-          content: const Text(
+          title: const SiteText(
+            contentKey: 'copy.affinity_review_desk_page.6',
+            literal: true,
+            'Publish anonymous opportunity?',
+          ),
+          content: const SiteText(
+            contentKey: 'copy.affinity_review_desk_page.7',
+            literal: true,
             'Verified professional members will immediately see the public fields. Confirm that the summary contains no buyer name, exact address, email, or identifying details.',
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('CANCEL'),
+              child: const SiteText(
+                contentKey: 'copy.affinity_review_desk_page.8',
+                literal: true,
+                'CANCEL',
+              ),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(context, true),
               style: FilledButton.styleFrom(backgroundColor: _green),
-              child: const Text('PUBLISH SAFELY'),
+              child: const SiteText(
+                contentKey: 'copy.affinity_review_desk_page.9',
+                literal: true,
+                'PUBLISH SAFELY',
+              ),
             ),
           ],
         ),
@@ -675,16 +737,26 @@ class _ReviewEditorState extends State<_ReviewEditor> {
     } catch (error) {
       if (mounted) {
         setState(() => saving = false);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('$error')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: SiteText(
+              contentKey: 'copy.affinity_review_desk_page.m15',
+              literal: false,
+              '$error',
+            ),
+          ),
+        );
       }
     }
   }
 
   @override
   Widget build(BuildContext context) => AlertDialog(
-    title: const Text('Review and anonymize deal'),
+    title: const SiteText(
+      contentKey: 'copy.affinity_review_desk_page.10',
+      literal: true,
+      'Review and anonymize deal',
+    ),
     content: SizedBox(
       width: 780,
       child: SingleChildScrollView(
@@ -693,14 +765,22 @@ class _ReviewEditorState extends State<_ReviewEditor> {
           children: [
             _privateSource(),
             const SizedBox(height: 24),
-            const Text(
+            const SiteText(
+              contentKey: 'copy.affinity_review_desk_page.11',
+              literal: true,
               'MEMBER-FACING FIELDS',
               style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1),
             ),
             const SizedBox(height: 14),
             TextField(
               controller: headline,
-              decoration: const InputDecoration(labelText: 'Safe headline'),
+              decoration: const InputDecoration(
+                label: SiteText(
+                  'Safe headline',
+                  contentKey: 'copy.affinity_review_desk_page.field1',
+                  literal: true,
+                ),
+              ),
             ),
             const SizedBox(height: 12),
             Row(
@@ -708,7 +788,13 @@ class _ReviewEditorState extends State<_ReviewEditor> {
                 Expanded(
                   child: TextField(
                     controller: industry,
-                    decoration: const InputDecoration(labelText: 'Industry'),
+                    decoration: const InputDecoration(
+                      label: SiteText(
+                        'Industry',
+                        contentKey: 'copy.affinity_review_desk_page.field2',
+                        literal: true,
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -716,7 +802,11 @@ class _ReviewEditorState extends State<_ReviewEditor> {
                   child: TextField(
                     controller: region,
                     decoration: const InputDecoration(
-                      labelText: 'General region',
+                      label: SiteText(
+                        'General region',
+                        contentKey: 'copy.affinity_review_desk_page.field3',
+                        literal: true,
+                      ),
                     ),
                   ),
                 ),
@@ -728,16 +818,24 @@ class _ReviewEditorState extends State<_ReviewEditor> {
               minLines: 4,
               maxLines: 7,
               decoration: const InputDecoration(
-                labelText: 'Anonymous opportunity summary',
+                label: SiteText(
+                  'Anonymous opportunity summary',
+                  contentKey: 'copy.affinity_review_desk_page.field4',
+                  literal: true,
+                ),
               ),
             ),
             const SizedBox(height: 12),
-            const Text(
+            const SiteText(
+              contentKey: 'copy.affinity_review_desk_page.12',
+              literal: true,
               'ANONYMOUS BUYER CRITERIA',
               style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1),
             ),
             const SizedBox(height: 6),
-            const Text(
+            const SiteText(
+              contentKey: 'copy.affinity_review_desk_page.13',
+              literal: true,
               'Translate the buyer’s inputs into useful member-facing criteria. Use ranges and general descriptions; never paste a company name, exact address, personal name, email, or identifying detail.',
               style: TextStyle(color: _muted, height: 1.45),
             ),
@@ -757,7 +855,12 @@ class _ReviewEditorState extends State<_ReviewEditor> {
                 controller: brief[entry.key],
                 minLines: 1,
                 maxLines: 3,
-                decoration: InputDecoration(labelText: entry.value),
+                decoration: InputDecoration(
+                  label: siteInputCopy(
+                    entry.value,
+                    contentKey: 'copy.affinity_review_desk_page.field.dynamic1',
+                  ),
+                ),
               ),
               const SizedBox(height: 12),
             ],
@@ -767,7 +870,11 @@ class _ReviewEditorState extends State<_ReviewEditor> {
                   child: TextField(
                     controller: priceBand,
                     decoration: const InputDecoration(
-                      labelText: 'Purchase price band',
+                      label: SiteText(
+                        'Purchase price band',
+                        contentKey: 'copy.affinity_review_desk_page.field5',
+                        literal: true,
+                      ),
                     ),
                   ),
                 ),
@@ -776,7 +883,11 @@ class _ReviewEditorState extends State<_ReviewEditor> {
                   child: TextField(
                     controller: capitalBand,
                     decoration: const InputDecoration(
-                      labelText: 'Capital required band',
+                      label: SiteText(
+                        'Capital required band',
+                        contentKey: 'copy.affinity_review_desk_page.field6',
+                        literal: true,
+                      ),
                     ),
                   ),
                 ),
@@ -790,7 +901,11 @@ class _ReviewEditorState extends State<_ReviewEditor> {
                     controller: score,
                     keyboardType: TextInputType.number,
                     decoration: const InputDecoration(
-                      labelText: 'Affinity score (0–100)',
+                      label: SiteText(
+                        'Affinity score (0–100)',
+                        contentKey: 'copy.affinity_review_desk_page.field7',
+                        literal: true,
+                      ),
                     ),
                   ),
                 ),
@@ -798,7 +913,13 @@ class _ReviewEditorState extends State<_ReviewEditor> {
                 Expanded(
                   child: TextField(
                     controller: scoreLabel,
-                    decoration: const InputDecoration(labelText: 'Score label'),
+                    decoration: const InputDecoration(
+                      label: SiteText(
+                        'Score label',
+                        contentKey: 'copy.affinity_review_desk_page.field8',
+                        literal: true,
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -806,13 +927,23 @@ class _ReviewEditorState extends State<_ReviewEditor> {
             const SizedBox(height: 12),
             TextField(
               controller: stage,
-              decoration: const InputDecoration(labelText: 'Deal stage'),
+              decoration: const InputDecoration(
+                label: SiteText(
+                  'Deal stage',
+                  contentKey: 'copy.affinity_review_desk_page.field9',
+                  literal: true,
+                ),
+              ),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: support,
               decoration: const InputDecoration(
-                labelText: 'Support needed, separated by commas',
+                label: SiteText(
+                  'Support needed, separated by commas',
+                  contentKey: 'copy.affinity_review_desk_page.field10',
+                  literal: true,
+                ),
               ),
             ),
             const SizedBox(height: 12),
@@ -821,7 +952,11 @@ class _ReviewEditorState extends State<_ReviewEditor> {
               minLines: 2,
               maxLines: 5,
               decoration: const InputDecoration(
-                labelText: 'Private reviewer notes—never shown to members',
+                label: SiteText(
+                  'Private reviewer notes—never shown to members',
+                  contentKey: 'copy.affinity_review_desk_page.field11',
+                  literal: true,
+                ),
               ),
             ),
           ],
@@ -831,24 +966,44 @@ class _ReviewEditorState extends State<_ReviewEditor> {
     actions: [
       TextButton(
         onPressed: saving ? null : () => Navigator.pop(context),
-        child: const Text('CANCEL'),
+        child: const SiteText(
+          contentKey: 'copy.affinity_review_desk_page.14',
+          literal: true,
+          'CANCEL',
+        ),
       ),
       TextButton(
         onPressed: saving ? null : () => _save('needs_information'),
-        child: const Text('NEEDS INFORMATION'),
+        child: const SiteText(
+          contentKey: 'copy.affinity_review_desk_page.15',
+          literal: true,
+          'NEEDS INFORMATION',
+        ),
       ),
       TextButton(
         onPressed: saving ? null : () => _save('declined'),
-        child: const Text('DECLINE'),
+        child: const SiteText(
+          contentKey: 'copy.affinity_review_desk_page.16',
+          literal: true,
+          'DECLINE',
+        ),
       ),
       OutlinedButton(
         onPressed: saving ? null : () => _save('reviewing'),
-        child: const Text('SAVE REVIEW'),
+        child: const SiteText(
+          contentKey: 'copy.affinity_review_desk_page.17',
+          literal: true,
+          'SAVE REVIEW',
+        ),
       ),
       FilledButton(
         onPressed: saving ? null : () => _save('published'),
         style: FilledButton.styleFrom(backgroundColor: _green),
-        child: Text(saving ? 'SAVING…' : 'PUBLISH'),
+        child: SiteText(
+          contentKey: 'copy.affinity_review_desk_page.m16',
+          literal: false,
+          saving ? 'SAVING…' : 'PUBLISH',
+        ),
       ),
     ],
   );
@@ -860,7 +1015,9 @@ class _ReviewEditorState extends State<_ReviewEditor> {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        const SiteText(
+          contentKey: 'copy.affinity_review_desk_page.18',
+          literal: true,
           'PRIVATE SOURCE · REVIEWERS ONLY',
           style: TextStyle(
             color: _green,
@@ -870,7 +1027,9 @@ class _ReviewEditorState extends State<_ReviewEditor> {
           ),
         ),
         const SizedBox(height: 9),
-        Text(
+        SiteText(
+          contentKey: 'copy.affinity_review_desk_page.m17',
+          literal: false,
           '${widget.item.businessName} · ${widget.item.buyerEmail}',
           style: const TextStyle(fontWeight: FontWeight.w700),
         ),
@@ -923,9 +1082,15 @@ class _MemberAccessCardState extends State<_MemberAccessCard> {
     } catch (error) {
       if (mounted) {
         setState(() => saving = false);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('$error')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: SiteText(
+              contentKey: 'copy.affinity_review_desk_page.m18',
+              literal: false,
+              '$error',
+            ),
+          ),
+        );
       }
     }
   }
@@ -946,7 +1111,9 @@ class _MemberAccessCardState extends State<_MemberAccessCard> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
+              SiteText(
+                contentKey: 'copy.affinity_review_desk_page.m19',
+                literal: false,
                 widget.member.displayName,
                 style: const TextStyle(
                   fontSize: 20,
@@ -954,12 +1121,16 @@ class _MemberAccessCardState extends State<_MemberAccessCard> {
                 ),
               ),
               const SizedBox(height: 5),
-              Text(
+              SiteText(
+                contentKey: 'copy.affinity_review_desk_page.m20',
+                literal: false,
                 '${widget.member.companyName} · ${widget.member.email} · ${widget.member.providerType.replaceAll('_', ' ')}',
                 style: const TextStyle(color: _muted),
               ),
               const SizedBox(height: 7),
-              Text(
+              SiteText(
+                contentKey: 'copy.affinity_review_desk_page.m21',
+                literal: false,
                 '${widget.member.onboardingStatus.toUpperCase()} · ${widget.member.membershipTier.toUpperCase()} · ${widget.member.membershipStatus.toUpperCase()}',
                 style: const TextStyle(
                   color: _green,
@@ -978,12 +1149,20 @@ class _MemberAccessCardState extends State<_MemberAccessCard> {
               FilledButton(
                 onPressed: saving ? null : () => _set(true),
                 style: FilledButton.styleFrom(backgroundColor: _green),
-                child: const Text('APPROVE MEMBER'),
+                child: const SiteText(
+                  contentKey: 'copy.affinity_review_desk_page.19',
+                  literal: true,
+                  'APPROVE MEMBER',
+                ),
               )
             else
               OutlinedButton(
                 onPressed: saving ? null : () => _set(false),
-                child: const Text('SUSPEND ACCESS'),
+                child: const SiteText(
+                  contentKey: 'copy.affinity_review_desk_page.20',
+                  literal: true,
+                  'SUSPEND ACCESS',
+                ),
               ),
           ],
         ),
@@ -1001,7 +1180,9 @@ class _Status extends StatelessWidget {
     color: status == 'published'
         ? const Color(0xFFDCECE4)
         : const Color(0xFFEDEAE4),
-    child: Text(
+    child: SiteText(
+      contentKey: 'copy.affinity_review_desk_page.m22',
+      literal: false,
       status.replaceAll('_', ' ').toUpperCase(),
       style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w900),
     ),
@@ -1016,7 +1197,9 @@ class _Metric extends StatelessWidget {
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Text(
+      SiteText(
+        contentKey: 'copy.affinity_review_desk_page.m23',
+        literal: false,
         label,
         style: const TextStyle(
           color: _muted,
@@ -1026,7 +1209,12 @@ class _Metric extends StatelessWidget {
         ),
       ),
       const SizedBox(height: 4),
-      Text(value, style: const TextStyle(fontWeight: FontWeight.w800)),
+      SiteText(
+        contentKey: 'copy.affinity_review_desk_page.m24',
+        literal: false,
+        value,
+        style: const TextStyle(fontWeight: FontWeight.w800),
+      ),
     ],
   );
 }
@@ -1048,7 +1236,9 @@ class _Empty extends StatelessWidget {
     width: double.infinity,
     padding: const EdgeInsets.all(42),
     color: Colors.white,
-    child: Text(
+    child: SiteText(
+      contentKey: 'copy.affinity_review_desk_page.m25',
+      literal: false,
       message,
       textAlign: TextAlign.center,
       style: const TextStyle(color: _muted, height: 1.5),

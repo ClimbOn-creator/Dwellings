@@ -1,3 +1,4 @@
+import 'site_image.dart';
 import 'package:flutter/material.dart';
 
 const brandInk = Color(0xFF050510);
@@ -17,11 +18,14 @@ class AffinityLogo extends StatelessWidget {
   final bool dark;
 
   @override
-  Widget build(BuildContext context) => Image.asset(
-    'assets/brand/affinity-logo.png',
-    width: showWordmark ? size * 2.5 : size * 1.7,
-    height: size,
-    fit: BoxFit.contain,
+  Widget build(BuildContext context) => SiteImage(
+    contentKey: 'image.brand_logo.m1',
+    original: Image.asset(
+      'assets/brand/affinity-logo.png',
+      width: showWordmark ? size * 2.5 : size * 1.7,
+      height: size,
+      fit: BoxFit.contain,
+    ),
   );
 }
 
@@ -34,11 +38,14 @@ class AffinityFooterLogo extends StatelessWidget {
   final double width;
 
   @override
-  Widget build(BuildContext context) => Image.asset(
-    'assets/brand/affinity-footer-logo.png',
-    width: width,
-    fit: BoxFit.contain,
-    alignment: Alignment.centerLeft,
-    filterQuality: FilterQuality.high,
+  Widget build(BuildContext context) => SiteImage(
+    contentKey: 'image.brand_logo.m2',
+    original: Image.asset(
+      'assets/brand/affinity-footer-logo.png',
+      width: width,
+      fit: BoxFit.contain,
+      alignment: Alignment.centerLeft,
+      filterQuality: FilterQuality.high,
+    ),
   );
 }

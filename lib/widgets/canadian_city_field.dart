@@ -1,3 +1,4 @@
+import 'site_text.dart';
 import 'package:flutter/material.dart';
 
 import '../services/marketplace_service.dart';
@@ -94,7 +95,9 @@ class _CanadianCityFieldState extends State<CanadianCityField> {
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
-      Text(
+      SiteText(
+        contentKey: 'copy.canadian_city_field.m1',
+        literal: false,
         widget.label,
         style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
       ),
@@ -104,7 +107,11 @@ class _CanadianCityFieldState extends State<CanadianCityField> {
         focusNode: _focus,
         textCapitalization: TextCapitalization.words,
         decoration: InputDecoration(
-          hintText: 'Start typing a Canadian city',
+          hint: SiteText(
+            'Start typing a Canadian city',
+            contentKey: 'copy.canadian_city_field.mfield1',
+            literal: true,
+          ),
           prefixIcon: const Icon(Icons.location_on_outlined),
           helperText: 'Choose a suggestion or press Enter to autofill.',
         ),
@@ -165,7 +172,9 @@ class _CanadianCityFieldState extends State<CanadianCityField> {
                         const Icon(Icons.location_city_outlined),
                         const SizedBox(width: 14),
                         Expanded(
-                          child: Text(
+                          child: SiteText(
+                            contentKey: 'copy.canadian_city_field.m2',
+                            literal: false,
                             '${city.city}, ${city.region}',
                             style: const TextStyle(
                               fontSize: 15,
@@ -173,7 +182,9 @@ class _CanadianCityFieldState extends State<CanadianCityField> {
                             ),
                           ),
                         ),
-                        const Text(
+                        const SiteText(
+                          contentKey: 'copy.canadian_city_field.1',
+                          literal: true,
                           'USE',
                           style: TextStyle(
                             color: Color(0xFF252525),

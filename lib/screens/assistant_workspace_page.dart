@@ -1,3 +1,5 @@
+import '../widgets/site_text.dart';
+import '../widgets/site_image.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -129,7 +131,9 @@ class _GuideWorkspacePageState extends State<GuideWorkspacePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                const SiteText(
+                  contentKey: 'copy.assistant_workspace_page.1',
+                  literal: true,
                   'CREATE & ACT',
                   style: TextStyle(
                     color: lilac,
@@ -172,7 +176,9 @@ class _GuideWorkspacePageState extends State<GuideWorkspacePage> {
                   () => _open(const PersonalizedConsultingPage()),
                 ),
                 const Spacer(),
-                const Text(
+                const SiteText(
+                  contentKey: 'copy.assistant_workspace_page.2',
+                  literal: true,
                   'Affinity creates drafts and plans. You approve every external action.',
                   style: TextStyle(color: muted, fontSize: 10, height: 1.4),
                 ),
@@ -198,7 +204,9 @@ class _GuideWorkspacePageState extends State<GuideWorkspacePage> {
                               size: 30,
                             ),
                             const SizedBox(height: 10),
-                            const Text(
+                            const SiteText(
+                              contentKey: 'copy.assistant_workspace_page.3',
+                              literal: true,
                               'Acquisition workspace',
                               style: TextStyle(
                                 color: Colors.white,
@@ -207,7 +215,9 @@ class _GuideWorkspacePageState extends State<GuideWorkspacePage> {
                               ),
                             ),
                             const SizedBox(height: 5),
-                            const Text(
+                            const SiteText(
+                              contentKey: 'copy.assistant_workspace_page.4',
+                              literal: true,
                               'Structured tools for your Blueprint, deals, calendar, and member workspace.',
                               textAlign: TextAlign.center,
                               style: TextStyle(color: muted),
@@ -227,7 +237,10 @@ class _GuideWorkspacePageState extends State<GuideWorkspacePage> {
                                     ),
                                   ),
                                   const SizedBox(width: 10),
-                                  Text(
+                                  SiteText(
+                                    contentKey:
+                                        'copy.assistant_workspace_page.m1',
+                                    literal: false,
                                     thinking!,
                                     style: const TextStyle(
                                       color: muted,
@@ -253,7 +266,12 @@ class _GuideWorkspacePageState extends State<GuideWorkspacePage> {
   Widget _tool(IconData i, String t, VoidCallback f) => ListTile(
     contentPadding: const EdgeInsets.symmetric(horizontal: 5),
     leading: Icon(i, color: lilac),
-    title: Text(t, style: const TextStyle(color: Colors.white, fontSize: 12)),
+    title: SiteText(
+      contentKey: 'copy.assistant_workspace_page.m2',
+      literal: false,
+      t,
+      style: const TextStyle(color: Colors.white, fontSize: 12),
+    ),
     onTap: f,
   );
   Widget _message(bool ai, String text) => Padding(
@@ -275,7 +293,9 @@ class _GuideWorkspacePageState extends State<GuideWorkspacePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
+              SiteText(
+                contentKey: 'copy.assistant_workspace_page.m3',
+                literal: false,
                 ai ? 'DWELLINGIQ' : 'YOU',
                 style: TextStyle(
                   color: ai ? lilac : muted,
@@ -285,7 +305,9 @@ class _GuideWorkspacePageState extends State<GuideWorkspacePage> {
                 ),
               ),
               const SizedBox(height: 7),
-              Text(
+              SiteText(
+                contentKey: 'copy.assistant_workspace_page.m4',
+                literal: false,
                 text,
                 style: const TextStyle(color: ink, fontSize: 15, height: 1.55),
               ),
@@ -319,7 +341,11 @@ class _GuideWorkspacePageState extends State<GuideWorkspacePage> {
                     minLines: 1,
                     style: const TextStyle(color: Colors.white),
                     decoration: const InputDecoration(
-                      hintText: 'Ask, plan, or create something…',
+                      hint: SiteText(
+                        'Ask, plan, or create something…',
+                        contentKey: 'copy.assistant_workspace_page.field1',
+                        literal: true,
+                      ),
                       hintStyle: TextStyle(color: muted),
                       border: InputBorder.none,
                       filled: false,
@@ -414,7 +440,13 @@ class _CalendarState extends State<PersonalizedCalendarPage> {
   void _notice(String message) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message.replaceFirst('Bad state: ', ''))),
+      SnackBar(
+        content: SiteText(
+          contentKey: 'copy.assistant_workspace_page.m5',
+          literal: false,
+          message.replaceFirst('Bad state: ', ''),
+        ),
+      ),
     );
   }
 
@@ -425,7 +457,9 @@ class _CalendarState extends State<PersonalizedCalendarPage> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: surface,
-        title: const Text(
+        title: const SiteText(
+          contentKey: 'copy.assistant_workspace_page.5',
+          literal: true,
           'Edit calendar item',
           style: TextStyle(color: Colors.white),
         ),
@@ -436,11 +470,19 @@ class _CalendarState extends State<PersonalizedCalendarPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: const SiteText(
+              contentKey: 'copy.assistant_workspace_page.6',
+              literal: true,
+              'Cancel',
+            ),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, title.text.trim()),
-            child: const Text('Choose date'),
+            child: const SiteText(
+              contentKey: 'copy.assistant_workspace_page.7',
+              literal: true,
+              'Choose date',
+            ),
           ),
         ],
       ),
@@ -488,7 +530,8 @@ class _CalendarState extends State<PersonalizedCalendarPage> {
   }
 
   @override
-  Widget build(BuildContext context) => _Page(
+  Widget build(BuildContext context) => _Page /* persistent page identity */ (
+    contentId: 'pipeline',
     title: 'Acquisition calendar',
     subtitle:
         'A personalized working plan. Google or Outlook sync requires a connected account.',
@@ -499,7 +542,11 @@ class _CalendarState extends State<PersonalizedCalendarPage> {
         FilledButton.icon(
           onPressed: _plan,
           icon: const Icon(Icons.auto_awesome),
-          label: const Text('Build my 90-day plan'),
+          label: const SiteText(
+            contentKey: 'copy.assistant_workspace_page.8',
+            literal: true,
+            'Build my 90-day plan',
+          ),
         ),
         OutlinedButton.icon(
           onPressed: () => _connect('google'),
@@ -508,7 +555,9 @@ class _CalendarState extends State<PersonalizedCalendarPage> {
                 ? Icons.check_circle
                 : Icons.add_link,
           ),
-          label: Text(
+          label: SiteText(
+            contentKey: 'copy.assistant_workspace_page.m6',
+            literal: false,
             connections.contains('google')
                 ? 'Google connected'
                 : 'Connect Google',
@@ -521,7 +570,9 @@ class _CalendarState extends State<PersonalizedCalendarPage> {
                 ? Icons.check_circle
                 : Icons.add_link,
           ),
-          label: Text(
+          label: SiteText(
+            contentKey: 'copy.assistant_workspace_page.m7',
+            literal: false,
             connections.contains('outlook')
                 ? 'Outlook connected'
                 : 'Connect Outlook',
@@ -549,13 +600,21 @@ class _CalendarState extends State<PersonalizedCalendarPage> {
                   leading: CircleAvatar(
                     backgroundColor: surface,
                     foregroundColor: lilac,
-                    child: Text('${i + 1}'),
+                    child: SiteText(
+                      contentKey: 'copy.assistant_workspace_page.m8',
+                      literal: false,
+                      '${i + 1}',
+                    ),
                   ),
-                  title: Text(
+                  title: SiteText(
+                    contentKey: 'copy.assistant_workspace_page.m9',
+                    literal: false,
                     events[i]['title']!,
                     style: const TextStyle(color: Colors.white),
                   ),
-                  subtitle: Text(
+                  subtitle: SiteText(
+                    contentKey: 'copy.assistant_workspace_page.m10',
+                    literal: false,
                     DateFormat.yMMMd().format(
                       DateTime.parse(events[i]['date']!),
                     ),
@@ -572,7 +631,9 @@ class _CalendarState extends State<PersonalizedCalendarPage> {
                             PopupMenuItem(
                               value: provider,
                               enabled: connections.contains(provider),
-                              child: Text(
+                              child: SiteText(
+                                contentKey: 'copy.assistant_workspace_page.m11',
+                                literal: false,
                                 '${events[i]['${provider}Id']?.isNotEmpty == true ? 'Update' : 'Add to'} ${provider == 'google' ? 'Google Calendar' : 'Outlook'}',
                               ),
                             ),
@@ -619,7 +680,8 @@ class PersonalizedConsultingPage extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) => _Page(
+  Widget build(BuildContext context) => _Page /* persistent page identity */ (
+    contentId: 'consulting',
     backgroundImage: 'assets/images/affinity-consulting.jpg',
     washOpacity: .36,
     title: SiteContentService.text(
@@ -635,14 +697,17 @@ class PersonalizedConsultingPage extends StatelessWidget {
       children: [
         ClipRRect(
           borderRadius: BorderRadius.circular(22),
-          child: Image.asset(
-            'assets/images/affinity-consulting.jpg',
-            width: double.infinity,
-            height: 390,
-            fit: BoxFit.cover,
-            alignment: Alignment.center,
-            cacheWidth: 1400,
-            filterQuality: FilterQuality.low,
+          child: SiteImage(
+            contentKey: 'image.assistant_workspace_page.m1',
+            original: Image.asset(
+              'assets/images/affinity-consulting.jpg',
+              width: double.infinity,
+              height: 390,
+              fit: BoxFit.cover,
+              alignment: Alignment.center,
+              cacheWidth: 1400,
+              filterQuality: FilterQuality.low,
+            ),
           ),
         ),
         const SizedBox(height: 26),
@@ -657,7 +722,9 @@ class PersonalizedConsultingPage extends StatelessWidget {
           child: const Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
+              SiteText(
+                contentKey: 'copy.assistant_workspace_page.m12',
+                literal: true,
                 'THE PERSON BEHIND THE FRAMEWORK',
                 style: TextStyle(
                   color: muted,
@@ -667,7 +734,9 @@ class PersonalizedConsultingPage extends StatelessWidget {
                 ),
               ),
               SizedBox(height: 12),
-              Text(
+              SiteText(
+                contentKey: 'copy.assistant_workspace_page.m13',
+                literal: true,
                 'Acquisition decisions deserve more than a spreadsheet.',
                 style: TextStyle(
                   color: ink,
@@ -677,12 +746,16 @@ class PersonalizedConsultingPage extends StatelessWidget {
                 ),
               ),
               SizedBox(height: 20),
-              Text(
+              SiteText(
+                contentKey: 'copy.assistant_workspace_page.m14',
+                literal: true,
                 'Affinity was created around a simple belief: buyers make stronger choices when their personal goals, financial readiness, and deal criteria are examined together. The founder’s work combines product development, transparent financial modelling, and buyer-first decision systems to turn an intimidating acquisition into a series of clear, defensible choices.',
                 style: TextStyle(color: muted, height: 1.6),
               ),
               SizedBox(height: 18),
-              Text(
+              SiteText(
+                contentKey: 'copy.assistant_workspace_page.m15',
+                literal: true,
                 'The process is practical and candid. A consulting engagement can sharpen an acquisition mandate, identify readiness gaps before a lender does, challenge the assumptions in a live opportunity, or organize the next phase of diligence. The goal is not to make the decision for you. It is to help you see the decision clearly enough to own it.',
                 style: TextStyle(color: muted, height: 1.6),
               ),
@@ -692,13 +765,16 @@ class PersonalizedConsultingPage extends StatelessWidget {
         const SizedBox(height: 26),
         ClipRRect(
           borderRadius: BorderRadius.circular(22),
-          child: Image.asset(
-            'assets/images/commercial-atrium.jpg',
-            width: double.infinity,
-            height: 330,
-            fit: BoxFit.cover,
-            cacheWidth: 1400,
-            filterQuality: FilterQuality.low,
+          child: SiteImage(
+            contentKey: 'image.assistant_workspace_page.m2',
+            original: Image.asset(
+              'assets/images/commercial-atrium.jpg',
+              width: double.infinity,
+              height: 330,
+              fit: BoxFit.cover,
+              cacheWidth: 1400,
+              filterQuality: FilterQuality.low,
+            ),
           ),
         ),
         const SizedBox(height: 26),
@@ -712,7 +788,9 @@ class PersonalizedConsultingPage extends StatelessWidget {
           child: const Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
+              SiteText(
+                contentKey: 'copy.assistant_workspace_page.m16',
+                literal: true,
                 'WHEN A CONVERSATION HELPS',
                 style: TextStyle(
                   color: Color(0xFFBFC9C3),
@@ -722,7 +800,9 @@ class PersonalizedConsultingPage extends StatelessWidget {
                 ),
               ),
               SizedBox(height: 12),
-              Text(
+              SiteText(
+                contentKey: 'copy.assistant_workspace_page.m17',
+                literal: true,
                 'Bring the question that keeps looping.',
                 style: TextStyle(
                   color: Colors.white,
@@ -732,7 +812,9 @@ class PersonalizedConsultingPage extends StatelessWidget {
                 ),
               ),
               SizedBox(height: 18),
-              Text(
+              SiteText(
+                contentKey: 'copy.assistant_workspace_page.m18',
+                literal: true,
                 'Consulting is most useful when the numbers are available but the judgment is still hard: choosing a target, preparing to approach lenders, deciding whether to advance a deal, or translating diligence findings into an action plan. Sessions are built around your real situation and end with an explicit next step.',
                 style: TextStyle(color: Color(0xFFD8DFDB), height: 1.65),
               ),
@@ -749,12 +831,18 @@ class PersonalizedConsultingPage extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 34, vertical: 21),
             ),
             icon: const Icon(Icons.calendar_month_outlined),
-            label: const Text('SET UP A CALL'),
+            label: const SiteText(
+              contentKey: 'copy.assistant_workspace_page.9',
+              literal: true,
+              'SET UP A CALL',
+            ),
           ),
         ),
         const SizedBox(height: 8),
         Center(
-          child: Text(
+          child: SiteText(
+            contentKey: 'copy.assistant_workspace_page.m19',
+            literal: false,
             BackendService.user == null
                 ? 'You will be asked to sign in before choosing a time.'
                 : 'Choose a preferred date and time for your call.',
@@ -804,7 +892,11 @@ class _ConsultingBookingPageState extends State<ConsultingBookingPage> {
     if (date == null || contextNotes.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Choose a date and add a little context first.'),
+          content: SiteText(
+            contentKey: 'copy.assistant_workspace_page.m20',
+            literal: true,
+            'Choose a date and add a little context first.',
+          ),
         ),
       );
       return;
@@ -821,9 +913,15 @@ class _ConsultingBookingPageState extends State<ConsultingBookingPage> {
       if (mounted) setState(() => sent = true);
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('$error')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: SiteText(
+              contentKey: 'copy.assistant_workspace_page.m21',
+              literal: false,
+              '$error',
+            ),
+          ),
+        );
       }
     } finally {
       if (mounted) setState(() => sending = false);
@@ -831,7 +929,8 @@ class _ConsultingBookingPageState extends State<ConsultingBookingPage> {
   }
 
   @override
-  Widget build(BuildContext context) => _Page(
+  Widget build(BuildContext context) => _Page /* persistent page identity */ (
+    contentId: 'consulting_booking',
     backgroundImage: 'assets/images/affinity-consulting.jpg',
     washOpacity: .62,
     title: 'Choose a time to talk',
@@ -857,13 +956,23 @@ class _ConsultingBookingPageState extends State<ConsultingBookingPage> {
                       'Diligence planning',
                     ]
                     .map(
-                      (value) =>
-                          DropdownMenuItem(value: value, child: Text(value)),
+                      (value) => DropdownMenuItem(
+                        value: value,
+                        child: SiteText(
+                          contentKey: 'copy.assistant_workspace_page.m22',
+                          literal: false,
+                          value,
+                        ),
+                      ),
                     )
                     .toList(),
             onChanged: (value) => focus = value!,
             decoration: const InputDecoration(
-              labelText: 'What should the call focus on?',
+              label: SiteText(
+                'What should the call focus on?',
+                contentKey: 'copy.assistant_workspace_page.field2',
+                literal: true,
+              ),
             ),
           ),
           const SizedBox(height: 14),
@@ -874,7 +983,9 @@ class _ConsultingBookingPageState extends State<ConsultingBookingPage> {
               alignment: Alignment.centerLeft,
             ),
             icon: const Icon(Icons.calendar_today_outlined),
-            label: Text(
+            label: SiteText(
+              contentKey: 'copy.assistant_workspace_page.m23',
+              literal: false,
               date == null
                   ? 'CHOOSE A DATE'
                   : DateFormat('EEEE, MMMM d, y').format(date!),
@@ -891,24 +1002,46 @@ class _ConsultingBookingPageState extends State<ConsultingBookingPage> {
                       '3:00 PM Pacific',
                     ]
                     .map(
-                      (value) =>
-                          DropdownMenuItem(value: value, child: Text(value)),
+                      (value) => DropdownMenuItem(
+                        value: value,
+                        child: SiteText(
+                          contentKey: 'copy.assistant_workspace_page.m24',
+                          literal: false,
+                          value,
+                        ),
+                      ),
                     )
                     .toList(),
             onChanged: (value) => time = value!,
-            decoration: const InputDecoration(labelText: 'Preferred time'),
+            decoration: const InputDecoration(
+              label: SiteText(
+                'Preferred time',
+                contentKey: 'copy.assistant_workspace_page.field3',
+                literal: true,
+              ),
+            ),
           ),
           const SizedBox(height: 14),
           TextField(
             controller: phone,
-            decoration: const InputDecoration(labelText: 'Phone number'),
+            decoration: const InputDecoration(
+              label: SiteText(
+                'Phone number',
+                contentKey: 'copy.assistant_workspace_page.field4',
+                literal: true,
+              ),
+            ),
           ),
           const SizedBox(height: 14),
           TextField(
             controller: contextNotes,
             maxLines: 5,
             decoration: const InputDecoration(
-              labelText: 'What would make this call useful?',
+              label: SiteText(
+                'What would make this call useful?',
+                contentKey: 'copy.assistant_workspace_page.field5',
+                literal: true,
+              ),
             ),
           ),
           const SizedBox(height: 22),
@@ -919,7 +1052,9 @@ class _ConsultingBookingPageState extends State<ConsultingBookingPage> {
               minimumSize: const Size(double.infinity, 58),
             ),
             icon: Icon(sent ? Icons.check : Icons.send_outlined),
-            label: Text(
+            label: SiteText(
+              contentKey: 'copy.assistant_workspace_page.m25',
+              literal: false,
               sent
                   ? 'CALL REQUESTED'
                   : sending
@@ -928,8 +1063,14 @@ class _ConsultingBookingPageState extends State<ConsultingBookingPage> {
             ),
           ),
           const SizedBox(height: 10),
-          Text(
-            'Request sent as ${BackendService.user?.email ?? 'your signed-in account'}. This does not place anything on your personal calendar until the appointment is confirmed.',
+          SiteText(
+            templateValues: {
+              'value1':
+                  '${BackendService.user?.email ?? 'your signed-in account'}',
+            },
+            contentKey: 'copy.assistant_workspace_page.m26',
+            literal: false,
+            "Request sent as {{value1}}. This does not place anything on your personal calendar until the appointment is confirmed.",
             textAlign: TextAlign.center,
             style: const TextStyle(color: muted, fontSize: 11, height: 1.4),
           ),
@@ -948,6 +1089,7 @@ class MemberStudioPage extends StatelessWidget {
 
 class _Page extends StatelessWidget {
   const _Page({
+    required this.contentId,
     required this.title,
     required this.subtitle,
     required this.child,
@@ -956,6 +1098,7 @@ class _Page extends StatelessWidget {
     this.washOpacity = .68,
   });
   final String title, subtitle;
+  final String contentId;
   final Widget child;
   final Widget? action;
   final String backgroundImage;
@@ -975,6 +1118,7 @@ class _Page extends StatelessWidget {
       ],
     ),
     body: FixedEditorialBackground(
+      contentKey: 'image.assistant.$contentId.background',
       imagePath: backgroundImage,
       wash: const Color(0xFFF4F1EB),
       washOpacity: washOpacity,
@@ -1010,7 +1154,9 @@ class _Page extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
+                            SiteText(
+                              contentKey: 'copy.assistant_workspace_page.m27',
+                              literal: false,
                               title,
                               style: const TextStyle(
                                 color: ink,
@@ -1023,7 +1169,9 @@ class _Page extends StatelessWidget {
                             const SizedBox(height: 14),
                             ConstrainedBox(
                               constraints: const BoxConstraints(maxWidth: 680),
-                              child: Text(
+                              child: SiteText(
+                                contentKey: 'copy.assistant_workspace_page.m28',
+                                literal: false,
                                 subtitle,
                                 style: const TextStyle(
                                   color: muted,
@@ -1066,7 +1214,9 @@ class _Empty extends StatelessWidget {
       border: Border.all(color: line),
       borderRadius: BorderRadius.circular(20),
     ),
-    child: Text(
+    child: SiteText(
+      contentKey: 'copy.assistant_workspace_page.m29',
+      literal: false,
       text,
       textAlign: TextAlign.center,
       style: const TextStyle(color: muted),

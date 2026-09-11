@@ -1,3 +1,4 @@
+import '../widgets/site_text.dart';
 import 'package:flutter/material.dart';
 
 import '../models/platform_side.dart';
@@ -114,7 +115,14 @@ class _ConnectionBriefPageState extends State<ConnectionBriefPage> {
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not send the connection brief: $error')),
+        SnackBar(
+          content: SiteText(
+            templateValues: {'value1': '${error}'},
+            contentKey: 'copy.connection_brief_page.m1',
+            literal: false,
+            "Could not send the connection brief: {{value1}}",
+          ),
+        ),
       );
     } finally {
       if (mounted) setState(() => _sending = false);
@@ -161,7 +169,9 @@ class _ConnectionBriefPageState extends State<ConnectionBriefPage> {
                   ],
                 ),
                 const SizedBox(height: 48),
-                const Text(
+                const SiteText(
+                  contentKey: 'copy.connection_brief_page.1',
+                  literal: true,
                   'PRIVATE CONNECTION BRIEF',
                   style: TextStyle(
                     color: _lilac,
@@ -171,7 +181,9 @@ class _ConnectionBriefPageState extends State<ConnectionBriefPage> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                Text(
+                SiteText(
+                  contentKey: 'copy.connection_brief_page.m2',
+                  literal: true,
                   'Make the first conversation count.',
                   style: const TextStyle(
                     color: Colors.white,
@@ -182,7 +194,9 @@ class _ConnectionBriefPageState extends State<ConnectionBriefPage> {
                   ),
                 ),
                 const SizedBox(height: 14),
-                const Text(
+                const SiteText(
+                  contentKey: 'copy.connection_brief_page.2',
+                  literal: true,
                   'Build a clear, consented brief so the professional understands your goal before they contact you.',
                   style: TextStyle(
                     color: Color(0xFFB8B8C5),
@@ -229,7 +243,11 @@ class _ConnectionBriefPageState extends State<ConnectionBriefPage> {
                 if (_step > 0)
                   TextButton(
                     onPressed: _sending ? null : () => setState(() => _step--),
-                    child: const Text('Back'),
+                    child: const SiteText(
+                      contentKey: 'copy.connection_brief_page.3',
+                      literal: true,
+                      'Back',
+                    ),
                   ),
                 const Spacer(),
                 FilledButton.icon(
@@ -243,7 +261,9 @@ class _ConnectionBriefPageState extends State<ConnectionBriefPage> {
                         ? Icons.arrow_forward_rounded
                         : Icons.lock_outline,
                   ),
-                  label: Text(
+                  label: SiteText(
+                    contentKey: 'copy.connection_brief_page.m3',
+                    literal: false,
                     _sending
                         ? 'Sending…'
                         : _step < 2
@@ -281,7 +301,9 @@ class _ConnectionBriefPageState extends State<ConnectionBriefPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
+              SiteText(
+                contentKey: 'copy.connection_brief_page.m4',
+                literal: false,
                 provider.name,
                 style: const TextStyle(
                   fontSize: 17,
@@ -289,7 +311,9 @@ class _ConnectionBriefPageState extends State<ConnectionBriefPage> {
                 ),
               ),
               const SizedBox(height: 3),
-              Text(
+              SiteText(
+                contentKey: 'copy.connection_brief_page.m5',
+                literal: false,
                 '${provider.jobTitle} · ${provider.company}',
                 style: const TextStyle(color: Color(0xFF666674), fontSize: 12),
               ),
@@ -297,7 +321,9 @@ class _ConnectionBriefPageState extends State<ConnectionBriefPage> {
           ),
         ),
         if (provider.isExample)
-          const Text(
+          const SiteText(
+            contentKey: 'copy.connection_brief_page.4',
+            literal: true,
             'PREVIEW',
             style: TextStyle(
               color: _purple,
@@ -339,7 +365,11 @@ class _ConnectionBriefPageState extends State<ConnectionBriefPage> {
         children: [
           for (final option in _helpOptions)
             ChoiceChip(
-              label: Text(option),
+              label: SiteText(
+                contentKey: 'copy.connection_brief_page.m6',
+                literal: false,
+                option,
+              ),
               selected: _help == option,
               onSelected: (_) => setState(() => _help = option),
             ),
@@ -348,7 +378,13 @@ class _ConnectionBriefPageState extends State<ConnectionBriefPage> {
       const SizedBox(height: 22),
       DropdownButtonFormField<String>(
         initialValue: _stage,
-        decoration: const InputDecoration(labelText: 'Where are you now?'),
+        decoration: const InputDecoration(
+          label: SiteText(
+            'Where are you now?',
+            contentKey: 'copy.connection_brief_page.field1',
+            literal: true,
+          ),
+        ),
         items:
             const [
                   'Exploring options',
@@ -359,7 +395,14 @@ class _ConnectionBriefPageState extends State<ConnectionBriefPage> {
                   'Closing',
                 ]
                 .map(
-                  (value) => DropdownMenuItem(value: value, child: Text(value)),
+                  (value) => DropdownMenuItem(
+                    value: value,
+                    child: SiteText(
+                      contentKey: 'copy.connection_brief_page.m7',
+                      literal: false,
+                      value,
+                    ),
+                  ),
                 )
                 .toList(),
         onChanged: (value) => setState(() => _stage = value!),
@@ -367,7 +410,13 @@ class _ConnectionBriefPageState extends State<ConnectionBriefPage> {
       const SizedBox(height: 12),
       DropdownButtonFormField<String>(
         initialValue: _timeline,
-        decoration: const InputDecoration(labelText: 'Desired timeline'),
+        decoration: const InputDecoration(
+          label: SiteText(
+            'Desired timeline',
+            contentKey: 'copy.connection_brief_page.field2',
+            literal: true,
+          ),
+        ),
         items:
             const [
                   'As soon as possible',
@@ -376,7 +425,14 @@ class _ConnectionBriefPageState extends State<ConnectionBriefPage> {
                   '3+ months',
                 ]
                 .map(
-                  (value) => DropdownMenuItem(value: value, child: Text(value)),
+                  (value) => DropdownMenuItem(
+                    value: value,
+                    child: SiteText(
+                      contentKey: 'copy.connection_brief_page.m8',
+                      literal: false,
+                      value,
+                    ),
+                  ),
                 )
                 .toList(),
         onChanged: (value) => setState(() => _timeline = value!),
@@ -390,7 +446,9 @@ class _ConnectionBriefPageState extends State<ConnectionBriefPage> {
     children: [
       const _StepTitle('02', 'Give them useful context'),
       const SizedBox(height: 8),
-      const Text(
+      const SiteText(
+        contentKey: 'copy.connection_brief_page.5',
+        literal: true,
         'Do not include confidential seller documents, account numbers or identification.',
         style: TextStyle(color: Color(0xFF6B6B78), fontSize: 12),
       ),
@@ -399,9 +457,10 @@ class _ConnectionBriefPageState extends State<ConnectionBriefPage> {
         controller: _location,
         onChanged: (_) => setState(() {}),
         decoration: InputDecoration(
-          labelText: _business
-              ? 'Target market or industry'
-              : 'City or property',
+          label: siteInputCopy(
+            _business ? 'Target market or industry' : 'City or property',
+            contentKey: 'copy.connection_brief_page.field.dynamic1',
+          ),
         ),
       ),
       const SizedBox(height: 12),
@@ -409,8 +468,15 @@ class _ConnectionBriefPageState extends State<ConnectionBriefPage> {
         controller: _budget,
         onChanged: (_) => setState(() {}),
         decoration: InputDecoration(
-          labelText: _business ? 'Approximate deal size' : 'Approximate budget',
-          hintText: r'Example: $750k–$1M',
+          label: siteInputCopy(
+            _business ? 'Approximate deal size' : 'Approximate budget',
+            contentKey: 'copy.connection_brief_page.field.dynamic2',
+          ),
+          hint: SiteText(
+            r'Example: $750k–$1M',
+            contentKey: 'copy.connection_brief_page.mfield1',
+            literal: true,
+          ),
         ),
       ),
       const SizedBox(height: 12),
@@ -420,9 +486,16 @@ class _ConnectionBriefPageState extends State<ConnectionBriefPage> {
         minLines: 4,
         maxLines: 7,
         decoration: const InputDecoration(
-          labelText: 'What should they know before contacting you?',
-          hintText:
-              'Your goal, constraint, concern and the decision you need help making.',
+          label: SiteText(
+            'What should they know before contacting you?',
+            contentKey: 'copy.connection_brief_page.field3',
+            literal: true,
+          ),
+          hint: SiteText(
+            'Your goal, constraint, concern and the decision you need help making.',
+            contentKey: 'copy.connection_brief_page.field4',
+            literal: true,
+          ),
         ),
       ),
     ],
@@ -438,12 +511,20 @@ class _ConnectionBriefPageState extends State<ConnectionBriefPage> {
         segments: const [
           ButtonSegment(
             value: 'email',
-            label: Text('Email'),
+            label: SiteText(
+              contentKey: 'copy.connection_brief_page.m9',
+              literal: true,
+              'Email',
+            ),
             icon: Icon(Icons.mail_outline),
           ),
           ButtonSegment(
             value: 'phone',
-            label: Text('Phone'),
+            label: SiteText(
+              contentKey: 'copy.connection_brief_page.m10',
+              literal: true,
+              'Phone',
+            ),
             icon: Icon(Icons.call_outlined),
           ),
         ],
@@ -458,8 +539,14 @@ class _ConnectionBriefPageState extends State<ConnectionBriefPage> {
         contentPadding: EdgeInsets.zero,
         value: _sharePhone,
         onChanged: (value) => setState(() => _sharePhone = value ?? false),
-        title: const Text('Share my phone number'),
-        subtitle: const Text(
+        title: const SiteText(
+          contentKey: 'copy.connection_brief_page.6',
+          literal: true,
+          'Share my phone number',
+        ),
+        subtitle: const SiteText(
+          contentKey: 'copy.connection_brief_page.7',
+          literal: true,
           'Your account name and email are included automatically.',
         ),
       ),
@@ -469,7 +556,13 @@ class _ConnectionBriefPageState extends State<ConnectionBriefPage> {
           controller: _phone,
           onChanged: (_) => setState(() {}),
           keyboardType: TextInputType.phone,
-          decoration: const InputDecoration(labelText: 'Phone number'),
+          decoration: const InputDecoration(
+            label: SiteText(
+              'Phone number',
+              contentKey: 'copy.connection_brief_page.field5',
+              literal: true,
+            ),
+          ),
         ),
       ],
       const SizedBox(height: 18),
@@ -483,7 +576,9 @@ class _ConnectionBriefPageState extends State<ConnectionBriefPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            const SiteText(
+              contentKey: 'copy.connection_brief_page.8',
+              literal: true,
               'WHAT THE PROFESSIONAL RECEIVES',
               style: TextStyle(
                 color: _purple,
@@ -512,7 +607,9 @@ class _ConnectionBriefPageState extends State<ConnectionBriefPage> {
       children: [
         const Icon(Icons.check_circle, color: Color(0xFF16825D), size: 48),
         const SizedBox(height: 16),
-        Text(
+        SiteText(
+          contentKey: 'copy.connection_brief_page.m11',
+          literal: false,
           provider.isExample
               ? 'Connection preview complete'
               : 'Your brief is on its way',
@@ -520,7 +617,9 @@ class _ConnectionBriefPageState extends State<ConnectionBriefPage> {
           style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 9),
-        Text(
+        SiteText(
+          contentKey: 'copy.connection_brief_page.m12',
+          literal: false,
           provider.isExample
               ? 'Nothing was sent because this is an example profile.'
               : '${provider.name} can now review your goal and respond with a useful next step.',
@@ -533,7 +632,11 @@ class _ConnectionBriefPageState extends State<ConnectionBriefPage> {
             MaterialPageRoute<void>(builder: (_) => const ProfilePage()),
             (route) => route.isFirst,
           ),
-          child: const Text('Track connections in Profile'),
+          child: const SiteText(
+            contentKey: 'copy.connection_brief_page.9',
+            literal: true,
+            'Track connections in Profile',
+          ),
         ),
       ],
     ),
@@ -548,7 +651,9 @@ class _StepTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Row(
     children: [
-      Text(
+      SiteText(
+        contentKey: 'copy.connection_brief_page.m13',
+        literal: false,
         number,
         style: const TextStyle(
           color: _purple,
@@ -558,7 +663,9 @@ class _StepTitle extends StatelessWidget {
       ),
       const SizedBox(width: 10),
       Expanded(
-        child: Text(
+        child: SiteText(
+          contentKey: 'copy.connection_brief_page.m14',
+          literal: false,
           title,
           style: const TextStyle(
             fontSize: 25,

@@ -1,3 +1,4 @@
+import '../widgets/site_text.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -96,7 +97,14 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not create deal: $error')),
+          SnackBar(
+            content: SiteText(
+              templateValues: {'value1': '${error}'},
+              contentKey: 'copy.deal_rooms_page.m1',
+              literal: false,
+              "Could not create deal: {{value1}}",
+            ),
+          ),
         );
       }
     } finally {
@@ -124,9 +132,15 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
       _refresh();
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('$error')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: SiteText(
+              contentKey: 'copy.deal_rooms_page.m2',
+              literal: false,
+              '$error',
+            ),
+          ),
+        );
       }
     } finally {
       if (mounted) setState(() => _creating = false);
@@ -155,7 +169,9 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
             children: [
               HomeBrandButton(size: 48, dark: false),
               SizedBox(width: 18),
-              Text(
+              SiteText(
+                contentKey: 'copy.deal_rooms_page.m3',
+                literal: true,
                 'DEAL OS',
                 style: TextStyle(
                   fontSize: 11,
@@ -169,7 +185,11 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
             FilledButton.icon(
               onPressed: _creating ? null : _manualCreate,
               icon: const Icon(Icons.add_rounded, size: 18),
-              label: Text(_creating ? 'CREATING…' : 'NEW DEAL'),
+              label: SiteText(
+                contentKey: 'copy.deal_rooms_page.m4',
+                literal: false,
+                _creating ? 'CREATING…' : 'NEW DEAL',
+              ),
             ),
             const SizedBox(width: 8),
             const AppNavigationMenu(side: PlatformSide.business, dark: false),
@@ -316,7 +336,9 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
               final heading = Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  SiteText(
+                    contentKey: 'copy.deal_rooms_page.m5',
+                    literal: false,
                     _showArchived ? 'DEAL HISTORY' : 'BUYER COMMAND CENTRE',
                     style: const TextStyle(
                       color: _purple,
@@ -326,7 +348,9 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                     ),
                   ),
                   const SizedBox(height: 7),
-                  Text(
+                  SiteText(
+                    contentKey: 'copy.deal_rooms_page.m6',
+                    literal: false,
                     _showArchived
                         ? 'Archived acquisitions'
                         : 'Every acquisition. One operating system.',
@@ -375,7 +399,9 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                 const SizedBox(height: 24),
                 Row(
                   children: [
-                    Text(
+                    SiteText(
+                      contentKey: 'copy.deal_rooms_page.m7',
+                      literal: false,
                       _showArchived ? 'PAST DEALS' : 'LIVE DEALS',
                       style: const TextStyle(
                         fontSize: 10,
@@ -384,8 +410,11 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                       ),
                     ),
                     const Spacer(),
-                    Text(
-                      '${rooms.length} TOTAL',
+                    SiteText(
+                      templateValues: {'value1': '${rooms.length}'},
+                      contentKey: 'copy.deal_rooms_page.m8',
+                      literal: false,
+                      "{{value1}} TOTAL",
                       style: const TextStyle(
                         color: _lilac,
                         fontSize: 9,
@@ -410,11 +439,15 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
   Widget _commandHeaderFact(String value, String label) => Column(
     crossAxisAlignment: CrossAxisAlignment.end,
     children: [
-      Text(
+      SiteText(
+        contentKey: 'copy.deal_rooms_page.m9',
+        literal: false,
         value,
         style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
       ),
-      Text(
+      SiteText(
+        contentKey: 'copy.deal_rooms_page.m10',
+        literal: false,
         label,
         style: const TextStyle(
           color: _lilac,
@@ -452,7 +485,9 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              const SiteText(
+                contentKey: 'copy.deal_rooms_page.1',
+                literal: true,
                 'WHAT NEEDS ATTENTION',
                 style: TextStyle(
                   color: Color(0xFFB8CEC4),
@@ -462,7 +497,9 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                 ),
               ),
               const SizedBox(height: 5),
-              Text(
+              SiteText(
+                contentKey: 'copy.deal_rooms_page.m11',
+                literal: false,
                 active.isEmpty
                     ? 'Start your first private acquisition workspace.'
                     : blockers > 0
@@ -487,7 +524,11 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
             backgroundColor: Colors.white,
             foregroundColor: _purple,
           ),
-          child: Text(active.isEmpty ? 'START A DEAL' : 'OPEN NEXT DEAL'),
+          child: SiteText(
+            contentKey: 'copy.deal_rooms_page.m12',
+            literal: false,
+            active.isEmpty ? 'START A DEAL' : 'OPEN NEXT DEAL',
+          ),
         ),
       ],
     ),
@@ -520,7 +561,9 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    SiteText(
+                      contentKey: 'copy.deal_rooms_page.m13',
+                      literal: false,
                       room.title,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -530,7 +573,9 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                       ),
                     ),
                     const SizedBox(height: 4),
-                    Text(
+                    SiteText(
+                      contentKey: 'copy.deal_rooms_page.m14',
+                      literal: false,
                       '${room.city.isEmpty ? 'Location private' : room.city} · ${room.currentStage.toUpperCase()}',
                       style: const TextStyle(color: _lilac, fontSize: 10),
                     ),
@@ -542,7 +587,9 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    SiteText(
+                      contentKey: 'copy.deal_rooms_page.m15',
+                      literal: false,
                       room.purchasePrice <= 0
                           ? 'Price pending'
                           : NumberFormat.compactCurrency(
@@ -550,7 +597,9 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                             ).format(room.purchasePrice),
                       style: const TextStyle(fontWeight: FontWeight.w800),
                     ),
-                    const Text(
+                    const SiteText(
+                      contentKey: 'copy.deal_rooms_page.2',
+                      literal: true,
                       'PURCHASE PRICE',
                       style: TextStyle(
                         color: _lilac,
@@ -576,8 +625,13 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                       ),
                     ),
                     const SizedBox(height: 5),
-                    Text(
-                      '${(room.progress * 100).round()}% COMPLETE',
+                    SiteText(
+                      templateValues: {
+                        'value1': '${(room.progress * 100).round()}',
+                      },
+                      contentKey: 'copy.deal_rooms_page.m16',
+                      literal: false,
+                      "{{value1}}% COMPLETE",
                       style: const TextStyle(
                         color: _lilac,
                         fontSize: 7,
@@ -590,7 +644,11 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
               const SizedBox(width: 16),
               if (room.blockedTaskCount > 0)
                 Badge(
-                  label: Text('${room.blockedTaskCount}'),
+                  label: SiteText(
+                    contentKey: 'copy.deal_rooms_page.m17',
+                    literal: false,
+                    '${room.blockedTaskCount}',
+                  ),
                   child: const Icon(
                     Icons.warning_amber_rounded,
                     color: Color(0xFF9D3A32),
@@ -623,12 +681,16 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
       children: [
         const Icon(Icons.add_business_outlined, size: 42, color: _purple),
         const SizedBox(height: 14),
-        Text(
+        SiteText(
+          contentKey: 'copy.deal_rooms_page.m18',
+          literal: false,
           _showArchived ? 'No archived deals' : 'Build your first Deal Room',
           style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
         ),
         const SizedBox(height: 8),
-        Text(
+        SiteText(
+          contentKey: 'copy.deal_rooms_page.m19',
+          literal: false,
           _showArchived
               ? 'Completed and archived acquisitions will remain available here.'
               : 'Start with what you know. Unknown information can be added later.',
@@ -640,7 +702,11 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
           FilledButton.icon(
             onPressed: _manualCreate,
             icon: const Icon(Icons.add),
-            label: const Text('NEW DEAL'),
+            label: const SiteText(
+              contentKey: 'copy.deal_rooms_page.3',
+              literal: true,
+              'NEW DEAL',
+            ),
           ),
         ],
       ],
@@ -675,7 +741,9 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                   ),
                 ),
                 SizedBox(width: 10),
-                Text(
+                SiteText(
+                  contentKey: 'copy.deal_rooms_page.m20',
+                  literal: true,
                   'Deal intelligence',
                   style: TextStyle(fontWeight: FontWeight.w800),
                 ),
@@ -708,7 +776,11 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                 OutlinedButton.icon(
                   onPressed: _manualCreate,
                   icon: const Icon(Icons.add_business_outlined),
-                  label: const Text('CREATE ANOTHER DEAL'),
+                  label: const SiteText(
+                    contentKey: 'copy.deal_rooms_page.4',
+                    literal: true,
+                    'CREATE ANOTHER DEAL',
+                  ),
                 ),
               ],
             ),
@@ -728,7 +800,9 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        SiteText(
+          contentKey: 'copy.deal_rooms_page.m21',
+          literal: false,
           label,
           style: const TextStyle(
             color: _purple,
@@ -738,7 +812,12 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
           ),
         ),
         const SizedBox(height: 7),
-        Text(text, style: const TextStyle(fontSize: 12, height: 1.5)),
+        SiteText(
+          contentKey: 'copy.deal_rooms_page.m22',
+          literal: false,
+          text,
+          style: const TextStyle(fontSize: 12, height: 1.5),
+        ),
       ],
     ),
   );
@@ -765,7 +844,9 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                   ],
                 ),
                 const SizedBox(height: 68),
-                Text(
+                SiteText(
+                  contentKey: 'copy.deal_rooms_page.m23',
+                  literal: false,
                   _showAll
                       ? 'CURRENT DEALS'
                       : _side == PlatformSide.business
@@ -779,7 +860,9 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                   ),
                 ),
                 const SizedBox(height: 14),
-                Text(
+                SiteText(
+                  contentKey: 'copy.deal_rooms_page.m24',
+                  literal: false,
                   _showAll
                       ? 'Every acquisition.\nOne command centre.'
                       : _side == PlatformSide.business
@@ -796,7 +879,9 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                 const SizedBox(height: 28),
                 SizedBox(
                   width: 650,
-                  child: Text(
+                  child: SiteText(
+                    contentKey: 'copy.deal_rooms_page.m25',
+                    literal: false,
                     _showAll
                         ? 'Start, organize and finish residential, commercial and business acquisitions with clear stages, owners, deadlines and blockers.'
                         : 'Turn an assessment into a private workspace for decisions, diligence, financing, legal work and closing.',
@@ -828,7 +913,11 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
                           : const Icon(Icons.add),
-                      label: Text(_creating ? 'CREATING…' : 'START A NEW DEAL'),
+                      label: SiteText(
+                        contentKey: 'copy.deal_rooms_page.m26',
+                        literal: false,
+                        _creating ? 'CREATING…' : 'START A NEW DEAL',
+                      ),
                     ),
                     if (_side == PlatformSide.property)
                       OutlinedButton.icon(
@@ -842,7 +931,11 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                           ),
                         ),
                         icon: const Icon(Icons.auto_graph, size: 18),
-                        label: const Text('USE LATEST ANALYSIS'),
+                        label: const SiteText(
+                          contentKey: 'copy.deal_rooms_page.5',
+                          literal: true,
+                          'USE LATEST ANALYSIS',
+                        ),
                       ),
                   ],
                 ),
@@ -852,12 +945,18 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                   runSpacing: 8,
                   children: [
                     ChoiceChip(
-                      label: const Text('ALL DEALS'),
+                      label: const SiteText(
+                        contentKey: 'copy.deal_rooms_page.6',
+                        literal: true,
+                        'ALL DEALS',
+                      ),
                       selected: _showAll,
                       onSelected: (_) => setState(() => _showAll = true),
                     ),
                     ChoiceChip(
-                      label: Text(
+                      label: SiteText(
+                        contentKey: 'copy.deal_rooms_page.m27',
+                        literal: false,
                         _showArchived ? 'PAST / ARCHIVED' : 'CURRENT',
                       ),
                       selected: _showArchived,
@@ -888,12 +987,16 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
       children: [
         const Icon(Icons.meeting_room_outlined, size: 44, color: _purple),
         const SizedBox(height: 15),
-        Text(
+        SiteText(
+          contentKey: 'copy.deal_rooms_page.m28',
+          literal: false,
           _showArchived ? 'No past deals yet' : 'No current deals yet',
           style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 8),
-        Text(
+        SiteText(
+          contentKey: 'copy.deal_rooms_page.m29',
+          literal: false,
           _showArchived
               ? 'Completed, cancelled and archived transactions will remain available here.'
               : 'Start a business acquisition and its guided checklist will be created automatically.',
@@ -903,7 +1006,11 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
         const SizedBox(height: 18),
         FilledButton(
           onPressed: _creating ? null : _manualCreate,
-          child: const Text('START A NEW DEAL'),
+          child: const SiteText(
+            contentKey: 'copy.deal_rooms_page.7',
+            literal: true,
+            'START A NEW DEAL',
+          ),
         ),
       ],
     ),
@@ -955,11 +1062,15 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            SiteText(
+              contentKey: 'copy.deal_rooms_page.m30',
+              literal: false,
               value,
               style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
             ),
-            Text(
+            SiteText(
+              contentKey: 'copy.deal_rooms_page.m31',
+              literal: false,
               label,
               style: const TextStyle(
                 color: Color(0xFF777785),
@@ -1009,7 +1120,9 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                   runSpacing: 6,
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    Text(
+                    SiteText(
+                      contentKey: 'copy.deal_rooms_page.m32',
+                      literal: false,
                       room.title,
                       style: const TextStyle(
                         fontSize: 19,
@@ -1022,7 +1135,9 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                   ],
                 ),
                 const SizedBox(height: 7),
-                Text(
+                SiteText(
+                  contentKey: 'copy.deal_rooms_page.m33',
+                  literal: false,
                   [
                     if (room.city.isNotEmpty) room.city,
                     if (room.purchasePrice > 0)
@@ -1054,7 +1169,9 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                       ),
                     ),
                     const SizedBox(width: 10),
-                    Text(
+                    SiteText(
+                      contentKey: 'copy.deal_rooms_page.m34',
+                      literal: false,
                       '${room.completedTaskCount}/${room.totalTaskCount}',
                       style: const TextStyle(
                         color: _purple,
@@ -1065,7 +1182,9 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                   ],
                 ),
                 const SizedBox(height: 8),
-                Text(
+                SiteText(
+                  contentKey: 'copy.deal_rooms_page.m35',
+                  literal: false,
                   '${room.currentStage.toUpperCase()} · ${room.currentStep.toUpperCase()}',
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -1078,8 +1197,14 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                 ),
                 if (room.blockedTaskCount > 0) ...[
                   const SizedBox(height: 7),
-                  Text(
-                    '${room.blockedTaskCount} BLOCKER${room.blockedTaskCount == 1 ? '' : 'S'} NEED ATTENTION',
+                  SiteText(
+                    templateValues: {
+                      'value1': '${room.blockedTaskCount}',
+                      'value2': '${room.blockedTaskCount == 1 ? '' : 'S'}',
+                    },
+                    contentKey: 'copy.deal_rooms_page.m36',
+                    literal: false,
+                    "{{value1}} BLOCKER{{value2}} NEED ATTENTION",
                     style: const TextStyle(
                       color: Color(0xFFB42318),
                       fontSize: 9,
@@ -1102,7 +1227,9 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
       color: _purple.withValues(alpha: .1),
       borderRadius: BorderRadius.circular(10),
     ),
-    child: Text(
+    child: SiteText(
+      contentKey: 'copy.deal_rooms_page.m37',
+      literal: false,
       value.toUpperCase().replaceAll('_', ' '),
       style: const TextStyle(
         color: _purple,
@@ -1238,7 +1365,9 @@ class _NewDealDialogState extends State<_NewDealDialog> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      SiteText(
+                        contentKey: 'copy.deal_rooms_page.m38',
+                        literal: true,
                         'NEW PRIVATE DEAL',
                         style: TextStyle(
                           color: Color(0xFFB8CEC4),
@@ -1248,7 +1377,9 @@ class _NewDealDialogState extends State<_NewDealDialog> {
                         ),
                       ),
                       SizedBox(height: 4),
-                      Text(
+                      SiteText(
+                        contentKey: 'copy.deal_rooms_page.m39',
+                        literal: true,
                         'Start with what you know',
                         style: TextStyle(
                           color: Colors.white,
@@ -1299,11 +1430,18 @@ class _NewDealDialogState extends State<_NewDealDialog> {
                 if (_step > 0)
                   OutlinedButton(
                     onPressed: () => setState(() => _step--),
-                    child: const Text('BACK'),
+                    child: const SiteText(
+                      contentKey: 'copy.deal_rooms_page.8',
+                      literal: true,
+                      'BACK',
+                    ),
                   ),
                 const Spacer(),
-                Text(
-                  '${_step + 1} OF 4',
+                SiteText(
+                  templateValues: {'value1': '${_step + 1}'},
+                  contentKey: 'copy.deal_rooms_page.m40',
+                  literal: false,
+                  "{{value1}} OF 4",
                   style: const TextStyle(
                     color: _lilac,
                     fontSize: 9,
@@ -1318,7 +1456,11 @@ class _NewDealDialogState extends State<_NewDealDialog> {
                             ? null
                             : _submit)
                       : () => setState(() => _step++),
-                  child: Text(_step == 3 ? 'CREATE PRIVATE DEAL' : 'CONTINUE'),
+                  child: SiteText(
+                    contentKey: 'copy.deal_rooms_page.m41',
+                    literal: false,
+                    _step == 3 ? 'CREATE PRIVATE DEAL' : 'CONTINUE',
+                  ),
                 ),
               ],
             ),
@@ -1339,7 +1481,9 @@ class _NewDealDialogState extends State<_NewDealDialog> {
         _wizardRailItem(2, Icons.flag_outlined, 'Acquisition plan'),
         _wizardRailItem(3, Icons.fact_check_outlined, 'Review'),
         const Spacer(),
-        const Text(
+        const SiteText(
+          contentKey: 'copy.deal_rooms_page.9',
+          literal: true,
           'Unknown values can stay blank and be completed later inside the Deal Room.',
           style: TextStyle(color: _lilac, fontSize: 10, height: 1.45),
         ),
@@ -1356,7 +1500,9 @@ class _NewDealDialogState extends State<_NewDealDialog> {
       selected: _step == step,
       selectedTileColor: const Color(0xFFE5EEE9),
       leading: Icon(icon, size: 19, color: _step == step ? _purple : _lilac),
-      title: Text(
+      title: SiteText(
+        contentKey: 'copy.deal_rooms_page.m42',
+        literal: false,
         label,
         style: TextStyle(
           fontSize: 12,
@@ -1377,7 +1523,9 @@ class _NewDealDialogState extends State<_NewDealDialog> {
   Widget _stepIntro(String eyebrow, String title, String text) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Text(
+      SiteText(
+        contentKey: 'copy.deal_rooms_page.m43',
+        literal: false,
         eyebrow,
         style: const TextStyle(
           color: _purple,
@@ -1387,7 +1535,9 @@ class _NewDealDialogState extends State<_NewDealDialog> {
         ),
       ),
       const SizedBox(height: 7),
-      Text(
+      SiteText(
+        contentKey: 'copy.deal_rooms_page.m44',
+        literal: false,
         title,
         style: const TextStyle(
           fontSize: 28,
@@ -1397,7 +1547,12 @@ class _NewDealDialogState extends State<_NewDealDialog> {
         ),
       ),
       const SizedBox(height: 9),
-      Text(text, style: const TextStyle(color: _lilac, height: 1.5)),
+      SiteText(
+        contentKey: 'copy.deal_rooms_page.m45',
+        literal: false,
+        text,
+        style: const TextStyle(color: _lilac, height: 1.5),
+      ),
       const SizedBox(height: 22),
     ],
   );
@@ -1415,14 +1570,28 @@ class _NewDealDialogState extends State<_NewDealDialog> {
         autofocus: true,
         onChanged: (_) => setState(() {}),
         decoration: const InputDecoration(
-          labelText: 'Private deal name',
-          hintText: 'Example: Lower Mainland service company',
+          label: SiteText(
+            'Private deal name',
+            contentKey: 'copy.deal_rooms_page.field1',
+            literal: true,
+          ),
+          hint: SiteText(
+            'Example: Lower Mainland service company',
+            contentKey: 'copy.deal_rooms_page.field2',
+            literal: true,
+          ),
         ),
       ),
       const SizedBox(height: 13),
       DropdownButtonFormField<String>(
         initialValue: _industry,
-        decoration: const InputDecoration(labelText: 'Industry'),
+        decoration: const InputDecoration(
+          label: SiteText(
+            'Industry',
+            contentKey: 'copy.deal_rooms_page.field3',
+            literal: true,
+          ),
+        ),
         items:
             const [
                   'Business services',
@@ -1435,7 +1604,14 @@ class _NewDealDialogState extends State<_NewDealDialog> {
                   'Other',
                 ]
                 .map(
-                  (value) => DropdownMenuItem(value: value, child: Text(value)),
+                  (value) => DropdownMenuItem(
+                    value: value,
+                    child: SiteText(
+                      contentKey: 'copy.deal_rooms_page.m46',
+                      literal: false,
+                      value,
+                    ),
+                  ),
                 )
                 .toList(),
         onChanged: (value) => setState(() => _industry = value ?? _industry),
@@ -1444,8 +1620,16 @@ class _NewDealDialogState extends State<_NewDealDialog> {
       TextField(
         controller: _location,
         decoration: const InputDecoration(
-          labelText: 'City, region, or market',
-          hintText: 'Leave blank if location is not known',
+          label: SiteText(
+            'City, region, or market',
+            contentKey: 'copy.deal_rooms_page.field4',
+            literal: true,
+          ),
+          hint: SiteText(
+            'Leave blank if location is not known',
+            contentKey: 'copy.deal_rooms_page.field5',
+            literal: true,
+          ),
         ),
       ),
       const SizedBox(height: 13),
@@ -1456,9 +1640,16 @@ class _NewDealDialogState extends State<_NewDealDialog> {
         maxLength: 500,
         onChanged: (_) => setState(() {}),
         decoration: const InputDecoration(
-          labelText: 'Deal details (required)',
-          hintText:
-              'In a short paragraph, describe the business, what attracts you to it, and what you are trying to accomplish.',
+          label: SiteText(
+            'Deal details (required)',
+            contentKey: 'copy.deal_rooms_page.field6',
+            literal: true,
+          ),
+          hint: SiteText(
+            'In a short paragraph, describe the business, what attracts you to it, and what you are trying to accomplish.',
+            contentKey: 'copy.deal_rooms_page.field7',
+            literal: true,
+          ),
           helperText:
               'Minimum 40 characters. Keep seller-identifying details private.',
         ),
@@ -1498,8 +1689,14 @@ class _NewDealDialogState extends State<_NewDealDialog> {
     controller: controller,
     keyboardType: TextInputType.number,
     decoration: InputDecoration(
-      labelText: label,
-      hintText: hint,
+      label: siteInputCopy(
+        label,
+        contentKey: 'copy.deal_rooms_page.field.dynamic1',
+      ),
+      hint: siteInputCopy(
+        hint,
+        contentKey: 'copy.deal_rooms_page.field.dynamic2',
+      ),
       prefixText: r'$ ',
     ),
   );
@@ -1521,11 +1718,15 @@ class _NewDealDialogState extends State<_NewDealDialog> {
       SwitchListTile(
         value: _financingNeeded,
         contentPadding: EdgeInsets.zero,
-        title: const Text(
+        title: const SiteText(
+          contentKey: 'copy.deal_rooms_page.10',
+          literal: true,
           'Financing support expected',
           style: TextStyle(fontWeight: FontWeight.w700),
         ),
-        subtitle: const Text(
+        subtitle: const SiteText(
+          contentKey: 'copy.deal_rooms_page.11',
+          literal: true,
           'Helps Affinity identify relevant lenders and capital partners.',
         ),
         onChanged: (value) => setState(() => _financingNeeded = value),
@@ -1536,8 +1737,16 @@ class _NewDealDialogState extends State<_NewDealDialog> {
         minLines: 3,
         maxLines: 5,
         decoration: const InputDecoration(
-          labelText: 'Goals and decision context',
-          hintText: 'What would make this acquisition successful?',
+          label: SiteText(
+            'Goals and decision context',
+            contentKey: 'copy.deal_rooms_page.field8',
+            literal: true,
+          ),
+          hint: SiteText(
+            'What would make this acquisition successful?',
+            contentKey: 'copy.deal_rooms_page.field9',
+            literal: true,
+          ),
         ),
       ),
       const SizedBox(height: 13),
@@ -1546,7 +1755,9 @@ class _NewDealDialogState extends State<_NewDealDialog> {
         child: OutlinedButton.icon(
           onPressed: _pickDate,
           icon: const Icon(Icons.event_outlined),
-          label: Text(
+          label: SiteText(
+            contentKey: 'copy.deal_rooms_page.m47',
+            literal: false,
             _targetDate == null
                 ? 'ADD OPTIONAL TARGET CLOSE'
                 : 'TARGET ${DateFormat.yMMMd().format(_targetDate!)}',
@@ -1610,8 +1821,14 @@ class _NewDealDialogState extends State<_NewDealDialog> {
           color: const Color(0xFFE5EEE9),
           borderRadius: BorderRadius.circular(14),
         ),
-        child: Text(
-          '${DealRoomService.templatesFor(_kind).length} guided actions across ${DealRoomService.stagesFor(_kind).length} acquisition stages will be added automatically.',
+        child: SiteText(
+          templateValues: {
+            'value1': '${DealRoomService.templatesFor(_kind).length}',
+            'value2': '${DealRoomService.stagesFor(_kind).length}',
+          },
+          contentKey: 'copy.deal_rooms_page.m48',
+          literal: false,
+          "{{value1}} guided actions across {{value2}} acquisition stages will be added automatically.",
           style: const TextStyle(
             color: _purple,
             fontSize: 11,
@@ -1632,7 +1849,9 @@ class _NewDealDialogState extends State<_NewDealDialog> {
       children: [
         SizedBox(
           width: 130,
-          child: Text(
+          child: SiteText(
+            contentKey: 'copy.deal_rooms_page.m49',
+            literal: false,
             label.toUpperCase(),
             style: const TextStyle(
               color: _lilac,
@@ -1642,7 +1861,9 @@ class _NewDealDialogState extends State<_NewDealDialog> {
           ),
         ),
         Expanded(
-          child: Text(
+          child: SiteText(
+            contentKey: 'copy.deal_rooms_page.m50',
+            literal: false,
             value,
             style: const TextStyle(fontWeight: FontWeight.w700),
           ),
@@ -1697,7 +1918,11 @@ class _TaskDialogState extends State<_TaskDialog> {
 
   @override
   Widget build(BuildContext context) => AlertDialog(
-    title: Text(widget.task.title),
+    title: SiteText(
+      contentKey: 'copy.deal_rooms_page.m51',
+      literal: false,
+      widget.task.title,
+    ),
     content: SizedBox(
       width: 520,
       child: SingleChildScrollView(
@@ -1706,41 +1931,85 @@ class _TaskDialogState extends State<_TaskDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (widget.task.details.isNotEmpty)
-              Text(
+              SiteText(
+                contentKey: 'copy.deal_rooms_page.m52',
+                literal: false,
                 widget.task.details,
                 style: const TextStyle(color: Color(0xFF666674), height: 1.45),
               ),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
               initialValue: _status,
-              decoration: const InputDecoration(labelText: 'Task status'),
+              decoration: const InputDecoration(
+                label: SiteText(
+                  'Task status',
+                  contentKey: 'copy.deal_rooms_page.field10',
+                  literal: true,
+                ),
+              ),
               items: const [
                 DropdownMenuItem(
                   value: 'not_started',
-                  child: Text('Not started'),
+                  child: SiteText(
+                    contentKey: 'copy.deal_rooms_page.m53',
+                    literal: true,
+                    'Not started',
+                  ),
                 ),
                 DropdownMenuItem(
                   value: 'in_progress',
-                  child: Text('In progress'),
+                  child: SiteText(
+                    contentKey: 'copy.deal_rooms_page.m54',
+                    literal: true,
+                    'In progress',
+                  ),
                 ),
-                DropdownMenuItem(value: 'blocked', child: Text('Blocked')),
-                DropdownMenuItem(value: 'completed', child: Text('Completed')),
+                DropdownMenuItem(
+                  value: 'blocked',
+                  child: SiteText(
+                    contentKey: 'copy.deal_rooms_page.m55',
+                    literal: true,
+                    'Blocked',
+                  ),
+                ),
+                DropdownMenuItem(
+                  value: 'completed',
+                  child: SiteText(
+                    contentKey: 'copy.deal_rooms_page.m56',
+                    literal: true,
+                    'Completed',
+                  ),
+                ),
               ],
               onChanged: (value) => setState(() => _status = value ?? _status),
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<String?>(
               initialValue: _assignedProviderId,
-              decoration: const InputDecoration(labelText: 'Assigned to'),
+              decoration: const InputDecoration(
+                label: SiteText(
+                  'Assigned to',
+                  contentKey: 'copy.deal_rooms_page.field11',
+                  literal: true,
+                ),
+              ),
               items: [
                 const DropdownMenuItem<String?>(
                   value: null,
-                  child: Text('Unassigned / deal owner'),
+                  child: SiteText(
+                    contentKey: 'copy.deal_rooms_page.m57',
+                    literal: true,
+                    'Unassigned / deal owner',
+                  ),
                 ),
                 ...widget.members.map(
                   (member) => DropdownMenuItem<String?>(
                     value: member.provider.id,
-                    child: Text(member.provider.name),
+                    child: SiteText(
+                      contentKey: 'copy.deal_rooms_page.m58',
+                      literal: false,
+                      member.provider.name,
+                    ),
                   ),
                 ),
               ],
@@ -1763,7 +2032,9 @@ class _TaskDialogState extends State<_TaskDialog> {
                   if (selected != null) setState(() => _dueAt = selected);
                 },
                 icon: const Icon(Icons.event_outlined),
-                label: Text(
+                label: SiteText(
+                  contentKey: 'copy.deal_rooms_page.m59',
+                  literal: false,
                   _dueAt == null
                       ? 'ADD DUE DATE'
                       : 'DUE ${DateFormat.yMMMd().format(_dueAt!)}',
@@ -1777,7 +2048,11 @@ class _TaskDialogState extends State<_TaskDialog> {
                 minLines: 2,
                 maxLines: 4,
                 decoration: const InputDecoration(
-                  labelText: 'What is blocking this task?',
+                  label: SiteText(
+                    'What is blocking this task?',
+                    contentKey: 'copy.deal_rooms_page.field12',
+                    literal: true,
+                  ),
                 ),
               ),
             ],
@@ -1788,7 +2063,11 @@ class _TaskDialogState extends State<_TaskDialog> {
     actions: [
       TextButton(
         onPressed: () => Navigator.pop(context),
-        child: const Text('CANCEL'),
+        child: const SiteText(
+          contentKey: 'copy.deal_rooms_page.12',
+          literal: true,
+          'CANCEL',
+        ),
       ),
       FilledButton(
         onPressed: () => Navigator.pop(
@@ -1800,7 +2079,11 @@ class _TaskDialogState extends State<_TaskDialog> {
             assignedProviderId: _assignedProviderId,
           ),
         ),
-        child: const Text('SAVE TASK'),
+        child: const SiteText(
+          contentKey: 'copy.deal_rooms_page.13',
+          literal: true,
+          'SAVE TASK',
+        ),
       ),
     ],
   );
@@ -1980,9 +2263,15 @@ class _DealRoomPageState extends State<DealRoomPage> {
         nextDueAt: _room.nextDueAt,
       );
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Deal profile saved.')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: SiteText(
+              contentKey: 'copy.deal_rooms_page.m60',
+              literal: true,
+              'Deal profile saved.',
+            ),
+          ),
+        );
       }
       _refresh();
     } finally {
@@ -2038,9 +2327,15 @@ class _DealRoomPageState extends State<DealRoomPage> {
       _refresh();
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('$error')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: SiteText(
+              contentKey: 'copy.deal_rooms_page.m61',
+              literal: false,
+              '$error',
+            ),
+          ),
+        );
       }
     } finally {
       if (mounted) setState(() => _uploading = false);
@@ -2084,7 +2379,9 @@ class _DealRoomPageState extends State<DealRoomPage> {
             Container(width: 1, height: 28, color: _line),
             const SizedBox(width: 18),
             Flexible(
-              child: Text(
+              child: SiteText(
+                contentKey: 'copy.deal_rooms_page.m62',
+                literal: false,
                 _room.title,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
@@ -2207,7 +2504,9 @@ class _DealRoomPageState extends State<DealRoomPage> {
       children: [
         Icon(Icons.lock_outline_rounded, size: 14, color: _purple),
         SizedBox(width: 6),
-        Text(
+        SiteText(
+          contentKey: 'copy.deal_rooms_page.m63',
+          literal: true,
           'PRIVATE',
           style: TextStyle(
             color: _purple,
@@ -2334,7 +2633,9 @@ class _DealRoomPageState extends State<DealRoomPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
+              SiteText(
+                contentKey: 'copy.deal_rooms_page.m64',
+                literal: false,
                 _workspaceLabel.toUpperCase(),
                 style: const TextStyle(
                   color: _purple,
@@ -2344,7 +2645,9 @@ class _DealRoomPageState extends State<DealRoomPage> {
                 ),
               ),
               const SizedBox(height: 5),
-              Text(
+              SiteText(
+                contentKey: 'copy.deal_rooms_page.m65',
+                literal: false,
                 _workspaceTitle,
                 style: const TextStyle(
                   fontSize: 27,
@@ -2398,12 +2701,16 @@ class _DealRoomPageState extends State<DealRoomPage> {
   Widget _headerFact(String value, String label) => Column(
     crossAxisAlignment: CrossAxisAlignment.end,
     children: [
-      Text(
+      SiteText(
+        contentKey: 'copy.deal_rooms_page.m66',
+        literal: false,
         value,
         style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
       ),
       const SizedBox(height: 3),
-      Text(
+      SiteText(
+        contentKey: 'copy.deal_rooms_page.m67',
+        literal: false,
         label,
         style: const TextStyle(
           color: _lilac,
@@ -2449,7 +2756,9 @@ class _DealRoomPageState extends State<DealRoomPage> {
 
   Widget _restrictedVault() => _card(
     'Private document vault',
-    const Text(
+    const SiteText(
+      contentKey: 'copy.deal_rooms_page.14',
+      literal: true,
       'The buyer has not enabled document access for this workspace.',
       style: TextStyle(color: _lilac),
     ),
@@ -2556,7 +2865,9 @@ class _DealRoomPageState extends State<DealRoomPage> {
       children: [
         Icon(icon, color: _purple, size: 23),
         const SizedBox(height: 18),
-        Text(
+        SiteText(
+          contentKey: 'copy.deal_rooms_page.m68',
+          literal: false,
           eyebrow,
           style: const TextStyle(
             color: _purple,
@@ -2566,7 +2877,9 @@ class _DealRoomPageState extends State<DealRoomPage> {
           ),
         ),
         const SizedBox(height: 7),
-        Text(
+        SiteText(
+          contentKey: 'copy.deal_rooms_page.m69',
+          literal: false,
           title,
           style: const TextStyle(
             fontSize: 18,
@@ -2575,14 +2888,24 @@ class _DealRoomPageState extends State<DealRoomPage> {
           ),
         ),
         const SizedBox(height: 7),
-        Text(
+        SiteText(
+          contentKey: 'copy.deal_rooms_page.m70',
+          literal: false,
           description,
           maxLines: 3,
           overflow: TextOverflow.ellipsis,
           style: const TextStyle(color: _lilac, fontSize: 11, height: 1.45),
         ),
         const SizedBox(height: 14),
-        if (action != null) TextButton(onPressed: onTap, child: Text(action)),
+        if (action != null)
+          TextButton(
+            onPressed: onTap,
+            child: SiteText(
+              contentKey: 'copy.deal_rooms_page.m71',
+              literal: false,
+              action,
+            ),
+          ),
       ],
     ),
   );
@@ -2619,7 +2942,11 @@ class _DealRoomPageState extends State<DealRoomPage> {
                   child: FilledButton.icon(
                     onPressed: _saving ? null : _saveDealProfile,
                     icon: const Icon(Icons.save_outlined, size: 17),
-                    label: Text(_saving ? 'SAVING…' : 'SAVE FINANCIALS'),
+                    label: SiteText(
+                      contentKey: 'copy.deal_rooms_page.m72',
+                      literal: false,
+                      _saving ? 'SAVING…' : 'SAVE FINANCIALS',
+                    ),
                   ),
                 ),
               ],
@@ -2655,7 +2982,11 @@ class _DealRoomPageState extends State<DealRoomPage> {
             ),
           ),
           icon: const Icon(Icons.open_in_new_rounded, size: 17),
-          label: const Text('OPEN FULL DEAL SCREEN'),
+          label: const SiteText(
+            contentKey: 'copy.deal_rooms_page.15',
+            literal: true,
+            'OPEN FULL DEAL SCREEN',
+          ),
         ),
       ],
     );
@@ -2667,9 +2998,16 @@ class _DealRoomPageState extends State<DealRoomPage> {
         enabled: _room.ownedByCurrentUser,
         keyboardType: TextInputType.number,
         decoration: InputDecoration(
-          labelText: label,
+          label: siteInputCopy(
+            label,
+            contentKey: 'copy.deal_rooms_page.field.dynamic3',
+          ),
           prefixText: r'$ ',
-          hintText: 'Not known yet',
+          hint: SiteText(
+            'Not known yet',
+            contentKey: 'copy.deal_rooms_page.mfield1',
+            literal: true,
+          ),
         ),
       );
 
@@ -2720,7 +3058,9 @@ class _DealRoomPageState extends State<DealRoomPage> {
                           : Icons.radio_button_unchecked_rounded,
                       color: entry.value ? _purple : _lilac,
                     ),
-                    title: Text(
+                    title: SiteText(
+                      contentKey: 'copy.deal_rooms_page.m73',
+                      literal: false,
                       entry.key,
                       style: TextStyle(
                         fontWeight: entry.value
@@ -2728,7 +3068,9 @@ class _DealRoomPageState extends State<DealRoomPage> {
                             : FontWeight.w500,
                       ),
                     ),
-                    trailing: Text(
+                    trailing: SiteText(
+                      contentKey: 'copy.deal_rooms_page.m74',
+                      literal: false,
                       entry.value ? 'READY' : 'MISSING',
                       style: TextStyle(
                         color: entry.value ? _purple : const Color(0xFF9D3A32),
@@ -2781,7 +3123,9 @@ class _DealRoomPageState extends State<DealRoomPage> {
                   backgroundColor: const Color(0xFFE7E2DA),
                 ),
                 Center(
-                  child: Text(
+                  child: SiteText(
+                    contentKey: 'copy.deal_rooms_page.m75',
+                    literal: false,
                     value == null ? '—' : '${normalized.round()}',
                     style: const TextStyle(
                       fontSize: 16,
@@ -2797,7 +3141,9 @@ class _DealRoomPageState extends State<DealRoomPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                SiteText(
+                  contentKey: 'copy.deal_rooms_page.m76',
+                  literal: false,
                   valueLabel ??
                       (value == null ? 'PENDING' : '${normalized.round()}/100'),
                   style: const TextStyle(
@@ -2805,7 +3151,9 @@ class _DealRoomPageState extends State<DealRoomPage> {
                     fontWeight: FontWeight.w800,
                   ),
                 ),
-                Text(
+                SiteText(
+                  contentKey: 'copy.deal_rooms_page.m77',
+                  literal: false,
                   label,
                   style: const TextStyle(
                     color: _lilac,
@@ -2889,7 +3237,9 @@ class _DealRoomPageState extends State<DealRoomPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
+              SiteText(
+                contentKey: 'copy.deal_rooms_page.m78',
+                literal: false,
                 stage.toUpperCase().replaceAll('_', ' '),
                 style: TextStyle(
                   color: current ? _purple : _ink,
@@ -2899,8 +3249,14 @@ class _DealRoomPageState extends State<DealRoomPage> {
                 ),
               ),
               const SizedBox(height: 4),
-              Text(
-                '${tasks.where((task) => task.completed).length}/${tasks.length} actions complete',
+              SiteText(
+                templateValues: {
+                  'value1': '${tasks.where((task) => task.completed).length}',
+                  'value2': '${tasks.length}',
+                },
+                contentKey: 'copy.deal_rooms_page.m79',
+                literal: false,
+                "{{value1}}/{{value2}} actions complete",
                 style: const TextStyle(color: _lilac, fontSize: 10),
               ),
             ],
@@ -2966,7 +3322,9 @@ class _DealRoomPageState extends State<DealRoomPage> {
                     ),
                   ),
                   SizedBox(width: 10),
-                  Text(
+                  SiteText(
+                    contentKey: 'copy.deal_rooms_page.m80',
+                    literal: true,
                     'ANONYMOUS BUYER · AFFINITY REVIEWED',
                     style: TextStyle(
                       fontSize: 9,
@@ -2977,7 +3335,9 @@ class _DealRoomPageState extends State<DealRoomPage> {
                 ],
               ),
               const SizedBox(height: 18),
-              Text(
+              SiteText(
+                contentKey: 'copy.deal_rooms_page.m81',
+                literal: false,
                 _room.propertySnapshot['industry'] as String? ??
                     'Business acquisition opportunity',
                 style: const TextStyle(
@@ -2986,7 +3346,9 @@ class _DealRoomPageState extends State<DealRoomPage> {
                 ),
               ),
               const SizedBox(height: 7),
-              Text(
+              SiteText(
+                contentKey: 'copy.deal_rooms_page.m82',
+                literal: false,
                 _room.city.isEmpty ? 'Region private' : _room.city,
                 style: const TextStyle(
                   color: _purple,
@@ -2994,7 +3356,9 @@ class _DealRoomPageState extends State<DealRoomPage> {
                 ),
               ),
               const SizedBox(height: 12),
-              const Text(
+              const SiteText(
+                contentKey: 'copy.deal_rooms_page.16',
+                literal: true,
                 'Affinity writes and approves the summary, price band, support needs, and score label before publication.',
                 style: TextStyle(color: _lilac, height: 1.5),
               ),
@@ -3009,8 +3373,15 @@ class _DealRoomPageState extends State<DealRoomPage> {
       SwitchListTile(
         value: _room.sharingPreferences[key] == true,
         contentPadding: EdgeInsets.zero,
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
-        subtitle: Text(
+        title: SiteText(
+          contentKey: 'copy.deal_rooms_page.m83',
+          literal: false,
+          title,
+          style: const TextStyle(fontWeight: FontWeight.w700),
+        ),
+        subtitle: SiteText(
+          contentKey: 'copy.deal_rooms_page.m84',
+          literal: false,
           subtitle,
           style: const TextStyle(color: _lilac, fontSize: 11),
         ),
@@ -3037,7 +3408,9 @@ class _DealRoomPageState extends State<DealRoomPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  SiteText(
+                    contentKey: 'copy.deal_rooms_page.m85',
+                    literal: false,
                     title,
                     style: const TextStyle(
                       color: _purple,
@@ -3045,7 +3418,9 @@ class _DealRoomPageState extends State<DealRoomPage> {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text(
+                  SiteText(
+                    contentKey: 'copy.deal_rooms_page.m86',
+                    literal: false,
                     text,
                     style: const TextStyle(
                       color: Color(0xFF405D52),
@@ -3071,7 +3446,9 @@ class _DealRoomPageState extends State<DealRoomPage> {
       const SizedBox(height: 8),
       const RotatedBox(
         quarterTurns: 1,
-        child: Text(
+        child: SiteText(
+          contentKey: 'copy.deal_rooms_page.m87',
+          literal: true,
           'INTRODUCTIONS',
           style: TextStyle(
             color: _purple,
@@ -3104,11 +3481,15 @@ class _DealRoomPageState extends State<DealRoomPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  SiteText(
+                    contentKey: 'copy.deal_rooms_page.m88',
+                    literal: true,
                     'Introductions',
                     style: TextStyle(fontWeight: FontWeight.w800),
                   ),
-                  Text(
+                  SiteText(
+                    contentKey: 'copy.deal_rooms_page.m89',
+                    literal: true,
                     'Private professional pitches',
                     style: TextStyle(color: _lilac, fontSize: 10),
                   ),
@@ -3153,7 +3534,9 @@ class _DealRoomPageState extends State<DealRoomPage> {
           color: Color(0xFFE5EEE9),
           border: Border(top: BorderSide(color: _line)),
         ),
-        child: const Text(
+        child: const SiteText(
+          contentKey: 'copy.deal_rooms_page.17',
+          literal: true,
           'Your identity stays private until you accept an introduction.',
           style: TextStyle(
             color: _purple,
@@ -3173,12 +3556,16 @@ class _DealRoomPageState extends State<DealRoomPage> {
       children: [
         Icon(Icons.mark_unread_chat_alt_outlined, size: 34, color: _lilac),
         SizedBox(height: 14),
-        Text(
+        SiteText(
+          contentKey: 'copy.deal_rooms_page.m90',
+          literal: true,
           'No introductions yet',
           style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
         ),
         SizedBox(height: 8),
-        Text(
+        SiteText(
+          contentKey: 'copy.deal_rooms_page.m91',
+          literal: true,
           'When a verified Affinity member responds to an approved anonymous opportunity, their short pitch will appear here.',
           textAlign: TextAlign.center,
           style: TextStyle(color: _lilac, fontSize: 12, height: 1.5),
@@ -3194,12 +3581,16 @@ class _DealRoomPageState extends State<DealRoomPage> {
       children: [
         Icon(Icons.lock_person_outlined, size: 34, color: _purple),
         SizedBox(height: 14),
-        Text(
+        SiteText(
+          contentKey: 'copy.deal_rooms_page.m92',
+          literal: true,
           'Buyer identity protected',
           style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
         ),
         SizedBox(height: 8),
-        Text(
+        SiteText(
+          contentKey: 'copy.deal_rooms_page.m93',
+          literal: true,
           'Use the Member Studio opportunity feed to send a concise introduction. Direct contact opens only if the buyer accepts.',
           textAlign: TextAlign.center,
           style: TextStyle(color: _lilac, fontSize: 12, height: 1.5),
@@ -3223,7 +3614,9 @@ class _DealRoomPageState extends State<DealRoomPage> {
             CircleAvatar(
               radius: 17,
               backgroundColor: const Color(0xFFE5EEE9),
-              child: Text(
+              child: SiteText(
+                contentKey: 'copy.deal_rooms_page.m94',
+                literal: false,
                 pitch.companyName.isNotEmpty
                     ? pitch.companyName[0].toUpperCase()
                     : 'A',
@@ -3238,7 +3631,9 @@ class _DealRoomPageState extends State<DealRoomPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  SiteText(
+                    contentKey: 'copy.deal_rooms_page.m95',
+                    literal: false,
                     pitch.companyName.isEmpty
                         ? pitch.providerName
                         : pitch.companyName,
@@ -3249,7 +3644,9 @@ class _DealRoomPageState extends State<DealRoomPage> {
                       fontWeight: FontWeight.w800,
                     ),
                   ),
-                  Text(
+                  SiteText(
+                    contentKey: 'copy.deal_rooms_page.m96',
+                    literal: false,
                     pitch.providerType,
                     style: const TextStyle(color: _lilac, fontSize: 9),
                   ),
@@ -3261,7 +3658,9 @@ class _DealRoomPageState extends State<DealRoomPage> {
         ),
         const SizedBox(height: 11),
         if (pitch.offerSummary.isNotEmpty) ...[
-          Text(
+          SiteText(
+            contentKey: 'copy.deal_rooms_page.m97',
+            literal: false,
             pitch.offerSummary,
             style: const TextStyle(
               color: _purple,
@@ -3271,7 +3670,9 @@ class _DealRoomPageState extends State<DealRoomPage> {
           ),
           const SizedBox(height: 6),
         ],
-        Text(
+        SiteText(
+          contentKey: 'copy.deal_rooms_page.m98',
+          literal: false,
           pitch.pitch,
           maxLines: 4,
           overflow: TextOverflow.ellipsis,
@@ -3284,14 +3685,22 @@ class _DealRoomPageState extends State<DealRoomPage> {
               Expanded(
                 child: OutlinedButton(
                   onPressed: () => _respondToIntroduction(pitch, 'declined'),
-                  child: const Text('PASS'),
+                  child: const SiteText(
+                    contentKey: 'copy.deal_rooms_page.18',
+                    literal: true,
+                    'PASS',
+                  ),
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: FilledButton(
                   onPressed: () => _respondToIntroduction(pitch, 'accepted'),
-                  child: const Text('CONNECT'),
+                  child: const SiteText(
+                    contentKey: 'copy.deal_rooms_page.19',
+                    literal: true,
+                    'CONNECT',
+                  ),
                 ),
               ),
             ],
@@ -3307,7 +3716,9 @@ class _DealRoomPageState extends State<DealRoomPage> {
       color: const Color(0xFFE5EEE9),
       borderRadius: BorderRadius.circular(20),
     ),
-    child: Text(
+    child: SiteText(
+      contentKey: 'copy.deal_rooms_page.m99',
+      literal: false,
       status.toUpperCase(),
       style: const TextStyle(
         color: _purple,
@@ -3327,7 +3738,9 @@ class _DealRoomPageState extends State<DealRoomPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
+            content: SiteText(
+              contentKey: 'copy.deal_rooms_page.m100',
+              literal: false,
               status == 'accepted'
                   ? 'Introduction accepted. Your contact details are now shared.'
                   : 'Introduction passed.',
@@ -3337,9 +3750,15 @@ class _DealRoomPageState extends State<DealRoomPage> {
       }
     } catch (error) {
       if (mounted)
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('$error')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: SiteText(
+              contentKey: 'copy.deal_rooms_page.m101',
+              literal: false,
+              '$error',
+            ),
+          ),
+        );
     }
   }
 
@@ -3435,7 +3854,9 @@ class _DealRoomPageState extends State<DealRoomPage> {
                   color: _workspaceView == view ? _purple : _lilac,
                 ),
                 const SizedBox(width: 7),
-                Text(
+                SiteText(
+                  contentKey: 'copy.deal_rooms_page.m102',
+                  literal: false,
                   label,
                   style: TextStyle(
                     fontSize: 10,
@@ -3473,7 +3894,9 @@ class _DealRoomPageState extends State<DealRoomPage> {
                   ],
                 ),
                 const SizedBox(height: 52),
-                Text(
+                SiteText(
+                  contentKey: 'copy.deal_rooms_page.m103',
+                  literal: false,
                   _room.ownedByCurrentUser
                       ? (_room.isBusiness
                             ? 'PRIVATE ACQUISITION WORKSPACE'
@@ -3487,7 +3910,9 @@ class _DealRoomPageState extends State<DealRoomPage> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                Text(
+                SiteText(
+                  contentKey: 'copy.deal_rooms_page.m104',
+                  literal: false,
                   _room.title,
                   style: const TextStyle(
                     color: Colors.white,
@@ -3498,8 +3923,17 @@ class _DealRoomPageState extends State<DealRoomPage> {
                   ),
                 ),
                 const SizedBox(height: 14),
-                Text(
-                  '${_room.dealKind.toUpperCase()} · ${_room.currentStage.toUpperCase().replaceAll('_', ' ')} · ${bundle.members.length} TEAM MEMBER${bundle.members.length == 1 ? '' : 'S'}',
+                SiteText(
+                  templateValues: {
+                    'value1': '${_room.dealKind.toUpperCase()}',
+                    'value2':
+                        '${_room.currentStage.toUpperCase().replaceAll('_', ' ')}',
+                    'value3': '${bundle.members.length}',
+                    'value4': '${bundle.members.length == 1 ? '' : 'S'}',
+                  },
+                  contentKey: 'copy.deal_rooms_page.m105',
+                  literal: false,
+                  "{{value1}} · {{value2}} · {{value3}} TEAM MEMBER{{value4}}",
                   style: const TextStyle(
                     color: Color(0xFF9B9B98),
                     fontSize: 12,
@@ -3537,7 +3971,9 @@ class _DealRoomPageState extends State<DealRoomPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                const SiteText(
+                  contentKey: 'copy.deal_rooms_page.20',
+                  literal: true,
                   'NEXT ACTION',
                   style: TextStyle(
                     color: _lilac,
@@ -3547,7 +3983,9 @@ class _DealRoomPageState extends State<DealRoomPage> {
                   ),
                 ),
                 const SizedBox(height: 6),
-                Text(
+                SiteText(
+                  contentKey: 'copy.deal_rooms_page.m106',
+                  literal: false,
                   next?.title ?? 'All guided tasks are complete',
                   style: const TextStyle(
                     color: Colors.white,
@@ -3578,7 +4016,9 @@ class _DealRoomPageState extends State<DealRoomPage> {
   Widget _commandMetric(String value, String label, bool alert) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Text(
+      SiteText(
+        contentKey: 'copy.deal_rooms_page.m107',
+        literal: false,
         value,
         style: TextStyle(
           color: alert ? const Color(0xFFFF8177) : Colors.white,
@@ -3587,7 +4027,9 @@ class _DealRoomPageState extends State<DealRoomPage> {
         ),
       ),
       const SizedBox(height: 4),
-      Text(
+      SiteText(
+        contentKey: 'copy.deal_rooms_page.m108',
+        literal: false,
         label,
         style: const TextStyle(color: Color(0xFF9D9DAC), fontSize: 8),
       ),
@@ -3686,7 +4128,9 @@ class _DealRoomPageState extends State<DealRoomPage> {
         Icon(Icons.lock_outline, color: Color(0xFF8A5800)),
         SizedBox(width: 11),
         Expanded(
-          child: Text(
+          child: SiteText(
+            contentKey: 'copy.deal_rooms_page.m109',
+            literal: true,
             'PRIVATE DEAL VAULT · Access is restricted to this Deal Room, files are validated against an allowlist, downloads require a live signed-in session, and file activity is audited. Do not upload executable files, passwords, government IDs or banking credentials. Independent security testing and malware scanning remain required before storing the most sensitive M&A records.',
             style: TextStyle(
               color: Color(0xFF6D4805),
@@ -3713,12 +4157,16 @@ class _DealRoomPageState extends State<DealRoomPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
-        Text(
+        SiteText(
+          contentKey: 'copy.deal_rooms_page.m110',
+          literal: false,
           value,
           style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 6),
-        Text(
+        SiteText(
+          contentKey: 'copy.deal_rooms_page.m111',
+          literal: false,
           label,
           style: const TextStyle(color: Color(0xFF777785), fontSize: 9),
         ),
@@ -3737,9 +4185,16 @@ class _DealRoomPageState extends State<DealRoomPage> {
           maxLines: 6,
           maxLength: 500,
           decoration: const InputDecoration(
-            labelText: 'Deal details',
-            hintText:
-                'Describe the business, what attracts you to it, and what you are trying to accomplish.',
+            label: SiteText(
+              'Deal details',
+              contentKey: 'copy.deal_rooms_page.field13',
+              literal: true,
+            ),
+            hint: SiteText(
+              'Describe the business, what attracts you to it, and what you are trying to accomplish.',
+              contentKey: 'copy.deal_rooms_page.field14',
+              literal: true,
+            ),
             helperText:
                 'Required before this deal can be submitted for review.',
           ),
@@ -3751,7 +4206,11 @@ class _DealRoomPageState extends State<DealRoomPage> {
           minLines: 3,
           maxLines: 5,
           decoration: const InputDecoration(
-            labelText: 'Goals and decision context',
+            label: SiteText(
+              'Goals and decision context',
+              contentKey: 'copy.deal_rooms_page.field15',
+              literal: true,
+            ),
           ),
         ),
         const SizedBox(height: 12),
@@ -3759,19 +4218,33 @@ class _DealRoomPageState extends State<DealRoomPage> {
           controller: _timeline,
           enabled: _room.ownedByCurrentUser,
           decoration: const InputDecoration(
-            labelText: 'Timeline or target closing date',
+            label: SiteText(
+              'Timeline or target closing date',
+              contentKey: 'copy.deal_rooms_page.field16',
+              literal: true,
+            ),
           ),
         ),
         const SizedBox(height: 12),
         if (_room.ownedByCurrentUser)
           DropdownButtonFormField<String>(
             initialValue: _room.currentStage,
-            decoration: const InputDecoration(labelText: 'Current step'),
+            decoration: const InputDecoration(
+              label: SiteText(
+                'Current step',
+                contentKey: 'copy.deal_rooms_page.field17',
+                literal: true,
+              ),
+            ),
             items: DealRoomService.stagesFor(_room.dealKind)
                 .map(
                   (stage) => DropdownMenuItem(
                     value: stage,
-                    child: Text(stage.toUpperCase().replaceAll('_', ' ')),
+                    child: SiteText(
+                      contentKey: 'copy.deal_rooms_page.m112',
+                      literal: false,
+                      stage.toUpperCase().replaceAll('_', ' '),
+                    ),
                   ),
                 )
                 .toList(),
@@ -3800,7 +4273,9 @@ class _DealRoomPageState extends State<DealRoomPage> {
                 await _saveRoom(_room.status);
               },
               icon: const Icon(Icons.event_outlined),
-              label: Text(
+              label: SiteText(
+                contentKey: 'copy.deal_rooms_page.m113',
+                literal: false,
                 _targetDate == null
                     ? 'ADD TARGET CLOSING DATE'
                     : 'TARGET CLOSE · ${DateFormat.yMMMd().format(_targetDate!)}',
@@ -3815,7 +4290,13 @@ class _DealRoomPageState extends State<DealRoomPage> {
               Expanded(
                 child: DropdownButtonFormField<String>(
                   initialValue: _room.status,
-                  decoration: const InputDecoration(labelText: 'Deal stage'),
+                  decoration: const InputDecoration(
+                    label: SiteText(
+                      'Deal stage',
+                      contentKey: 'copy.deal_rooms_page.field18',
+                      literal: true,
+                    ),
+                  ),
                   items:
                       const [
                             'draft',
@@ -3829,7 +4310,9 @@ class _DealRoomPageState extends State<DealRoomPage> {
                           .map(
                             (value) => DropdownMenuItem(
                               value: value,
-                              child: Text(
+                              child: SiteText(
+                                contentKey: 'copy.deal_rooms_page.m114',
+                                literal: false,
                                 value.toUpperCase().replaceAll('_', ' '),
                               ),
                             ),
@@ -3848,7 +4331,9 @@ class _DealRoomPageState extends State<DealRoomPage> {
                         if (_dealDetails.text.trim().length < 40) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text(
+                              content: SiteText(
+                                contentKey: 'copy.deal_rooms_page.m115',
+                                literal: true,
                                 'Add at least 40 characters of deal details before saving.',
                               ),
                             ),
@@ -3858,14 +4343,20 @@ class _DealRoomPageState extends State<DealRoomPage> {
                         await _saveRoom(_room.status);
                         await _saveDealProfile();
                       },
-                child: const Text('SAVE'),
+                child: const SiteText(
+                  contentKey: 'copy.deal_rooms_page.21',
+                  literal: true,
+                  'SAVE',
+                ),
               ),
             ],
           ),
           const SizedBox(height: 18),
           const Align(
             alignment: Alignment.centerLeft,
-            child: Text(
+            child: SiteText(
+              contentKey: 'copy.deal_rooms_page.m116',
+              literal: true,
               'TEAM ACCESS',
               style: TextStyle(
                 color: _purple,
@@ -3878,20 +4369,32 @@ class _DealRoomPageState extends State<DealRoomPage> {
           SwitchListTile(
             value: _room.sharingPreferences['financials'] != false,
             onChanged: (value) => _setSharing('financials', value),
-            title: const Text('Share financial model'),
+            title: const SiteText(
+              contentKey: 'copy.deal_rooms_page.22',
+              literal: true,
+              'Share financial model',
+            ),
             contentPadding: EdgeInsets.zero,
           ),
           SwitchListTile(
             value: _room.sharingPreferences['risk'] != false,
             onChanged: (value) => _setSharing('risk', value),
-            title: const Text('Share risk assessment'),
+            title: const SiteText(
+              contentKey: 'copy.deal_rooms_page.23',
+              literal: true,
+              'Share risk assessment',
+            ),
             contentPadding: EdgeInsets.zero,
           ),
           if (!_room.isBusiness)
             SwitchListTile(
               value: _room.sharingPreferences['documents'] == true,
               onChanged: (value) => _setSharing('documents', value),
-              title: const Text('Allow document access'),
+              title: const SiteText(
+                contentKey: 'copy.deal_rooms_page.24',
+                literal: true,
+                'Allow document access',
+              ),
               contentPadding: EdgeInsets.zero,
             ),
         ],
@@ -3902,7 +4405,9 @@ class _DealRoomPageState extends State<DealRoomPage> {
   Widget _team(List<DealRoomMember> members) => _card(
     _room.isBusiness ? 'Acquisition team' : 'Property team',
     members.isEmpty
-        ? const Text(
+        ? const SiteText(
+            contentKey: 'copy.deal_rooms_page.25',
+            literal: true,
             'No professionals were attached when this room was created.',
           )
         : Column(
@@ -3923,11 +4428,15 @@ class _DealRoomPageState extends State<DealRoomPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
+                          SiteText(
+                            contentKey: 'copy.deal_rooms_page.m117',
+                            literal: false,
                             provider.name,
                             style: const TextStyle(fontWeight: FontWeight.w700),
                           ),
-                          Text(
+                          SiteText(
+                            contentKey: 'copy.deal_rooms_page.m118',
+                            literal: false,
                             '${provider.jobTitle} · ${member.status}',
                             style: const TextStyle(
                               color: Color(0xFF777785),
@@ -3949,9 +4458,20 @@ class _DealRoomPageState extends State<DealRoomPage> {
                         itemBuilder: (_) => const [
                           PopupMenuItem(
                             value: true,
-                            child: Text('Accept workspace'),
+                            child: SiteText(
+                              contentKey: 'copy.deal_rooms_page.m119',
+                              literal: true,
+                              'Accept workspace',
+                            ),
                           ),
-                          PopupMenuItem(value: false, child: Text('Decline')),
+                          PopupMenuItem(
+                            value: false,
+                            child: SiteText(
+                              contentKey: 'copy.deal_rooms_page.m120',
+                              literal: true,
+                              'Decline',
+                            ),
+                          ),
                         ],
                       ),
                     if (_room.ownedByCurrentUser)
@@ -3967,18 +4487,32 @@ class _DealRoomPageState extends State<DealRoomPage> {
                         itemBuilder: (_) => const [
                           PopupMenuItem(
                             value: 'summary',
-                            child: Text('Summary access'),
+                            child: SiteText(
+                              contentKey: 'copy.deal_rooms_page.m121',
+                              literal: true,
+                              'Summary access',
+                            ),
                           ),
                           PopupMenuItem(
                             value: 'standard',
-                            child: Text('Standard access'),
+                            child: SiteText(
+                              contentKey: 'copy.deal_rooms_page.m122',
+                              literal: true,
+                              'Standard access',
+                            ),
                           ),
                           PopupMenuItem(
                             value: 'full',
-                            child: Text('Full access'),
+                            child: SiteText(
+                              contentKey: 'copy.deal_rooms_page.m123',
+                              literal: true,
+                              'Full access',
+                            ),
                           ),
                         ],
-                        child: Text(
+                        child: SiteText(
+                          contentKey: 'copy.deal_rooms_page.m124',
+                          literal: false,
                           member.accessLevel.toUpperCase(),
                           style: const TextStyle(
                             color: _purple,
@@ -4044,8 +4578,14 @@ class _DealRoomPageState extends State<DealRoomPage> {
                 ),
               ),
               const SizedBox(width: 12),
-              Text(
-                '$complete/${tasks.length} COMPLETE',
+              SiteText(
+                templateValues: {
+                  'value1': '${complete}',
+                  'value2': '${tasks.length}',
+                },
+                contentKey: 'copy.deal_rooms_page.m125',
+                literal: false,
+                "{{value1}}/{{value2}} COMPLETE",
                 style: const TextStyle(
                   color: _purple,
                   fontSize: 9,
@@ -4063,8 +4603,14 @@ class _DealRoomPageState extends State<DealRoomPage> {
                 color: const Color(0xFFFFE9E7),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Text(
-                '$blocked BLOCKED TASK${blocked == 1 ? '' : 'S'} · Resolve these before the transaction can move cleanly.',
+              child: SiteText(
+                templateValues: {
+                  'value1': '${blocked}',
+                  'value2': '${blocked == 1 ? '' : 'S'}',
+                },
+                contentKey: 'copy.deal_rooms_page.m126',
+                literal: false,
+                "{{value1}} BLOCKED TASK{{value2}} · Resolve these before the transaction can move cleanly.",
                 style: const TextStyle(
                   color: Color(0xFF9D2018),
                   fontSize: 10,
@@ -4108,7 +4654,9 @@ class _DealRoomPageState extends State<DealRoomPage> {
             color: current ? Colors.white : _purple,
           ),
         ),
-        title: Text(
+        title: SiteText(
+          contentKey: 'copy.deal_rooms_page.m127',
+          literal: false,
           stage.toUpperCase().replaceAll('_', ' '),
           style: TextStyle(
             fontSize: 12,
@@ -4117,7 +4665,15 @@ class _DealRoomPageState extends State<DealRoomPage> {
             letterSpacing: .8,
           ),
         ),
-        subtitle: Text('$complete/${tasks.length} complete'),
+        subtitle: SiteText(
+          templateValues: {
+            'value1': '${complete}',
+            'value2': '${tasks.length}',
+          },
+          contentKey: 'copy.deal_rooms_page.m128',
+          literal: false,
+          "{{value1}}/{{value2}} complete",
+        ),
         children: tasks.map((task) => _taskRow(task, members)).toList(),
       ),
     );
@@ -4158,7 +4714,9 @@ class _DealRoomPageState extends State<DealRoomPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  SiteText(
+                    contentKey: 'copy.deal_rooms_page.m129',
+                    literal: false,
                     task.title,
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
@@ -4169,7 +4727,9 @@ class _DealRoomPageState extends State<DealRoomPage> {
                   ),
                   if (task.details.isNotEmpty) ...[
                     const SizedBox(height: 4),
-                    Text(
+                    SiteText(
+                      contentKey: 'copy.deal_rooms_page.m130',
+                      literal: false,
                       task.details,
                       style: const TextStyle(
                         color: Color(0xFF666674),
@@ -4195,8 +4755,11 @@ class _DealRoomPageState extends State<DealRoomPage> {
                   ),
                   if (task.blockerNote.isNotEmpty) ...[
                     const SizedBox(height: 6),
-                    Text(
-                      'BLOCKER · ${task.blockerNote}',
+                    SiteText(
+                      templateValues: {'value1': '${task.blockerNote}'},
+                      contentKey: 'copy.deal_rooms_page.m131',
+                      literal: false,
+                      "BLOCKER · {{value1}}",
                       style: const TextStyle(
                         color: Color(0xFF9D2018),
                         fontSize: 10,
@@ -4224,7 +4787,9 @@ class _DealRoomPageState extends State<DealRoomPage> {
       color: alert ? const Color(0xFF4A2027) : _purple.withValues(alpha: .14),
       borderRadius: BorderRadius.circular(8),
     ),
-    child: Text(
+    child: SiteText(
+      contentKey: 'copy.deal_rooms_page.m132',
+      literal: false,
       label.toUpperCase().replaceAll('_', ' '),
       style: TextStyle(
         color: alert ? const Color(0xFF9D2018) : _purple,
@@ -4247,7 +4812,11 @@ class _DealRoomPageState extends State<DealRoomPage> {
                 minLines: 2,
                 maxLines: 5,
                 decoration: const InputDecoration(
-                  labelText: 'Add a decision, question or update',
+                  label: SiteText(
+                    'Add a decision, question or update',
+                    contentKey: 'copy.deal_rooms_page.field19',
+                    literal: true,
+                  ),
                 ),
               ),
             ),
@@ -4268,7 +4837,11 @@ class _DealRoomPageState extends State<DealRoomPage> {
         if (notes.isEmpty)
           const Align(
             alignment: Alignment.centerLeft,
-            child: Text('No shared notes yet.'),
+            child: SiteText(
+              contentKey: 'copy.deal_rooms_page.m133',
+              literal: true,
+              'No shared notes yet.',
+            ),
           )
         else
           ...notes.map(
@@ -4285,9 +4858,16 @@ class _DealRoomPageState extends State<DealRoomPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(note.text, style: const TextStyle(height: 1.45)),
+                  SiteText(
+                    contentKey: 'copy.deal_rooms_page.m134',
+                    literal: false,
+                    note.text,
+                    style: const TextStyle(height: 1.45),
+                  ),
                   const SizedBox(height: 6),
-                  Text(
+                  SiteText(
+                    contentKey: 'copy.deal_rooms_page.m135',
+                    literal: false,
                     '${note.mine ? 'YOU' : 'TEAM MEMBER'} · ${DateFormat.MMMd().add_jm().format(note.createdAt)}',
                     style: const TextStyle(
                       color: Color(0xFF777785),
@@ -4319,16 +4899,24 @@ class _DealRoomPageState extends State<DealRoomPage> {
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
               : const Icon(Icons.upload_file_outlined),
-          label: Text(_uploading ? 'UPLOADING…' : 'UPLOAD DOCUMENT'),
+          label: SiteText(
+            contentKey: 'copy.deal_rooms_page.m136',
+            literal: false,
+            _uploading ? 'UPLOADING…' : 'UPLOAD DOCUMENT',
+          ),
         ),
         const SizedBox(height: 14),
-        const Text(
+        const SiteText(
+          contentKey: 'copy.deal_rooms_page.26',
+          literal: true,
           'PDF, JPG or PNG · 15 MB maximum · authenticated participants only',
           style: TextStyle(color: Color(0xFF666674), fontSize: 11),
         ),
         const SizedBox(height: 14),
         if (documents.isEmpty)
-          const Text(
+          const SiteText(
+            contentKey: 'copy.deal_rooms_page.27',
+            literal: true,
             'No private documents have been added.',
             style: TextStyle(color: Color(0xFF666674), fontSize: 12),
           )
@@ -4337,9 +4925,20 @@ class _DealRoomPageState extends State<DealRoomPage> {
             (document) => ListTile(
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.description_outlined, color: _purple),
-              title: Text(document.fileName),
-              subtitle: Text(
-                '${(document.fileSize / 1024).ceil()} KB · ${document.securityStatus.toUpperCase()} · ${DateFormat.MMMd().format(document.createdAt)}',
+              title: SiteText(
+                contentKey: 'copy.deal_rooms_page.m137',
+                literal: false,
+                document.fileName,
+              ),
+              subtitle: SiteText(
+                templateValues: {
+                  'value1': '${(document.fileSize / 1024).ceil()}',
+                  'value2': '${document.securityStatus.toUpperCase()}',
+                  'value3': '${DateFormat.MMMd().format(document.createdAt)}',
+                },
+                contentKey: 'copy.deal_rooms_page.m138',
+                literal: false,
+                "{{value1}} KB · {{value2}} · {{value3}}",
               ),
               trailing: PopupMenuButton<String>(
                 tooltip: 'Document actions',
@@ -4353,22 +4952,36 @@ class _DealRoomPageState extends State<DealRoomPage> {
                     }
                   } catch (error) {
                     if (mounted) {
-                      ScaffoldMessenger.of(
-                        context,
-                      ).showSnackBar(SnackBar(content: Text('$error')));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: SiteText(
+                            contentKey: 'copy.deal_rooms_page.m139',
+                            literal: false,
+                            '$error',
+                          ),
+                        ),
+                      );
                     }
                   }
                 },
                 itemBuilder: (_) => [
                   const PopupMenuItem(
                     value: 'download',
-                    child: Text('Download securely'),
+                    child: SiteText(
+                      contentKey: 'copy.deal_rooms_page.m140',
+                      literal: true,
+                      'Download securely',
+                    ),
                   ),
                   if (_room.ownedByCurrentUser ||
                       document.uploadedBy == BackendService.user?.id)
                     const PopupMenuItem(
                       value: 'delete',
-                      child: Text('Delete document'),
+                      child: SiteText(
+                        contentKey: 'copy.deal_rooms_page.m141',
+                        literal: true,
+                        'Delete document',
+                      ),
                     ),
                 ],
               ),
@@ -4378,11 +4991,17 @@ class _DealRoomPageState extends State<DealRoomPage> {
           const Divider(height: 32),
           ExpansionTile(
             tilePadding: EdgeInsets.zero,
-            title: const Text(
+            title: const SiteText(
+              contentKey: 'copy.deal_rooms_page.28',
+              literal: true,
               'File activity',
               style: TextStyle(fontWeight: FontWeight.w700),
             ),
-            subtitle: const Text('Recent downloads, uploads and deletions'),
+            subtitle: const SiteText(
+              contentKey: 'copy.deal_rooms_page.29',
+              literal: true,
+              'Recent downloads, uploads and deletions',
+            ),
             children: events
                 .take(12)
                 .map(
@@ -4395,14 +5014,18 @@ class _DealRoomPageState extends State<DealRoomPage> {
                           : Icons.history,
                       size: 18,
                     ),
-                    title: Text(
+                    title: SiteText(
+                      contentKey: 'copy.deal_rooms_page.m142',
+                      literal: false,
                       '${event.eventType.toUpperCase()} · ${event.fileName}',
                       style: const TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                    subtitle: Text(
+                    subtitle: SiteText(
+                      contentKey: 'copy.deal_rooms_page.m143',
+                      literal: false,
                       '${event.mine ? 'You' : 'Deal participant'} · ${DateFormat.MMMd().add_jm().format(event.createdAt)}',
                     ),
                   ),
@@ -4425,7 +5048,9 @@ class _DealRoomPageState extends State<DealRoomPage> {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        SiteText(
+          contentKey: 'copy.deal_rooms_page.m144',
+          literal: false,
           title,
           style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
         ),

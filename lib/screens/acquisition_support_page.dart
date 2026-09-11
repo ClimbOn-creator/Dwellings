@@ -1,3 +1,7 @@
+import '../widgets/site_text.dart';
+import '../widgets/site_parallax_image.dart';
+import '../widgets/affinity_cinematic.dart';
+import '../widgets/site_image.dart';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -35,254 +39,726 @@ class AcquisitionSupportPage extends StatefulWidget {
 }
 
 class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
-  final _marketingScroll = ScrollController();
+  static const _forest = Color(0xFF151A19);
+  static const _acid = Color(0xFFE5E1D7);
+  final _pageScroll = ScrollController();
+  bool? _motionEnabled;
+
+  @override
+  void initState() {
+    super.initState();
+    SharedPreferences.getInstance().then((preferences) {
+      if (mounted && _motionEnabled == null) {
+        setState(
+          () => _motionEnabled = preferences.getBool('affinity.landing.motion'),
+        );
+      }
+    });
+  }
+
+  Future<void> _setMotion(bool value) async {
+    setState(() => _motionEnabled = value);
+    // Scene lengths differ in reading mode: start at the opening after switching.
+    if (_pageScroll.hasClients) _pageScroll.jumpTo(0);
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.setBool('affinity.landing.motion', value);
+  }
 
   @override
   void dispose() {
-    _marketingScroll.dispose();
+    _pageScroll.dispose();
     super.dispose();
   }
 
   void _open(Widget page) =>
       Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => page));
 
+  Widget _copy(
+    String id,
+    String fallback, {
+    double size = 18,
+    Color color = _ink,
+    FontWeight weight = FontWeight.w400,
+    double height = 1.5,
+  }) => SiteCopyText(
+    id,
+    fallback,
+    style: TextStyle(
+      fontSize: size,
+      color: color,
+      fontWeight: weight,
+      height: height,
+      letterSpacing: size >= 36 ? -size * .035 : 0,
+    ),
+  );
+
+  Widget _label(String id, String fallback, {Color color = _forest}) =>
+      SiteCopyText(
+        id,
+        fallback,
+        style: TextStyle(
+          color: color,
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 1.5,
+        ),
+      );
+
+  Widget _section(
+    Widget child, {
+    Color color = Colors.white,
+    double vertical = 96,
+  }) => Container(
+    color: color,
+    padding: EdgeInsets.symmetric(
+      horizontal: MediaQuery.sizeOf(context).width < 700 ? 24 : 56,
+      vertical: vertical,
+    ),
+    child: Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 1280),
+        child: Material(type: MaterialType.transparency, child: child),
+      ),
+    ),
+  );
+
+  Widget _button(
+    String id,
+    String title,
+    VoidCallback action, {
+    bool light = false,
+  }) => FilledButton.icon(
+    onPressed: action,
+    iconAlignment: IconAlignment.end,
+    style: FilledButton.styleFrom(
+      backgroundColor: light ? _acid : _forest,
+      foregroundColor: light ? _forest : Colors.white,
+      padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 23),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(40)),
+    ),
+    icon: const Icon(Icons.arrow_outward, size: 20),
+    label: SiteCopyText(
+      id,
+      title,
+      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+    ),
+  );
+
   @override
-  Widget build(BuildContext context) => Scaffold(
+  Widget build(BuildContext context) {
+    final enabled = _motionEnabled ?? !MediaQuery.disableAnimationsOf(context);
+    return MediaQuery(
+      data: MediaQuery.of(context).copyWith(disableAnimations: !enabled),
+      child: Builder(builder: (context) => _buildPage(context, enabled)),
+    );
+  }
+
+  Widget _buildPage(BuildContext context, bool motionEnabled) => Scaffold(
     backgroundColor: _cream,
     body: CustomScrollView(
+      controller: _pageScroll,
       slivers: [
         SliverAppBar(
           pinned: true,
           automaticallyImplyLeading: false,
-          toolbarHeight: 86,
+          toolbarHeight: 82,
           elevation: 0,
           scrolledUnderElevation: 1,
-          backgroundColor: const Color(0xFFF7F5F0),
+          backgroundColor: const Color(0xFFF7F8F4),
           surfaceTintColor: Colors.transparent,
           title: const HomeBrandButton(size: 66, dark: false),
           actions: [
-            OutlinedButton(
-              onPressed: () => _open(const AcquisitionBlueprintPage()),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: _ink,
-                side: const BorderSide(color: Color(0xFFBDB9B2)),
+            TextButton.icon(
+              onPressed: () => _setMotion(!motionEnabled),
+              icon: Icon(
+                motionEnabled
+                    ? Icons.pause_circle_outline
+                    : Icons.play_circle_outline,
+                size: 20,
               ),
-              child: const Text('START MY PATH'),
+              label: Text(motionEnabled ? 'Motion on' : 'Enable motion'),
+              style: TextButton.styleFrom(foregroundColor: _forest),
             ),
+            if (MediaQuery.sizeOf(context).width >= 700)
+              _button(
+                'copy.acquisition_support_page.1',
+                'START MY PATH',
+                () => _open(const AcquisitionBlueprintPage()),
+              ),
             const SizedBox(width: 8),
             const AppNavigationMenu(side: PlatformSide.business, dark: false),
-            const SizedBox(width: 18),
+            const SizedBox(width: 12),
           ],
         ),
-        SliverToBoxAdapter(child: _hero()),
-        SliverToBoxAdapter(child: _goalStatement()),
-        SliverToBoxAdapter(child: _audiences()),
-        SliverToBoxAdapter(child: _movingMarketing()),
-        SliverToBoxAdapter(child: _path()),
+        SliverToBoxAdapter(
+          child: AffinityScrollScene(
+            controller: _pageScroll,
+            startOffset: 0,
+            screens: 2.7,
+            fallback: Column(
+              children: [
+                _hero(),
+                _section(
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _label(
+                        'home.cinema.eyebrow',
+                        'FROM POSSIBILITY TO PERSPECTIVE',
+                      ),
+                      const SizedBox(height: 24),
+                      _copy(
+                        'home.cinema.statement',
+                        'A bigger future.\nA clearer view.',
+                        size: 48,
+                        height: 1.05,
+                      ),
+                      const SizedBox(height: 24),
+                      _copy(
+                        'home.cinema.body',
+                        'Turn the ambition to own a business into a path you can act on. Define your target. Understand the opportunity. Bring the right people with you.',
+                      ),
+                      const SizedBox(height: 24),
+                      _label('home.cinema.scroll', 'SCROLL TO EXPLORE'),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            builder: (context, progress, height) => AffinityCinemaHero(
+              progress: progress,
+              height: height,
+              onBuyer: () => _open(const AcquisitionBlueprintPage()),
+              onMember: () => _open(const MemberStudioPage()),
+            ),
+          ),
+        ),
+        _reveal(_goalStatement()),
+        SliverLayoutBuilder(
+          builder: (context, constraints) => SliverToBoxAdapter(
+            child: AffinityScrollScene(
+              controller: _pageScroll,
+              startOffset: constraints.precedingScrollExtent - 82,
+              screens: 4.8,
+              fallback: _movingMarketing(),
+              builder: (context, progress, height) =>
+                  AffinityCinemaChapters(progress: progress),
+            ),
+          ),
+        ),
+        _reveal(_buyerBenefits()),
+        _reveal(_audiences()),
+        _reveal(_path()),
+        _reveal(_questions()),
+        _reveal(_closing()),
         const SliverToBoxAdapter(child: MembershipFooter()),
       ],
     ),
   );
 
-  Widget _hero() => Container(
-    constraints: const BoxConstraints(minHeight: 690),
-    decoration: const BoxDecoration(
-      image: DecorationImage(
-        image: AssetImage('assets/images/affinity-city-hero.jpg'),
-        fit: BoxFit.cover,
+  Widget _reveal(Widget child) => SliverLayoutBuilder(
+    builder: (context, sliver) => SliverToBoxAdapter(
+      child: ValueListenableBuilder<bool>(
+        valueListenable: SiteContentService.editing,
+        builder: (context, editing, _) => AnimatedBuilder(
+          animation: _pageScroll,
+          child: child,
+          builder: (context, content) {
+            final still = editing || MediaQuery.disableAnimationsOf(context);
+            final height = MediaQuery.sizeOf(context).height;
+            final top =
+                sliver.precedingScrollExtent -
+                (_pageScroll.hasClients ? _pageScroll.offset : 0);
+            final visible = still
+                ? 1.0
+                : ((height - top) / (height * .42)).clamp(0.0, 1.0);
+            return Opacity(
+              opacity: .25 + visible * .75,
+              child: Transform.translate(
+                offset: Offset(0, (1 - visible) * 100),
+                child: content,
+              ),
+            );
+          },
+        ),
       ),
     ),
-    padding: const EdgeInsets.fromLTRB(24, 150, 24, 0),
-    alignment: Alignment.bottomCenter,
-    child: Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 1180),
-        child: Align(
-          alignment: Alignment.bottomLeft,
-          child: Container(
-            width: 820,
-            padding: const EdgeInsets.fromLTRB(44, 42, 44, 46),
-            color: const Color(0xF7F7F5F0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SiteCopyText(
-                  'home.eyebrow',
-                  'BUSINESS ACQUISITION, MADE NAVIGABLE',
-                  style: TextStyle(
-                    color: Color(0xFF65615C),
-                    fontSize: 10,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 1.7,
+  );
+
+  Widget _hero() => _section(
+    LayoutBuilder(
+      builder: (context, box) {
+        final narrow = box.maxWidth < 850;
+        final words = Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _label(
+              'home.eyebrow',
+              'BUSINESS ACQUISITION, MADE NAVIGABLE',
+              color: _acid,
+            ),
+            const SizedBox(height: 30),
+            _copy(
+              'home.title',
+              'Don’t just find a business.\nKnow what you’re buying into.',
+              size: narrow ? 46 : 70,
+              color: Colors.white,
+              weight: FontWeight.w600,
+              height: 1.02,
+            ),
+            const SizedBox(height: 28),
+            _copy(
+              'home.intro',
+              'Affinity helps aspiring buyers define the right target, prepare to transact, screen real opportunities, and build the professional team needed to close with confidence.',
+              size: 18,
+              color: const Color(0xFFD2DFD9),
+            ),
+            const SizedBox(height: 34),
+            _button(
+              'copy.acquisition_support_page.2',
+              'I WANT TO BUY A BUSINESS',
+              () => _open(const AcquisitionBlueprintPage()),
+              light: true,
+            ),
+            const SizedBox(height: 12),
+            TextButton.icon(
+              onPressed: () => _open(const MemberStudioPage()),
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  vertical: 16,
+                  horizontal: 4,
+                ),
+              ),
+              icon: const Icon(Icons.arrow_outward, size: 18),
+              iconAlignment: IconAlignment.end,
+              label: const SiteCopyText(
+                'copy.acquisition_support_page.3',
+                'I PROVIDE PROFESSIONAL SERVICES',
+                style: TextStyle(fontSize: 12),
+              ),
+            ),
+          ],
+        );
+        final visual = ClipRRect(
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(narrow ? 100 : 200),
+            topRight: const Radius.circular(24),
+            bottomLeft: const Radius.circular(24),
+            bottomRight: const Radius.circular(24),
+          ),
+          child: SiteParallaxImage(
+            controller: _pageScroll,
+            contentKey: 'image.acquisition_support_page.mbackground1',
+            asset: 'assets/images/affinity-city-hero.jpg',
+            child: Container(
+              height: narrow ? 360 : 640,
+              alignment: Alignment.bottomLeft,
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Colors.transparent, Color(0xC0102723)],
+                ),
+              ),
+              padding: const EdgeInsets.all(30),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _label(
+                    'home.visual.eyebrow',
+                    'YOUR NEXT CHAPTER',
+                    color: _acid,
                   ),
-                ),
-                const SizedBox(height: 20),
-                SiteCopyText(
-                  'home.title',
-                  'Don’t just find a business.\nKnow what you’re buying into.',
-                  style: TextStyle(
-                    color: _ink,
-                    fontSize: MediaQuery.sizeOf(context).width < 700 ? 44 : 66,
-                    height: .96,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: -3.4,
+                  const SizedBox(height: 12),
+                  _copy(
+                    'home.visual.title',
+                    'Build a future\nyou can stand behind.',
+                    size: 32,
+                    color: Colors.white,
+                    weight: FontWeight.w500,
+                    height: 1.1,
                   ),
-                ),
-                const SizedBox(height: 28),
-                const SizedBox(
-                  width: 780,
-                  child: SiteCopyText(
-                    'home.intro',
-                    'Affinity helps aspiring buyers define the right target, prepare to transact, screen real opportunities, and build the professional team needed to close with confidence.',
-                    style: TextStyle(
-                      color: Color(0xFF5D5954),
-                      fontSize: 17,
-                      height: 1.5,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 34),
-                Wrap(
-                  spacing: 12,
-                  runSpacing: 12,
-                  children: [
-                    FilledButton.icon(
-                      onPressed: () => _open(const AcquisitionBlueprintPage()),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: _ink,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 26,
-                          vertical: 20,
-                        ),
-                      ),
-                      icon: const Icon(Icons.arrow_forward),
-                      label: const Text('I WANT TO BUY A BUSINESS'),
-                    ),
-                    OutlinedButton.icon(
-                      onPressed: () => _open(const MemberStudioPage()),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: _ink,
-                        side: const BorderSide(color: Color(0xFFAAA69F)),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 26,
-                          vertical: 20,
-                        ),
-                      ),
-                      icon: const Icon(Icons.badge_outlined),
-                      label: const Text('I PROVIDE PROFESSIONAL SERVICES'),
-                    ),
-                  ],
-                ),
-              ],
+                ],
+              ),
+            ),
+          ),
+        );
+        return narrow
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [words, const SizedBox(height: 38), visual],
+              )
+            : Row(
+                children: [
+                  Expanded(flex: 6, child: words),
+                  const SizedBox(width: 60),
+                  Expanded(flex: 5, child: visual),
+                ],
+              );
+      },
+    ),
+    color: _forest,
+    vertical: 56,
+  );
+
+  Widget _goalStatement() => _section(
+    Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (MediaQuery.sizeOf(context).width < 760) ...[
+          _copy(
+            'home.intro',
+            'Affinity helps aspiring buyers define the right target, prepare to transact, screen real opportunities, and build the professional team needed to close with confidence.',
+          ),
+          const SizedBox(height: 36),
+        ],
+        _label('home.perspective.eyebrow', 'AMBITION, WITH A PLAN'),
+        const SizedBox(height: 26),
+        _copy(
+          'home.goal',
+          'A clearer path from “I want to buy a business” to “this is the right business for me.”',
+          size: MediaQuery.sizeOf(context).width < 700 ? 36 : 56,
+          weight: FontWeight.w500,
+          height: 1.12,
+        ),
+        const SizedBox(height: 30),
+        Align(
+          alignment: Alignment.centerRight,
+          child: SizedBox(
+            width: 660,
+            child: _copy(
+              'home.goal_body',
+              'The goal is not more deal flow. It is better judgment: a personal acquisition Blueprint, an honest view of readiness, disciplined screening, and access to specialists when the stakes rise.',
+              color: const Color(0xFF56625D),
+              size: 20,
             ),
           ),
         ),
-      ),
+      ],
     ),
   );
 
-  Widget _goalStatement() => Container(
-    color: Colors.white,
-    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 86),
-    child: Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 1120),
-        child: LayoutBuilder(
-          builder: (context, box) {
-            const statement = SiteCopyText(
-              'home.goal',
-              'A clearer path from “I want to buy a business” to “this is the right business for me.”',
-              style: TextStyle(
-                color: _ink,
-                fontSize: 42,
-                height: 1.08,
-                fontWeight: FontWeight.w700,
-                letterSpacing: -2.2,
-              ),
-            );
-            const copy = SiteCopyText(
-              'home.goal_body',
-              'The goal is not more deal flow. It is better judgment: a personal acquisition Blueprint, an honest view of readiness, disciplined screening, and access to specialists when the stakes rise.',
-              style: TextStyle(color: Color(0xFF555562), height: 1.65),
-            );
-            if (box.maxWidth < 720) {
-              return const Column(
+  Widget _benefit(String id, String title, String body, {bool dark = false}) =>
+      Padding(
+        padding: const EdgeInsets.symmetric(vertical: 22),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _copy(
+              '$id.title',
+              title,
+              size: 23,
+              weight: FontWeight.w600,
+              color: dark ? Colors.white : _ink,
+              height: 1.2,
+            ),
+            const SizedBox(height: 10),
+            _copy(
+              '$id.body',
+              body,
+              size: 17,
+              color: dark ? const Color(0xFFCCDAD5) : const Color(0xFF56625D),
+            ),
+          ],
+        ),
+      );
+
+  Widget _buyerBenefits() => _section(
+    LayoutBuilder(
+      builder: (context, box) {
+        final title = Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _label(
+              'home.benefits.buyer.eyebrow',
+              'LESS GUESSWORK. MORE DIRECTION.',
+            ),
+            const SizedBox(height: 24),
+            _copy(
+              'home.benefits.buyer.title',
+              'Make your next move\na considered one.',
+              size: box.maxWidth < 700 ? 38 : 54,
+              height: 1.08,
+              weight: FontWeight.w500,
+            ),
+            const SizedBox(height: 24),
+            _copy(
+              'home.benefits.buyer.intro',
+              'Buying a business brings a lot of moving parts. Affinity gives you a place to connect them—and a practical next step when you need one.',
+              color: const Color(0xFF56625D),
+            ),
+            const SizedBox(height: 30),
+            _button(
+              'home.benefits.buyer.cta',
+              'Explore the deal screen',
+              () => _open(const BusinessAcquisitionPage()),
+            ),
+          ],
+        );
+        final benefits = Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _benefit(
+              'home.benefits.focus',
+              'Spend time on businesses that fit.',
+              'Put your budget, location, experience and goals into a Blueprint. Use it to give your search boundaries before an attractive listing pulls you off course.',
+            ),
+            const Divider(color: Color(0xFFC5CCC4)),
+            _benefit(
+              'home.benefits.numbers',
+              'See what the headline price leaves out.',
+              'Work through earnings, owner compensation, working capital and debt assumptions. Turn uncertainty into questions you can investigate with your advisers.',
+            ),
+            const Divider(color: Color(0xFFC5CCC4)),
+            _benefit(
+              'home.benefits.progress',
+              'Keep the next step in sight.',
+              'Move promising opportunities into your pipeline. Bring your preparation, screening and professional conversations into a more organized acquisition process.',
+            ),
+          ],
+        );
+        return box.maxWidth < 850
+            ? Column(children: [title, const SizedBox(height: 30), benefits])
+            : Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [statement, SizedBox(height: 28), copy],
+                children: [
+                  Expanded(child: title),
+                  const SizedBox(width: 100),
+                  Expanded(child: benefits),
+                ],
               );
-            }
-            return const Row(
+      },
+    ),
+    color: const Color(0xFFE9E8E2),
+  );
+
+  Widget _audiences() => SiteParallaxImage(
+    controller: _pageScroll,
+    contentKey: 'image.acquisition_support_page.mbackground2',
+    asset: 'assets/images/affinity-reflection-facade.jpg',
+    child: Container(
+      color: const Color(0x99102723),
+      child: _section(
+        LayoutBuilder(
+          builder: (context, box) {
+            final buyer = _audience(false);
+            final member = _audience(true);
+            return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(flex: 6, child: statement),
-                SizedBox(width: 70),
-                Expanded(flex: 4, child: copy),
+                _label(
+                  'home.audiences.eyebrow',
+                  'DIFFERENT EXPERTISE. SHARED MOMENTUM.',
+                  color: _acid,
+                ),
+                const SizedBox(height: 22),
+                _copy(
+                  'home.audiences.title',
+                  'Good decisions\nbring people together.',
+                  size: box.maxWidth < 700 ? 40 : 64,
+                  height: 1.06,
+                  color: Colors.white,
+                  weight: FontWeight.w500,
+                ),
+                const SizedBox(height: 52),
+                if (box.maxWidth < 800) ...[
+                  buyer,
+                  const SizedBox(height: 24),
+                  member,
+                ] else
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(child: buyer),
+                      const SizedBox(width: 28),
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 76),
+                          child: member,
+                        ),
+                      ),
+                    ],
+                  ),
               ],
             );
           },
         ),
+        color: Colors.transparent,
+        vertical: 96,
       ),
     ),
   );
 
-  Widget _audiences() => Container(
-    decoration: const BoxDecoration(
-      image: DecorationImage(
-        image: AssetImage('assets/images/affinity-reflection-facade.jpg'),
-        fit: BoxFit.cover,
-      ),
+  Widget _audience(bool member) => Container(
+    padding: const EdgeInsets.all(32),
+    decoration: BoxDecoration(
+      color: member ? _forest : Colors.white,
+      borderRadius: BorderRadius.circular(26),
     ),
-    padding: const EdgeInsets.fromLTRB(24, 112, 24, 112),
-    child: Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 1120),
-        child: LayoutBuilder(
-          builder: (context, box) {
-            final narrow = box.maxWidth < 760;
-            final buyer = _AudienceBlock(
-              number: '01',
-              eyebrow: 'FOR BUYERS & THE ACQUISITION-CURIOUS',
-              title: SiteContentService.text(
-                'home.buyer_title',
-                'Turn interest into a mandate.',
-              ),
-              copy: SiteContentService.text(
-                'home.buyer_body',
-                'Learn the path, define what fits your life and capital, measure your readiness, and screen opportunities against your own rules.',
-              ),
-              action: 'BUILD MY BLUEPRINT',
-              onTap: () => _open(const AcquisitionBlueprintPage()),
-            );
-            final member = _AudienceBlock(
-              number: '02',
-              eyebrow: 'FOR PROFESSIONAL MEMBERS',
-              title: SiteContentService.text(
-                'home.member_title',
-                'Be visible when buyers need you.',
-              ),
-              copy: SiteContentService.text(
-                'home.member_body',
-                'Build a credible professional presence and respond privately when an Affinity-reviewed opportunity fits your expertise.',
-              ),
-              action: 'EXPLORE MEMBER STUDIO',
-              onTap: () => _open(const MemberStudioPage()),
-            );
-            return narrow
-                ? Column(children: [buyer, const SizedBox(height: 18), member])
-                : Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(child: buyer),
-                      const SizedBox(width: 18),
-                      Expanded(child: member),
-                    ],
-                  );
-          },
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SiteText(
+          member
+              ? 'FOR PROFESSIONAL MEMBERS'
+              : 'FOR BUYERS & THE ACQUISITION-CURIOUS',
+          contentKey: 'copy.acquisition_support_page.m3',
+          style: TextStyle(
+            fontSize: 12,
+            letterSpacing: 1.1,
+            color: member ? _acid : _forest,
+          ),
         ),
-      ),
+        const SizedBox(height: 30),
+        _copy(
+          member ? 'home.member_title' : 'home.buyer_title',
+          member
+              ? 'Be visible when buyers need you.'
+              : 'Turn interest into a mandate.',
+          size: 36,
+          weight: FontWeight.w500,
+          height: 1.08,
+          color: member ? Colors.white : _ink,
+        ),
+        const SizedBox(height: 18),
+        _copy(
+          member ? 'home.member_body' : 'home.buyer_body',
+          member
+              ? 'Build a credible professional presence and respond privately when an Affinity-reviewed opportunity fits your expertise.'
+              : 'Learn the path, define what fits your life and capital, measure your readiness, and screen opportunities against your own rules.',
+          color: member ? const Color(0xFFCCDAD5) : const Color(0xFF56625D),
+        ),
+        const SizedBox(height: 18),
+        _benefit(
+          member ? 'home.member.presence' : 'home.buyer.start',
+          member ? 'Let your expertise speak.' : 'Start where you are.',
+          member
+              ? 'Use Member Studio to present your services and the work you can support, so buyers can understand where you fit.'
+              : 'You do not need a business picked out to begin. Define your target and work through your readiness before evaluating a live deal.',
+          dark: member,
+        ),
+        _benefit(
+          member ? 'home.member.connections' : 'home.buyer.support',
+          member
+              ? 'Find a relevant conversation.'
+              : 'Bring in specialist support.',
+          member
+              ? 'Review opportunities and buyer needs, then express interest where your experience is relevant. Keep the conversation focused on the work ahead.'
+              : 'Explore professionals for financing, legal, diligence, tax and transition questions as your acquisition takes shape.',
+          dark: member,
+        ),
+        const SizedBox(height: 20),
+        TextButton.icon(
+          onPressed: () => member
+              ? _open(const MemberStudioPage())
+              : _open(const AcquisitionBlueprintPage()),
+          iconAlignment: IconAlignment.end,
+          icon: const Icon(Icons.arrow_outward),
+          style: TextButton.styleFrom(
+            foregroundColor: member ? _acid : _forest,
+          ),
+          label: SiteText(
+            member ? 'EXPLORE MEMBER STUDIO' : 'BUILD MY BLUEPRINT',
+            contentKey: 'copy.acquisition_support_page.m6',
+            style: const TextStyle(fontSize: 14),
+          ),
+        ),
+      ],
     ),
+  );
+
+  Widget _questions() => _section(
+    Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _label('home.faq.eyebrow', 'A FEW THINGS TO KNOW'),
+        const SizedBox(height: 22),
+        _copy(
+          'home.faq.title',
+          'Your starting questions, answered.',
+          size: 40,
+          height: 1.1,
+          weight: FontWeight.w500,
+        ),
+        const SizedBox(height: 32),
+        for (final item in const [
+          (
+            'start',
+            'Do I need to have a business in mind?',
+            'No. Begin with your Blueprint: the type of business, location, budget and role that could fit your life. Readiness helps you identify what to prepare before you pursue a specific opportunity.',
+          ),
+          (
+            'members',
+            'Who is the professional membership for?',
+            'Professionals who help buyers prepare for and complete acquisitions, including financing, accounting, legal, diligence, risk and transition specialists. Member Studio is the starting point for presenting your services.',
+          ),
+          (
+            'decision',
+            'Does Affinity make the acquisition decision for me?',
+            'You remain the decision-maker. Affinity helps organize your criteria, assumptions and next steps. Use screening results as a starting point for verification and specialist advice.',
+          ),
+        ])
+          ExpansionTile(
+            tilePadding: const EdgeInsets.symmetric(vertical: 12),
+            childrenPadding: const EdgeInsets.only(bottom: 24),
+            title: _copy(
+              'home.faq.${item.$1}.question',
+              item.$2,
+              size: 20,
+              weight: FontWeight.w500,
+            ),
+            children: [
+              Align(
+                alignment: Alignment.centerLeft,
+                child: _copy(
+                  'home.faq.${item.$1}.answer',
+                  item.$3,
+                  color: const Color(0xFF56625D),
+                ),
+              ),
+            ],
+          ),
+      ],
+    ),
+    color: const Color(0xFFF1F3EE),
+    vertical: 80,
+  );
+
+  Widget _closing() => _section(
+    Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _label('home.closing.eyebrow', 'MAKE ROOM FOR WHAT’S NEXT'),
+        const SizedBox(height: 24),
+        _copy(
+          'home.closing.title',
+          'Your ambition deserves\na clear next step.',
+          size: MediaQuery.sizeOf(context).width < 700 ? 44 : 72,
+          weight: FontWeight.w500,
+          height: 1.02,
+        ),
+        const SizedBox(height: 32),
+        Wrap(
+          spacing: 18,
+          runSpacing: 16,
+          children: [
+            _button(
+              'home.closing.buyer',
+              'Build my Blueprint',
+              () => _open(const AcquisitionBlueprintPage()),
+            ),
+            _button(
+              'home.closing.member',
+              'Explore membership',
+              () => _open(const MemberStudioPage()),
+            ),
+          ],
+        ),
+      ],
+    ),
+    color: _acid,
   );
 
   Widget _movingMarketing() {
@@ -319,35 +795,53 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
         children: [
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 24),
-            child: Text(
+            child: SiteText(
+              contentKey: 'copy.acquisition_support_page.m1',
+              literal: true,
               'WHAT AFFINITY MOVES FORWARD',
               style: TextStyle(
                 color: Color(0xFF66615B),
-                fontSize: 10,
+                fontSize: 12,
                 fontWeight: FontWeight.w900,
                 letterSpacing: 1.5,
               ),
             ),
           ),
           const SizedBox(height: 18),
-          SizedBox(
-            height: 310,
-            child: ListView.separated(
-              controller: _marketingScroll,
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              scrollDirection: Axis.horizontal,
-              itemCount: stories.length,
-              separatorBuilder: (_, _) => const SizedBox(width: 16),
-              itemBuilder: (_, index) {
-                final story = stories[index];
-                return _MovingMarketingCard(
-                  eyebrow: story.$1,
-                  title: story.$2,
-                  copy: story.$3,
-                  icon: story.$4,
-                );
-              },
-            ),
+          LayoutBuilder(
+            builder: (context, box) {
+              final columns = box.maxWidth < 700
+                  ? 1
+                  : box.maxWidth < 1100
+                  ? 2
+                  : 4;
+              final width = (box.maxWidth - 48 - (columns - 1) * 18) / columns;
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Wrap(
+                  spacing: 18,
+                  runSpacing: 18,
+                  children: [
+                    for (var index = 0; index < stories.length; index++)
+                      SizedBox(
+                        width: width,
+                        child: Padding(
+                          padding: EdgeInsets.only(
+                            top: columns == 4 && index.isOdd ? 44 : 0,
+                          ),
+                          child: _MovingMarketingCard(
+                            eyebrow: stories[index].$1,
+                            title: stories[index].$2,
+                            copy: stories[index].$3,
+                            icon: stories[index].$4,
+                            chapter: index,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              );
+            },
           ),
         ],
       ),
@@ -363,23 +857,27 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            const SiteText(
+              contentKey: 'copy.acquisition_support_page.4',
+              literal: true,
               'THE BUYER PATH',
               style: TextStyle(
                 color: _green,
-                fontSize: 10,
+                fontSize: 12,
                 fontWeight: FontWeight.w900,
                 letterSpacing: 1.5,
               ),
             ),
             const SizedBox(height: 14),
-            const Text(
+            const SiteText(
+              contentKey: 'copy.acquisition_support_page.5',
+              literal: true,
               'Four steps. One clearer decision.',
               style: TextStyle(
                 color: _ink,
                 fontSize: 44,
                 fontWeight: FontWeight.w700,
-                letterSpacing: -2.2,
+                letterSpacing: -1.5,
               ),
             ),
             const SizedBox(height: 30),
@@ -410,122 +908,62 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
   );
 }
 
-class _AudienceBlock extends StatelessWidget {
-  const _AudienceBlock({
-    required this.number,
-    required this.eyebrow,
-    required this.title,
-    required this.copy,
-    required this.action,
-    required this.onTap,
-  });
-  final String number, eyebrow, title, copy, action;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) => Container(
-    constraints: const BoxConstraints(minHeight: 430),
-    padding: const EdgeInsets.all(30),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(4),
-      boxShadow: const [
-        BoxShadow(
-          color: Color(0x33000000),
-          blurRadius: 40,
-          offset: Offset(0, 20),
-        ),
-      ],
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          number,
-          style: const TextStyle(
-            color: _green,
-            fontSize: 56,
-            height: 1,
-            fontWeight: FontWeight.w300,
-          ),
-        ),
-        const SizedBox(height: 92),
-        Text(
-          eyebrow,
-          style: const TextStyle(
-            color: _green,
-            fontSize: 9,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 1.2,
-          ),
-        ),
-        const SizedBox(height: 11),
-        Text(
-          title,
-          style: const TextStyle(
-            color: _ink,
-            fontSize: 31,
-            height: 1.05,
-            fontWeight: FontWeight.w700,
-            letterSpacing: -1.4,
-          ),
-        ),
-        const SizedBox(height: 14),
-        Text(
-          copy,
-          style: const TextStyle(color: Color(0xFF555562), height: 1.55),
-        ),
-        const SizedBox(height: 24),
-        TextButton.icon(
-          onPressed: onTap,
-          style: TextButton.styleFrom(foregroundColor: _ink),
-          iconAlignment: IconAlignment.end,
-          icon: const Icon(Icons.arrow_forward),
-          label: Text(action),
-        ),
-      ],
-    ),
-  );
-}
-
 class _MovingMarketingCard extends StatelessWidget {
   const _MovingMarketingCard({
     required this.eyebrow,
     required this.title,
     required this.copy,
     required this.icon,
+    required this.chapter,
   });
   final String eyebrow, title, copy;
   final IconData icon;
+  final int chapter;
 
   @override
   Widget build(BuildContext context) => Container(
-    width: MediaQuery.sizeOf(context).width < 520 ? 300 : 370,
     padding: const EdgeInsets.all(28),
     decoration: BoxDecoration(
       color: Colors.white,
-      borderRadius: BorderRadius.circular(4),
+      borderRadius: BorderRadius.circular(24),
     ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: SiteImage(
+            contentKey: 'image.home.cinema.chapter.$chapter',
+            original: Image.asset(
+              'assets/images/${AffinityCinemaChapters.chapters[chapter].$4}',
+              height: 180,
+              width: double.infinity,
+              fit: BoxFit.cover,
+            ),
+          ),
+        ),
+        const SizedBox(height: 24),
         Row(
           children: [
             Icon(icon, color: _green, size: 30),
             const Spacer(),
-            Text(
+            SiteText(
+              contentKey: 'copy.acquisition_support_page.m7',
+              literal: false,
               eyebrow,
               style: const TextStyle(
                 color: _green,
-                fontSize: 9,
+                fontSize: 12,
                 fontWeight: FontWeight.w900,
                 letterSpacing: 1.3,
               ),
             ),
           ],
         ),
-        const Spacer(),
-        Text(
+        const SizedBox(height: 48),
+        SiteText(
+          contentKey: 'copy.acquisition_support_page.m8',
+          literal: false,
           title,
           style: const TextStyle(
             color: _ink,
@@ -536,9 +974,15 @@ class _MovingMarketingCard extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 14),
-        Text(
+        SiteText(
+          contentKey: 'copy.acquisition_support_page.m9',
+          literal: false,
           copy,
-          style: const TextStyle(color: Color(0xFF555562), height: 1.5),
+          style: const TextStyle(
+            color: Color(0xFF555562),
+            fontSize: 16,
+            height: 1.5,
+          ),
         ),
       ],
     ),
@@ -562,7 +1006,9 @@ class _HomePathStep extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Text(
+            SiteText(
+              contentKey: 'copy.acquisition_support_page.m10',
+              literal: false,
               number,
               style: const TextStyle(
                 color: _green,
@@ -575,7 +1021,9 @@ class _HomePathStep extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  SiteText(
+                    contentKey: 'copy.acquisition_support_page.m11',
+                    literal: false,
                     title,
                     style: const TextStyle(
                       color: _ink,
@@ -583,7 +1031,12 @@ class _HomePathStep extends StatelessWidget {
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  Text(copy, style: const TextStyle(color: Color(0xFF777783))),
+                  SiteText(
+                    contentKey: 'copy.acquisition_support_page.m12',
+                    literal: false,
+                    copy,
+                    style: const TextStyle(color: Color(0xFF777783)),
+                  ),
                 ],
               ),
             ),
@@ -649,14 +1102,25 @@ class _AcquisitionBlueprintPageState extends State<AcquisitionBlueprintPage> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Draft kept on this device. Cloud save failed: $error'),
+          content: SiteText(
+            templateValues: {'value1': '${error}'},
+            contentKey: 'copy.acquisition_support_page.m13',
+            literal: false,
+            "Draft kept on this device. Cloud save failed: {{value1}}",
+          ),
         ),
       );
       return;
     }
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Step 1 saved to your profile.')),
+        const SnackBar(
+          content: SiteText(
+            contentKey: 'copy.acquisition_support_page.m14',
+            literal: true,
+            'Step 1 saved to your profile.',
+          ),
+        ),
       );
     }
   }
@@ -692,8 +1156,11 @@ class _AcquisitionBlueprintPageState extends State<AcquisitionBlueprintPage> {
             children: [
               Row(
                 children: [
-                  Text(
-                    'QUESTION ${_chapter + 1} OF 4',
+                  SiteText(
+                    templateValues: {'value1': '${_chapter + 1}'},
+                    contentKey: 'copy.acquisition_support_page.m15',
+                    literal: false,
+                    "QUESTION {{value1}} OF 4",
                     style: const TextStyle(
                       color: _lime,
                       fontSize: 10,
@@ -702,7 +1169,9 @@ class _AcquisitionBlueprintPageState extends State<AcquisitionBlueprintPage> {
                     ),
                   ),
                   const Spacer(),
-                  Text(
+                  SiteText(
+                    contentKey: 'copy.acquisition_support_page.m16',
+                    literal: false,
                     '${((_chapter + 1) / 4 * 100).round()}%',
                     style: const TextStyle(color: _muted, fontSize: 11),
                   ),
@@ -838,7 +1307,11 @@ class _AcquisitionBlueprintPageState extends State<AcquisitionBlueprintPage> {
         TextButton.icon(
           onPressed: () => setState(() => _chapter--),
           icon: const Icon(Icons.arrow_back),
-          label: const Text('Back'),
+          label: const SiteText(
+            contentKey: 'copy.acquisition_support_page.6',
+            literal: true,
+            'Back',
+          ),
         ),
       const Spacer(),
       if (_chapter == 2)
@@ -849,7 +1322,11 @@ class _AcquisitionBlueprintPageState extends State<AcquisitionBlueprintPage> {
             controllers['minReturn']?.clear();
             setState(() => _chapter++);
           },
-          child: const Text('I DON’T KNOW YET'),
+          child: const SiteText(
+            contentKey: 'copy.acquisition_support_page.7',
+            literal: true,
+            'I DON’T KNOW YET',
+          ),
         ),
       const SizedBox(width: 10),
       FilledButton.icon(
@@ -860,7 +1337,11 @@ class _AcquisitionBlueprintPageState extends State<AcquisitionBlueprintPage> {
               }
             : _save,
         icon: Icon(_chapter < 3 ? Icons.arrow_forward : Icons.check_rounded),
-        label: Text(_chapter < 3 ? 'CONTINUE' : 'SAVE BLUEPRINT'),
+        label: SiteText(
+          contentKey: 'copy.acquisition_support_page.m17',
+          literal: false,
+          _chapter < 3 ? 'CONTINUE' : 'SAVE BLUEPRINT',
+        ),
       ),
     ],
   );
@@ -881,7 +1362,12 @@ class _AcquisitionBlueprintPageState extends State<AcquisitionBlueprintPage> {
           ? TextInputType.number
           : TextInputType.text,
       maxLines: maxLines,
-      decoration: InputDecoration(hintText: hint),
+      decoration: InputDecoration(
+        hint: siteInputCopy(
+          hint,
+          contentKey: 'copy.acquisition_support_page.field.dynamic1',
+        ),
+      ),
     ),
   );
 
@@ -892,10 +1378,21 @@ class _AcquisitionBlueprintPageState extends State<AcquisitionBlueprintPage> {
       labelColor: _ink,
       child: DropdownButtonFormField<String>(
         initialValue: options.contains(current) ? current : null,
-        hint: const Text('Select an option'),
+        hint: const SiteText(
+          contentKey: 'copy.acquisition_support_page.8',
+          literal: true,
+          'Select an option',
+        ),
         items: options
             .map(
-              (option) => DropdownMenuItem(value: option, child: Text(option)),
+              (option) => DropdownMenuItem(
+                value: option,
+                child: SiteText(
+                  contentKey: 'copy.acquisition_support_page.m18',
+                  literal: false,
+                  option,
+                ),
+              ),
             )
             .toList(),
         onChanged: (selected) => controllers[key]?.text = selected ?? '',
@@ -950,15 +1447,24 @@ class _BuyerReadinessPageState extends State<BuyerReadinessPage> {
       await value!.saveForAccount('readiness');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Step 2 saved to your profile.')),
+          const SnackBar(
+            content: SiteText(
+              contentKey: 'copy.acquisition_support_page.m19',
+              literal: true,
+              'Step 2 saved to your profile.',
+            ),
+          ),
         );
       }
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              'Draft kept on this device. Cloud save failed: $error',
+            content: SiteText(
+              templateValues: {'value1': '${error}'},
+              contentKey: 'copy.acquisition_support_page.m20',
+              literal: false,
+              "Draft kept on this device. Cloud save failed: {{value1}}",
             ),
           ),
         );
@@ -998,8 +1504,11 @@ class _BuyerReadinessPageState extends State<BuyerReadinessPage> {
               children: [
                 Row(
                   children: [
-                    Text(
-                      'MOMENT ${_stage + 1} OF 3',
+                    SiteText(
+                      templateValues: {'value1': '${_stage + 1}'},
+                      contentKey: 'copy.acquisition_support_page.m21',
+                      literal: false,
+                      "MOMENT {{value1}} OF 3",
                       style: const TextStyle(
                         color: _lime,
                         fontSize: 10,
@@ -1008,7 +1517,9 @@ class _BuyerReadinessPageState extends State<BuyerReadinessPage> {
                       ),
                     ),
                     const Spacer(),
-                    Text(
+                    SiteText(
+                      contentKey: 'copy.acquisition_support_page.m22',
+                      literal: false,
                       '${((_stage + 1) / 3 * 100).round()}%',
                       style: const TextStyle(color: _muted, fontSize: 11),
                     ),
@@ -1036,7 +1547,11 @@ class _BuyerReadinessPageState extends State<BuyerReadinessPage> {
                       TextButton.icon(
                         onPressed: () => setState(() => _stage--),
                         icon: const Icon(Icons.arrow_back),
-                        label: const Text('Back'),
+                        label: const SiteText(
+                          contentKey: 'copy.acquisition_support_page.9',
+                          literal: true,
+                          'Back',
+                        ),
                       ),
                     const Spacer(),
                     FilledButton.icon(
@@ -1049,7 +1564,11 @@ class _BuyerReadinessPageState extends State<BuyerReadinessPage> {
                       icon: Icon(
                         _stage < 2 ? Icons.arrow_forward : Icons.check_rounded,
                       ),
-                      label: Text(_stage < 2 ? 'CONTINUE' : 'SAVE READINESS'),
+                      label: SiteText(
+                        contentKey: 'copy.acquisition_support_page.m23',
+                        literal: false,
+                        _stage < 2 ? 'CONTINUE' : 'SAVE READINESS',
+                      ),
                     ),
                   ],
                 ),
@@ -1098,7 +1617,11 @@ class _BuyerReadinessPageState extends State<BuyerReadinessPage> {
                 ].contains(controllers['credit']?.text)
                 ? controllers['credit']!.text
                 : null,
-            hint: const Text('Choose what feels closest'),
+            hint: const SiteText(
+              contentKey: 'copy.acquisition_support_page.10',
+              literal: true,
+              'Choose what feels closest',
+            ),
             items:
                 const [
                       'Excellent',
@@ -1108,8 +1631,14 @@ class _BuyerReadinessPageState extends State<BuyerReadinessPage> {
                       'I’m not sure yet',
                     ]
                     .map(
-                      (option) =>
-                          DropdownMenuItem(value: option, child: Text(option)),
+                      (option) => DropdownMenuItem(
+                        value: option,
+                        child: SiteText(
+                          contentKey: 'copy.acquisition_support_page.m24',
+                          literal: false,
+                          option,
+                        ),
+                      ),
                     )
                     .toList(),
             onChanged: (selected) =>
@@ -1137,7 +1666,11 @@ class _BuyerReadinessPageState extends State<BuyerReadinessPage> {
         }.entries)
           CheckboxListTile(
             value: current.readiness[item.key] == true,
-            title: Text(item.value),
+            title: SiteText(
+              contentKey: 'copy.acquisition_support_page.m25',
+              literal: false,
+              item.value,
+            ),
             activeColor: _green,
             contentPadding: EdgeInsets.zero,
             controlAffinity: ListTileControlAffinity.leading,
@@ -1155,7 +1688,13 @@ class _BuyerReadinessPageState extends State<BuyerReadinessPage> {
     child: TextField(
       controller: controllers[key],
       keyboardType: TextInputType.number,
-      decoration: const InputDecoration(hintText: 'Optional estimate'),
+      decoration: const InputDecoration(
+        hint: SiteText(
+          'Optional estimate',
+          contentKey: 'copy.acquisition_support_page.field1',
+          literal: true,
+        ),
+      ),
     ),
   );
 }
@@ -1252,14 +1791,18 @@ class _AcquisitionGuideSheetState extends State<AcquisitionGuideSheet> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      SiteText(
+                        contentKey: 'copy.acquisition_support_page.m26',
+                        literal: true,
                         'Acquisition Guide',
                         style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
-                      Text(
+                      SiteText(
+                        contentKey: 'copy.acquisition_support_page.m27',
+                        literal: true,
                         'Personalized from your saved foundation',
                         style: TextStyle(color: _muted, fontSize: 12),
                       ),
@@ -1281,7 +1824,9 @@ class _AcquisitionGuideSheetState extends State<AcquisitionGuideSheet> {
                 border: Border.all(color: _line),
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: Text(
+              child: SiteText(
+                contentKey: 'copy.acquisition_support_page.m28',
+                literal: false,
                 widget.foundation.guideSummary,
                 style: const TextStyle(color: _muted, height: 1.45),
               ),
@@ -1293,7 +1838,9 @@ class _AcquisitionGuideSheetState extends State<AcquisitionGuideSheet> {
                 ActionChip(
                   backgroundColor: _surface,
                   side: const BorderSide(color: _line),
-                  label: const Text(
+                  label: const SiteText(
+                    contentKey: 'copy.acquisition_support_page.11',
+                    literal: true,
                     'Teach the Guide about me',
                     style: TextStyle(color: _lilac),
                   ),
@@ -1321,7 +1868,9 @@ class _AcquisitionGuideSheetState extends State<AcquisitionGuideSheet> {
                           border: Border.all(color: _line),
                           borderRadius: BorderRadius.circular(14),
                         ),
-                        child: Text(
+                        child: SiteText(
+                          contentKey: 'copy.acquisition_support_page.m29',
+                          literal: false,
                           message.text,
                           style: TextStyle(color: Colors.white, height: 1.45),
                         ),
@@ -1344,7 +1893,9 @@ class _AcquisitionGuideSheetState extends State<AcquisitionGuideSheet> {
                       ),
                     ),
                     SizedBox(width: 9),
-                    Text(
+                    SiteText(
+                      contentKey: 'copy.acquisition_support_page.m30',
+                      literal: true,
                       'Connecting this to your acquisition profile…',
                       style: TextStyle(color: _muted, fontSize: 11),
                     ),
@@ -1358,7 +1909,11 @@ class _AcquisitionGuideSheetState extends State<AcquisitionGuideSheet> {
                     controller: input,
                     onSubmitted: _ask,
                     decoration: const InputDecoration(
-                      hintText: 'Ask about your acquisition…',
+                      hint: SiteText(
+                        'Ask about your acquisition…',
+                        contentKey: 'copy.acquisition_support_page.field2',
+                        literal: true,
+                      ),
                       hintStyle: TextStyle(color: _muted),
                       filled: true,
                       fillColor: _surface,
@@ -1566,6 +2121,7 @@ class _ModuleScaffold extends StatelessWidget {
       ],
     ),
     body: FixedEditorialBackground(
+      contentKey: 'image.acquisition_module.$currentStep.background',
       imagePath: currentStep == 0
           ? 'assets/images/affinity-reflection-facade.jpg'
           : 'assets/images/commercial-atrium.jpg',
@@ -1627,7 +2183,9 @@ class _LabeledField extends StatelessWidget {
       Row(
         children: [
           Expanded(
-            child: Text(
+            child: SiteText(
+              contentKey: 'copy.acquisition_support_page.m31',
+              literal: false,
               label,
               style: TextStyle(
                 color: labelColor,
@@ -1637,7 +2195,9 @@ class _LabeledField extends StatelessWidget {
             ),
           ),
           if (unit != null)
-            Text(
+            SiteText(
+              contentKey: 'copy.acquisition_support_page.m32',
+              literal: false,
               unit!,
               style: const TextStyle(
                 color: _green,
@@ -1679,7 +2239,9 @@ class _GuidedQuestion extends StatelessWidget {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        SiteText(
+          contentKey: 'copy.acquisition_support_page.m33',
+          literal: false,
           title,
           style: const TextStyle(
             color: _ink,
@@ -1690,7 +2252,9 @@ class _GuidedQuestion extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        Text(
+        SiteText(
+          contentKey: 'copy.acquisition_support_page.m34',
+          literal: false,
           copy,
           style: const TextStyle(color: Color(0xFF626270), height: 1.55),
         ),

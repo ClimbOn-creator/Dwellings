@@ -1,0 +1,67 @@
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+const {PGlite} = await import(process.env.PGLITE_MODULE || '@electric-sql/pglite');
+const db = new PGlite();
+await db.exec(`
+create role anon; create role authenticated;
+create schema auth; create schema storage;
+create table auth.users(id uuid primary key, email text, email_confirmed_at timestamptz);
+create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
+create table storage.buckets(id text primary key, name text, public boolean, file_size_limit bigint, allowed_mime_types text[]);
+create table storage.objects(bucket_id text, name text);
+alter table storage.objects enable row level security;
+create function storage.foldername(text) returns text[] language sql immutable as $$ select string_to_array($1,'/') $$;
+grant usage on schema public, auth, storage to anon, authenticated;
+grant select, insert, delete on storage.objects to authenticated;
+`);
+const root=process.env.DWELLINGS_ROOT || new URL('../../',import.meta.url).pathname;
+await db.exec(await readFile(`${root}/supabase/migrations/202608190016_site_content_editor.sql`,'utf8'));
+const migration=await readFile(`${root}/supabase/migrations/202609110025_visual_site_editor.sql`,'utf8');
+await db.exec(migration);
+await db.exec(migration);
+const owner='00000000-0000-0000-0000-000000000001';
+const partner='00000000-0000-0000-0000-000000000002';
+const stranger='00000000-0000-0000-0000-000000000003';
+const unverified='00000000-0000-0000-0000-000000000004';
+for(const [id,email,verified] of [[owner,'rw0882308@gmail.com',true],[partner,'DFISCH5@gmail.com',true],[stranger,'visitor@example.com',true],[unverified,'dfisch5@gmail.com',false]]) {
+  await db.query('insert into auth.users values($1,$2,$3)',[id,email,verified?'2026-09-11T00:00:00Z':null]);
+}
+await db.exec('set role authenticated');
+const asUser=id=>db.query("select set_config('request.jwt.claim.sub',$1,false)",[id]);
+const allowed=async()=> (await db.query('select is_affinity_content_editor() ok')).rows[0].ok;
+const save=(key,value,expected=null)=>db.query('select save_site_content_v2($1,$2,$3)',[key,value,expected]);
+await asUser(owner); assert.equal(await allowed(),true);
+await save('copy.test.title','First version');
+await asUser(partner); assert.equal(await allowed(),true,'partner signing up after migration receives access');
+assert.equal((await db.query("select content_value from site_content where content_key='copy.test.title'")).rows[0].content_value,'First version');
+await save('copy.test.title','Partner version','First version');
+await asUser(owner);
+await assert.rejects(save('copy.test.title','Stale draft','First version'),/changed/);
+await assert.rejects(save('copy.test.title','Missing snapshot'),/changed/);
+await save('copy.test.title',null,'Partner version');
+assert.equal((await db.query("select * from site_content where content_key='copy.test.title'")).rows.length,0);
+await assert.rejects(db.query("insert into site_content(content_key,content_value) values('copy.bypass','bad')"),/permission/);
+await assert.rejects(save('copy.too_long','x'.repeat(12001)),/too long/);
+await assert.rejects(save('image.test.picture','javascript:alert(1)'),/Upload/);
+const path=`${owner}/123-photo.png`;
+await db.query('insert into storage.objects values($1,$2)',['site-media',path]);
+await assert.rejects(db.query('insert into storage.objects values($1,$2)',['site-media',`${partner}/wrong.png`]),/row-level security/);
+const url=`https://example.supabase.co/storage/v1/object/public/site-media/${path}`;
+await save('image.test.picture',url);
+await db.query('delete from storage.objects where name=$1',[path]);
+assert.equal((await db.query('select * from storage.objects where name=$1',[path])).rows.length,1,'published image cannot be deleted');
+await save('image.test.picture',null,url);
+await db.query('delete from storage.objects where name=$1',[path]);
+assert.equal((await db.query('select * from storage.objects where name=$1',[path])).rows.length,0);
+for(const id of [stranger,unverified]) {
+ await asUser(id); assert.equal(await allowed(),false);
+ await assert.rejects(save('copy.denied','bad'),/editor access required/);
+ await assert.rejects(db.query('insert into storage.objects values($1,$2)',['site-media',`${id}/bad.png`]),/row-level security/);
+}
+await db.exec('reset role; set role anon');
+await asUser('');
+assert.equal(await allowed(),false);
+await assert.rejects(save('copy.anon','bad'),/permission/);
+await db.query('select * from site_content');
+console.log('Passed: both verified accounts, future sign-in, public reads, denied outsider/unverified/anonymous writes, conflict detection, reset, image policies and validation.');
+await db.close();

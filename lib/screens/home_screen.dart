@@ -1,3 +1,5 @@
+import '../widgets/site_text.dart';
+import '../widgets/site_image.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -266,7 +268,11 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
       if (cloud) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Analysis saved to your Affinity account.'),
+            content: const SiteText(
+              contentKey: 'copy.home_screen.1',
+              literal: true,
+              'Analysis saved to your Affinity account.',
+            ),
             behavior: SnackBarBehavior.floating,
             action: SnackBarAction(
               label: 'DEAL ROOMS',
@@ -287,7 +293,14 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
   void _message(String text) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(text), behavior: SnackBarBehavior.floating),
+      SnackBar(
+        content: SiteText(
+          contentKey: 'copy.home_screen.m1',
+          literal: false,
+          text,
+        ),
+        behavior: SnackBarBehavior.floating,
+      ),
     );
   }
 
@@ -349,10 +362,13 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
                   scale: 1.025,
                   child: ColorFiltered(
                     colorFilter: _monochrome,
-                    child: Image.asset(
-                      'assets/images/hero-city.jpg',
-                      fit: BoxFit.cover,
-                      alignment: Alignment.center,
+                    child: SiteImage(
+                      contentKey: 'image.home_screen.m1',
+                      original: Image.asset(
+                        'assets/images/hero-city.jpg',
+                        fit: BoxFit.cover,
+                        alignment: Alignment.center,
+                      ),
                     ),
                   ),
                 ),
@@ -385,7 +401,9 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
                         children: [
                           const _Kicker('PROPERTY UNDERWRITING, REBUILT'),
                           const SizedBox(height: 22),
-                          Text(
+                          SiteText(
+                            contentKey: 'copy.home_screen.m2',
+                            literal: true,
                             'THE PROPERTY.\nTHE NUMBERS.\nTHE TRUTH.',
                             style: TextStyle(
                               color: Colors.white,
@@ -398,7 +416,9 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
                             ),
                           ),
                           const SizedBox(height: 28),
-                          const Text(
+                          const SiteText(
+                            contentKey: 'copy.home_screen.2',
+                            literal: true,
                             'A complete decision engine for residential and commercial real estate—built to expose the assumptions behind every return.',
                             style: TextStyle(
                               color: Color(0xFFE4E4E4),
@@ -428,7 +448,9 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
             const Positioned(
               right: 28,
               bottom: 26,
-              child: Text(
+              child: SiteText(
+                contentKey: 'copy.home_screen.m3',
+                literal: true,
                 'SCROLL TO UNDERWRITE  ↓',
                 style: TextStyle(
                   color: Colors.white70,
@@ -459,7 +481,9 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
             children: [
               const _Kicker('PROPERTY RISK ASSESSMENT'),
               const SizedBox(height: 12),
-              const Text(
+              const SiteText(
+                contentKey: 'copy.home_screen.3',
+                literal: true,
                 'Understand what could break the deal.',
                 style: TextStyle(
                   color: Colors.white,
@@ -470,7 +494,9 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              const Text(
+              const SiteText(
+                contentKey: 'copy.home_screen.4',
+                literal: true,
                 'Enter the property record, income, debt and condition evidence you have. The calculator scores financial, physical, market and exit risk—and shows what is still missing.',
                 style: TextStyle(color: Color(0xFFAAAAAA), fontSize: 15),
               ),
@@ -493,9 +519,16 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('01  ·  STRATEGY', style: _eyebrow),
+        const SiteText(
+          contentKey: 'copy.home_screen.5',
+          literal: true,
+          '01  ·  STRATEGY',
+          style: _eyebrow,
+        ),
         const SizedBox(height: 8),
-        const Text(
+        const SiteText(
+          contentKey: 'copy.home_screen.6',
+          literal: true,
           'What are you evaluating?',
           style: TextStyle(fontSize: 25, fontWeight: FontWeight.w900),
         ),
@@ -528,21 +561,38 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
         const SizedBox(height: 18),
         DropdownButtonFormField<PropertyType>(
           initialValue: _propertyType,
-          decoration: const InputDecoration(labelText: 'Asset class'),
+          decoration: const InputDecoration(
+            label: SiteText(
+              'Asset class',
+              contentKey: 'copy.home_screen.field1',
+              literal: true,
+            ),
+          ),
           items: PropertyType.values
               .where(
                 (type) => _mode == DecisionMode.invest || type.isResidential,
               )
               .map(
-                (type) =>
-                    DropdownMenuItem(value: type, child: Text(type.label)),
+                (type) => DropdownMenuItem(
+                  value: type,
+                  child: SiteText(
+                    contentKey: 'copy.home_screen.m4',
+                    literal: false,
+                    type.label,
+                  ),
+                ),
               )
               .toList(),
           onChanged: (value) =>
               value == null ? null : setState(() => _propertyType = value),
         ),
         const SizedBox(height: 28),
-        const Text('02  ·  LOCATION', style: _eyebrow),
+        const SiteText(
+          contentKey: 'copy.home_screen.7',
+          literal: true,
+          '02  ·  LOCATION',
+          style: _eyebrow,
+        ),
         const SizedBox(height: 10),
         CanadianCityField(
           controller: _city,
@@ -553,7 +603,11 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
         TextField(
           controller: _address,
           decoration: InputDecoration(
-            labelText: 'Address or neighbourhood',
+            label: SiteText(
+              'Address or neighbourhood',
+              contentKey: 'copy.home_screen.mfield1',
+              literal: true,
+            ),
             prefixIcon: const Icon(Icons.location_on_outlined),
             suffixIcon: Padding(
               padding: const EdgeInsets.all(6),
@@ -563,7 +617,11 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
                   _scanning ? Icons.radar_rounded : Icons.my_location_rounded,
                   size: 17,
                 ),
-                label: Text(_scanning ? 'Locating…' : 'Use my location'),
+                label: SiteText(
+                  contentKey: 'copy.home_screen.m5',
+                  literal: false,
+                  _scanning ? 'Locating…' : 'Use my location',
+                ),
               ),
             ),
           ),
@@ -576,8 +634,11 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
           child: OutlinedButton.icon(
             onPressed: _openLocalNetwork,
             icon: const Icon(Icons.groups_outlined, size: 18),
-            label: Text(
-              'FIND A LOCAL TEAM IN ${_profile.city.toUpperCase()}',
+            label: SiteText(
+              templateValues: {'value1': '${_profile.city.toUpperCase()}'},
+              contentKey: 'copy.home_screen.m6',
+              literal: false,
+              "FIND A LOCAL TEAM IN {{value1}}",
               style: const TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.w900,
@@ -604,7 +665,9 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
               _Spec('area', 'Finished / rentable area', 'sq ft'),
             ]),
             const SizedBox(height: 12),
-            const Text(
+            const SiteText(
+              contentKey: 'copy.home_screen.8',
+              literal: true,
               'Assessment values are dated tax values—not appraisals. Affinity uses them only as a discrepancy and due-diligence signal.',
               style: TextStyle(color: _muted, fontSize: 10, height: 1.5),
             ),
@@ -694,7 +757,9 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
               ),
             ),
             icon: const Icon(Icons.arrow_outward),
-            label: const Text(
+            label: const SiteText(
+              contentKey: 'copy.home_screen.9',
+              literal: true,
               'CALCULATE PROPERTY RISK',
               style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: .5),
             ),
@@ -728,7 +793,10 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
                       decimal: true,
                     ),
                     decoration: InputDecoration(
-                      labelText: spec.label,
+                      label: siteInputCopy(
+                        spec.label,
+                        contentKey: 'copy.home_screen.field.dynamic1',
+                      ),
                       suffixText: spec.suffix,
                     ),
                   ),
@@ -778,7 +846,9 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
+                            SiteText(
+                              contentKey: 'copy.home_screen.m7',
+                              literal: false,
                               verdict,
                               style: TextStyle(
                                 color: verdictColor,
@@ -788,7 +858,9 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
                               ),
                             ),
                             const SizedBox(height: 9),
-                            Text(
+                            SiteText(
+                              contentKey: 'copy.home_screen.m8',
+                              literal: false,
                               _inputs.address,
                               style: const TextStyle(
                                 color: Colors.white,
@@ -797,7 +869,9 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
                               ),
                             ),
                             const SizedBox(height: 4),
-                            Text(
+                            SiteText(
+                              contentKey: 'copy.home_screen.m9',
+                              literal: false,
                               '${_propertyType.label} · ${_profile.city}, ${_profile.region}',
                               style: const TextStyle(
                                 color: Color(0xFFB7B7B7),
@@ -811,8 +885,15 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
                     ],
                   ),
                   const SizedBox(height: 22),
-                  Text(
-                    'Overall risk is ${result.risk.round()}/100. The separate decision score is ${result.net.round()}/100, with ${(result.dataCompleteness * 100).round()}% of core property and underwriting evidence populated.',
+                  SiteText(
+                    templateValues: {
+                      'value1': '${result.risk.round()}',
+                      'value2': '${result.net.round()}',
+                      'value3': '${(result.dataCompleteness * 100).round()}',
+                    },
+                    contentKey: 'copy.home_screen.m10',
+                    literal: false,
+                    "Overall risk is {{value1}}/100. The separate decision score is {{value2}}/100, with {{value3}}% of core property and underwriting evidence populated.",
                     style: const TextStyle(
                       color: Color(0xFFD6D6D6),
                       height: 1.45,
@@ -826,7 +907,11 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
                       side: const BorderSide(color: Color(0xFF777777)),
                     ),
                     icon: Icon(_saved ? Icons.bookmark : Icons.bookmark_border),
-                    label: Text(_saved ? 'SAVED' : 'SAVE ANALYSIS'),
+                    label: SiteText(
+                      contentKey: 'copy.home_screen.m11',
+                      literal: false,
+                      _saved ? 'SAVED' : 'SAVE ANALYSIS',
+                    ),
                   ),
                 ],
               ),
@@ -837,19 +922,36 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('RISK, RETURNS & CREDIT', style: _eyebrow),
+                const SiteText(
+                  contentKey: 'copy.home_screen.10',
+                  literal: true,
+                  'RISK, RETURNS & CREDIT',
+                  style: _eyebrow,
+                ),
                 const SizedBox(height: 12),
                 _Metrics(result: result, mode: _mode),
                 const SizedBox(height: 26),
-                const Text('THREE-CASE STRESS TEST', style: _eyebrow),
+                const SiteText(
+                  contentKey: 'copy.home_screen.11',
+                  literal: true,
+                  'THREE-CASE STRESS TEST',
+                  style: _eyebrow,
+                ),
                 const SizedBox(height: 10),
                 _ScenarioTable(scenarios: result.scenarios),
                 const SizedBox(height: 26),
-                const Text('UNDERWRITING FLAGS', style: _eyebrow),
+                const SiteText(
+                  contentKey: 'copy.home_screen.12',
+                  literal: true,
+                  'UNDERWRITING FLAGS',
+                  style: _eyebrow,
+                ),
                 const SizedBox(height: 10),
                 ...result.flags.map((flag) => _Flag(flag)),
                 const SizedBox(height: 24),
-                const Text(
+                const SiteText(
+                  contentKey: 'copy.home_screen.13',
+                  literal: true,
                   'BIGGEST RISK & OPPORTUNITY DRIVERS',
                   style: _eyebrow,
                 ),
@@ -859,7 +961,9 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
                 Container(
                   padding: const EdgeInsets.all(18),
                   color: const Color(0xFFF1EFF7),
-                  child: const Text(
+                  child: const SiteText(
+                    contentKey: 'copy.home_screen.14',
+                    literal: true,
                     'Decision support—not an appraisal, lending commitment, tax opinion or guarantee. Validate rent roll, leases, title, zoning, environmental condition, inspection, taxes, insurance and financing with qualified professionals.',
                     style: TextStyle(color: _muted, fontSize: 10, height: 1.5),
                   ),
@@ -904,7 +1008,9 @@ class _HeroSystemCard extends StatelessWidget {
           children: [
             CircleAvatar(radius: 4, backgroundColor: _success),
             SizedBox(width: 8),
-            Text(
+            SiteText(
+              contentKey: 'copy.home_screen.m12',
+              literal: true,
               'DWELLINGS IQ / LIVE',
               style: TextStyle(
                 color: Colors.white,
@@ -916,7 +1022,9 @@ class _HeroSystemCard extends StatelessWidget {
           ],
         ),
         SizedBox(height: 24),
-        Text(
+        SiteText(
+          contentKey: 'copy.home_screen.m13',
+          literal: true,
           '40+',
           style: TextStyle(
             color: _lime,
@@ -926,7 +1034,9 @@ class _HeroSystemCard extends StatelessWidget {
           ),
         ),
         SizedBox(height: 7),
-        Text(
+        SiteText(
+          contentKey: 'copy.home_screen.m14',
+          literal: true,
           'CONNECTED ASSUMPTIONS',
           style: TextStyle(
             color: Colors.white,
@@ -936,7 +1046,9 @@ class _HeroSystemCard extends StatelessWidget {
           ),
         ),
         SizedBox(height: 9),
-        Text(
+        SiteText(
+          contentKey: 'copy.home_screen.m15',
+          literal: true,
           'Residential + commercial\nThree-case stress engine',
           style: TextStyle(
             color: Color(0xFFBEBEBE),
@@ -1004,7 +1116,9 @@ class _SignalCell extends StatelessWidget {
     padding: const EdgeInsets.symmetric(horizontal: 22),
     child: Row(
       children: [
-        Text(
+        SiteText(
+          contentKey: 'copy.home_screen.m16',
+          literal: false,
           number,
           style: TextStyle(
             color: foreground.withValues(alpha: .55),
@@ -1013,7 +1127,9 @@ class _SignalCell extends StatelessWidget {
           ),
         ),
         const Spacer(),
-        Text(
+        SiteText(
+          contentKey: 'copy.home_screen.m17',
+          literal: false,
           from,
           style: TextStyle(
             color: foreground,
@@ -1024,9 +1140,16 @@ class _SignalCell extends StatelessWidget {
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 10),
-          child: Text(arrow, style: TextStyle(color: foreground, fontSize: 18)),
+          child: SiteText(
+            contentKey: 'copy.home_screen.m18',
+            literal: false,
+            arrow,
+            style: TextStyle(color: foreground, fontSize: 18),
+          ),
         ),
-        Text(
+        SiteText(
+          contentKey: 'copy.home_screen.m19',
+          literal: false,
           to,
           style: TextStyle(
             color: foreground,
@@ -1058,7 +1181,9 @@ class _FuturistManifesto extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    const SiteText(
+                      contentKey: 'copy.home_screen.15',
+                      literal: true,
                       'ONE PROPERTY.',
                       style: TextStyle(
                         fontSize: 48,
@@ -1067,7 +1192,9 @@ class _FuturistManifesto extends StatelessWidget {
                         fontWeight: FontWeight.w900,
                       ),
                     ),
-                    const Text(
+                    const SiteText(
+                      contentKey: 'copy.home_screen.16',
+                      literal: true,
                       'EVERY ANGLE.',
                       style: TextStyle(
                         color: _green,
@@ -1083,14 +1210,19 @@ class _FuturistManifesto extends StatelessWidget {
                       width: double.infinity,
                       child: ColorFiltered(
                         colorFilter: _monochrome,
-                        child: Image.asset(
-                          'assets/images/commercial-atrium.jpg',
-                          fit: BoxFit.cover,
+                        child: SiteImage(
+                          contentKey: 'image.home_screen.m2',
+                          original: Image.asset(
+                            'assets/images/commercial-atrium.jpg',
+                            fit: BoxFit.cover,
+                          ),
                         ),
                       ),
                     ),
                     const SizedBox(height: 28),
-                    const Text(
+                    const SiteText(
+                      contentKey: 'copy.home_screen.17',
+                      literal: true,
                       'Affinity connects the place, the income, the debt, the exit and the risk in one visible system.',
                       style: TextStyle(
                         color: _muted,
@@ -1109,7 +1241,9 @@ class _FuturistManifesto extends StatelessWidget {
                   const Positioned(
                     left: 0,
                     top: 72,
-                    child: Text(
+                    child: SiteText(
+                      contentKey: 'copy.home_screen.m20',
+                      literal: true,
                       'ONE PROPERTY.',
                       style: TextStyle(
                         fontSize: 92,
@@ -1122,7 +1256,9 @@ class _FuturistManifesto extends StatelessWidget {
                   const Positioned(
                     right: 0,
                     top: 205,
-                    child: Text(
+                    child: SiteText(
+                      contentKey: 'copy.home_screen.m21',
+                      literal: true,
                       'EVERY ANGLE.',
                       style: TextStyle(
                         color: _green,
@@ -1136,7 +1272,9 @@ class _FuturistManifesto extends StatelessWidget {
                   const Positioned(
                     left: 0,
                     top: 338,
-                    child: Text(
+                    child: SiteText(
+                      contentKey: 'copy.home_screen.m22',
+                      literal: true,
                       'ZERO BLIND SPOTS.',
                       style: TextStyle(
                         fontSize: 82,
@@ -1159,9 +1297,12 @@ class _FuturistManifesto extends StatelessWidget {
                       ),
                       child: ColorFiltered(
                         colorFilter: _monochrome,
-                        child: Image.asset(
-                          'assets/images/commercial-atrium.jpg',
-                          fit: BoxFit.cover,
+                        child: SiteImage(
+                          contentKey: 'image.home_screen.m3',
+                          original: Image.asset(
+                            'assets/images/commercial-atrium.jpg',
+                            fit: BoxFit.cover,
+                          ),
                         ),
                       ),
                     ),
@@ -1179,9 +1320,12 @@ class _FuturistManifesto extends StatelessWidget {
                       ),
                       child: ColorFiltered(
                         colorFilter: _monochrome,
-                        child: Image.asset(
-                          'assets/images/residential-courtyard.jpg',
-                          fit: BoxFit.cover,
+                        child: SiteImage(
+                          contentKey: 'image.home_screen.m4',
+                          original: Image.asset(
+                            'assets/images/residential-courtyard.jpg',
+                            fit: BoxFit.cover,
+                          ),
                         ),
                       ),
                     ),
@@ -1191,7 +1335,9 @@ class _FuturistManifesto extends StatelessWidget {
                     bottom: 58,
                     child: SizedBox(
                       width: 520,
-                      child: Text(
+                      child: SiteText(
+                        contentKey: 'copy.home_screen.m23',
+                        literal: true,
                         'A single system for the physical property, market, income, financing, exit and downside.',
                         style: TextStyle(
                           color: _muted,
@@ -1245,8 +1391,11 @@ class _ModelCommandBar extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 9),
-            Text(
-              '$side MODEL LIVE',
+            SiteText(
+              templateValues: {'value1': '${side}'},
+              contentKey: 'copy.home_screen.m24',
+              literal: false,
+              "{{value1}} MODEL LIVE",
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 10,
@@ -1278,7 +1427,9 @@ class _CommandDatum extends StatelessWidget {
     children: [
       Icon(icon, color: _lime, size: 16),
       const SizedBox(width: 7),
-      Text(
+      SiteText(
+        contentKey: 'copy.home_screen.m25',
+        literal: false,
         label,
         style: const TextStyle(
           color: Color(0xFFC8C8D4),
@@ -1330,7 +1481,9 @@ class _Kicker extends StatelessWidget {
     children: [
       Container(width: 36, height: 3, color: _lime),
       const SizedBox(width: 12),
-      Text(
+      SiteText(
+        contentKey: 'copy.home_screen.m26',
+        literal: false,
         text,
         style: TextStyle(
           color: darkText ? _green : _lime,
@@ -1353,7 +1506,9 @@ class _HeroChip extends StatelessWidget {
       color: Colors.black26,
       border: Border.all(color: Colors.white24),
     ),
-    child: Text(
+    child: SiteText(
+      contentKey: 'copy.home_screen.m27',
+      literal: false,
       label,
       style: const TextStyle(
         color: Colors.white,
@@ -1392,7 +1547,9 @@ class _ModeButton extends StatelessWidget {
           Icon(icon, color: active ? _lime : _green),
           const SizedBox(width: 9),
           Expanded(
-            child: Text(
+            child: SiteText(
+              contentKey: 'copy.home_screen.m28',
+              literal: false,
               label,
               style: TextStyle(
                 color: active ? Colors.white : _ink,
@@ -1423,20 +1580,40 @@ class _LocationStrip extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                '${profile.city}, ${profile.region} · ${profile.marketArea.toUpperCase()} PROFILE',
+              SiteText(
+                templateValues: {
+                  'value1': '${profile.city}',
+                  'value2': '${profile.region}',
+                  'value3': '${profile.marketArea.toUpperCase()}',
+                },
+                contentKey: 'copy.home_screen.m29',
+                literal: false,
+                "{{value1}}, {{value2}} · {{value3}} PROFILE",
                 style: const TextStyle(
                   fontSize: 9,
                   letterSpacing: .8,
                   fontWeight: FontWeight.w900,
                 ),
               ),
-              Text(
-                '${profile.inventory.toStringAsFixed(1)} months inventory  ·  ${(profile.mortgage * 100).toStringAsFixed(2)}% model rate  ·  ${profile.transit.round()}/100 transit',
+              SiteText(
+                templateValues: {
+                  'value1': '${profile.inventory.toStringAsFixed(1)}',
+                  'value2': '${(profile.mortgage * 100).toStringAsFixed(2)}',
+                  'value3': '${profile.transit.round()}',
+                },
+                contentKey: 'copy.home_screen.m30',
+                literal: false,
+                "{{value1}} months inventory  ·  {{value2}}% model rate  ·  {{value3}}/100 transit",
                 style: const TextStyle(color: _muted, fontSize: 9),
               ),
-              Text(
-                '${profile.sourceName} · ${profile.dataAsOf} regional reference',
+              SiteText(
+                templateValues: {
+                  'value1': '${profile.sourceName}',
+                  'value2': '${profile.dataAsOf}',
+                },
+                contentKey: 'copy.home_screen.m31',
+                literal: false,
+                "{{value1}} · {{value2}} regional reference",
                 style: const TextStyle(color: Color(0xFF756A8C), fontSize: 8),
               ),
             ],
@@ -1473,7 +1650,9 @@ class _InputSection extends StatelessWidget {
         initiallyExpanded: initiallyExpanded,
         tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         childrenPadding: const EdgeInsets.fromLTRB(16, 2, 16, 18),
-        title: Text(
+        title: SiteText(
+          contentKey: 'copy.home_screen.m32',
+          literal: false,
           title,
           style: const TextStyle(
             fontSize: 11,
@@ -1481,7 +1660,9 @@ class _InputSection extends StatelessWidget {
             letterSpacing: .7,
           ),
         ),
-        subtitle: Text(
+        subtitle: SiteText(
+          contentKey: 'copy.home_screen.m33',
+          literal: false,
           subtitle,
           style: const TextStyle(color: _muted, fontSize: 9),
         ),
@@ -1515,7 +1696,9 @@ class _Score extends StatelessWidget {
     child: Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text(
+        SiteText(
+          contentKey: 'copy.home_screen.m34',
+          literal: false,
           score.round().toString(),
           style: const TextStyle(
             color: Colors.white,
@@ -1524,7 +1707,9 @@ class _Score extends StatelessWidget {
             fontWeight: FontWeight.w900,
           ),
         ),
-        Text(
+        SiteText(
+          contentKey: 'copy.home_screen.m35',
+          literal: false,
           risk ? 'RISK / 100' : '/ 100',
           style: const TextStyle(color: Color(0xFF999999), fontSize: 7),
         ),
@@ -1660,7 +1845,9 @@ class _Metrics extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
+                  SiteText(
+                    contentKey: 'copy.home_screen.m36',
+                    literal: false,
                     metric.$1,
                     style: const TextStyle(
                       color: _muted,
@@ -1671,7 +1858,9 @@ class _Metrics extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   FittedBox(
-                    child: Text(
+                    child: SiteText(
+                      contentKey: 'copy.home_screen.m37',
+                      literal: false,
                       metric.$2,
                       style: TextStyle(
                         color: metric.$4 ? _risk : _ink,
@@ -1680,7 +1869,9 @@ class _Metrics extends StatelessWidget {
                       ),
                     ),
                   ),
-                  Text(
+                  SiteText(
+                    contentKey: 'copy.home_screen.m38',
+                    literal: false,
                     metric.$3,
                     style: const TextStyle(color: _muted, fontSize: 8),
                   ),
@@ -1737,7 +1928,9 @@ class _ScenarioRow extends StatelessWidget {
                   horizontal: 10,
                   vertical: 11,
                 ),
-                child: Text(
+                child: SiteText(
+                  contentKey: 'copy.home_screen.m39',
+                  literal: false,
                   value,
                   style: TextStyle(
                     color: header
@@ -1777,7 +1970,9 @@ class _Flag extends StatelessWidget {
           ),
           const SizedBox(width: 9),
           Expanded(
-            child: Text(
+            child: SiteText(
+              contentKey: 'copy.home_screen.m40',
+              literal: false,
               text,
               style: const TextStyle(
                 fontSize: 10,
@@ -1814,12 +2009,16 @@ class _Driver extends StatelessWidget {
         ),
         const SizedBox(width: 10),
         Expanded(
-          child: Text(
+          child: SiteText(
+            contentKey: 'copy.home_screen.m41',
+            literal: false,
             driver.name,
             style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800),
           ),
         ),
-        Text(
+        SiteText(
+          contentKey: 'copy.home_screen.m42',
+          literal: false,
           '${driver.impact >= 0 ? '+' : '−'}${driver.impact.abs().toStringAsFixed(1)}',
           style: TextStyle(
             color: driver.isRisk ? _risk : _green,
@@ -1834,6 +2033,7 @@ class _Driver extends StatelessWidget {
 
 class _EditorialSection extends StatelessWidget {
   const _EditorialSection({
+    required this.contentId,
     required this.controller,
     required this.image,
     required this.kicker,
@@ -1844,6 +2044,7 @@ class _EditorialSection extends StatelessWidget {
   });
   final ScrollController controller;
   final String image;
+  final String contentId;
   final String kicker;
   final String title;
   final String body;
@@ -1875,7 +2076,10 @@ class _EditorialSection extends StatelessWidget {
                         width: double.infinity,
                         child: ColorFiltered(
                           colorFilter: _monochrome,
-                          child: Image.asset(image, fit: BoxFit.cover),
+                          child: SiteImage(
+                            contentKey: 'image.home_screen.m5.$contentId',
+                            original: Image.asset(image, fit: BoxFit.cover),
+                          ),
                         ),
                       ),
                     );
@@ -1889,7 +2093,9 @@ class _EditorialSection extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  SiteText(
+                    contentKey: 'copy.home_screen.m43',
+                    literal: false,
                     kicker,
                     style: TextStyle(
                       color: dark ? _lime : _green,
@@ -1899,7 +2105,9 @@ class _EditorialSection extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 18),
-                  Text(
+                  SiteText(
+                    contentKey: 'copy.home_screen.m44',
+                    literal: false,
                     title,
                     style: TextStyle(
                       color: dark ? Colors.white : _ink,
@@ -1910,7 +2118,9 @@ class _EditorialSection extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 22),
-                  Text(
+                  SiteText(
+                    contentKey: 'copy.home_screen.m45',
+                    literal: false,
                     body,
                     style: TextStyle(
                       color: dark ? const Color(0xFFBDBDBD) : _muted,
@@ -1951,7 +2161,9 @@ class _Methodology extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            const SiteText(
+              contentKey: 'copy.home_screen.18',
+              literal: true,
               'EXPLAINABLE BY DESIGN',
               style: TextStyle(
                 color: _lime,
@@ -1961,7 +2173,9 @@ class _Methodology extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 14),
-            const Text(
+            const SiteText(
+              contentKey: 'copy.home_screen.19',
+              literal: true,
               'The answer is only as strong\nas the assumptions beneath it.',
               style: TextStyle(
                 color: Colors.white,
@@ -2022,12 +2236,16 @@ class _MethodCard extends StatelessWidget {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        SiteText(
+          contentKey: 'copy.home_screen.m46',
+          literal: false,
           number,
           style: const TextStyle(color: _lime, fontWeight: FontWeight.w900),
         ),
         const SizedBox(height: 42),
-        Text(
+        SiteText(
+          contentKey: 'copy.home_screen.m47',
+          literal: false,
           title,
           style: const TextStyle(
             color: Colors.white,
@@ -2036,7 +2254,9 @@ class _MethodCard extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 9),
-        Text(
+        SiteText(
+          contentKey: 'copy.home_screen.m48',
+          literal: false,
           body,
           style: const TextStyle(
             color: Color(0xFFD8D0EB),

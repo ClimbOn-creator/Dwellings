@@ -1,3 +1,4 @@
+import '../widgets/site_text.dart';
 import 'package:flutter/material.dart';
 
 import '../services/account_service.dart';
@@ -177,7 +178,9 @@ class _AuthPageState extends State<AuthPage> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     const SizedBox(height: 36),
-                    Text(
+                    SiteText(
+                      contentKey: 'copy.auth_page.m1',
+                      literal: false,
                       _creating
                           ? 'Create your Affinity account.'
                           : 'Welcome back.',
@@ -190,7 +193,9 @@ class _AuthPageState extends State<AuthPage> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    Text(
+                    SiteText(
+                      contentKey: 'copy.auth_page.m2',
+                      literal: false,
                       _creating
                           ? 'One account works for buyers, investors and every professional on the property team.'
                           : 'Sign in to restore your calculator, saved analyses and selected team.',
@@ -216,11 +221,19 @@ class _AuthPageState extends State<AuthPage> {
                               segments: const [
                                 ButtonSegment(
                                   value: false,
-                                  label: Text('Sign in'),
+                                  label: SiteText(
+                                    contentKey: 'copy.auth_page.m3',
+                                    literal: true,
+                                    'Sign in',
+                                  ),
                                 ),
                                 ButtonSegment(
                                   value: true,
-                                  label: Text('Create account'),
+                                  label: SiteText(
+                                    contentKey: 'copy.auth_page.m4',
+                                    literal: true,
+                                    'Create account',
+                                  ),
                                 ),
                               ],
                               selected: {_creating},
@@ -235,14 +248,18 @@ class _AuthPageState extends State<AuthPage> {
                                   _loading || !BackendService.googleAuthEnabled
                                   ? null
                                   : _google,
-                              icon: const Text(
+                              icon: const SiteText(
+                                contentKey: 'copy.auth_page.1',
+                                literal: true,
                                 'G',
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w800,
                                 ),
                               ),
-                              label: Text(
+                              label: SiteText(
+                                contentKey: 'copy.auth_page.m5',
+                                literal: false,
                                 BackendService.googleAuthEnabled
                                     ? 'Continue with Google'
                                     : 'Google sign-in · setup required',
@@ -267,7 +284,9 @@ class _AuthPageState extends State<AuthPage> {
                                     padding: EdgeInsets.symmetric(
                                       horizontal: 14,
                                     ),
-                                    child: Text(
+                                    child: SiteText(
+                                      contentKey: 'copy.auth_page.m6',
+                                      literal: true,
                                       'or',
                                       style: TextStyle(
                                         color: Color(0xFF777785),
@@ -283,7 +302,11 @@ class _AuthPageState extends State<AuthPage> {
                                 controller: _fullName,
                                 validator: _required,
                                 decoration: const InputDecoration(
-                                  labelText: 'Full name',
+                                  label: SiteText(
+                                    'Full name',
+                                    contentKey: 'copy.auth_page.field1',
+                                    literal: true,
+                                  ),
                                 ),
                               ),
                               const SizedBox(height: 12),
@@ -296,7 +319,11 @@ class _AuthPageState extends State<AuthPage> {
                                     ? null
                                     : 'Use 3–24 letters, numbers or underscores',
                                 decoration: const InputDecoration(
-                                  labelText: 'Private username',
+                                  label: SiteText(
+                                    'Private username',
+                                    contentKey: 'copy.auth_page.field2',
+                                    literal: true,
+                                  ),
                                   helperText:
                                       'Used as your unique account identifier; not shown on public profiles.',
                                 ),
@@ -305,13 +332,21 @@ class _AuthPageState extends State<AuthPage> {
                               DropdownButtonFormField<AccountRole>(
                                 initialValue: _role,
                                 decoration: const InputDecoration(
-                                  labelText: 'I am a…',
+                                  label: SiteText(
+                                    'I am a…',
+                                    contentKey: 'copy.auth_page.field3',
+                                    literal: true,
+                                  ),
                                 ),
                                 items: AccountRole.values
                                     .map(
                                       (role) => DropdownMenuItem(
                                         value: role,
-                                        child: Text(role.label),
+                                        child: SiteText(
+                                          contentKey: 'copy.auth_page.m7',
+                                          literal: false,
+                                          role.label,
+                                        ),
                                       ),
                                     )
                                     .toList(),
@@ -324,7 +359,11 @@ class _AuthPageState extends State<AuthPage> {
                                   controller: _jobTitle,
                                   validator: _required,
                                   decoration: const InputDecoration(
-                                    labelText: 'Job title or specialty',
+                                    label: SiteText(
+                                      'Job title or specialty',
+                                      contentKey: 'copy.auth_page.field4',
+                                      literal: true,
+                                    ),
                                   ),
                                 ),
                                 const SizedBox(height: 12),
@@ -332,27 +371,47 @@ class _AuthPageState extends State<AuthPage> {
                                   controller: _company,
                                   validator: _required,
                                   decoration: const InputDecoration(
-                                    labelText: 'Company, firm or practice',
+                                    label: SiteText(
+                                      'Company, firm or practice',
+                                      contentKey: 'copy.auth_page.field5',
+                                      literal: true,
+                                    ),
                                   ),
                                 ),
                                 const SizedBox(height: 12),
                                 DropdownButtonFormField<String>(
                                   initialValue: _employmentType,
                                   decoration: const InputDecoration(
-                                    labelText: 'Work arrangement',
+                                    label: SiteText(
+                                      'Work arrangement',
+                                      contentKey: 'copy.auth_page.field6',
+                                      literal: true,
+                                    ),
                                   ),
                                   items: const [
                                     DropdownMenuItem(
                                       value: 'company',
-                                      child: Text('Part of a company or firm'),
+                                      child: SiteText(
+                                        contentKey: 'copy.auth_page.m8',
+                                        literal: true,
+                                        'Part of a company or firm',
+                                      ),
                                     ),
                                     DropdownMenuItem(
                                       value: 'self_employed',
-                                      child: Text('Self-employed'),
+                                      child: SiteText(
+                                        contentKey: 'copy.auth_page.m9',
+                                        literal: true,
+                                        'Self-employed',
+                                      ),
                                     ),
                                     DropdownMenuItem(
                                       value: 'own_practice',
-                                      child: Text('Own practice or company'),
+                                      child: SiteText(
+                                        contentKey: 'copy.auth_page.m10',
+                                        literal: true,
+                                        'Own practice or company',
+                                      ),
                                     ),
                                   ],
                                   onChanged: (value) => setState(
@@ -371,7 +430,11 @@ class _AuthPageState extends State<AuthPage> {
                                   ? null
                                   : 'Enter a valid email',
                               decoration: const InputDecoration(
-                                labelText: 'Email address',
+                                label: SiteText(
+                                  'Email address',
+                                  contentKey: 'copy.auth_page.field7',
+                                  literal: true,
+                                ),
                               ),
                             ),
                             const SizedBox(height: 12),
@@ -382,7 +445,11 @@ class _AuthPageState extends State<AuthPage> {
                                   ? null
                                   : 'Use at least 8 characters',
                               decoration: InputDecoration(
-                                labelText: 'Password',
+                                label: SiteText(
+                                  'Password',
+                                  contentKey: 'copy.auth_page.mfield1',
+                                  literal: true,
+                                ),
                                 suffixIcon: IconButton(
                                   onPressed: () =>
                                       setState(() => _obscure = !_obscure),
@@ -401,7 +468,11 @@ class _AuthPageState extends State<AuthPage> {
                                 obscureText: _obscure,
                                 validator: _required,
                                 decoration: const InputDecoration(
-                                  labelText: 'Confirm password',
+                                  label: SiteText(
+                                    'Confirm password',
+                                    contentKey: 'copy.auth_page.field8',
+                                    literal: true,
+                                  ),
                                 ),
                               ),
                             ],
@@ -415,7 +486,9 @@ class _AuthPageState extends State<AuthPage> {
                                   vertical: 19,
                                 ),
                               ),
-                              child: Text(
+                              child: SiteText(
+                                contentKey: 'copy.auth_page.m11',
+                                literal: false,
                                 _loading
                                     ? 'Please wait…'
                                     : _creating
@@ -425,7 +498,9 @@ class _AuthPageState extends State<AuthPage> {
                             ),
                             if (_message != null) ...[
                               const SizedBox(height: 16),
-                              Text(
+                              SiteText(
+                                contentKey: 'copy.auth_page.m12',
+                                literal: false,
                                 _message!,
                                 style: const TextStyle(
                                   color: Color(0xFF5B21B6),

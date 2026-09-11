@@ -1,3 +1,4 @@
+import 'site_text.dart';
 import 'package:flutter/material.dart';
 
 import 'auth_button.dart';
@@ -76,7 +77,9 @@ class MembershipFooter extends StatelessWidget {
               const Row(
                 children: [
                   Expanded(
-                    child: Text(
+                    child: SiteText(
+                      contentKey: 'copy.membership_footer.m1',
+                      literal: true,
                       '© 2026 AFFINITY · BUSINESS ACQUISITION, MADE NAVIGABLE',
                       style: TextStyle(
                         color: Color(0xFFAEB8B2),
@@ -107,7 +110,9 @@ class _FooterIdentity extends StatelessWidget {
       SizedBox(height: 24),
       SizedBox(
         width: 300,
-        child: Text(
+        child: SiteText(
+          contentKey: 'copy.membership_footer.m2',
+          literal: true,
           'Better judgment for the business you choose next.',
           style: TextStyle(
             color: Colors.white,
@@ -130,7 +135,9 @@ class _FooterColumn extends StatelessWidget {
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Text(
+      SiteText(
+        contentKey: 'copy.membership_footer.m3',
+        literal: false,
         title,
         style: const TextStyle(
           color: Colors.white,
@@ -141,7 +148,12 @@ class _FooterColumn extends StatelessWidget {
       ),
       const SizedBox(height: 20),
       for (final item in items) ...[
-        Text(item, style: const TextStyle(color: Color(0xFFB6C0BA))),
+        SiteText(
+          contentKey: 'copy.membership_footer.m4',
+          literal: false,
+          item,
+          style: const TextStyle(color: Color(0xFFB6C0BA)),
+        ),
         const SizedBox(height: 12),
       ],
     ],

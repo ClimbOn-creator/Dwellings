@@ -1,3 +1,4 @@
+import '../widgets/site_text.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -291,13 +292,24 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
       if (!mounted) return;
       _selectCity(located.city);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Matched to ${located.city.label}.')),
+        SnackBar(
+          content: SiteText(
+            templateValues: {'value1': '${located.city.label}'},
+            contentKey: 'copy.business_acquisition_page.m1',
+            literal: false,
+            "Matched to {{value1}}.",
+          ),
+        ),
       );
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(error.toString().replaceFirst('Bad state: ', '')),
+            content: SiteText(
+              contentKey: 'copy.business_acquisition_page.m2',
+              literal: false,
+              error.toString().replaceFirst('Bad state: ', ''),
+            ),
           ),
         );
       }
@@ -319,7 +331,11 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
     if (_number('askingPrice') <= 0 || _number('revenue') <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Add an asking price and annual revenue.'),
+          content: SiteText(
+            contentKey: 'copy.business_acquisition_page.m3',
+            literal: true,
+            'Add an asking price and annual revenue.',
+          ),
         ),
       );
       return;
@@ -364,14 +380,27 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
         );
       } else if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Step 3 saved to your profile.')),
+          const SnackBar(
+            content: SiteText(
+              contentKey: 'copy.business_acquisition_page.m4',
+              literal: true,
+              'Step 3 saved to your profile.',
+            ),
+          ),
         );
       }
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Could not save: $error')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: SiteText(
+              templateValues: {'value1': '${error}'},
+              contentKey: 'copy.business_acquisition_page.m5',
+              literal: false,
+              "Could not save: {{value1}}",
+            ),
+          ),
+        );
       }
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -420,6 +449,7 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
           ],
         ),
         body: FixedEditorialBackground(
+          contentKey: 'image.business_screen.background',
           imagePath: 'assets/images/affinity-deal-screen.jpg',
           wash: _paper,
           washOpacity: .32,
@@ -473,7 +503,10 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
                                   ),
                                 ),
                                 icon: const Icon(Icons.analytics_outlined),
-                                label: const Text(
+                                label: const SiteText(
+                                  contentKey:
+                                      'copy.business_acquisition_page.1',
+                                  literal: true,
                                   'RUN INITIAL VIABILITY ASSESSMENT',
                                 ),
                               ),
@@ -518,7 +551,9 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
                   ],
                 ),
                 const SizedBox(height: 70),
-                const Text(
+                const SiteText(
+                  contentKey: 'copy.business_acquisition_page.2',
+                  literal: true,
                   'DEALIQ / ACQUISITIONIQ · PLACEHOLDER',
                   style: TextStyle(
                     color: _lilac,
@@ -528,7 +563,9 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                Text(
+                SiteText(
+                  contentKey: 'copy.business_acquisition_page.m6',
+                  literal: true,
                   'Know whether the business\ncan support the buyer.',
                   style: TextStyle(
                     color: Colors.white,
@@ -541,7 +578,9 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
                 const SizedBox(height: 22),
                 const SizedBox(
                   width: 720,
-                  child: Text(
+                  child: SiteText(
+                    contentKey: 'copy.business_acquisition_page.m7',
+                    literal: true,
                     'Normalize earnings, finance the acquisition, pay a real owner salary, reserve working capital and expose the questions that must be answered before an offer.',
                     style: TextStyle(
                       color: Color(0xFFC5C5D0),
@@ -593,7 +632,9 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
         Icon(Icons.shield_outlined, color: Color(0xFF8A5800)),
         SizedBox(width: 12),
         Expanded(
-          child: Text(
+          child: SiteText(
+            contentKey: 'copy.business_acquisition_page.m8',
+            literal: false,
             SiteContentService.text(
               'screen.privacy',
               'CONFIDENTIAL DATA BOUNDARY · Use summarized figures only. Do not upload tax returns, payroll, customer lists, employee records or confidential seller documents.',
@@ -648,7 +689,11 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
                 icon: Icon(
                   _locating ? Icons.radar_rounded : Icons.my_location_rounded,
                 ),
-                label: Text(_locating ? 'LOCATING…' : 'USE MY LOCATION'),
+                label: SiteText(
+                  contentKey: 'copy.business_acquisition_page.m9',
+                  literal: false,
+                  _locating ? 'LOCATING…' : 'USE MY LOCATION',
+                ),
               ),
             ),
           ],
@@ -664,14 +709,21 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
   ) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Text(
+      SiteText(
+        contentKey: 'copy.business_acquisition_page.m10',
+        literal: false,
         label,
         style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
       ),
       const SizedBox(height: 8),
       TextField(
         controller: controller,
-        decoration: InputDecoration(hintText: hint),
+        decoration: InputDecoration(
+          hint: siteInputCopy(
+            hint,
+            contentKey: 'copy.business_acquisition_page.field.dynamic1',
+          ),
+        ),
       ),
     ],
   );
@@ -690,8 +742,11 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
       Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'FINANCIAL MOMENT ${_inputStage + 1} OF 4',
+          SiteText(
+            templateValues: {'value1': '${_inputStage + 1}'},
+            contentKey: 'copy.business_acquisition_page.m11',
+            literal: false,
+            "FINANCIAL MOMENT {{value1}} OF 4",
             style: const TextStyle(
               color: _lilac,
               fontSize: 9,
@@ -700,7 +755,9 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
             ),
           ),
           const SizedBox(height: 8),
-          Text(
+          SiteText(
+            contentKey: 'copy.business_acquisition_page.m12',
+            literal: false,
             SiteContentService.text(
               'screen.form_help',
               'Use only the figures you have. Blank fields remain unknown and become questions for diligence.',
@@ -731,14 +788,22 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
                 TextButton.icon(
                   onPressed: () => setState(() => _inputStage--),
                   icon: const Icon(Icons.arrow_back),
-                  label: const Text('Back'),
+                  label: const SiteText(
+                    contentKey: 'copy.business_acquisition_page.3',
+                    literal: true,
+                    'Back',
+                  ),
                 ),
               const Spacer(),
               if (_inputStage < 3)
                 FilledButton.icon(
                   onPressed: () => setState(() => _inputStage++),
                   icon: const Icon(Icons.arrow_forward),
-                  label: const Text('NEXT FINANCIAL MOMENT'),
+                  label: const SiteText(
+                    contentKey: 'copy.business_acquisition_page.4',
+                    literal: true,
+                    'NEXT FINANCIAL MOMENT',
+                  ),
                 ),
             ],
           ),
@@ -767,7 +832,9 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
           Row(
             children: [
               Expanded(
-                child: Text(
+                child: SiteText(
+                  contentKey: 'copy.business_acquisition_page.m13',
+                  literal: false,
                   definition.label,
                   style: const TextStyle(
                     fontSize: 12,
@@ -781,7 +848,9 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
                   color: _purple.withValues(alpha: .14),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Text(
+                child: SiteText(
+                  contentKey: 'copy.business_acquisition_page.m14',
+                  literal: false,
                   unit,
                   style: const TextStyle(
                     color: _purple,
@@ -793,7 +862,9 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
             ],
           ),
           const SizedBox(height: 5),
-          Text(
+          SiteText(
+            contentKey: 'copy.business_acquisition_page.m15',
+            literal: false,
             definition.help,
             style: const TextStyle(
               color: Color(0xFFA5A5B5),
@@ -809,7 +880,11 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
               signed: true,
             ),
             decoration: InputDecoration(
-              hintText: 'Enter value · example $example',
+              hint: siteInputCopy(
+                'Enter value · example {{value1}}',
+                contentKey: 'copy.business_acquisition_page.field.dynamic2',
+                templateValues: {'value1': '$example'},
+              ),
               prefixText: definition.percent || years ? null : r'$ ',
               suffixText: definition.percent
                   ? '%'
@@ -845,7 +920,11 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
     value: _number(key) == 1,
     onChanged: (value) =>
         setState(() => _fields[key]!.text = value == true ? '1' : '0'),
-    title: Text(label),
+    title: SiteText(
+      contentKey: 'copy.business_acquisition_page.m16',
+      literal: false,
+      label,
+    ),
     contentPadding: EdgeInsets.zero,
     activeColor: _purple,
     controlAffinity: ListTileControlAffinity.leading,
@@ -861,7 +940,9 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            const SiteText(
+              contentKey: 'copy.business_acquisition_page.5',
+              literal: true,
               'INITIAL ACQUISITION SCREEN',
               style: TextStyle(
                 color: _lilac,
@@ -871,7 +952,9 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
               ),
             ),
             const SizedBox(height: 12),
-            Text(
+            SiteText(
+              contentKey: 'copy.business_acquisition_page.m17',
+              literal: false,
               result.verdict,
               style: const TextStyle(
                 color: Colors.white,
@@ -989,17 +1072,27 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
           FilledButton.icon(
             onPressed: _saving ? null : () => _save(),
             icon: const Icon(Icons.save_outlined),
-            label: const Text('SAVE ASSESSMENT'),
+            label: const SiteText(
+              contentKey: 'copy.business_acquisition_page.6',
+              literal: true,
+              'SAVE ASSESSMENT',
+            ),
           ),
           OutlinedButton.icon(
             onPressed: _saving ? null : () => _save(openRoom: true),
             icon: const Icon(Icons.meeting_room_outlined),
-            label: const Text('CREATE ACQUISITION WORKSPACE'),
+            label: const SiteText(
+              contentKey: 'copy.business_acquisition_page.7',
+              literal: true,
+              'CREATE ACQUISITION WORKSPACE',
+            ),
           ),
         ],
       ),
       const SizedBox(height: 12),
-      const Text(
+      const SiteText(
+        contentKey: 'copy.business_acquisition_page.8',
+        literal: true,
         'Educational screening only. This is not a formal valuation, quality-of-earnings report, legal opinion, tax advice or financing commitment.',
         style: TextStyle(color: Color(0xFF777785), fontSize: 11),
       ),
@@ -1012,22 +1105,78 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
       scrollDirection: Axis.horizontal,
       child: DataTable(
         columns: const [
-          DataColumn(label: Text('Scenario')),
-          DataColumn(label: Text('Revenue')),
-          DataColumn(label: Text('Cash after owner')),
-          DataColumn(label: Text('DSCR')),
-          DataColumn(label: Text('Payback')),
+          DataColumn(
+            label: SiteText(
+              contentKey: 'copy.business_acquisition_page.m18',
+              literal: true,
+              'Scenario',
+            ),
+          ),
+          DataColumn(
+            label: SiteText(
+              contentKey: 'copy.business_acquisition_page.m19',
+              literal: true,
+              'Revenue',
+            ),
+          ),
+          DataColumn(
+            label: SiteText(
+              contentKey: 'copy.business_acquisition_page.m20',
+              literal: true,
+              'Cash after owner',
+            ),
+          ),
+          DataColumn(
+            label: SiteText(
+              contentKey: 'copy.business_acquisition_page.m21',
+              literal: true,
+              'DSCR',
+            ),
+          ),
+          DataColumn(
+            label: SiteText(
+              contentKey: 'copy.business_acquisition_page.m22',
+              literal: true,
+              'Payback',
+            ),
+          ),
         ],
         rows: result.scenarios
             .map(
               (scenario) => DataRow(
                 cells: [
-                  DataCell(Text(scenario.name)),
-                  DataCell(Text(_money(scenario.revenue))),
-                  DataCell(Text(_money(scenario.cashAfterOwner))),
-                  DataCell(Text('${scenario.dscr.toStringAsFixed(2)}×')),
                   DataCell(
-                    Text(
+                    SiteText(
+                      contentKey: 'copy.business_acquisition_page.m23',
+                      literal: false,
+                      scenario.name,
+                    ),
+                  ),
+                  DataCell(
+                    SiteText(
+                      contentKey: 'copy.business_acquisition_page.m24',
+                      literal: false,
+                      _money(scenario.revenue),
+                    ),
+                  ),
+                  DataCell(
+                    SiteText(
+                      contentKey: 'copy.business_acquisition_page.m25',
+                      literal: false,
+                      _money(scenario.cashAfterOwner),
+                    ),
+                  ),
+                  DataCell(
+                    SiteText(
+                      contentKey: 'copy.business_acquisition_page.m26',
+                      literal: false,
+                      '${scenario.dscr.toStringAsFixed(2)}×',
+                    ),
+                  ),
+                  DataCell(
+                    SiteText(
+                      contentKey: 'copy.business_acquisition_page.m27',
+                      literal: false,
                       scenario.paybackYears >= 99
                           ? 'N/A'
                           : '${scenario.paybackYears.toStringAsFixed(1)} yrs',
@@ -1061,7 +1210,9 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
           children: [
             Icon(icon, color: color),
             const SizedBox(width: 9),
-            Text(
+            SiteText(
+              contentKey: 'copy.business_acquisition_page.m28',
+              literal: false,
               title,
               style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w700),
             ),
@@ -1069,7 +1220,9 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
         ),
         const SizedBox(height: 14),
         if (items.isEmpty)
-          const Text(
+          const SiteText(
+            contentKey: 'copy.business_acquisition_page.9',
+            literal: true,
             'Nothing material identified from the information entered.',
           )
         else
@@ -1079,12 +1232,16 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  SiteText(
+                    contentKey: 'copy.business_acquisition_page.m29',
+                    literal: true,
                     '• ',
                     style: TextStyle(color: color, fontWeight: FontWeight.w900),
                   ),
                   Expanded(
-                    child: Text(
+                    child: SiteText(
+                      contentKey: 'copy.business_acquisition_page.m30',
+                      literal: false,
                       item,
                       style: const TextStyle(fontSize: 12, height: 1.45),
                     ),
@@ -1110,7 +1267,9 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        SiteText(
+          contentKey: 'copy.business_acquisition_page.m31',
+          literal: false,
           title,
           style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
         ),
@@ -1130,7 +1289,9 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        SiteText(
+          contentKey: 'copy.business_acquisition_page.m32',
+          literal: false,
           value,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
@@ -1141,7 +1302,9 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
           ),
         ),
         const SizedBox(height: 5),
-        Text(
+        SiteText(
+          contentKey: 'copy.business_acquisition_page.m33',
+          literal: false,
           label,
           style: const TextStyle(
             color: _lilac,
@@ -1163,12 +1326,16 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        SiteText(
+          contentKey: 'copy.business_acquisition_page.m34',
+          literal: false,
           value,
           style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
         ),
         const SizedBox(height: 5),
-        Text(
+        SiteText(
+          contentKey: 'copy.business_acquisition_page.m35',
+          literal: false,
           label,
           style: const TextStyle(color: Color(0xFFA5A5B5), fontSize: 9),
         ),
@@ -1191,7 +1358,9 @@ class _DealStatus extends StatelessWidget {
     children: [
       Icon(icon, color: _lilac, size: 17),
       const SizedBox(width: 8),
-      Text(
+      SiteText(
+        contentKey: 'copy.business_acquisition_page.m36',
+        literal: false,
         label,
         style: const TextStyle(
           color: _ink,

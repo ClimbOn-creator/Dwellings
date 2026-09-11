@@ -1,3 +1,4 @@
+import '../widgets/site_text.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -209,8 +210,19 @@ class _DealComparisonPageState extends State<BusinessComparisonQuiz>
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(_error!),
-                TextButton(onPressed: _load, child: const Text('Retry')),
+                SiteText(
+                  contentKey: 'copy.deal_comparison_page.m1',
+                  literal: false,
+                  _error!,
+                ),
+                TextButton(
+                  onPressed: _load,
+                  child: const SiteText(
+                    contentKey: 'copy.deal_comparison_page.1',
+                    literal: true,
+                    'Retry',
+                  ),
+                ),
               ],
             ),
           )
@@ -255,7 +267,9 @@ class _DealComparisonPageState extends State<BusinessComparisonQuiz>
         Row(
           children: [
             const Expanded(
-              child: Text(
+              child: SiteText(
+                contentKey: 'copy.deal_comparison_page.m2',
+                literal: true,
                 'QUIZ',
                 style: TextStyle(
                   color: _green,
@@ -270,13 +284,19 @@ class _DealComparisonPageState extends State<BusinessComparisonQuiz>
                 _fullMotion ? Icons.animation : Icons.blur_on,
                 size: 18,
               ),
-              label: Text(_fullMotion ? 'Full motion' : 'Gentle motion'),
+              label: SiteText(
+                contentKey: 'copy.deal_comparison_page.m3',
+                literal: false,
+                _fullMotion ? 'Full motion' : 'Gentle motion',
+              ),
               onPressed: _selected == null
                   ? () => setState(() => _motionOverride = !_fullMotion)
                   : null,
             ),
             const SizedBox(width: 12),
-            Text(
+            SiteText(
+              contentKey: 'copy.deal_comparison_page.m4',
+              literal: false,
               '${_step + 1} / 8',
               style: const TextStyle(
                 color: _muted,
@@ -305,7 +325,9 @@ class _DealComparisonPageState extends State<BusinessComparisonQuiz>
           ),
         ),
         const SizedBox(height: 24),
-        Text(
+        SiteText(
+          contentKey: 'copy.deal_comparison_page.m5',
+          literal: true,
           'Which business would you rather own?',
           style: const TextStyle(
             color: _ink,
@@ -316,7 +338,9 @@ class _DealComparisonPageState extends State<BusinessComparisonQuiz>
           ),
         ),
         const SizedBox(height: 8),
-        const Text(
+        const SiteText(
+          contentKey: 'copy.deal_comparison_page.2',
+          literal: true,
           'Compare the whole business. Your favourite stays; a new challenger takes the other spot.',
           style: TextStyle(color: _muted, fontSize: 16, height: 1.5),
         ),
@@ -417,7 +441,9 @@ class _DealComparisonPageState extends State<BusinessComparisonQuiz>
 
               const versus = Padding(
                 padding: EdgeInsets.all(12),
-                child: Text(
+                child: SiteText(
+                  contentKey: 'copy.deal_comparison_page.m6',
+                  literal: true,
                   'OR',
                   style: TextStyle(
                     color: _muted,
@@ -447,10 +473,16 @@ class _DealComparisonPageState extends State<BusinessComparisonQuiz>
               TextButton.icon(
                 onPressed: _selected == null ? _back : null,
                 icon: const Icon(Icons.arrow_back_rounded),
-                label: const Text('Previous comparison'),
+                label: const SiteText(
+                  contentKey: 'copy.deal_comparison_page.3',
+                  literal: true,
+                  'Previous comparison',
+                ),
               ),
             const Expanded(
-              child: Text(
+              child: SiteText(
+                contentKey: 'copy.deal_comparison_page.m7',
+                literal: true,
                 'Illustrative businesses · CAD · Figures are examples, not live listings.',
                 textAlign: TextAlign.end,
                 style: TextStyle(color: _muted, fontSize: 12, height: 1.4),
@@ -467,7 +499,9 @@ class _DealComparisonPageState extends State<BusinessComparisonQuiz>
     children: [
       const Icon(Icons.check_circle_outline, color: _green, size: 44),
       const SizedBox(height: 18),
-      const Text(
+      const SiteText(
+        contentKey: 'copy.deal_comparison_page.4',
+        literal: true,
         'Your preferences, learned from your choices.',
         style: TextStyle(
           color: _ink,
@@ -476,7 +510,9 @@ class _DealComparisonPageState extends State<BusinessComparisonQuiz>
         ),
       ),
       const SizedBox(height: 12),
-      Text(
+      SiteText(
+        contentKey: 'copy.deal_comparison_page.m8',
+        literal: false,
         _saving
             ? 'Saving your choices…'
             : _savedToAccount
@@ -485,7 +521,9 @@ class _DealComparisonPageState extends State<BusinessComparisonQuiz>
         style: const TextStyle(color: _muted, fontSize: 16),
       ),
       const SizedBox(height: 24),
-      const Text(
+      const SiteText(
+        contentKey: 'copy.deal_comparison_page.5',
+        literal: true,
         'These are inferred preferences from the businesses you chose, not fixed requirements.',
         style: TextStyle(color: _muted, fontSize: 16),
       ),
@@ -493,17 +531,26 @@ class _DealComparisonPageState extends State<BusinessComparisonQuiz>
       for (final trait in quizTraitLabels.entries)
         ListTile(
           contentPadding: EdgeInsets.zero,
-          title: Text(
+          title: SiteText(
+            contentKey: 'copy.deal_comparison_page.m9',
+            literal: false,
             trait.value,
             style: const TextStyle(color: _muted, fontSize: 14),
           ),
-          subtitle: Text(
+          subtitle: SiteText(
+            contentKey: 'copy.deal_comparison_page.m10',
+            literal: false,
             '${_answers[trait.key] ?? ''}',
             style: const TextStyle(color: _ink, fontSize: 18),
           ),
         ),
       if (_error != null)
-        Text(_error!, style: const TextStyle(color: Colors.red)),
+        SiteText(
+          contentKey: 'copy.deal_comparison_page.m11',
+          literal: false,
+          _error!,
+          style: const TextStyle(color: Colors.red),
+        ),
       const SizedBox(height: 20),
       Wrap(
         spacing: 16,
@@ -535,7 +582,9 @@ class _DealComparisonPageState extends State<BusinessComparisonQuiz>
                     );
                   },
             style: FilledButton.styleFrom(backgroundColor: _green),
-            child: Text(
+            child: SiteText(
+              contentKey: 'copy.deal_comparison_page.m12',
+              literal: false,
               _error != null
                   ? 'Retry saving'
                   : _savedToAccount
@@ -555,7 +604,11 @@ class _DealComparisonPageState extends State<BusinessComparisonQuiz>
                     _selected = null;
                     _error = null;
                   }),
-            child: const Text('Retake the quiz'),
+            child: const SiteText(
+              contentKey: 'copy.deal_comparison_page.6',
+              literal: true,
+              'Retake the quiz',
+            ),
           ),
         ],
       ),
@@ -626,8 +679,11 @@ class _BusinessDocument extends StatelessWidget {
                   ),
                   const SizedBox(width: 10),
                   Expanded(
-                    child: Text(
-                      'BUSINESS $letter',
+                    child: SiteText(
+                      templateValues: {'value1': '${letter}'},
+                      contentKey: 'copy.deal_comparison_page.m13',
+                      literal: false,
+                      "BUSINESS {{value1}}",
                       style: const TextStyle(
                         color: _green,
                         fontWeight: FontWeight.w800,
@@ -635,7 +691,9 @@ class _BusinessDocument extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const Text(
+                  const SiteText(
+                    contentKey: 'copy.deal_comparison_page.7',
+                    literal: true,
                     'ILLUSTRATIVE',
                     style: TextStyle(color: _muted, fontSize: 12),
                   ),
@@ -652,7 +710,9 @@ class _BusinessDocument extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 18),
-              Text(
+              SiteText(
+                contentKey: 'copy.deal_comparison_page.m14',
+                literal: false,
                 option.name,
                 style: const TextStyle(
                   color: _ink,
@@ -662,7 +722,9 @@ class _BusinessDocument extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 6),
-              const Text(
+              const SiteText(
+                contentKey: 'copy.deal_comparison_page.8',
+                literal: true,
                 'Commercial maintenance services',
                 style: TextStyle(color: _muted, fontSize: 14),
               ),
@@ -679,7 +741,9 @@ class _BusinessDocument extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    SiteText(
+                      contentKey: 'copy.deal_comparison_page.m15',
+                      literal: true,
                       'BUSINESS STRENGTH',
                       style: const TextStyle(
                         color: _green,
@@ -688,7 +752,9 @@ class _BusinessDocument extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 6),
-                    Text(
+                    SiteText(
+                      contentKey: 'copy.deal_comparison_page.m16',
+                      literal: false,
                       option.strength,
                       style: const TextStyle(
                         color: _ink,
@@ -750,7 +816,9 @@ class _BusinessDocument extends StatelessWidget {
                 'Annual equity return',
                 '${(option.cash / option.equity * 100).round()}%',
               ),
-              const Text(
+              const SiteText(
+                contentKey: 'copy.deal_comparison_page.9',
+                literal: true,
                 'Illustrative all-cash purchase; before tax and financing.',
                 style: TextStyle(color: _muted, fontSize: 12),
               ),
@@ -770,7 +838,9 @@ class _BusinessDocument extends StatelessWidget {
                         ? Icons.check_rounded
                         : Icons.arrow_forward_rounded,
                   ),
-                  label: Text(
+                  label: SiteText(
+                    contentKey: 'copy.deal_comparison_page.m17',
+                    literal: false,
                     selected ? 'Selected' : 'I would choose business $letter',
                   ),
                 ),
@@ -788,14 +858,18 @@ class _BusinessDocument extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(
-          child: Text(
+          child: SiteText(
+            contentKey: 'copy.deal_comparison_page.m18',
+            literal: false,
             label,
             style: const TextStyle(color: _muted, fontSize: 14),
           ),
         ),
         const SizedBox(width: 12),
         Expanded(
-          child: Text(
+          child: SiteText(
+            contentKey: 'copy.deal_comparison_page.m19',
+            literal: false,
             value,
             textAlign: TextAlign.end,
             style: const TextStyle(
@@ -832,7 +906,9 @@ class _BusinessDocument extends StatelessWidget {
         .map(
           (entry) => Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-            child: Text(
+            child: SiteText(
+              contentKey: 'copy.deal_comparison_page.m20',
+              literal: false,
               entry.value,
               textAlign: entry.key == 0 ? TextAlign.start : TextAlign.end,
               style: TextStyle(

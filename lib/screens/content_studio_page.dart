@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 
 import '../models/platform_side.dart';
@@ -8,6 +6,7 @@ import '../services/site_content_service.dart';
 import '../widgets/app_navigation_menu.dart';
 import '../widgets/home_brand_button.dart';
 import 'auth_page.dart';
+import 'acquisition_support_page.dart';
 
 class ContentStudioPage extends StatefulWidget {
   const ContentStudioPage({super.key});
@@ -17,22 +16,12 @@ class ContentStudioPage extends StatefulWidget {
 }
 
 class _ContentStudioPageState extends State<ContentStudioPage> {
-  final _controllers = <String, TextEditingController>{};
-  final _timers = <String, Timer>{};
-  final _states = <String, String>{};
   bool _loading = true;
   bool _allowed = false;
 
   @override
   void initState() {
     super.initState();
-    for (final section in SiteContentService.sections.values) {
-      for (final entry in section.entries) {
-        _controllers[entry.key] = TextEditingController(
-          text: SiteContentService.text(entry.key, entry.value),
-        );
-      }
-    }
     _checkAccess();
   }
 
@@ -43,31 +32,6 @@ class _ContentStudioPageState extends State<ContentStudioPage> {
         _allowed = allowed;
         _loading = false;
       });
-  }
-
-  void _queueSave(String key, String value) {
-    _timers[key]?.cancel();
-    setState(() => _states[key] = 'Editing…');
-    _timers[key] = Timer(const Duration(milliseconds: 650), () async {
-      if (mounted) setState(() => _states[key] = 'Saving…');
-      try {
-        await SiteContentService.save(key, value);
-        if (mounted) setState(() => _states[key] = 'Saved');
-      } catch (_) {
-        if (mounted) setState(() => _states[key] = 'Could not save');
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    for (final timer in _timers.values) {
-      timer.cancel();
-    }
-    for (final controller in _controllers.values) {
-      controller.dispose();
-    }
-    super.dispose();
   }
 
   @override
@@ -87,7 +51,44 @@ class _ContentStudioPageState extends State<ContentStudioPage> {
         ? const Center(child: CircularProgressIndicator())
         : !_allowed
         ? _locked()
-        : _editor(),
+        : _visualEditor(),
+  );
+
+  Widget _visualEditor() => Center(
+    child: Padding(
+      padding: const EdgeInsets.all(24),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 560),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.touch_app_outlined, size: 48),
+            const SizedBox(height: 16),
+            const Text(
+              'Edit directly on any page',
+              style: TextStyle(fontSize: 28),
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'Open a page, turn on Edit this page, then click text or a picture and choose Edit. Save publishes your changes for everyone. Choose Done editing to use links and navigate.',
+            ),
+            const SizedBox(height: 20),
+            FilledButton.icon(
+              onPressed: () {
+                SiteContentService.editing.value = true;
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const AcquisitionSupportPage(),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.edit),
+              label: const Text('Open visual editor'),
+            ),
+          ],
+        ),
+      ),
+    ),
   );
 
   Widget _locked() => Center(
@@ -125,126 +126,4 @@ class _ContentStudioPageState extends State<ContentStudioPage> {
       ),
     ),
   );
-
-  Widget _editor() => SingleChildScrollView(
-    child: Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 1120),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 52, 24, 90),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'CONTENT STUDIO',
-                style: TextStyle(
-                  color: Color(0xFF506C61),
-                  fontSize: 11,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 1.5,
-                ),
-              ),
-              const SizedBox(height: 12),
-              const Text(
-                'Edit the live site in plain language.',
-                style: TextStyle(
-                  fontSize: 48,
-                  height: 1,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: -2.3,
-                ),
-              ),
-              const SizedBox(height: 16),
-              const SizedBox(
-                width: 720,
-                child: Text(
-                  'Every change autosaves after you pause typing. Visitors receive the new copy on their next page load.',
-                  style: TextStyle(
-                    color: Color(0xFF62655F),
-                    fontSize: 16,
-                    height: 1.5,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 44),
-              for (final section in SiteContentService.sections.entries) ...[
-                _section(section.key, section.value),
-                const SizedBox(height: 22),
-              ],
-            ],
-          ),
-        ),
-      ),
-    ),
-  );
-
-  Widget _section(String title, Map<String, String> entries) => Container(
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(24),
-    ),
-    padding: const EdgeInsets.fromLTRB(28, 26, 28, 30),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
-        ),
-        const SizedBox(height: 6),
-        const Text(
-          'Changes save automatically.',
-          style: TextStyle(color: Color(0xFF777A74), fontSize: 12),
-        ),
-        const SizedBox(height: 24),
-        for (final entry in entries.entries) ...[
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  _label(entry.key),
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              Text(
-                _states[entry.key] ?? '',
-                style: TextStyle(
-                  color: _states[entry.key] == 'Could not save'
-                      ? Colors.red
-                      : const Color(0xFF5E756B),
-                  fontSize: 11,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 7),
-          TextField(
-            controller: _controllers[entry.key],
-            minLines: entry.value.length > 90 || entry.value.contains('\n')
-                ? 3
-                : 1,
-            maxLines: 7,
-            onChanged: (value) => _queueSave(entry.key, value),
-            decoration: const InputDecoration(fillColor: Color(0xFFF7F8F5)),
-          ),
-          const SizedBox(height: 18),
-        ],
-      ],
-    ),
-  );
-
-  String _label(String key) => key
-      .split('.')
-      .last
-      .replaceAll('_', ' ')
-      .split(' ')
-      .map(
-        (word) => word.isEmpty
-            ? word
-            : '${word[0].toUpperCase()}${word.substring(1)}',
-      )
-      .join(' ');
 }

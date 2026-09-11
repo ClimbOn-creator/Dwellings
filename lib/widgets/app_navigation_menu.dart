@@ -1,3 +1,4 @@
+import 'site_text.dart';
 import 'package:flutter/material.dart';
 
 import '../models/platform_side.dart';
@@ -7,7 +8,6 @@ import '../services/site_content_service.dart';
 import '../screens/acquisition_support_page.dart';
 import '../screens/assistant_workspace_page.dart';
 import '../screens/auth_page.dart';
-import '../screens/local_network_page.dart';
 import '../screens/member_deal_marketplace_page.dart';
 import '../screens/profile_page.dart';
 import '../screens/content_studio_page.dart';
@@ -21,7 +21,6 @@ enum AppNavigationDestination {
   dealComparison,
   bulletinBoard,
   memberStudio,
-  network,
   consulting,
   profile,
 }
@@ -58,7 +57,6 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
     AppNavigationDestination.dealComparison => 'Deal comparison quiz',
     AppNavigationDestination.bulletinBoard => 'Businesses for sale',
     AppNavigationDestination.memberStudio => 'Professional Member Studio',
-    AppNavigationDestination.network => 'Members & experts',
     AppNavigationDestination.consulting => 'Personal consulting',
     AppNavigationDestination.profile => 'My profile',
   };
@@ -71,9 +69,6 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
     AppNavigationDestination.dealComparison => const DealComparisonPage(),
     AppNavigationDestination.bulletinBoard => const BusinessSaleBulletinPage(),
     AppNavigationDestination.memberStudio => const MemberStudioPage(),
-    AppNavigationDestination.network => const LocalNetworkPage(
-      side: PlatformSide.business,
-    ),
     AppNavigationDestination.consulting => const PersonalizedConsultingPage(),
     AppNavigationDestination.profile =>
       BackendService.user == null
@@ -117,7 +112,11 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
           future: MemberBetaService.unreadCount(),
           builder: (context, snapshot) => Badge(
             isLabelVisible: (snapshot.data ?? 0) > 0,
-            label: Text('${snapshot.data ?? 0}'),
+            label: SiteText(
+              contentKey: 'copy.app_navigation_menu.m1',
+              literal: false,
+              '${snapshot.data ?? 0}',
+            ),
             child: IconButton(
               tooltip: 'Private updates',
               onPressed: _openNotifications,
@@ -181,7 +180,9 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
             PopupMenuItem(
               value: destination,
               height: 43,
-              child: Text(
+              child: SiteText(
+                contentKey: 'copy.app_navigation_menu.m2',
+                literal: false,
                 _label(destination),
                 style: TextStyle(
                   color: widget.dark ? Colors.white : const Color(0xFF161616),

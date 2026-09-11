@@ -1,9 +1,11 @@
+import 'widgets/site_inline_editor.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'models/platform_side.dart';
 import 'screens/deal_rooms_page.dart';
 import 'screens/deal_comparison_page.dart';
+import 'screens/bulletin_listing_pages.dart';
 import 'screens/business_acquisition_page.dart';
 import 'screens/local_network_page.dart';
 import 'screens/member_deal_marketplace_page.dart';
@@ -43,6 +45,8 @@ class AffinityApp extends StatelessWidget {
       textTheme: GoogleFonts.spaceGroteskTextTheme(),
     );
     return MaterialApp(
+      builder: (context, child) =>
+          SiteEditorShell(child: child ?? const SizedBox.shrink()),
       debugShowCheckedModeBanner: false,
       title: 'Affinity',
       theme: base.copyWith(
@@ -113,7 +117,12 @@ class AffinityApp extends StatelessWidget {
       'network' => LocalNetworkPage(side: side),
       'deal-rooms' => const DealRoomsPage(initialSide: PlatformSide.business),
       'deal-comparison' => const DealComparisonPage(),
-      'bulletin-board' => const BusinessSaleBulletinPage(),
+      'bulletin-board' =>
+        Uri.base.queryParameters['bulletin'] == null
+            ? const BusinessSaleBulletinPage()
+            : BusinessListingDetailPage(
+                bulletinId: Uri.base.queryParameters['bulletin']!,
+              ),
       'member-studio' => const MemberDealMarketplacePage(),
       'review-desk' => const AffinityReviewDeskPage(),
       'content-studio' => const ContentStudioPage(),

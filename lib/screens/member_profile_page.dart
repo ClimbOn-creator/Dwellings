@@ -1,3 +1,4 @@
+import '../widgets/site_text.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -78,7 +79,13 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
   Future<void> _launch(Uri uri) async {
     if (!await launchUrl(uri, mode: LaunchMode.platformDefault) && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not open that link.')),
+        const SnackBar(
+          content: SiteText(
+            contentKey: 'copy.member_profile_page.m1',
+            literal: true,
+            'Could not open that link.',
+          ),
+        ),
       );
     }
   }
@@ -87,7 +94,11 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
     if (provider.isExample) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Example professionals cannot receive real reviews.'),
+          content: SiteText(
+            contentKey: 'copy.member_profile_page.m2',
+            literal: true,
+            'Example professionals cannot receive real reviews.',
+          ),
         ),
       );
       return;
@@ -113,7 +124,9 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setModalState) => AlertDialog(
-          title: Text(
+          title: SiteText(
+            contentKey: 'copy.member_profile_page.m3',
+            literal: false,
             '${mine == null ? 'Review' : 'Update review for'} ${provider.name}',
           ),
           content: SizedBox(
@@ -144,12 +157,21 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
                   maxLines: 7,
                   maxLength: 2000,
                   decoration: const InputDecoration(
-                    labelText: 'Your review',
-                    hintText:
-                        'Describe your experience with this professional.',
+                    label: SiteText(
+                      'Your review',
+                      contentKey: 'copy.member_profile_page.field1',
+                      literal: true,
+                    ),
+                    hint: SiteText(
+                      'Describe your experience with this professional.',
+                      contentKey: 'copy.member_profile_page.field2',
+                      literal: true,
+                    ),
                   ),
                 ),
-                const Text(
+                const SiteText(
+                  contentKey: 'copy.member_profile_page.1',
+                  literal: true,
                   'Your public name will appear with the review. One review is allowed per professional and can be updated.',
                   style: TextStyle(color: Color(0xFF777785), fontSize: 11),
                 ),
@@ -159,7 +181,11 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
           actions: [
             TextButton(
               onPressed: saving ? null : () => Navigator.pop(dialogContext),
-              child: const Text('Cancel'),
+              child: const SiteText(
+                contentKey: 'copy.member_profile_page.2',
+                literal: true,
+                'Cancel',
+              ),
             ),
             FilledButton(
               onPressed: saving || reviewText.text.trim().isEmpty
@@ -184,13 +210,22 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
                         if (dialogContext.mounted) {
                           ScaffoldMessenger.of(dialogContext).showSnackBar(
                             SnackBar(
-                              content: Text('Could not save review: $error'),
+                              content: SiteText(
+                                templateValues: {'value1': '${error}'},
+                                contentKey: 'copy.member_profile_page.m4',
+                                literal: false,
+                                "Could not save review: {{value1}}",
+                              ),
                             ),
                           );
                         }
                       }
                     },
-              child: Text(saving ? 'Saving…' : 'Publish review'),
+              child: SiteText(
+                contentKey: 'copy.member_profile_page.m5',
+                literal: false,
+                saving ? 'Saving…' : 'Publish review',
+              ),
             ),
           ],
         ),
@@ -226,7 +261,9 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
     if (myProfile?.id == provider.id) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text(
+          content: SiteText(
+            contentKey: 'copy.member_profile_page.m6',
+            literal: true,
             'This is your profile. Choose another member to message.',
           ),
         ),
@@ -341,7 +378,9 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
                             ],
                           ),
                           const SizedBox(height: 10),
-                          Text(
+                          SiteText(
+                            contentKey: 'copy.member_profile_page.m7',
+                            literal: false,
                             provider.name,
                             style: const TextStyle(
                               color: Colors.white,
@@ -352,7 +391,9 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
                             ),
                           ),
                           const SizedBox(height: 10),
-                          Text(
+                          SiteText(
+                            contentKey: 'copy.member_profile_page.m8',
+                            literal: false,
                             '${provider.jobTitle} · ${provider.company}',
                             style: const TextStyle(
                               color: Color(0xFF9B9B98),
@@ -381,7 +422,11 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
                               icon: const Icon(
                                 Icons.chat_bubble_outline_rounded,
                               ),
-                              label: const Text('MESSAGE'),
+                              label: const SiteText(
+                                contentKey: 'copy.member_profile_page.3',
+                                literal: true,
+                                'MESSAGE',
+                              ),
                             ),
                           if (widget.onRefer != null)
                             OutlinedButton.icon(
@@ -395,7 +440,11 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
                                 ),
                               ),
                               icon: const Icon(Icons.person_add_alt_1_outlined),
-                              label: const Text('REFER'),
+                              label: const SiteText(
+                                contentKey: 'copy.member_profile_page.4',
+                                literal: true,
+                                'REFER',
+                              ),
                             ),
                           FilledButton.icon(
                             onPressed: _changingTeam ? null : _toggleTeam,
@@ -410,7 +459,11 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
                               ),
                             ),
                             icon: Icon(_added ? Icons.check_circle : Icons.add),
-                            label: Text(_added ? 'ADDED!' : 'ADD TO TEAM'),
+                            label: SiteText(
+                              contentKey: 'copy.member_profile_page.m9',
+                              literal: false,
+                              _added ? 'ADDED!' : 'ADD TO TEAM',
+                            ),
                           ),
                         ],
                       ),
@@ -429,7 +482,9 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        SiteText(
+          contentKey: 'copy.member_profile_page.m10',
+          literal: false,
           provider.specialty,
           style: const TextStyle(color: Color(0xFF555562), height: 1.6),
         ),
@@ -463,7 +518,11 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
             child: FilledButton.icon(
               onPressed: _changingTeam ? null : _toggleTeam,
               icon: Icon(_added ? Icons.check_circle : Icons.add),
-              label: Text(_added ? 'ADDED!' : 'ADD TO TEAM'),
+              label: SiteText(
+                contentKey: 'copy.member_profile_page.m11',
+                literal: false,
+                _added ? 'ADDED!' : 'ADD TO TEAM',
+              ),
             ),
           ),
         ],
@@ -485,14 +544,22 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
         FilledButton.icon(
           onPressed: _requestIntroduction,
           icon: const Icon(Icons.handshake_outlined, size: 18),
-          label: const Text('BUILD A CONNECTION BRIEF'),
+          label: const SiteText(
+            contentKey: 'copy.member_profile_page.5',
+            literal: true,
+            'BUILD A CONNECTION BRIEF',
+          ),
         ),
         if (_canMessage && MediaQuery.sizeOf(context).width < 700) ...[
           const SizedBox(height: 10),
           OutlinedButton.icon(
             onPressed: _messageMember,
             icon: const Icon(Icons.chat_bubble_outline_rounded, size: 18),
-            label: const Text('MESSAGE'),
+            label: const SiteText(
+              contentKey: 'copy.member_profile_page.6',
+              literal: true,
+              'MESSAGE',
+            ),
           ),
         ],
         const SizedBox(height: 10),
@@ -523,7 +590,9 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
         if (provider.phone.isEmpty &&
             provider.email.isEmpty &&
             provider.websiteUrl.isEmpty)
-          const Text(
+          const SiteText(
+            contentKey: 'copy.member_profile_page.7',
+            literal: true,
             'Direct contact details have not been published yet.',
             style: TextStyle(color: Color(0xFF777785), fontSize: 12),
           ),
@@ -537,7 +606,9 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
       Row(
         children: [
           const Expanded(
-            child: Text(
+            child: SiteText(
+              contentKey: 'copy.member_profile_page.m12',
+              literal: true,
               'Member reviews',
               style: TextStyle(fontSize: 30, fontWeight: FontWeight.w700),
             ),
@@ -545,7 +616,11 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
           FilledButton.icon(
             onPressed: _review,
             icon: const Icon(Icons.rate_review_outlined, size: 18),
-            label: const Text('RATE & REVIEW'),
+            label: const SiteText(
+              contentKey: 'copy.member_profile_page.8',
+              literal: true,
+              'RATE & REVIEW',
+            ),
           ),
         ],
       ),
@@ -559,7 +634,9 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
           if (snapshot.hasError) {
             return _card(
               title: 'Reviews are being enabled',
-              child: const Text(
+              child: const SiteText(
+                contentKey: 'copy.member_profile_page.9',
+                literal: true,
                 'The professional profile is ready. Run the included provider reviews migration to activate ratings.',
               ),
             );
@@ -568,7 +645,9 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
           if (reviews.isEmpty) {
             return _card(
               title: 'No member reviews yet',
-              child: const Text(
+              child: const SiteText(
+                contentKey: 'copy.member_profile_page.10',
+                literal: true,
                 'Be the first verified member to share an experience.',
               ),
             );
@@ -593,7 +672,9 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
         Row(
           children: [
             Expanded(
-              child: Text(
+              child: SiteText(
+                contentKey: 'copy.member_profile_page.m13',
+                literal: false,
                 review.reviewerName,
                 style: const TextStyle(fontWeight: FontWeight.w700),
               ),
@@ -609,7 +690,12 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
           ],
         ),
         const SizedBox(height: 10),
-        Text(review.text, style: const TextStyle(height: 1.55)),
+        SiteText(
+          contentKey: 'copy.member_profile_page.m14',
+          literal: false,
+          review.text,
+          style: const TextStyle(height: 1.55),
+        ),
       ],
     ),
   );
@@ -625,7 +711,9 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        SiteText(
+          contentKey: 'copy.member_profile_page.m15',
+          literal: false,
           title,
           style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w700),
         ),
@@ -646,7 +734,9 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
       children: [
         Icon(icon, color: _purple, size: 15),
         const SizedBox(width: 6),
-        Text(
+        SiteText(
+          contentKey: 'copy.member_profile_page.m16',
+          literal: false,
           text,
           style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
         ),
@@ -672,7 +762,14 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
         child: OutlinedButton.icon(
           onPressed: onPressed,
           icon: Icon(icon, size: 17),
-          label: Align(alignment: Alignment.centerLeft, child: Text(text)),
+          label: Align(
+            alignment: Alignment.centerLeft,
+            child: SiteText(
+              contentKey: 'copy.member_profile_page.m17',
+              literal: false,
+              text,
+            ),
+          ),
         ),
       );
 
@@ -683,7 +780,9 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
       borderRadius: BorderRadius.circular(12),
       border: Border.all(color: _purple.withValues(alpha: .5)),
     ),
-    child: Text(
+    child: SiteText(
+      contentKey: 'copy.member_profile_page.m18',
+      literal: false,
       label,
       style: const TextStyle(
         color: Color(0xFFD8D0FF),
@@ -701,7 +800,9 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
       color: const Color(0xFFEDE9FE),
       borderRadius: BorderRadius.circular(16),
     ),
-    child: const Text(
+    child: const SiteText(
+      contentKey: 'copy.member_profile_page.11',
+      literal: true,
       'EXAMPLE PROFILE · This fictional professional demonstrates the public profile experience. Contact actions and reviews activate for verified members.',
       style: TextStyle(
         color: Color(0xFF4C348F),

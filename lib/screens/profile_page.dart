@@ -1,3 +1,5 @@
+import '../widgets/site_text.dart';
+import '../widgets/site_image.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -135,7 +137,14 @@ class _ProfilePageState extends State<ProfilePage> {
       if (mounted) {
         setState(() => _loading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not load profile: $error')),
+          SnackBar(
+            content: SiteText(
+              templateValues: {'value1': '${error}'},
+              contentKey: 'copy.profile_page.m1',
+              literal: false,
+              "Could not load profile: {{value1}}",
+            ),
+          ),
         );
       }
     }
@@ -153,9 +162,15 @@ class _ProfilePageState extends State<ProfilePage> {
       );
       await _load();
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Profile saved.')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: SiteText(
+              contentKey: 'copy.profile_page.m2',
+              literal: true,
+              'Profile saved.',
+            ),
+          ),
+        );
       }
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -182,7 +197,14 @@ class _ProfilePageState extends State<ProfilePage> {
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not upload photo: $error')),
+          SnackBar(
+            content: SiteText(
+              templateValues: {'value1': '${error}'},
+              contentKey: 'copy.profile_page.m3',
+              literal: false,
+              "Could not upload photo: {{value1}}",
+            ),
+          ),
         );
       }
     } finally {
@@ -309,7 +331,9 @@ class _ProfilePageState extends State<ProfilePage> {
                       const SizedBox(height: 42),
                       _introductionCentre(),
                       const SizedBox(height: 42),
-                      const Text(
+                      const SiteText(
+                        contentKey: 'copy.profile_page.1',
+                        literal: true,
                         'Your selected team',
                         style: TextStyle(
                           fontSize: 30,
@@ -318,7 +342,9 @@ class _ProfilePageState extends State<ProfilePage> {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      const Text(
+                      const SiteText(
+                        contentKey: 'copy.profile_page.2',
+                        literal: true,
                         'PropertyIQ and DealIQ professionals you select in the Network stay attached to your account.',
                         style: TextStyle(color: Color(0xFF666674)),
                       ),
@@ -331,7 +357,9 @@ class _ProfilePageState extends State<ProfilePage> {
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(16),
                           ),
-                          child: const Text(
+                          child: const SiteText(
+                            contentKey: 'copy.profile_page.3',
+                            literal: true,
                             'Your team is empty. Open Local Network and add professionals you want to remember.',
                           ),
                         )
@@ -390,7 +418,9 @@ class _ProfilePageState extends State<ProfilePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          const SiteText(
+            contentKey: 'copy.profile_page.4',
+            literal: true,
             'YOUR ACQUISITION PATH',
             style: TextStyle(
               color: _lilac,
@@ -400,7 +430,9 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
+          const SiteText(
+            contentKey: 'copy.profile_page.5',
+            literal: true,
             'Saved to your account',
             style: TextStyle(
               color: Colors.white,
@@ -420,7 +452,11 @@ class _ProfilePageState extends State<ProfilePage> {
                       size: 18,
                       color: step.$2 ? const Color(0xFF7DE2C1) : _lilac,
                     ),
-                    label: Text(step.$1),
+                    label: SiteText(
+                      contentKey: 'copy.profile_page.m4',
+                      literal: false,
+                      step.$1,
+                    ),
                     onPressed: () => Navigator.of(
                       context,
                     ).push(MaterialPageRoute<void>(builder: (_) => step.$3)),
@@ -433,78 +469,87 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _header(AccountProfile? profile) => Container(
-    decoration: BoxDecoration(
-      color: _paper,
-      image: DecorationImage(
-        image: const AssetImage('assets/images/affinity-reflection-facade.jpg'),
-        fit: BoxFit.cover,
-        colorFilter: ColorFilter.mode(
-          _paper.withValues(alpha: .86),
-          BlendMode.srcOver,
+  Widget _header(AccountProfile? profile) => SiteBackground(
+    contentKey: 'image.profile_page.mbackground1',
+    original: Container(
+      decoration: BoxDecoration(
+        color: _paper,
+        image: DecorationImage(
+          image: const AssetImage(
+            'assets/images/affinity-reflection-facade.jpg',
+          ),
+          fit: BoxFit.cover,
+          colorFilter: ColorFilter.mode(
+            _paper.withValues(alpha: .86),
+            BlendMode.srcOver,
+          ),
         ),
       ),
-    ),
-    child: Padding(
-      padding: const EdgeInsets.fromLTRB(28, 22, 28, 54),
-      child: SafeArea(
-        bottom: false,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 28),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Stack(
-                  children: [
-                    ProfilePhoto(
-                      size: 112,
-                      photoUrl: profile?.photoUrl ?? '',
-                      borderRadius: BorderRadius.circular(28),
-                    ),
-                    Positioned(
-                      right: 4,
-                      bottom: 4,
-                      child: IconButton.filled(
-                        onPressed: _photo,
-                        icon: const Icon(Icons.camera_alt_outlined, size: 17),
-                        tooltip: 'Upload profile photo',
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(width: 24),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(28, 22, 28, 54),
+        child: SafeArea(
+          bottom: false,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 28),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Stack(
                     children: [
-                      Text(
-                        profile?.fullName.isNotEmpty == true
-                            ? profile!.fullName
-                            : 'Complete your profile',
-                        style: const TextStyle(
-                          color: _ink,
-                          fontSize: 42,
-                          height: 1,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: -1.8,
-                        ),
+                      ProfilePhoto(
+                        size: 112,
+                        photoUrl: profile?.photoUrl ?? '',
+                        borderRadius: BorderRadius.circular(28),
                       ),
-                      const SizedBox(height: 10),
-                      Text(
-                        _publicIdentity(profile),
-                        style: const TextStyle(
-                          color: Color(0xFF9B9B98),
-                          fontSize: 14,
+                      Positioned(
+                        right: 4,
+                        bottom: 4,
+                        child: IconButton.filled(
+                          onPressed: _photo,
+                          icon: const Icon(Icons.camera_alt_outlined, size: 17),
+                          tooltip: 'Upload profile photo',
                         ),
                       ),
                     ],
                   ),
-                ),
-              ],
-            ),
-          ],
+                  const SizedBox(width: 24),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SiteText(
+                          contentKey: 'copy.profile_page.m5',
+                          literal: false,
+                          profile?.fullName.isNotEmpty == true
+                              ? profile!.fullName
+                              : 'Complete your profile',
+                          style: const TextStyle(
+                            color: _ink,
+                            fontSize: 42,
+                            height: 1,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: -1.8,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        SiteText(
+                          contentKey: 'copy.profile_page.m6',
+                          literal: false,
+                          _publicIdentity(profile),
+                          style: const TextStyle(
+                            color: Color(0xFF9B9B98),
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     ),
@@ -524,7 +569,9 @@ class _ProfilePageState extends State<ProfilePage> {
         Row(
           children: [
             const Expanded(
-              child: Text(
+              child: SiteText(
+                contentKey: 'copy.profile_page.m7',
+                literal: true,
                 'Current deals',
                 style: TextStyle(
                   fontSize: 25,
@@ -537,13 +584,19 @@ class _ProfilePageState extends State<ProfilePage> {
               onPressed: () => Navigator.of(context).push(
                 MaterialPageRoute<void>(builder: (_) => const DealRoomsPage()),
               ),
-              child: const Text('VIEW ALL'),
+              child: const SiteText(
+                contentKey: 'copy.profile_page.6',
+                literal: true,
+                'VIEW ALL',
+              ),
             ),
           ],
         ),
         const SizedBox(height: 6),
         if (_deals.isEmpty)
-          const Text(
+          const SiteText(
+            contentKey: 'copy.profile_page.7',
+            literal: true,
             'No active deals yet. Your next property or business acquisition will appear here.',
             style: TextStyle(color: Color(0xFF666674), height: 1.45),
           )
@@ -565,7 +618,9 @@ class _ProfilePageState extends State<ProfilePage> {
                         Row(
                           children: [
                             Expanded(
-                              child: Text(
+                              child: SiteText(
+                                contentKey: 'copy.profile_page.m8',
+                                literal: false,
                                 deal.title,
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w700,
@@ -573,7 +628,9 @@ class _ProfilePageState extends State<ProfilePage> {
                                 ),
                               ),
                             ),
-                            Text(
+                            SiteText(
+                              contentKey: 'copy.profile_page.m9',
+                              literal: false,
                               '${deal.completedTaskCount}/${deal.totalTaskCount}',
                               style: const TextStyle(
                                 color: _purple,
@@ -592,8 +649,13 @@ class _ProfilePageState extends State<ProfilePage> {
                           color: _purple,
                         ),
                         const SizedBox(height: 7),
-                        Text(
-                          'CURRENT STEP · ${deal.currentStep.toUpperCase()}',
+                        SiteText(
+                          templateValues: {
+                            'value1': '${deal.currentStep.toUpperCase()}',
+                          },
+                          contentKey: 'copy.profile_page.m10',
+                          literal: false,
+                          "CURRENT STEP · {{value1}}",
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
@@ -624,7 +686,9 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget _introductionCentre() => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      const Text(
+      const SiteText(
+        contentKey: 'copy.profile_page.8',
+        literal: true,
         'Connections',
         style: TextStyle(
           fontSize: 30,
@@ -633,7 +697,9 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
       ),
       const SizedBox(height: 8),
-      const Text(
+      const SiteText(
+        contentKey: 'copy.profile_page.9',
+        literal: true,
         'Keep track of the connection briefs you have sent to professionals.',
         style: TextStyle(color: Color(0xFF666674)),
       ),
@@ -646,7 +712,9 @@ class _ProfilePageState extends State<ProfilePage> {
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
           ),
-          child: const Text(
+          child: const SiteText(
+            contentKey: 'copy.profile_page.10',
+            literal: true,
             'No connections yet. Open a professional profile and build a private brief with the context they need.',
           ),
         )
@@ -669,11 +737,15 @@ class _ProfilePageState extends State<ProfilePage> {
     child: ExpansionTile(
       tilePadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
       childrenPadding: const EdgeInsets.fromLTRB(18, 0, 18, 18),
-      title: Text(
+      title: SiteText(
+        contentKey: 'copy.profile_page.m11',
+        literal: false,
         incoming ? request.requesterName : request.providerName,
         style: const TextStyle(fontWeight: FontWeight.w700),
       ),
-      subtitle: Text(
+      subtitle: SiteText(
+        contentKey: 'copy.profile_page.m12',
+        literal: false,
         incoming
             ? 'Request for ${request.providerName}'
             : request.providerCompany,
@@ -683,7 +755,9 @@ class _ProfilePageState extends State<ProfilePage> {
       children: [
         Align(
           alignment: Alignment.centerLeft,
-          child: Text(
+          child: SiteText(
+            contentKey: 'copy.profile_page.m13',
+            literal: false,
             request.propertySummary.isEmpty
                 ? 'No property details supplied.'
                 : request.propertySummary,
@@ -694,8 +768,11 @@ class _ProfilePageState extends State<ProfilePage> {
           const SizedBox(height: 12),
           Align(
             alignment: Alignment.centerLeft,
-            child: Text(
-              'Response: ${request.memberMessage}',
+            child: SiteText(
+              templateValues: {'value1': '${request.memberMessage}'},
+              contentKey: 'copy.profile_page.m14',
+              literal: false,
+              "Response: {{value1}}",
               style: const TextStyle(
                 color: _purple,
                 fontSize: 12,
@@ -710,7 +787,9 @@ class _ProfilePageState extends State<ProfilePage> {
             const SizedBox(height: 12),
             Align(
               alignment: Alignment.centerLeft,
-              child: Text(
+              child: SiteText(
+                contentKey: 'copy.profile_page.m15',
+                literal: false,
                 [
                   if (request.nextFollowUpAt != null)
                     'FOLLOW UP ${DateFormat.yMMMd().format(request.nextFollowUpAt!)}',
@@ -749,7 +828,11 @@ class _ProfilePageState extends State<ProfilePage> {
               FilledButton.icon(
                 onPressed: () => _respondToIntroduction(request),
                 icon: const Icon(Icons.account_tree_outlined, size: 16),
-                label: const Text('UPDATE LEAD'),
+                label: const SiteText(
+                  contentKey: 'copy.profile_page.11',
+                  literal: true,
+                  'UPDATE LEAD',
+                ),
               ),
             ],
           ),
@@ -775,7 +858,9 @@ class _ProfilePageState extends State<ProfilePage> {
         color: color.withValues(alpha: .1),
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Text(
+      child: SiteText(
+        contentKey: 'copy.profile_page.m16',
+        literal: false,
         status.toUpperCase(),
         style: TextStyle(
           color: color,
@@ -796,7 +881,11 @@ class _ProfilePageState extends State<ProfilePage> {
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setModalState) => AlertDialog(
-          title: const Text('Update lead'),
+          title: const SiteText(
+            contentKey: 'copy.profile_page.12',
+            literal: true,
+            'Update lead',
+          ),
           content: SizedBox(
             width: 480,
             child: SingleChildScrollView(
@@ -806,7 +895,11 @@ class _ProfilePageState extends State<ProfilePage> {
                   DropdownButtonFormField<String>(
                     initialValue: status,
                     decoration: const InputDecoration(
-                      labelText: 'Pipeline stage',
+                      label: SiteText(
+                        'Pipeline stage',
+                        contentKey: 'copy.profile_page.field1',
+                        literal: true,
+                      ),
                     ),
                     items:
                         const [
@@ -822,7 +915,11 @@ class _ProfilePageState extends State<ProfilePage> {
                             .map(
                               (value) => DropdownMenuItem(
                                 value: value,
-                                child: Text(value.toUpperCase()),
+                                child: SiteText(
+                                  contentKey: 'copy.profile_page.m17',
+                                  literal: false,
+                                  value.toUpperCase(),
+                                ),
                               ),
                             )
                             .toList(),
@@ -836,7 +933,11 @@ class _ProfilePageState extends State<ProfilePage> {
                     minLines: 2,
                     maxLines: 4,
                     decoration: const InputDecoration(
-                      labelText: 'Message visible to client (optional)',
+                      label: SiteText(
+                        'Message visible to client (optional)',
+                        contentKey: 'copy.profile_page.field2',
+                        literal: true,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -845,7 +946,11 @@ class _ProfilePageState extends State<ProfilePage> {
                     minLines: 2,
                     maxLines: 4,
                     decoration: const InputDecoration(
-                      labelText: 'Private pipeline notes',
+                      label: SiteText(
+                        'Private pipeline notes',
+                        contentKey: 'copy.profile_page.field3',
+                        literal: true,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -864,7 +969,9 @@ class _ProfilePageState extends State<ProfilePage> {
                       }
                     },
                     icon: const Icon(Icons.event_outlined),
-                    label: Text(
+                    label: SiteText(
+                      contentKey: 'copy.profile_page.m18',
+                      literal: false,
                       followUp == null
                           ? 'SET FOLLOW-UP'
                           : 'FOLLOW UP ${DateFormat.yMMMd().format(followUp!)}',
@@ -875,7 +982,11 @@ class _ProfilePageState extends State<ProfilePage> {
                     TextField(
                       controller: reason,
                       decoration: const InputDecoration(
-                        labelText: 'Close reason',
+                        label: SiteText(
+                          'Close reason',
+                          contentKey: 'copy.profile_page.field4',
+                          literal: true,
+                        ),
                       ),
                     ),
                   ],
@@ -886,11 +997,19 @@ class _ProfilePageState extends State<ProfilePage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext, false),
-              child: const Text('Cancel'),
+              child: const SiteText(
+                contentKey: 'copy.profile_page.13',
+                literal: true,
+                'Cancel',
+              ),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(dialogContext, true),
-              child: const Text('Save update'),
+              child: const SiteText(
+                contentKey: 'copy.profile_page.14',
+                literal: true,
+                'Save update',
+              ),
             ),
           ],
         ),
@@ -920,12 +1039,17 @@ class _ProfilePageState extends State<ProfilePage> {
     child: ExpansionTile(
       tilePadding: const EdgeInsets.symmetric(horizontal: 22, vertical: 8),
       childrenPadding: const EdgeInsets.fromLTRB(22, 0, 22, 24),
-      title: const Text(
+      title: const SiteText(
+        contentKey: 'copy.profile_page.15',
+        literal: true,
         'Profile details',
         style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
       ),
-      subtitle: Text(
-        '${_roleLabel(profile?.role ?? 'user')} account · Tap to edit',
+      subtitle: SiteText(
+        templateValues: {'value1': '${_roleLabel(profile?.role ?? 'user')}'},
+        contentKey: 'copy.profile_page.m19',
+        literal: false,
+        "{{value1}} account · Tap to edit",
         style: const TextStyle(
           color: _purple,
           fontSize: 11,
@@ -935,38 +1059,70 @@ class _ProfilePageState extends State<ProfilePage> {
       children: [
         TextField(
           controller: _name,
-          decoration: const InputDecoration(labelText: 'Full name'),
+          decoration: const InputDecoration(
+            label: SiteText(
+              'Full name',
+              contentKey: 'copy.profile_page.field5',
+              literal: true,
+            ),
+          ),
         ),
         const SizedBox(height: 12),
         TextField(
           controller: _job,
           decoration: const InputDecoration(
-            labelText: 'Job title or specialty',
+            label: SiteText(
+              'Job title or specialty',
+              contentKey: 'copy.profile_page.field6',
+              literal: true,
+            ),
           ),
         ),
         const SizedBox(height: 12),
         TextField(
           controller: _company,
           decoration: const InputDecoration(
-            labelText: 'Company, firm or practice',
+            label: SiteText(
+              'Company, firm or practice',
+              contentKey: 'copy.profile_page.field7',
+              literal: true,
+            ),
           ),
         ),
         const SizedBox(height: 12),
         DropdownButtonFormField<String>(
           initialValue: _employment,
-          decoration: const InputDecoration(labelText: 'Work arrangement'),
+          decoration: const InputDecoration(
+            label: SiteText(
+              'Work arrangement',
+              contentKey: 'copy.profile_page.field8',
+              literal: true,
+            ),
+          ),
           items: const [
             DropdownMenuItem(
               value: 'company',
-              child: Text('Part of a company or firm'),
+              child: SiteText(
+                contentKey: 'copy.profile_page.m20',
+                literal: true,
+                'Part of a company or firm',
+              ),
             ),
             DropdownMenuItem(
               value: 'self_employed',
-              child: Text('Self-employed'),
+              child: SiteText(
+                contentKey: 'copy.profile_page.m21',
+                literal: true,
+                'Self-employed',
+              ),
             ),
             DropdownMenuItem(
               value: 'own_practice',
-              child: Text('Own practice or company'),
+              child: SiteText(
+                contentKey: 'copy.profile_page.m22',
+                literal: true,
+                'Own practice or company',
+              ),
             ),
           ],
           onChanged: (value) =>
@@ -977,7 +1133,11 @@ class _ProfilePageState extends State<ProfilePage> {
           controller: _bio,
           maxLines: 3,
           decoration: const InputDecoration(
-            labelText: 'Professional bio or property goals',
+            label: SiteText(
+              'Professional bio or property goals',
+              contentKey: 'copy.profile_page.field9',
+              literal: true,
+            ),
           ),
         ),
         const SizedBox(height: 18),
@@ -987,13 +1147,21 @@ class _ProfilePageState extends State<ProfilePage> {
             backgroundColor: _purple,
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
           ),
-          child: Text(_saving ? 'Saving…' : 'Save profile'),
+          child: SiteText(
+            contentKey: 'copy.profile_page.m23',
+            literal: false,
+            _saving ? 'Saving…' : 'Save profile',
+          ),
         ),
         const SizedBox(height: 10),
         TextButton.icon(
           onPressed: _signOut,
           icon: const Icon(Icons.logout, size: 17),
-          label: const Text('Sign out'),
+          label: const SiteText(
+            contentKey: 'copy.profile_page.16',
+            literal: true,
+            'Sign out',
+          ),
         ),
       ],
     ),
@@ -1014,18 +1182,24 @@ class _ProfilePageState extends State<ProfilePage> {
         exampleIndex: provider.photoIndex,
         borderRadius: BorderRadius.circular(16),
       ),
-      title: Text(
+      title: SiteText(
+        contentKey: 'copy.profile_page.m24',
+        literal: false,
         provider.name,
         style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
       ),
-      subtitle: Text(
+      subtitle: SiteText(
+        contentKey: 'copy.profile_page.m25',
+        literal: false,
         '${provider.jobTitle} · ${provider.company}',
         style: const TextStyle(color: Color(0xFF666674), fontSize: 12),
       ),
       children: [
         Align(
           alignment: Alignment.centerLeft,
-          child: Text(
+          child: SiteText(
+            contentKey: 'copy.profile_page.m26',
+            literal: false,
             provider.specialty,
             style: const TextStyle(
               color: Color(0xFF666674),
@@ -1057,8 +1231,16 @@ class _ProfilePageState extends State<ProfilePage> {
         const SizedBox(height: 12),
         Align(
           alignment: Alignment.centerLeft,
-          child: Text(
-            '${provider.reviewScore.toStringAsFixed(1)} ★ · ${provider.reviewCount} ratings · ${provider.experience} years experience${provider.isExample ? ' · Example profile' : ''}',
+          child: SiteText(
+            templateValues: {
+              'value1': '${provider.reviewScore.toStringAsFixed(1)}',
+              'value2': '${provider.reviewCount}',
+              'value3': '${provider.experience}',
+              'value4': '${provider.isExample ? ' · Example profile' : ''}',
+            },
+            contentKey: 'copy.profile_page.m27',
+            literal: false,
+            "{{value1}} ★ · {{value2}} ratings · {{value3}} years experience{{value4}}",
             style: const TextStyle(
               color: _purple,
               fontSize: 11,
@@ -1080,7 +1262,11 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
             ),
             icon: const Icon(Icons.open_in_new, size: 16),
-            label: const Text('OPEN FULL PROFILE'),
+            label: const SiteText(
+              contentKey: 'copy.profile_page.17',
+              literal: true,
+              'OPEN FULL PROFILE',
+            ),
           ),
         ),
         const SizedBox(height: 6),
@@ -1094,7 +1280,9 @@ class _ProfilePageState extends State<ProfilePage> {
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
                 icon: const Icon(Icons.mark_email_unread_outlined, size: 18),
-                label: Text(
+                label: SiteText(
+                  contentKey: 'copy.profile_page.m28',
+                  literal: false,
                   provider.isExample
                       ? 'PREVIEW CONNECTION'
                       : 'BUILD CONNECTION BRIEF',
@@ -1112,7 +1300,11 @@ class _ProfilePageState extends State<ProfilePage> {
                 await _refreshActivity();
               },
               icon: const Icon(Icons.person_remove_outlined, size: 17),
-              label: const Text('REMOVE'),
+              label: const SiteText(
+                contentKey: 'copy.profile_page.18',
+                literal: true,
+                'REMOVE',
+              ),
             ),
           ],
         ),
@@ -1152,7 +1344,9 @@ class _StatCard extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
-        Text(
+        SiteText(
+          contentKey: 'copy.profile_page.m29',
+          literal: false,
           value,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
@@ -1163,7 +1357,9 @@ class _StatCard extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 6),
-        Text(
+        SiteText(
+          contentKey: 'copy.profile_page.m30',
+          literal: false,
           label,
           style: const TextStyle(color: Color(0xFF777785), fontSize: 10),
         ),

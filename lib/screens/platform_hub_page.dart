@@ -1,3 +1,4 @@
+import '../widgets/site_text.dart';
 import 'package:flutter/material.dart';
 
 import '../models/platform_side.dart';
@@ -110,7 +111,9 @@ class PlatformHubPage extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 86),
-                  Text(
+                  SiteText(
+                    contentKey: 'copy.platform_hub_page.m1',
+                    literal: false,
                     _business
                         ? 'DEALIQ · BUSINESS ACQUISITIONS'
                         : 'PROPERTYIQ · REAL ESTATE',
@@ -122,7 +125,9 @@ class PlatformHubPage extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 18),
-                  Text(
+                  SiteText(
+                    contentKey: 'copy.platform_hub_page.m2',
+                    literal: false,
                     _business
                         ? 'Buy a business\nwith a clear process.'
                         : 'Make the property\ndecision with clarity.',
@@ -137,7 +142,9 @@ class PlatformHubPage extends StatelessWidget {
                   const SizedBox(height: 24),
                   ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 680),
-                    child: Text(
+                    child: SiteText(
+                      contentKey: 'copy.platform_hub_page.m3',
+                      literal: false,
                       _business
                           ? 'Screen the economics, assemble specialist advisers and move through diligence, financing, closing and transition in one place.'
                           : 'Assess affordability and investment risk, find the right local professionals and keep every active purchase on track.',
@@ -165,7 +172,9 @@ class PlatformHubPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            const SiteText(
+              contentKey: 'copy.platform_hub_page.1',
+              literal: true,
               'CHOOSE WHAT YOU NEED',
               style: TextStyle(
                 color: _purple,
@@ -175,7 +184,9 @@ class PlatformHubPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 14),
-            Text(
+            SiteText(
+              contentKey: 'copy.platform_hub_page.m4',
+              literal: false,
               _business
                   ? 'Your acquisition workspace.'
                   : 'Your property workspace.',
@@ -305,9 +316,16 @@ class PlatformHubPage extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(step.$1, style: const TextStyle(color: _lilac)),
+                        SiteText(
+                          contentKey: 'copy.platform_hub_page.m5',
+                          literal: false,
+                          step.$1,
+                          style: const TextStyle(color: _lilac),
+                        ),
                         const SizedBox(height: 18),
-                        Text(
+                        SiteText(
+                          contentKey: 'copy.platform_hub_page.m6',
+                          literal: false,
                           step.$2,
                           style: const TextStyle(
                             color: Colors.white,
@@ -316,7 +334,9 @@ class PlatformHubPage extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        Text(
+                        SiteText(
+                          contentKey: 'copy.platform_hub_page.m7',
+                          literal: false,
                           step.$3,
                           style: const TextStyle(
                             color: Color(0xFFB5B5C1),
@@ -380,7 +400,9 @@ class _HubActionState extends State<_HubAction> {
           children: [
             Icon(widget.icon, color: _hovered ? _lilac : _purple, size: 30),
             const Spacer(),
-            Text(
+            SiteText(
+              contentKey: 'copy.platform_hub_page.m8',
+              literal: false,
               widget.title,
               style: TextStyle(
                 color: _hovered ? Colors.white : _ink,
@@ -389,7 +411,9 @@ class _HubActionState extends State<_HubAction> {
               ),
             ),
             const SizedBox(height: 8),
-            Text(
+            SiteText(
+              contentKey: 'copy.platform_hub_page.m9',
+              literal: false,
               widget.detail,
               style: TextStyle(
                 color: _hovered ? Colors.white60 : const Color(0xFF666674),

@@ -1,3 +1,4 @@
+import 'site_inline_editor.dart';
 import 'package:flutter/material.dart';
 
 import '../services/site_content_service.dart';
@@ -23,12 +24,16 @@ class SiteCopyText extends StatelessWidget {
   @override
   Widget build(BuildContext context) => ValueListenableBuilder<int>(
     valueListenable: SiteContentService.revision,
-    builder: (_, _, _) => Text(
-      SiteContentService.text(contentKey, fallback),
-      style: style,
-      textAlign: textAlign,
-      maxLines: maxLines,
-      overflow: overflow,
+    builder: (_, _, _) => SiteEditTarget(
+      contentKey: contentKey,
+      fallback: fallback,
+      child: Text(
+        SiteContentService.text(contentKey, fallback),
+        style: style,
+        textAlign: textAlign,
+        maxLines: maxLines,
+        overflow: overflow,
+      ),
     ),
   );
 }
