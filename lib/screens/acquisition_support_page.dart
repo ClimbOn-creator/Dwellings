@@ -1,3 +1,5 @@
+import '../widgets/flowing_color_banner.dart';
+import '../widgets/acquisition_step_bar.dart';
 import '../widgets/personal_motion.dart';
 import '../widgets/site_text.dart';
 import '../widgets/site_parallax_image.dart';
@@ -1228,6 +1230,7 @@ class _AcquisitionBlueprintPageState extends State<AcquisitionBlueprintPage> {
 
   Widget _chapterBody() => switch (_chapter) {
     0 => _GuidedQuestion(
+      plain: true,
       title: SiteContentService.text(
         'blueprint.q1_title',
         'What kind of owner do you want to become?',
@@ -1252,6 +1255,7 @@ class _AcquisitionBlueprintPageState extends State<AcquisitionBlueprintPage> {
       ],
     ),
     1 => _GuidedQuestion(
+      plain: true,
       title: SiteContentService.text(
         'blueprint.q2_title',
         'What would feel like a natural fit?',
@@ -1274,6 +1278,7 @@ class _AcquisitionBlueprintPageState extends State<AcquisitionBlueprintPage> {
       ],
     ),
     2 => _GuidedQuestion(
+      plain: true,
       title: SiteContentService.text(
         'blueprint.q3_title',
         'Do you know your financial range?',
@@ -1304,6 +1309,7 @@ class _AcquisitionBlueprintPageState extends State<AcquisitionBlueprintPage> {
       ],
     ),
     _ => _GuidedQuestion(
+      plain: true,
       title: SiteContentService.text(
         'blueprint.q4_title',
         'What should protect you from the wrong deal?',
@@ -1405,27 +1411,69 @@ class _AcquisitionBlueprintPageState extends State<AcquisitionBlueprintPage> {
     return _LabeledField(
       label: label,
       labelColor: _ink,
-      child: DropdownButtonFormField<String>(
-        isExpanded: true,
-        initialValue: options.contains(current) ? current : null,
-        hint: const SiteText(
-          contentKey: 'copy.acquisition_support_page.8',
-          literal: true,
-          'Select an option',
-        ),
-        items: options
-            .map(
-              (option) => DropdownMenuItem(
-                value: option,
-                child: SiteText(
-                  contentKey: 'copy.acquisition_support_page.m18',
-                  literal: false,
-                  option,
+      child: Wrap(
+        spacing: 10,
+        runSpacing: 10,
+        children: [
+          for (var i = 0; i < options.length; i++)
+            SizedBox(
+              width: 310,
+              child: Semantics(
+                selected: current == options[i],
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(8),
+                  onTap: () =>
+                      setState(() => controllers[key]?.text = options[i]),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: current == options[i]
+                          ? const Color(0xFFE1DCFF)
+                          : const Color(0xFFF0EEF3),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: current == options[i]
+                            ? const Color(0xFF6A59D9)
+                            : const Color(0xFFD6D2DC),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 28,
+                          height: 28,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            border: Border.all(color: const Color(0xFFAAA1B4)),
+                          ),
+                          child: Text(
+                            String.fromCharCode(65 + i),
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: SiteText(
+                            options[i],
+                            contentKey: 'copy.acquisition_support_page.m18',
+                            literal: false,
+                            style: const TextStyle(fontSize: 16),
+                          ),
+                        ),
+                        if (current == options[i])
+                          const Icon(
+                            Icons.check,
+                            size: 18,
+                            color: Color(0xFF6554CF),
+                          ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
-            )
-            .toList(),
-        onChanged: (selected) => controllers[key]?.text = selected ?? '',
+            ),
+        ],
       ),
     );
   }
@@ -2143,59 +2191,156 @@ class _ModuleScaffold extends StatelessWidget {
   final int currentStep;
   final ValueChanged<int> onStepSelected;
   @override
-  Widget build(BuildContext context) => Scaffold(
-    backgroundColor: motionScroll == null ? _cream : Colors.transparent,
-    appBar: AppBar(
-      toolbarHeight: 78,
-      backgroundColor: const Color(0xFFF7F5F0),
-      surfaceTintColor: Colors.transparent,
-      foregroundColor: _ink,
-      title: const HomeBrandButton(size: 58, dark: false),
-      actions: [
-        if (motionToggle != null) motionToggle!,
-        const AppNavigationMenu(side: PlatformSide.business, dark: false),
-        const SizedBox(width: 12),
-      ],
-    ),
-    body: _backdrop(
-      context, SingleChildScrollView(
-        controller: motionScroll,
-        physics: const ClampingScrollPhysics(),
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(22, 28, 22, 80),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 900),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(28),
-                        child: AcquisitionEditorialHeader(
-                          studio: motionScroll != null,
-                          currentStep: currentStep,
-                          onSelected: onStepSelected,
-                          kicker: kicker,
-                          title: title,
-                          subtitle: subtitle,
-                          accent: currentStep == 0
-                              ? const Color(0xFF244E43)
-                              : const Color(0xFF40556D),
+  Widget build(BuildContext context) => motionScroll != null
+      ? _studio(context)
+      : Scaffold(
+          backgroundColor: motionScroll == null ? _cream : Colors.transparent,
+          appBar: AppBar(
+            toolbarHeight: 78,
+            backgroundColor: const Color(0xFFF7F5F0),
+            surfaceTintColor: Colors.transparent,
+            foregroundColor: _ink,
+            title: const HomeBrandButton(size: 58, dark: false),
+            actions: [
+              if (motionToggle != null) motionToggle!,
+              const AppNavigationMenu(side: PlatformSide.business, dark: false),
+              const SizedBox(width: 12),
+            ],
+          ),
+          body: _backdrop(
+            context,
+            SingleChildScrollView(
+              controller: motionScroll,
+              physics: const ClampingScrollPhysics(),
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(22, 28, 22, 80),
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 900),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(28),
+                              child: AcquisitionEditorialHeader(
+                                studio: motionScroll != null,
+                                currentStep: currentStep,
+                                onSelected: onStepSelected,
+                                kicker: kicker,
+                                title: title,
+                                subtitle: subtitle,
+                                accent: currentStep == 0
+                                    ? const Color(0xFF244E43)
+                                    : const Color(0xFF40556D),
+                              ),
+                            ),
+                            const SizedBox(height: 28),
+                            child,
+                          ],
                         ),
                       ),
-                      const SizedBox(height: 28),
-                      child,
-                    ],
+                    ),
                   ),
-                ),
+                  const MembershipFooter(),
+                ],
               ),
             ),
-            const MembershipFooter(),
-          ],
+          ),
+        );
+  Widget _studio(BuildContext context) => Scaffold(
+    backgroundColor: Colors.white,
+    appBar: AppBar(
+      backgroundColor: Colors.white,
+      surfaceTintColor: Colors.transparent,
+      toolbarHeight: 72,
+      title: const HomeBrandButton(size: 48, dark: false),
+      actions: [motionToggle!, const AppNavigationMenu(dark: false)],
+    ),
+    body: Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
+          child: AcquisitionStepBar(
+            currentStep: currentStep,
+            onSelected: onStepSelected,
+          ),
         ),
-      ),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(18),
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: EditableColorCover(
+                      wash: const Color(0xDDF0EDF4),
+                      contentKey:
+                          'image.acquisition_module.$currentStep.background',
+                      original: AnimatedContainer(
+                        duration: MediaQuery.disableAnimationsOf(context)
+                            ? Duration.zero
+                            : const Duration(milliseconds: 650),
+                        color: const [
+                          Color(0xFFF0EDF4),
+                          Color(0xFFEBEFF8),
+                          Color(0xFFF2ECF2),
+                          Color(0xFFF0F0E8),
+                        ][chapter],
+                      ),
+                    ),
+                  ),
+                  LayoutBuilder(
+                    builder: (context, box) => SingleChildScrollView(
+                      controller: motionScroll,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: box.maxWidth < 650 ? 22 : 64,
+                        vertical: box.maxWidth < 650 ? 30 : 50,
+                      ),
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 740),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              SiteText(
+                                title,
+                                contentKey:
+                                    'copy.acquisition_editorial_header.m2',
+                                literal: false,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF62596D),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              SiteText(
+                                subtitle,
+                                contentKey:
+                                    'copy.acquisition_editorial_header.m3',
+                                literal: false,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: Color(0xFF756D7D),
+                                ),
+                              ),
+                              const SizedBox(height: 38),
+                              child,
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
     ),
   );
   Widget _backdrop(BuildContext context, Widget child) => motionScroll == null
@@ -2211,7 +2356,9 @@ class _ModuleScaffold extends StatelessWidget {
           contentKey: 'image.acquisition_module.$currentStep.background',
           asset: 'assets/images/affinity-reflection-facade.jpg',
           child: AnimatedContainer(
-            duration: MediaQuery.disableAnimationsOf(context) ? Duration.zero : const Duration(milliseconds: 650),
+            duration: MediaQuery.disableAnimationsOf(context)
+                ? Duration.zero
+                : const Duration(milliseconds: 650),
             color: [
               const Color(0xDDE0EEE8),
               const Color(0xDDE0EAF4),
@@ -2276,10 +2423,12 @@ class _LabeledField extends StatelessWidget {
 class _GuidedQuestion extends StatelessWidget {
   const _GuidedQuestion({
     required this.title,
+    this.plain = false,
     required this.copy,
     required this.children,
   });
 
+  final bool plain;
   final String title;
   final String copy;
   final List<Widget> children;
@@ -2287,19 +2436,23 @@ class _GuidedQuestion extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
     width: double.infinity,
-    padding: const EdgeInsets.symmetric(horizontal: 34, vertical: 40),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(28),
-      border: Border.all(color: const Color(0xFFD5E3DF)),
-      boxShadow: const [
-        BoxShadow(
-          color: Color(0x16234F48),
-          blurRadius: 36,
-          offset: Offset(0, 16),
-        ),
-      ],
-    ),
+    padding: plain
+        ? EdgeInsets.zero
+        : const EdgeInsets.symmetric(horizontal: 34, vertical: 40),
+    decoration: plain
+        ? null
+        : BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(color: const Color(0xFFD5E3DF)),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x16234F48),
+                blurRadius: 36,
+                offset: Offset(0, 16),
+              ),
+            ],
+          ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

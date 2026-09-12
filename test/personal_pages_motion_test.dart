@@ -1,3 +1,4 @@
+import 'package:dwelling_iq/widgets/flowing_color_banner.dart';
 import 'package:dwelling_iq/screens/acquisition_support_page.dart';
 import 'package:dwelling_iq/widgets/personal_motion.dart';
 import 'package:flutter/material.dart';
@@ -5,6 +6,43 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  testWidgets(
+    'portfolio color cover moves continuously and stops for reduced motion',
+    (tester) async {
+      Widget banner(bool reduced) => MaterialApp(
+        home: MediaQuery(
+          data: MediaQueryData(disableAnimations: reduced),
+          child: const SizedBox(
+            width: 800,
+            height: 200,
+            child: FlowingColorBanner(),
+          ),
+        ),
+      );
+      await tester.pumpWidget(banner(false));
+      final first = tester
+          .widget<CustomPaint>(find.byType(CustomPaint).last)
+          .painter!;
+      await tester.pump(const Duration(seconds: 2));
+      final moving = tester
+          .widget<CustomPaint>(find.byType(CustomPaint).last)
+          .painter!;
+      expect(moving.shouldRepaint(first), isTrue);
+      await tester.pumpWidget(banner(true));
+      final stopped = tester
+          .widget<CustomPaint>(find.byType(CustomPaint).last)
+          .painter!;
+      await tester.pump(const Duration(seconds: 2));
+      expect(
+        tester
+            .widget<CustomPaint>(find.byType(CustomPaint).last)
+            .painter!
+            .shouldRepaint(stopped),
+        isFalse,
+      );
+    },
+  );
+
   testWidgets('Blueprint navigation retains typed answers on a phone', (
     tester,
   ) async {

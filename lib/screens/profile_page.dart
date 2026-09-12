@@ -1,3 +1,5 @@
+import '../widgets/site_copy_text.dart';
+import '../widgets/flowing_color_banner.dart';
 import '../widgets/personal_motion.dart';
 import '../widgets/marketplace_motion.dart';
 import '../widgets/site_parallax_image.dart';
@@ -40,6 +42,9 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
+  final _overviewAnchor = GlobalKey();
+  final _teamAnchor = GlobalKey();
+  final _detailsAnchor = GlobalKey();
   AccountProfile? _profile;
   DashboardStats? _stats;
   List<MarketplaceProvider> _team = [];
@@ -269,10 +274,10 @@ class _ProfilePageState extends State<ProfilePage> {
           lastRisk: null,
         );
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: Colors.white,
       appBar: AppBar(
         toolbarHeight: 78,
-        backgroundColor: const Color(0xFFF7F5F0),
+        backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
         foregroundColor: _ink,
         title: const HomeBrandButton(size: 58, dark: false),
@@ -288,7 +293,7 @@ class _ProfilePageState extends State<ProfilePage> {
           SliverToBoxAdapter(child: _header(profile, scroll)),
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 54),
+              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 26),
               child: Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 1120),
@@ -343,13 +348,17 @@ class _ProfilePageState extends State<ProfilePage> {
                         },
                       ),
                       const SizedBox(height: 24),
-                      _acquisitionPath(),
+                      KeyedSubtree(
+                        key: _overviewAnchor,
+                        child: _acquisitionPath(),
+                      ),
                       const SizedBox(height: 24),
                       _currentDeals(),
                       const SizedBox(height: 42),
                       _introductionCentre(),
                       const SizedBox(height: 42),
-                      const SiteText(
+                      SiteText(
+                        key: _teamAnchor,
                         contentKey: 'copy.profile_page.1',
                         literal: true,
                         'Your selected team',
@@ -384,7 +393,10 @@ class _ProfilePageState extends State<ProfilePage> {
                       else
                         ..._team.map(_teamRow),
                       const SizedBox(height: 32),
-                      _profileEditor(profile),
+                      KeyedSubtree(
+                        key: _detailsAnchor,
+                        child: _profileEditor(profile),
+                      ),
                       const SizedBox(height: 42),
                       const MembershipFooter(),
                     ],
@@ -429,9 +441,12 @@ class _ProfilePageState extends State<ProfilePage> {
         const DealRoomsPage(initialSide: PlatformSide.business),
       ),
     ];
-    return TopoCard(
+    return Container(
       width: double.infinity,
-      opacity: .11,
+      decoration: const BoxDecoration(
+        color: Color(0xFFF5F3FB),
+        borderRadius: BorderRadius.all(Radius.circular(16)),
+      ),
       padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -453,7 +468,7 @@ class _ProfilePageState extends State<ProfilePage> {
             literal: true,
             'Saved to your account',
             style: TextStyle(
-              color: Colors.white,
+              color: _ink,
               fontSize: 24,
               fontWeight: FontWeight.w700,
             ),
@@ -487,93 +502,157 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _header(AccountProfile? profile, ScrollController scroll) => Padding(
-    padding: const EdgeInsets.fromLTRB(22, 22, 22, 0),
-    child: ClipRRect(
-      borderRadius: BorderRadius.circular(32),
-      child: SiteParallaxImage(
-        controller: scroll,
-        asset: 'assets/images/affinity-reflection-facade.jpg',
-        contentKey: 'image.profile_page.mbackground1',
-        child: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xF036294C), Color(0xCC33485C), Color(0xC05A4950)],
-            ),
-          ),
+  void _jumpTo(GlobalKey key) {
+    final target = key.currentContext;
+    if (target != null)
+      Scrollable.ensureVisible(
+        target,
+        duration: MediaQuery.disableAnimationsOf(context)
+            ? Duration.zero
+            : const Duration(milliseconds: 550),
+        curve: Curves.easeInOutCubic,
+      );
+  }
+
+  Widget _header(AccountProfile? profile, ScrollController scroll) => Column(
+    children: [
+      SizedBox(
+        height: 205,
+        width: double.infinity,
+        child: EditableColorCover(
+          contentKey: 'image.profile_page.mbackground1',
+          original: const FlowingColorBanner(),
+        ),
+      ),
+      Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1120),
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(28, 22, 28, 54),
-            child: SafeArea(
-              bottom: false,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 28),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Stack(
-                        children: [
-                          ProfilePhoto(
-                            size: 112,
-                            photoUrl: profile?.photoUrl ?? '',
-                            borderRadius: BorderRadius.circular(28),
-                          ),
-                          Positioned(
-                            right: 4,
-                            bottom: 4,
-                            child: IconButton.filled(
-                              onPressed: _photo,
-                              icon: const Icon(
-                                Icons.camera_alt_outlined,
-                                size: 17,
-                              ),
-                              tooltip: 'Upload profile photo',
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(width: 24),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            SiteText(
-                              contentKey: 'copy.profile_page.m5',
-                              literal: false,
-                              profile?.fullName.isNotEmpty == true
-                                  ? profile!.fullName
-                                  : 'Complete your profile',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 36,
-                                height: 1,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: -1.8,
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            SiteText(
-                              contentKey: 'copy.profile_page.m6',
-                              literal: false,
-                              _publicIdentity(profile),
-                              style: const TextStyle(
-                                color: Color(0xFFE5DAEA),
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
+            padding: const EdgeInsets.symmetric(horizontal: 22),
+            child: LayoutBuilder(
+              builder: (context, box) {
+                final compact = box.maxWidth < 650;
+                final portrait = Transform.translate(
+                  offset: const Offset(0, -48),
+                  child: Container(
+                    padding: const EdgeInsets.all(7),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(52),
+                    ),
+                    child: Stack(
+                      children: [
+                        ProfilePhoto(
+                          size: compact ? 148 : 210,
+                          photoUrl: profile?.photoUrl ?? '',
+                          borderRadius: BorderRadius.circular(44),
                         ),
-                      ),
-                    ],
+                        Positioned(
+                          right: 8,
+                          bottom: 8,
+                          child: IconButton.filled(
+                            onPressed: _photo,
+                            tooltip: 'Upload profile photo',
+                            icon: const Icon(
+                              Icons.camera_alt_outlined,
+                              size: 19,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ],
-              ),
+                );
+                final identity = Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SiteText(
+                      profile?.fullName.isNotEmpty == true
+                          ? profile!.fullName
+                          : 'Complete your profile',
+                      contentKey: 'copy.profile_page.m5',
+                      literal: false,
+                      style: TextStyle(
+                        fontSize: compact ? 30 : 38,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -1.3,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    SiteText(
+                      _publicIdentity(profile),
+                      contentKey: 'copy.profile_page.m6',
+                      literal: false,
+                      style: const TextStyle(
+                        fontSize: 17,
+                        color: Color(0xFF504956),
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    FilledButton(
+                      onPressed: () => _jumpTo(_detailsAnchor),
+                      child: const SiteCopyText(
+                        'profile.portfolio.edit',
+                        'Edit profile',
+                      ),
+                    ),
+                  ],
+                );
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    compact
+                        ? Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              SizedBox(height: 128, child: portrait),
+                              identity,
+                            ],
+                          )
+                        : Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              SizedBox(height: 184, child: portrait),
+                              const SizedBox(width: 32),
+                              Expanded(child: identity),
+                            ],
+                          ),
+                    const SizedBox(height: 26),
+                    Wrap(
+                      spacing: 20,
+                      children: [
+                        TextButton(
+                          onPressed: () => _jumpTo(_overviewAnchor),
+                          child: const SiteCopyText(
+                            'profile.portfolio.overview',
+                            'Overview',
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () => _jumpTo(_teamAnchor),
+                          child: const SiteCopyText(
+                            'profile.portfolio.team',
+                            'My team',
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () => _jumpTo(_detailsAnchor),
+                          child: const SiteCopyText(
+                            'profile.portfolio.about',
+                            'About & details',
+                          ),
+                        ),
+                      ],
+                    ),
+                    const Divider(height: 1),
+                  ],
+                );
+              },
             ),
           ),
         ),
       ),
-    ),
+    ],
   );
 
   Widget _currentDeals() => Container(
@@ -1358,14 +1437,8 @@ class _StatCard extends StatelessWidget {
       width: width,
       constraints: const BoxConstraints(minHeight: 128),
       padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Colors.white, Color(0xFFF0EAF3)],
-        ),
-        border: Border.all(color: const Color(0xFFE0D7E7)),
-        borderRadius: BorderRadius.circular(16),
+      decoration: const BoxDecoration(
+        border: Border(right: BorderSide(color: Color(0xFFE6E2EB))),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1378,7 +1451,7 @@ class _StatCard extends StatelessWidget {
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(
-              fontSize: 24,
+              fontSize: 34,
               fontWeight: FontWeight.w700,
               letterSpacing: -.8,
             ),
