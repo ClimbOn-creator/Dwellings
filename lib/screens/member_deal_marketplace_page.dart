@@ -1,3 +1,5 @@
+import '../widgets/marketplace_motion.dart';
+import '../widgets/site_parallax_image.dart';
 import '../widgets/site_text.dart';
 import 'dart:async';
 
@@ -4324,6 +4326,8 @@ class _BusinessSaleBulletinPageState extends State<BusinessSaleBulletinPage> {
   late Future<List<BusinessSaleBulletin>> _bulletins;
   late Future<bool> _isAdmin;
   late Future<Map<String, dynamic>> _buyerFoundation;
+  final _browseScroll = ScrollController();
+  bool? _motion;
   final _bulletinSearch = TextEditingController();
   String _searchQuery = '';
   String _priceFilter = 'all';
@@ -4335,10 +4339,14 @@ class _BusinessSaleBulletinPageState extends State<BusinessSaleBulletinPage> {
   void initState() {
     super.initState();
     _reload();
+    SharedPreferences.getInstance().then((prefs) {
+      if (mounted && _motion == null)
+        setState(() => _motion = prefs.getBool('affinity.landing.motion'));
+    });
   }
 
   void _reload() {
-    _bulletins = BusinessSaleBulletinService.load();
+    _bulletins = BusinessSaleBulletinService.load(includeExamples: true);
     _isAdmin = AffinityAdminService.isAdmin();
     _buyerFoundation = AccountService.loadAcquisitionFoundation().then(
       (value) => value ?? const <String, dynamic>{},
@@ -4347,6 +4355,7 @@ class _BusinessSaleBulletinPageState extends State<BusinessSaleBulletinPage> {
 
   @override
   void dispose() {
+    _browseScroll.dispose();
     _bulletinSearch.dispose();
     super.dispose();
   }
@@ -4390,7 +4399,7 @@ class _BusinessSaleBulletinPageState extends State<BusinessSaleBulletinPage> {
 
   Future<void> _toggleSaved(BusinessSaleBulletin b) async {
     if (_savingIds.contains(b.id)) return;
-    if (BackendService.user == null) {
+    if (!b.isExample && BackendService.user == null) {
       await Navigator.of(
         context,
       ).push(MaterialPageRoute<void>(builder: (_) => const AuthPage()));
@@ -4430,14 +4439,33 @@ class _BusinessSaleBulletinPageState extends State<BusinessSaleBulletinPage> {
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    backgroundColor: const Color(0xFFE7ECFF),
+  Widget build(BuildContext context) {
+    final motion = _motion ?? !MediaQuery.disableAnimationsOf(context);
+    return MediaQuery(
+      data: MediaQuery.of(context).copyWith(disableAnimations: !motion),
+      child: Builder(builder: (context) => _page(context, motion)),
+    );
+  }
+
+  Widget _page(BuildContext context, bool motion) => Scaffold(
+    backgroundColor: const Color(0xFFDFE9E6),
     appBar: AppBar(
       toolbarHeight: 72,
       backgroundColor: const Color(0xFFF7F5F0),
       surfaceTintColor: Colors.transparent,
       title: const HomeBrandButton(size: 52, dark: false),
       actions: [
+        IconButton(
+          tooltip: motion ? 'Pause motion' : 'Enable motion',
+          icon: Icon(
+            motion ? Icons.pause_circle_outline : Icons.play_circle_outline,
+          ),
+          onPressed: () async {
+            setState(() => _motion = !motion);
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setBool('affinity.landing.motion', !motion);
+          },
+        ),
         IconButton(
           onPressed: () => setState(_reload),
           tooltip: 'Refresh bulletin board',
@@ -4447,196 +4475,227 @@ class _BusinessSaleBulletinPageState extends State<BusinessSaleBulletinPage> {
         const SizedBox(width: 10),
       ],
     ),
-    body: FutureBuilder<List<BusinessSaleBulletin>>(
-      future: _bulletins,
-      builder: (context, snapshot) => FutureBuilder<Map<String, dynamic>>(
-        future: _buyerFoundation,
-        builder: (context, foundationSnapshot) {
-          final foundation = foundationSnapshot.data ?? const {};
-          final blueprint = foundation['blueprint'] is Map
-              ? Map<String, dynamic>.from(foundation['blueprint'] as Map)
-              : const <String, dynamic>{};
-          final rawProfile = blueprint['comparisonProfile'];
-          final profile = rawProfile is Map
-              ? BuyerComparisonProfile.fromJson(
-                  Map<String, dynamic>.from(rawProfile),
-                )
-              : const BuyerComparisonProfile();
-          final matcher = BuyerDealMatcher(
-            profile: profile,
-            blueprint: blueprint,
-          );
-          final hasPreferences =
-              profile.answeredCount > 0 ||
-              [
-                'industries',
-                'geography',
-                'minPrice',
-                'maxPrice',
-              ].any((key) => '${blueprint[key] ?? ''}'.trim().isNotEmpty);
-          final query = _searchQuery.trim().toLowerCase();
-          final visible = (snapshot.data ?? const <BusinessSaleBulletin>[]).where((
-            bulletin,
-          ) {
-            final text =
-                '${bulletin.title} ${bulletin.industry} ${bulletin.region} ${bulletin.summary}'
-                    .toLowerCase();
-            return (!_savedOnly || bulletin.isSaved) &&
-                (query.isEmpty ||
-                    query.split(RegExp(r'\s+')).every(text.contains)) &&
-                BuyerDealMatcher.matchesPriceFilter(
-                  bulletin.askingPriceBand,
-                  _priceFilter,
-                );
-          }).toList();
-          if (hasPreferences && _sort == 'match') {
-            visible.sort(
-              (a, b) => matcher
-                  .score(
-                    title: b.title,
-                    industry: b.industry,
-                    region: b.region,
-                    askingPriceBand: b.askingPriceBand,
-                    summary: b.summary,
+    body: MarketplaceAtmosphere(
+      controller: _browseScroll,
+      child: FutureBuilder<List<BusinessSaleBulletin>>(
+        future: _bulletins,
+        builder: (context, snapshot) => FutureBuilder<Map<String, dynamic>>(
+          future: _buyerFoundation,
+          builder: (context, foundationSnapshot) {
+            final foundation = foundationSnapshot.data ?? const {};
+            final blueprint = foundation['blueprint'] is Map
+                ? Map<String, dynamic>.from(foundation['blueprint'] as Map)
+                : const <String, dynamic>{};
+            final rawProfile = blueprint['comparisonProfile'];
+            final profile = rawProfile is Map
+                ? BuyerComparisonProfile.fromJson(
+                    Map<String, dynamic>.from(rawProfile),
                   )
-                  .compareTo(
-                    matcher.score(
-                      title: a.title,
-                      industry: a.industry,
-                      region: a.region,
-                      askingPriceBand: a.askingPriceBand,
-                      summary: a.summary,
-                    ),
-                  ),
+                : const BuyerComparisonProfile();
+            final matcher = BuyerDealMatcher(
+              profile: profile,
+              blueprint: blueprint,
             );
-          }
-          if (_sort == 'newest') {
-            visible.sort((a, b) => b.postedAt.compareTo(a.postedAt));
-          }
-          if (_sort == 'updated') {
-            visible.sort(
-              (a, b) => (b.updatedAt ?? b.postedAt).compareTo(
-                a.updatedAt ?? a.postedAt,
-              ),
-            );
-          }
-          return SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(20, 38, 20, 70),
-            child: Center(
-              child: SizedBox(
-                width: 1040,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    LayoutBuilder(
-                      builder: (context, box) {
-                        const heading = Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            SiteText(
-                              contentKey:
-                                  'copy.member_deal_marketplace_page.m90',
-                              literal: true,
-                              'BUSINESSES FOR SALE',
-                              style: TextStyle(
-                                color: _green,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 1.3,
-                              ),
-                            ),
-                            SizedBox(height: 10),
-                            SiteText(
-                              contentKey:
-                                  'copy.member_deal_marketplace_page.m91',
-                              literal: true,
-                              'Bulletin board',
-                              style: TextStyle(
-                                fontSize: 42,
-                                height: 1,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: -1.6,
-                              ),
-                            ),
-                            SizedBox(height: 12),
-                            SiteText(
-                              contentKey:
-                                  'copy.member_deal_marketplace_page.m92',
-                              literal: true,
-                              'Find your next business. Browse freely, save your favourites, and follow only the updates that matter to you.',
-                              style: TextStyle(
-                                color: _muted,
-                                fontSize: 16,
-                                height: 1.5,
-                              ),
-                            ),
-                          ],
-                        );
-                        final addButton = FutureBuilder<bool>(
-                          future: _isAdmin,
-                          builder: (context, admin) => admin.data == true
-                              ? FilledButton.icon(
-                                  onPressed: _addBusiness,
-                                  style: FilledButton.styleFrom(
-                                    backgroundColor: _green,
-                                  ),
-                                  icon: const Icon(Icons.add_rounded),
-                                  label: const SiteText(
-                                    contentKey:
-                                        'copy.member_deal_marketplace_page.55',
-                                    literal: true,
-                                    'ADD BUSINESS',
-                                  ),
-                                )
-                              : const SizedBox.shrink(),
-                        );
-                        if (box.maxWidth < 650) {
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              heading,
-                              const SizedBox(height: 18),
-                              addButton,
-                            ],
-                          );
-                        }
-                        return Row(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            const Expanded(child: heading),
-                            const SizedBox(width: 20),
-                            addButton,
-                          ],
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 32),
-                    Container(
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(22),
-                        border: Border.all(color: const Color(0xFFD5DDF8)),
+            final hasPreferences =
+                profile.answeredCount > 0 ||
+                [
+                  'industries',
+                  'geography',
+                  'minPrice',
+                  'maxPrice',
+                ].any((key) => '${blueprint[key] ?? ''}'.trim().isNotEmpty);
+            final query = _searchQuery.trim().toLowerCase();
+            final visible = (snapshot.data ?? const <BusinessSaleBulletin>[])
+                .where((bulletin) {
+                  final text =
+                      '${bulletin.title} ${bulletin.industry} ${bulletin.region} ${bulletin.summary}'
+                          .toLowerCase();
+                  return (!_savedOnly || bulletin.isSaved) &&
+                      (query.isEmpty ||
+                          query.split(RegExp(r'\s+')).every(text.contains)) &&
+                      BuyerDealMatcher.matchesPriceFilter(
+                        bulletin.askingPriceBand,
+                        _priceFilter,
+                      );
+                })
+                .toList();
+            if (hasPreferences && _sort == 'match') {
+              visible.sort(
+                (a, b) => matcher
+                    .score(
+                      title: b.title,
+                      industry: b.industry,
+                      region: b.region,
+                      askingPriceBand: b.askingPriceBand,
+                      summary: b.summary,
+                    )
+                    .compareTo(
+                      matcher.score(
+                        title: a.title,
+                        industry: a.industry,
+                        region: a.region,
+                        askingPriceBand: a.askingPriceBand,
+                        summary: a.summary,
                       ),
-                      child: _bulletinFilters(),
                     ),
-                    const SizedBox(height: 14),
-                    Wrap(
-                      spacing: 14,
-                      runSpacing: 10,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      children: [
-                        SiteText(
-                          templateValues: {'value1': '${visible.length}'},
-                          contentKey: 'copy.member_deal_marketplace_page.m93',
-                          literal: false,
-                          "{{value1}} businesses",
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w800,
+              );
+            }
+            if (_sort == 'newest') {
+              visible.sort((a, b) => b.postedAt.compareTo(a.postedAt));
+            }
+            if (_sort == 'updated') {
+              visible.sort(
+                (a, b) => (b.updatedAt ?? b.postedAt).compareTo(
+                  a.updatedAt ?? a.postedAt,
+                ),
+              );
+            }
+            return SingleChildScrollView(
+              controller: _browseScroll,
+              padding: const EdgeInsets.fromLTRB(20, 38, 20, 70),
+              child: Center(
+                child: SizedBox(
+                  width: 1240,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(28),
+                        child: SiteParallaxImage(
+                          controller: _browseScroll,
+                          contentKey: 'image.marketplace.header',
+                          asset: 'assets/images/affinity-reflection-facade.jpg',
+                          child: Container(
+                            padding: const EdgeInsets.all(30),
+                            decoration: const BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [Color(0xF20E3636), Color(0xBB163B48)],
+                              ),
+                            ),
+                            child: LayoutBuilder(
+                              builder: (context, box) {
+                                const heading = Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    SiteText(
+                                      contentKey:
+                                          'copy.member_deal_marketplace_page.m90',
+                                      literal: true,
+                                      'BUSINESSES FOR SALE',
+                                      style: TextStyle(
+                                        color: Color(0xFFB8E5D5),
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w900,
+                                        letterSpacing: 1.3,
+                                      ),
+                                    ),
+                                    SizedBox(height: 10),
+                                    SiteText(
+                                      contentKey:
+                                          'copy.member_deal_marketplace_page.m91',
+                                      literal: true,
+                                      'Find your next business.',
+                                      style: TextStyle(
+                                        fontSize: 42,
+                                        color: Colors.white,
+                                        height: 1,
+                                        fontWeight: FontWeight.w800,
+                                        letterSpacing: -1.6,
+                                      ),
+                                    ),
+                                    SizedBox(height: 12),
+                                    SiteText(
+                                      contentKey:
+                                          'copy.member_deal_marketplace_page.m92',
+                                      literal: true,
+                                      'Find your next business. Browse freely, save your favourites, and follow only the updates that matter to you.',
+                                      style: TextStyle(
+                                        color: Color(0xFFE4EFEB),
+                                        fontSize: 16,
+                                        height: 1.5,
+                                      ),
+                                    ),
+                                  ],
+                                );
+                                final addButton = FutureBuilder<bool>(
+                                  future: _isAdmin,
+                                  builder: (context, admin) =>
+                                      admin.data == true
+                                      ? FilledButton.icon(
+                                          onPressed: _addBusiness,
+                                          style: FilledButton.styleFrom(
+                                            backgroundColor: _green,
+                                          ),
+                                          icon: const Icon(Icons.add_rounded),
+                                          label: const SiteText(
+                                            contentKey:
+                                                'copy.member_deal_marketplace_page.55',
+                                            literal: true,
+                                            'ADD BUSINESS',
+                                          ),
+                                        )
+                                      : const SizedBox.shrink(),
+                                );
+                                if (box.maxWidth < 650) {
+                                  return Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      heading,
+                                      const SizedBox(height: 18),
+                                      addButton,
+                                    ],
+                                  );
+                                }
+                                return Row(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    const Expanded(child: heading),
+                                    const SizedBox(width: 20),
+                                    addButton,
+                                  ],
+                                );
+                              },
+                            ),
                           ),
                         ),
-                        if (BackendService.user != null)
+                      ),
+                      const SizedBox(height: 20),
+                      const SiteCopyText(
+                        'marketplace.examples.notice',
+                        'Explore four fictional examples. Illustrative figures in CAD; these are not live offers. Saving an example keeps it on this device.',
+                        style: TextStyle(
+                          color: Color(0xFF24483E),
+                          fontSize: 14,
+                          height: 1.5,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      Container(
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(22),
+                          border: Border.all(color: const Color(0xFFCADBD5)),
+                        ),
+                        child: _bulletinFilters(),
+                      ),
+                      const SizedBox(height: 14),
+                      Wrap(
+                        spacing: 14,
+                        runSpacing: 10,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          SiteText(
+                            templateValues: {'value1': '${visible.length}'},
+                            contentKey: 'copy.member_deal_marketplace_page.m93',
+                            literal: false,
+                            "{{value1}} businesses",
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
                           FilterChip(
                             label: const SiteText(
                               contentKey:
@@ -4648,131 +4707,146 @@ class _BusinessSaleBulletinPageState extends State<BusinessSaleBulletinPage> {
                             onSelected: (value) =>
                                 setState(() => _savedOnly = value),
                           ),
-                        SizedBox(
-                          width: 240,
-                          child: DropdownButtonFormField<String>(
-                            initialValue: _sort,
-                            decoration: const InputDecoration(
-                              label: SiteText(
-                                'Sort by',
-                                contentKey:
-                                    'copy.member_deal_marketplace_page.field18',
-                                literal: true,
+                          SizedBox(
+                            width: 240,
+                            child: DropdownButtonFormField<String>(
+                              initialValue: _sort,
+                              decoration: const InputDecoration(
+                                label: SiteText(
+                                  'Sort by',
+                                  contentKey:
+                                      'copy.member_deal_marketplace_page.field18',
+                                  literal: true,
+                                ),
                               ),
+                              items: const [
+                                DropdownMenuItem(
+                                  value: 'match',
+                                  child: SiteText(
+                                    contentKey:
+                                        'copy.member_deal_marketplace_page.m94',
+                                    literal: true,
+                                    'Best matches',
+                                  ),
+                                ),
+                                DropdownMenuItem(
+                                  value: 'newest',
+                                  child: SiteText(
+                                    contentKey:
+                                        'copy.member_deal_marketplace_page.m95',
+                                    literal: true,
+                                    'Newest listings',
+                                  ),
+                                ),
+                                DropdownMenuItem(
+                                  value: 'updated',
+                                  child: SiteText(
+                                    contentKey:
+                                        'copy.member_deal_marketplace_page.m96',
+                                    literal: true,
+                                    'Recently updated',
+                                  ),
+                                ),
+                              ],
+                              onChanged: (value) =>
+                                  setState(() => _sort = value ?? 'match'),
                             ),
-                            items: const [
-                              DropdownMenuItem(
-                                value: 'match',
-                                child: SiteText(
-                                  contentKey:
-                                      'copy.member_deal_marketplace_page.m94',
-                                  literal: true,
-                                  'Best matches',
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 18),
+                      if (BackendService.user != null && hasPreferences)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SiteText(
+                                contentKey:
+                                    'copy.member_deal_marketplace_page.57',
+                                literal: true,
+                                'PERSONALIZED FOR YOUR SAVED BUYER PROFILE · BEST MATCHES FIRST',
+                                style: TextStyle(
+                                  color: _green,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: .8,
                                 ),
                               ),
-                              DropdownMenuItem(
-                                value: 'newest',
-                                child: SiteText(
-                                  contentKey:
-                                      'copy.member_deal_marketplace_page.m95',
-                                  literal: true,
-                                  'Newest listings',
-                                ),
-                              ),
-                              DropdownMenuItem(
-                                value: 'updated',
-                                child: SiteText(
-                                  contentKey:
-                                      'copy.member_deal_marketplace_page.m96',
-                                  literal: true,
-                                  'Recently updated',
-                                ),
+                              const SizedBox(height: 5),
+                              const SiteText(
+                                contentKey:
+                                    'copy.member_deal_marketplace_page.58',
+                                literal: true,
+                                'Deal scores estimate interest fit from the listing details available. Financial diligence still determines whether a business is viable.',
+                                style: TextStyle(color: _muted, fontSize: 13),
                               ),
                             ],
-                            onChanged: (value) =>
-                                setState(() => _sort = value ?? 'match'),
                           ),
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 18),
-                    if (BackendService.user != null && hasPreferences)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const SiteText(
-                              contentKey:
-                                  'copy.member_deal_marketplace_page.57',
-                              literal: true,
-                              'PERSONALIZED FOR YOUR SAVED BUYER PROFILE · BEST MATCHES FIRST',
-                              style: TextStyle(
-                                color: _green,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: .8,
-                              ),
-                            ),
-                            const SizedBox(height: 5),
-                            const SiteText(
-                              contentKey:
-                                  'copy.member_deal_marketplace_page.58',
-                              literal: true,
-                              'Deal scores estimate interest fit from the listing details available. Financial diligence still determines whether a business is viable.',
-                              style: TextStyle(color: _muted, fontSize: 13),
-                            ),
-                          ],
+                      if (snapshot.connectionState == ConnectionState.waiting)
+                        const _LoadingBlock()
+                      else if (snapshot.hasError)
+                        _AccessState(
+                          title: 'Bulletin board unavailable',
+                          message: _bulletinError(snapshot.error!),
+                        )
+                      else if (visible.isEmpty)
+                        _AccessState(
+                          title: query.isEmpty && _priceFilter == 'all'
+                              ? 'No businesses posted yet'
+                              : 'No businesses match those filters',
+                          message: query.isEmpty && _priceFilter == 'all'
+                              ? 'New business-for-sale listings will appear here as they are added.'
+                              : 'Try a broader name, theme, location, or price range.',
+                        )
+                      else
+                        LayoutBuilder(
+                          builder: (context, box) => Wrap(
+                            spacing: 24,
+                            runSpacing: 24,
+                            children: [
+                              for (final bulletin in visible)
+                                SizedBox(
+                                  width: box.maxWidth < 900
+                                      ? box.maxWidth
+                                      : (box.maxWidth - 24) / 2,
+                                  child: MarketplaceHover(
+                                    child: BulletinMarketplaceCard(
+                                      bulletin: bulletin,
+                                      dealScore: hasPreferences
+                                          ? matcher.score(
+                                              title: bulletin.title,
+                                              industry: bulletin.industry,
+                                              region: bulletin.region,
+                                              askingPriceBand:
+                                                  bulletin.askingPriceBand,
+                                              summary: bulletin.summary,
+                                            )
+                                          : null,
+                                      onOpen: () => _openListing(bulletin),
+                                      onSave: _savingIds.contains(bulletin.id)
+                                          ? null
+                                          : () => _toggleSaved(bulletin),
+                                      onEdit: bulletin.canEdit
+                                          ? () => _editBusiness(bulletin)
+                                          : null,
+                                      onConvert: bulletin.canConvert
+                                          ? () => _makeAnonymousDeal(bulletin)
+                                          : null,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
                         ),
-                      ),
-                    if (snapshot.connectionState == ConnectionState.waiting)
-                      const _LoadingBlock()
-                    else if (snapshot.hasError)
-                      _AccessState(
-                        title: 'Bulletin board unavailable',
-                        message: _bulletinError(snapshot.error!),
-                      )
-                    else if (visible.isEmpty)
-                      _AccessState(
-                        title: query.isEmpty && _priceFilter == 'all'
-                            ? 'No businesses posted yet'
-                            : 'No businesses match those filters',
-                        message: query.isEmpty && _priceFilter == 'all'
-                            ? 'New business-for-sale listings will appear here as they are added.'
-                            : 'Try a broader name, theme, location, or price range.',
-                      )
-                    else
-                      for (final bulletin in visible) ...[
-                        BulletinMarketplaceCard(
-                          bulletin: bulletin,
-                          dealScore: hasPreferences
-                              ? matcher.score(
-                                  title: bulletin.title,
-                                  industry: bulletin.industry,
-                                  region: bulletin.region,
-                                  askingPriceBand: bulletin.askingPriceBand,
-                                  summary: bulletin.summary,
-                                )
-                              : null,
-                          onOpen: () => _openListing(bulletin),
-                          onSave: _savingIds.contains(bulletin.id)
-                              ? null
-                              : () => _toggleSaved(bulletin),
-                          onEdit: bulletin.canEdit
-                              ? () => _editBusiness(bulletin)
-                              : null,
-                          onConvert: bulletin.canConvert
-                              ? () => _makeAnonymousDeal(bulletin)
-                              : null,
-                        ),
-                        const SizedBox(height: 14),
-                      ],
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     ),
   );

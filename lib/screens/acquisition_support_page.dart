@@ -1,3 +1,4 @@
+import '../widgets/personal_motion.dart';
 import '../widgets/site_text.dart';
 import '../widgets/site_parallax_image.dart';
 import '../widgets/affinity_cinematic.dart';
@@ -1140,62 +1141,89 @@ class _AcquisitionBlueprintPageState extends State<AcquisitionBlueprintPage> {
   }
 
   @override
-  Widget build(BuildContext context) => _ModuleScaffold(
-    kicker: 'PAGE 1 OF 4 · BLUEPRINT',
-    title: SiteContentService.text('blueprint.title', 'Acquisition Blueprint'),
-    subtitle: SiteContentService.text(
-      'blueprint.subtitle',
-      'Define the acquisition you want before a compelling deal changes the rules.',
-    ),
-    currentStep: 0,
-    onStepSelected: _goStep,
-    child: value == null
-        ? const Center(child: CircularProgressIndicator())
-        : Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  SiteText(
-                    templateValues: {'value1': '${_chapter + 1}'},
-                    contentKey: 'copy.acquisition_support_page.m15',
-                    literal: false,
-                    "QUESTION {{value1}} OF 4",
-                    style: const TextStyle(
-                      color: _lime,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 1.3,
+  Widget build(BuildContext context) => PersonalMotion(
+    chapter: _chapter,
+    builder: (context, scroll, toggle) => _ModuleScaffold(
+      motionScroll: scroll,
+      motionToggle: toggle,
+      chapter: _chapter,
+      kicker: 'PAGE 1 OF 4 · BLUEPRINT',
+      title: SiteContentService.text(
+        'blueprint.title',
+        'Acquisition Blueprint',
+      ),
+      subtitle: SiteContentService.text(
+        'blueprint.subtitle',
+        'Define the acquisition you want before a compelling deal changes the rules.',
+      ),
+      currentStep: 0,
+      onStepSelected: _goStep,
+      child: value == null
+          ? const Center(child: CircularProgressIndicator())
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    SiteText(
+                      templateValues: {'value1': '${_chapter + 1}'},
+                      contentKey: 'copy.acquisition_support_page.m15',
+                      literal: false,
+                      "QUESTION {{value1}} OF 4",
+                      style: const TextStyle(
+                        color: _lime,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.3,
+                      ),
+                    ),
+                    const Spacer(),
+                    SiteText(
+                      contentKey: 'copy.acquisition_support_page.m16',
+                      literal: false,
+                      '${((_chapter + 1) / 4 * 100).round()}%',
+                      style: const TextStyle(color: _muted, fontSize: 11),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                LinearProgressIndicator(
+                  value: (_chapter + 1) / 4,
+                  minHeight: 3,
+                  color: _green,
+                  backgroundColor: _line,
+                ),
+                const SizedBox(height: 24),
+                AnimatedSwitcher(
+                  duration: MediaQuery.disableAnimationsOf(context)
+                      ? Duration.zero
+                      : const Duration(milliseconds: 480),
+                  transitionBuilder: (child, animation) => FadeTransition(
+                    opacity: animation,
+                    child: SlideTransition(
+                      position:
+                          Tween<Offset>(
+                            begin: const Offset(.07, .02),
+                            end: Offset.zero,
+                          ).animate(
+                            CurvedAnimation(
+                              parent: animation,
+                              curve: Curves.easeOutCubic,
+                            ),
+                          ),
+                      child: child,
                     ),
                   ),
-                  const Spacer(),
-                  SiteText(
-                    contentKey: 'copy.acquisition_support_page.m16',
-                    literal: false,
-                    '${((_chapter + 1) / 4 * 100).round()}%',
-                    style: const TextStyle(color: _muted, fontSize: 11),
+                  child: KeyedSubtree(
+                    key: ValueKey(_chapter),
+                    child: _chapterBody(),
                   ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              LinearProgressIndicator(
-                value: (_chapter + 1) / 4,
-                minHeight: 3,
-                color: _green,
-                backgroundColor: _line,
-              ),
-              const SizedBox(height: 24),
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 160),
-                child: KeyedSubtree(
-                  key: ValueKey(_chapter),
-                  child: _chapterBody(),
                 ),
-              ),
-              const SizedBox(height: 22),
-              _chapterActions(),
-            ],
-          ),
+                const SizedBox(height: 22),
+                _chapterActions(),
+              ],
+            ),
+    ),
   );
 
   Widget _chapterBody() => switch (_chapter) {
@@ -1301,7 +1329,10 @@ class _AcquisitionBlueprintPageState extends State<AcquisitionBlueprintPage> {
     ),
   };
 
-  Widget _chapterActions() => Row(
+  Widget _chapterActions() => Wrap(
+    alignment: WrapAlignment.end,
+    spacing: 10,
+    runSpacing: 10,
     children: [
       if (_chapter > 0)
         TextButton.icon(
@@ -1313,7 +1344,6 @@ class _AcquisitionBlueprintPageState extends State<AcquisitionBlueprintPage> {
             'Back',
           ),
         ),
-      const Spacer(),
       if (_chapter == 2)
         TextButton(
           onPressed: () {
@@ -1328,7 +1358,6 @@ class _AcquisitionBlueprintPageState extends State<AcquisitionBlueprintPage> {
             'I DON’T KNOW YET',
           ),
         ),
-      const SizedBox(width: 10),
       FilledButton.icon(
         onPressed: _chapter < 3
             ? () async {
@@ -1377,6 +1406,7 @@ class _AcquisitionBlueprintPageState extends State<AcquisitionBlueprintPage> {
       label: label,
       labelColor: _ink,
       child: DropdownButtonFormField<String>(
+        isExpanded: true,
         initialValue: options.contains(current) ? current : null,
         hint: const SiteText(
           contentKey: 'copy.acquisition_support_page.8',
@@ -2101,33 +2131,35 @@ class _ModuleScaffold extends StatelessWidget {
     required this.child,
     required this.currentStep,
     required this.onStepSelected,
+    this.motionScroll,
+    this.motionToggle,
+    this.chapter = 0,
   });
+  final int chapter;
+  final ScrollController? motionScroll;
+  final Widget? motionToggle;
   final String kicker, title, subtitle;
   final Widget child;
   final int currentStep;
   final ValueChanged<int> onStepSelected;
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: _cream,
+    backgroundColor: motionScroll == null ? _cream : Colors.transparent,
     appBar: AppBar(
       toolbarHeight: 78,
       backgroundColor: const Color(0xFFF7F5F0),
       surfaceTintColor: Colors.transparent,
       foregroundColor: _ink,
       title: const HomeBrandButton(size: 58, dark: false),
-      actions: const [
-        AppNavigationMenu(side: PlatformSide.business, dark: false),
-        SizedBox(width: 12),
+      actions: [
+        if (motionToggle != null) motionToggle!,
+        const AppNavigationMenu(side: PlatformSide.business, dark: false),
+        const SizedBox(width: 12),
       ],
     ),
-    body: FixedEditorialBackground(
-      contentKey: 'image.acquisition_module.$currentStep.background',
-      imagePath: currentStep == 0
-          ? 'assets/images/affinity-reflection-facade.jpg'
-          : 'assets/images/commercial-atrium.jpg',
-      wash: _cream,
-      washOpacity: currentStep == 0 ? .38 : .34,
-      child: SingleChildScrollView(
+    body: _backdrop(
+      context, SingleChildScrollView(
+        controller: motionScroll,
         physics: const ClampingScrollPhysics(),
         child: Column(
           children: [
@@ -2139,17 +2171,21 @@ class _ModuleScaffold extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      AcquisitionEditorialHeader(
-                        currentStep: currentStep,
-                        onSelected: onStepSelected,
-                        kicker: kicker,
-                        title: title,
-                        subtitle: subtitle,
-                        accent: currentStep == 0
-                            ? const Color(0xFF244E43)
-                            : const Color(0xFF40556D),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(28),
+                        child: AcquisitionEditorialHeader(
+                          studio: motionScroll != null,
+                          currentStep: currentStep,
+                          onSelected: onStepSelected,
+                          kicker: kicker,
+                          title: title,
+                          subtitle: subtitle,
+                          accent: currentStep == 0
+                              ? const Color(0xFF244E43)
+                              : const Color(0xFF40556D),
+                        ),
                       ),
-                      const SizedBox(height: 42),
+                      const SizedBox(height: 28),
                       child,
                     ],
                   ),
@@ -2162,6 +2198,29 @@ class _ModuleScaffold extends StatelessWidget {
       ),
     ),
   );
+  Widget _backdrop(BuildContext context, Widget child) => motionScroll == null
+      ? FixedEditorialBackground(
+          contentKey: 'image.acquisition_module.$currentStep.background',
+          imagePath: 'assets/images/commercial-atrium.jpg',
+          wash: _cream,
+          washOpacity: .34,
+          child: child,
+        )
+      : SiteParallaxImage(
+          controller: motionScroll!,
+          contentKey: 'image.acquisition_module.$currentStep.background',
+          asset: 'assets/images/affinity-reflection-facade.jpg',
+          child: AnimatedContainer(
+            duration: MediaQuery.disableAnimationsOf(context) ? Duration.zero : const Duration(milliseconds: 650),
+            color: [
+              const Color(0xDDE0EEE8),
+              const Color(0xDDE0EAF4),
+              const Color(0xDDEBE2F1),
+              const Color(0xDDF0E9DC),
+            ][chapter],
+            child: child,
+          ),
+        );
 }
 
 class _LabeledField extends StatelessWidget {
@@ -2229,12 +2288,17 @@ class _GuidedQuestion extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     width: double.infinity,
     padding: const EdgeInsets.symmetric(horizontal: 34, vertical: 40),
-    decoration: const BoxDecoration(
+    decoration: BoxDecoration(
       color: Colors.white,
-      border: Border(
-        top: BorderSide(color: _green, width: 5),
-        bottom: BorderSide(color: Color(0xFFD8D5CF)),
-      ),
+      borderRadius: BorderRadius.circular(28),
+      border: Border.all(color: const Color(0xFFD5E3DF)),
+      boxShadow: const [
+        BoxShadow(
+          color: Color(0x16234F48),
+          blurRadius: 36,
+          offset: Offset(0, 16),
+        ),
+      ],
     ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -2266,15 +2330,15 @@ class _GuidedQuestion extends StatelessWidget {
               fillColor: const Color(0xFFFAF9F6),
               hintStyle: const TextStyle(color: Color(0xFF898995)),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.zero,
+                borderRadius: BorderRadius.circular(14),
                 borderSide: const BorderSide(color: Color(0xFFD8DDE8)),
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.zero,
+                borderRadius: BorderRadius.circular(14),
                 borderSide: const BorderSide(color: Color(0xFFD8DDE8)),
               ),
-              focusedBorder: const OutlineInputBorder(
-                borderRadius: BorderRadius.zero,
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
                 borderSide: BorderSide(color: _green, width: 2),
               ),
             ),

@@ -1,3 +1,5 @@
+import '../widgets/site_image.dart';
+import '../widgets/site_copy_text.dart';
 import '../services/site_content_service.dart';
 import '../widgets/site_inline_editor.dart';
 import '../widgets/site_text.dart';
@@ -12,14 +14,14 @@ import '../widgets/app_navigation_menu.dart';
 import '../widgets/home_brand_button.dart';
 import 'auth_page.dart';
 
-const _blue = Color(0xFF245DD8);
-const _violet = Color(0xFF7942CE);
+const _blue = Color(0xFF154B47);
+const _violet = Color(0xFF245663);
 const _ink = Color(0xFF233445);
 const _muted = Color(0xFF607080);
 const _gradient = LinearGradient(
   begin: Alignment.topLeft,
   end: Alignment.bottomRight,
-  colors: [Color(0xFFDCEAFF), Color(0xFFEAE1FF), Color(0xFFD8F5EC)],
+  colors: [Color(0xFFD9E8E3), Color(0xFFF2F0E9), Color(0xFFDAE5F0)],
 );
 
 class BulletinListingEditor extends StatefulWidget {
@@ -495,7 +497,7 @@ class _BusinessListingDetailPageState extends State<BusinessListingDetailPage> {
       _listing = BusinessSaleBulletinService.loadOne(widget.bulletinId);
   Future<void> _toggle(BusinessSaleBulletin b) async {
     if (_saving) return;
-    if (BackendService.user == null) {
+    if (!b.isExample && BackendService.user == null) {
       await Navigator.of(
         context,
       ).push(MaterialPageRoute<void>(builder: (_) => const AuthPage()));
@@ -589,7 +591,11 @@ class _BusinessListingDetailPageState extends State<BusinessListingDetailPage> {
                               label: SiteText(
                                 contentKey: 'copy.bulletin_listing_pages.m9',
                                 literal: false,
-                                b.isSaved
+                                b.isExample
+                                    ? (b.isSaved
+                                          ? 'Saved example'
+                                          : 'Save example')
+                                    : b.isSaved
                                     ? 'Saved · stop following'
                                     : 'Save & follow updates',
                               ),
@@ -709,6 +715,28 @@ class BulletinListingBody extends StatelessWidget {
     final content = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        if (b.isExample) ...[
+          const _Panel(
+            child: SiteCopyText(
+              'marketplace.examples.detail_notice',
+              'FICTIONAL EXAMPLE · Illustrative figures in CAD. This business is not for sale and has no seller to contact.',
+              style: TextStyle(fontSize: 15, color: _blue, height: 1.5),
+            ),
+          ),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(24),
+            child: SiteImage(
+              contentKey: 'image.marketplace.${b.id}',
+              original: Image.asset(
+                b.exampleAsset,
+                height: 320,
+                width: double.infinity,
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+        ],
         _Panel(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -920,19 +948,55 @@ class BulletinMarketplaceCard extends StatelessWidget {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        InkWell(
+          onTap: onOpen,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(18),
+            child: bulletin.isExample
+                ? SiteImage(
+                    contentKey: 'image.marketplace.${bulletin.id}',
+                    original: Image.asset(
+                      bulletin.exampleAsset,
+                      height: 255,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                    ),
+                  )
+                : BulletinPhoto(
+                    url: bulletin.photos.isEmpty ? '' : bulletin.photos.first,
+                    height: 255,
+                  ),
+          ),
+        ),
+        const SizedBox(height: 20),
+        if (bulletin.isExample)
+          const Padding(
+            padding: EdgeInsets.only(bottom: 12),
+            child: SiteCopyText(
+              'marketplace.examples.badge',
+              'FICTIONAL EXAMPLE · CAD',
+              style: TextStyle(
+                color: _blue,
+                fontSize: 12,
+                letterSpacing: 1.2,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
         Wrap(
           spacing: 10,
           runSpacing: 8,
           children: [
             Chip(
-              backgroundColor: const Color(0xFFE6D9FF),
+              backgroundColor: const Color(0xFFE0ECE5),
               label: SiteText(
                 contentKey: 'copy.bulletin_listing_pages.m20',
                 literal: false,
                 bulletin.industry,
               ),
             ),
-            if (DateTime.now().difference(bulletin.postedAt).inDays < 7)
+            if (!bulletin.isExample &&
+                DateTime.now().difference(bulletin.postedAt).inDays < 7)
               const Chip(
                 backgroundColor: Color(0xFFFFD9E8),
                 label: SiteText(
@@ -996,23 +1060,7 @@ class BulletinMarketplaceCard extends StatelessWidget {
                 ),
               ],
             );
-            final photo = BulletinPhoto(
-              url: bulletin.photos.isEmpty ? '' : bulletin.photos.first,
-              height: 200,
-            );
-            if (box.maxWidth < 650) {
-              return Column(
-                children: [photo, const SizedBox(height: 16), info],
-              );
-            }
-            return Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(width: 230, child: photo),
-                const SizedBox(width: 22),
-                Expanded(child: info),
-              ],
-            );
+            return info;
           },
         ),
         const SizedBox(height: 20),
@@ -1037,7 +1085,9 @@ class BulletinMarketplaceCard extends StatelessWidget {
               label: SiteText(
                 contentKey: 'copy.bulletin_listing_pages.m26',
                 literal: false,
-                bulletin.isSaved
+                bulletin.isExample
+                    ? (bulletin.isSaved ? 'Saved example' : 'Save example')
+                    : bulletin.isSaved
                     ? 'Saved · following updates'
                     : 'Save business',
               ),
@@ -1082,17 +1132,17 @@ class ListingNumbers extends StatelessWidget {
                 (
                   'Asking price',
                   bulletin.askingPriceBand,
-                  const Color(0xFFDCE8FF),
+                  const Color(0xFFE2EBE5),
                 ),
                 (
                   'Annual revenue',
                   bulletin.detail('revenue'),
-                  const Color(0xFFEDE0FF),
+                  const Color(0xFFE4EBF0),
                 ),
                 (
                   'Annual cash flow',
                   bulletin.detail('cash_flow'),
-                  const Color(0xFFFFEBBD),
+                  const Color(0xFFF1EBDD),
                 ),
               ]
               .map(
@@ -1184,7 +1234,7 @@ class _Panel extends StatelessWidget {
     decoration: BoxDecoration(
       color: Colors.white,
       borderRadius: BorderRadius.circular(22),
-      border: Border.all(color: const Color(0xFFD9E2F7)),
+      border: Border.all(color: const Color(0xFFD4DFD9)),
       boxShadow: const [
         BoxShadow(
           color: Color(0x10245DD8),

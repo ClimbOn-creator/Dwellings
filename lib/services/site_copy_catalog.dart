@@ -331,7 +331,7 @@ const siteCopyCatalog = <String, String>{
   '7bbcff1f':
       "Builds the data, modelling and intelligence layer that makes complex analysis understandable.",
   'b31f85c3': "Built at the intersection of property and technology.",
-  'e691ce6': "Bulletin board",
+  'e691ce6': "Find your next business.",
   'e4a4ba1c': "Bulletin board unavailable",
   '1c35c454': "Business / listing title",
   '403e9788': "Business Acquisition",

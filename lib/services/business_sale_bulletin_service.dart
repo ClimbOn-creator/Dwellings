@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:typed_data';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'backend_service.dart';
 
@@ -20,8 +21,12 @@ class BusinessSaleBulletin {
     this.canEdit = false,
     this.isSaved = false,
     this.updatedAt,
+    this.isExample = false,
+    this.exampleAsset = '',
   });
 
+  final bool isExample;
+  final String exampleAsset;
   final String id;
   final String title;
   final String industry;
@@ -80,19 +85,127 @@ class BusinessSaleBulletin {
 class BusinessSaleBulletinService {
   static SupabaseClient get _client => Supabase.instance.client;
 
-  static Future<List<BusinessSaleBulletin>> load() async {
-    if (!BackendService.configured) return const [];
-    final rows = await _client.rpc('browse_business_sale_bulletins_v2');
-    return (rows as List<dynamic>)
-        .map(
+  static const exampleIds = [
+    'example-advisory',
+    'example-workspace',
+    'example-fabrication',
+    'example-management',
+  ];
+  static Future<List<BusinessSaleBulletin>> examples() async {
+    final prefs = await SharedPreferences.getInstance();
+    final saved =
+        prefs.getStringList('affinity.example-businesses.saved') ?? [];
+    final specs = [
+      (
+        'example-advisory',
+        'Harbour Advisory Studio',
+        'Professional services',
+        'Victoria, BC',
+        r'$325,000',
+        r'$680,000',
+        r'$128,000',
+        'affinity-consulting.jpg',
+        'A boutique bookkeeping and advisory practice serving independent businesses. Recurring monthly retainers and a small delivery team create a practical foundation for a hands-on owner.',
+        'Established client relationships; monthly service packages; documented onboarding process.',
+        'Leased studio; lease assignment subject to landlord approval.',
+        'Central Victoria with a hybrid service model.',
+        'Illustrative owner transition; three months of handover support.',
+      ),
+      (
+        'example-workspace',
+        'Foundry Workspaces',
+        'Coworking & business services',
+        'Calgary, AB',
+        r'$785,000',
+        r'$1,120,000',
+        r'$205,000',
+        'commercial-atrium.jpg',
+        'A flexible workspace business with private offices, shared desks and meeting-room bookings. Explore a membership model with recurring revenue and room to improve occupancy.',
+        'Multiple membership tiers; meeting-room revenue; established local business community.',
+        'Leased commercial premises; real estate is not included.',
+        'An accessible mixed-use neighbourhood in Calgary.',
+        'Illustrative portfolio simplification; staff-led day-to-day operations.',
+      ),
+      (
+        'example-fabrication',
+        'Northline Precision Works',
+        'Manufacturing',
+        'Hamilton, ON',
+        r'$1,650,000',
+        r'$2,850,000',
+        r'$415,000',
+        'affinity-deal-screen.jpg',
+        'A small precision fabrication shop supporting regional industrial customers. The example includes an experienced production team, repeat commercial orders and a meaningful equipment base.',
+        'Repeat B2B customers; skilled production team; equipment included subject to diligence.',
+        'Leased industrial facility; equipment included in the illustrative asking price.',
+        'Hamilton industrial corridor with regional distribution access.',
+        'Illustrative retirement sale; six-month transition available.',
+      ),
+      (
+        'example-management',
+        'Evergreen Property Partners',
+        'Property management',
+        'Kelowna, BC',
+        r'$2,450,000',
+        r'$3,600,000',
+        r'$580,000',
+        'affinity-member-studio.jpg',
+        'An established property-management operation coordinating leasing, maintenance and owner reporting. Explore the economics of recurring management fees and an experienced service team.',
+        'Recurring management contracts; established vendor network; experienced operations manager.',
+        'Leased office; managed client properties are not part of the sale.',
+        'Serving Kelowna and surrounding Okanagan communities.',
+        'Illustrative founder succession; structured handover proposed.',
+      ),
+    ];
+    return [
+      for (final x in specs)
+        BusinessSaleBulletin(
+          id: x.$1,
+          title: x.$2,
+          industry: x.$3,
+          region: x.$4,
+          askingPriceBand: x.$5,
+          summary: x.$9,
+          sourceLabel: 'Affinity fictional example — no seller',
+          sourceUrl: '',
+          postedAt: DateTime.utc(2026, 9, 11),
+          canConvert: false,
+          isExample: true,
+          exampleAsset: 'assets/images/${x.$8}',
+          isSaved: saved.contains(x.$1),
+          details: {
+            'revenue': x.$6,
+            'cash_flow': x.$7,
+            'highlights': x.$10,
+            'real_estate': x.$11,
+            'location_details': x.$12,
+            'reason_for_selling': x.$13,
+            'listing_type': 'Fictional example · amounts in CAD',
+          },
+        ),
+    ];
+  }
+
+  static Future<List<BusinessSaleBulletin>> load({
+    bool includeExamples = false,
+  }) async {
+    final real = <BusinessSaleBulletin>[];
+    if (BackendService.configured) {
+      final rows = await _client.rpc('browse_business_sale_bulletins_v2');
+      real.addAll(
+        (rows as List<dynamic>).map(
           (row) => BusinessSaleBulletin.fromJson(
             Map<String, dynamic>.from(row as Map),
           ),
-        )
-        .toList();
+        ),
+      );
+    }
+    return [...real, if (includeExamples) ...await examples()];
   }
 
   static Future<BusinessSaleBulletin?> loadOne(String id) async {
+    if (exampleIds.contains(id))
+      return (await examples()).firstWhere((b) => b.id == id);
     if (!BackendService.configured) return null;
     final rows =
         await _client.rpc(
@@ -108,6 +221,22 @@ class BusinessSaleBulletinService {
   }
 
   static Future<void> setSaved(String id, bool saved) async {
+    if (exampleIds.contains(id)) {
+      final prefs = await SharedPreferences.getInstance();
+      final ids =
+          (prefs.getStringList('affinity.example-businesses.saved') ?? [])
+              .toSet();
+      if (saved) {
+        ids.add(id);
+      } else {
+        ids.remove(id);
+      }
+      await prefs.setStringList(
+        'affinity.example-businesses.saved',
+        ids.toList(),
+      );
+      return;
+    }
     _requireUser();
     await _client.rpc(
       'set_business_sale_bulletin_saved',

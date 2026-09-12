@@ -1,7 +1,32 @@
 import 'package:dwelling_iq/services/business_sale_bulletin_service.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  test('four fictional examples are distinct and cannot contact or convert', () async {
+    SharedPreferences.setMockInitialValues({});
+    final examples = await BusinessSaleBulletinService.examples();
+    expect(examples.length, 4);
+    expect(examples.map((b) => b.id).toSet().length, 4);
+    for (final b in examples) {
+      expect(b.isExample, isTrue);
+      expect(b.canConvert, isFalse);
+      expect(b.canEdit, isFalse);
+      expect(b.sourceUrl, isEmpty);
+      expect(b.exampleAsset, startsWith('assets/images/'));
+      expect((await BusinessSaleBulletinService.loadOne(b.id))?.title, b.title);
+    }
+  });
+  test('example bookmarks persist across reload and can be removed', () async {
+    SharedPreferences.setMockInitialValues({});
+    const id = 'example-advisory';
+    await BusinessSaleBulletinService.setSaved(id, true);
+    expect((await BusinessSaleBulletinService.loadOne(id))!.isSaved, isTrue);
+    expect((await BusinessSaleBulletinService.loadOne('example-workspace'))!.isSaved, isFalse);
+    await BusinessSaleBulletinService.setSaved(id, false);
+    expect((await BusinessSaleBulletinService.loadOne(id))!.isSaved, isFalse);
+  });
   test(
     'rich listings preserve edit, saved and financial details with safe photos',
     () {

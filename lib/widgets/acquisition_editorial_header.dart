@@ -13,8 +13,10 @@ class AcquisitionEditorialHeader extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.accent,
+    this.studio = false,
   });
 
+  final bool studio;
   final int currentStep;
   final ValueChanged<int> onSelected;
   final String kicker;
@@ -31,9 +33,14 @@ class AcquisitionEditorialHeader extends StatelessWidget {
         width: double.infinity,
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
-          color: const Color(0xFFFDFCF9).withValues(alpha: .97),
+          color: studio
+              ? const Color(0xFF183D3D)
+              : const Color(0xFFFDFCF9).withValues(alpha: .97),
           border: Border(
-            left: BorderSide(color: accent, width: 8),
+            left: BorderSide(
+              color: studio ? const Color(0xFFABE6D7) : accent,
+              width: 8,
+            ),
             bottom: const BorderSide(color: Color(0xFFD6D1CA)),
           ),
         ),
@@ -50,7 +57,7 @@ class AcquisitionEditorialHeader extends StatelessWidget {
                     literal: false,
                     kicker,
                     style: TextStyle(
-                      color: accent,
+                      color: studio ? const Color(0xFFABE6D7) : accent,
                       fontSize: 10,
                       fontWeight: FontWeight.w900,
                       letterSpacing: 1.5,
@@ -62,7 +69,7 @@ class AcquisitionEditorialHeader extends StatelessWidget {
                     literal: false,
                     title,
                     style: TextStyle(
-                      color: const Color(0xFF171717),
+                      color: studio ? Colors.white : const Color(0xFF171717),
                       fontSize: compact ? 38 : 54,
                       height: .98,
                       fontWeight: FontWeight.w700,
@@ -76,8 +83,10 @@ class AcquisitionEditorialHeader extends StatelessWidget {
                       contentKey: 'copy.acquisition_editorial_header.m3',
                       literal: false,
                       subtitle,
-                      style: const TextStyle(
-                        color: Color(0xFF625E58),
+                      style: TextStyle(
+                        color: studio
+                            ? const Color(0xFFD7E6E3)
+                            : const Color(0xFF625E58),
                         fontSize: 15,
                         height: 1.55,
                       ),
@@ -89,7 +98,7 @@ class AcquisitionEditorialHeader extends StatelessWidget {
             final number = Container(
               width: compact ? double.infinity : 190,
               height: compact ? 108 : null,
-              color: const Color(0xFFF6F3ED),
+              color: studio ? const Color(0xFF285654) : const Color(0xFFF6F3ED),
               padding: const EdgeInsets.all(22),
               alignment: compact ? Alignment.centerLeft : Alignment.bottomLeft,
               child: SiteText(
@@ -97,7 +106,7 @@ class AcquisitionEditorialHeader extends StatelessWidget {
                 literal: false,
                 '0${currentStep + 1}',
                 style: TextStyle(
-                  color: accent,
+                  color: studio ? const Color(0xFFABE6D7) : accent,
                   fontSize: 66,
                   height: .9,
                   fontWeight: FontWeight.w300,

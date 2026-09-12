@@ -1,3 +1,6 @@
+import '../widgets/personal_motion.dart';
+import '../widgets/marketplace_motion.dart';
+import '../widgets/site_parallax_image.dart';
 import '../widgets/site_text.dart';
 import '../widgets/site_image.dart';
 import 'dart:async';
@@ -232,7 +235,17 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => PersonalMotion(
+    profile: true,
+    builder: (context, scroll, toggle) =>
+        _buildProfile(context, scroll, toggle),
+  );
+
+  Widget _buildProfile(
+    BuildContext context,
+    ScrollController scroll,
+    Widget toggle,
+  ) {
     if (_loading) {
       return const Scaffold(
         backgroundColor: _ink,
@@ -256,18 +269,23 @@ class _ProfilePageState extends State<ProfilePage> {
           lastRisk: null,
         );
     return Scaffold(
-      backgroundColor: _paper,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         toolbarHeight: 78,
         backgroundColor: const Color(0xFFF7F5F0),
         surfaceTintColor: Colors.transparent,
         foregroundColor: _ink,
         title: const HomeBrandButton(size: 58, dark: false),
-        actions: const [AppNavigationMenu(dark: false), SizedBox(width: 12)],
+        actions: [
+          toggle,
+          const AppNavigationMenu(dark: false),
+          const SizedBox(width: 12),
+        ],
       ),
       body: CustomScrollView(
+        controller: scroll,
         slivers: [
-          SliverToBoxAdapter(child: _header(profile)),
+          SliverToBoxAdapter(child: _header(profile, scroll)),
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 54),
@@ -469,86 +487,89 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _header(AccountProfile? profile) => SiteBackground(
-    contentKey: 'image.profile_page.mbackground1',
-    original: Container(
-      decoration: BoxDecoration(
-        color: _paper,
-        image: DecorationImage(
-          image: const AssetImage(
-            'assets/images/affinity-reflection-facade.jpg',
+  Widget _header(AccountProfile? profile, ScrollController scroll) => Padding(
+    padding: const EdgeInsets.fromLTRB(22, 22, 22, 0),
+    child: ClipRRect(
+      borderRadius: BorderRadius.circular(32),
+      child: SiteParallaxImage(
+        controller: scroll,
+        asset: 'assets/images/affinity-reflection-facade.jpg',
+        contentKey: 'image.profile_page.mbackground1',
+        child: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xF036294C), Color(0xCC33485C), Color(0xC05A4950)],
+            ),
           ),
-          fit: BoxFit.cover,
-          colorFilter: ColorFilter.mode(
-            _paper.withValues(alpha: .86),
-            BlendMode.srcOver,
-          ),
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(28, 22, 28, 54),
-        child: SafeArea(
-          bottom: false,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 28),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(28, 22, 28, 54),
+            child: SafeArea(
+              bottom: false,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Stack(
+                  const SizedBox(height: 28),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      ProfilePhoto(
-                        size: 112,
-                        photoUrl: profile?.photoUrl ?? '',
-                        borderRadius: BorderRadius.circular(28),
+                      Stack(
+                        children: [
+                          ProfilePhoto(
+                            size: 112,
+                            photoUrl: profile?.photoUrl ?? '',
+                            borderRadius: BorderRadius.circular(28),
+                          ),
+                          Positioned(
+                            right: 4,
+                            bottom: 4,
+                            child: IconButton.filled(
+                              onPressed: _photo,
+                              icon: const Icon(
+                                Icons.camera_alt_outlined,
+                                size: 17,
+                              ),
+                              tooltip: 'Upload profile photo',
+                            ),
+                          ),
+                        ],
                       ),
-                      Positioned(
-                        right: 4,
-                        bottom: 4,
-                        child: IconButton.filled(
-                          onPressed: _photo,
-                          icon: const Icon(Icons.camera_alt_outlined, size: 17),
-                          tooltip: 'Upload profile photo',
+                      const SizedBox(width: 24),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SiteText(
+                              contentKey: 'copy.profile_page.m5',
+                              literal: false,
+                              profile?.fullName.isNotEmpty == true
+                                  ? profile!.fullName
+                                  : 'Complete your profile',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 36,
+                                height: 1,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: -1.8,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            SiteText(
+                              contentKey: 'copy.profile_page.m6',
+                              literal: false,
+                              _publicIdentity(profile),
+                              style: const TextStyle(
+                                color: Color(0xFFE5DAEA),
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(width: 24),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SiteText(
-                          contentKey: 'copy.profile_page.m5',
-                          literal: false,
-                          profile?.fullName.isNotEmpty == true
-                              ? profile!.fullName
-                              : 'Complete your profile',
-                          style: const TextStyle(
-                            color: _ink,
-                            fontSize: 42,
-                            height: 1,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: -1.8,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        SiteText(
-                          contentKey: 'copy.profile_page.m6',
-                          literal: false,
-                          _publicIdentity(profile),
-                          style: const TextStyle(
-                            color: Color(0xFF9B9B98),
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
                 ],
               ),
-            ],
+            ),
           ),
         ),
       ),
@@ -1332,38 +1353,45 @@ class _StatCard extends StatelessWidget {
   final String value;
   final String label;
   @override
-  Widget build(BuildContext context) => Container(
-    width: width,
-    constraints: const BoxConstraints(minHeight: 128),
-    padding: const EdgeInsets.all(18),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(16),
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        SiteText(
-          contentKey: 'copy.profile_page.m29',
-          literal: false,
-          value,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.w700,
-            letterSpacing: -.8,
+  Widget build(BuildContext context) => MarketplaceHover(
+    child: Container(
+      width: width,
+      constraints: const BoxConstraints(minHeight: 128),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Colors.white, Color(0xFFF0EAF3)],
+        ),
+        border: Border.all(color: const Color(0xFFE0D7E7)),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          SiteText(
+            contentKey: 'copy.profile_page.m29',
+            literal: false,
+            value,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.w700,
+              letterSpacing: -.8,
+            ),
           ),
-        ),
-        const SizedBox(height: 6),
-        SiteText(
-          contentKey: 'copy.profile_page.m30',
-          literal: false,
-          label,
-          style: const TextStyle(color: Color(0xFF777785), fontSize: 10),
-        ),
-      ],
+          const SizedBox(height: 6),
+          SiteText(
+            contentKey: 'copy.profile_page.m30',
+            literal: false,
+            label,
+            style: const TextStyle(color: Color(0xFF777785), fontSize: 10),
+          ),
+        ],
+      ),
     ),
   );
 }
