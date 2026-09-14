@@ -55,6 +55,12 @@ class DealRoom {
   final String currentStep;
   final int blockedTaskCount;
   final DateTime? nextDueAt;
+  String get currency {
+    final code =
+        (propertySnapshot['currency'] as String?)?.trim().toUpperCase() ?? '';
+    return code.isEmpty ? 'CAD' : code;
+  }
+
   bool get isBusiness => transactionType == 'business';
   double get progress =>
       totalTaskCount == 0 ? 0 : completedTaskCount / totalTaskCount;

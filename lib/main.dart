@@ -1,3 +1,4 @@
+import 'screens/transaction_learning_page.dart';
 import 'widgets/site_inline_editor.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -115,6 +116,10 @@ class AffinityApp extends StatelessWidget {
       'business-calculator' => const BusinessAcquisitionPage(),
       'property-calculator' => const AcquisitionSupportPage(),
       'network' => LocalNetworkPage(side: side),
+      'transaction-room' => const TransactionLearningPage(),
+      'buyer-dashboard' => const DealRoomsPage(
+        initialSide: PlatformSide.business,
+      ),
       'deal-rooms' => const DealRoomsPage(initialSide: PlatformSide.business),
       'deal-comparison' => const DealComparisonPage(),
       'bulletin-board' =>

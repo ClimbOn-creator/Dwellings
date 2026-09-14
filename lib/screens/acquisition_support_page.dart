@@ -1165,6 +1165,22 @@ class _AcquisitionBlueprintPageState extends State<AcquisitionBlueprintPage> {
           : Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                OutlinedButton.icon(
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const DealRoomsPage(
+                        initialSide: PlatformSide.business,
+                        startIntake: true,
+                      ),
+                    ),
+                  ),
+                  icon: const Icon(Icons.add_link),
+                  label: const SiteCopyText(
+                    'blueprint.deal.intake',
+                    'Already found a business? Add a deal from any source',
+                  ),
+                ),
+                const SizedBox(height: 22),
                 Row(
                   children: [
                     SiteText(

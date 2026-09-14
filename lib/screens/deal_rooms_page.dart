@@ -1,3 +1,7 @@
+import '../services/deal_intake_fields.dart';
+import '../widgets/deal_intake_form.dart';
+import '../widgets/site_copy_text.dart';
+import 'transaction_learning_page.dart';
 import '../widgets/site_text.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -18,14 +22,19 @@ import 'auth_page.dart';
 const _ink = Color(0xFF171717);
 const _paper = Color(0xFFF4F1EB);
 const _purple = Color(0xFF053827);
-const _lilac = Color(0xFF9B9B98);
+const _lilac = Color(0xFF64645F);
 const _surface = Color(0xFFFCFBF8);
 const _line = Color(0xFFD6D1C9);
 
 class DealRoomsPage extends StatefulWidget {
-  const DealRoomsPage({super.key, this.initialSide = PlatformSide.property});
+  const DealRoomsPage({
+    super.key,
+    this.initialSide = PlatformSide.property,
+    this.startIntake = false,
+  });
 
   final PlatformSide initialSide;
+  final bool startIntake;
 
   @override
   State<DealRoomsPage> createState() => _DealRoomsPageState();
@@ -43,6 +52,10 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
     super.initState();
     _side = widget.initialSide;
     _rooms = DealRoomService.loadRooms();
+    if (widget.startIntake)
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _manualCreate();
+      });
   }
 
   void _refresh() => setState(() => _rooms = DealRoomService.loadRooms());
@@ -59,16 +72,20 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
     ).pushReplacement(MaterialPageRoute<void>(builder: (_) => page));
   }
 
+  DealIntakeDetails? _pendingIntake;
+
   Future<void> _manualCreate() async {
-    final result = await showDialog<_NewDealDetails>(
+    final result = await showDialog<DealIntakeDetails>(
       context: context,
-      builder: (_) => _NewDealDialog(
+      builder: (_) => DealIntakeDialog(
+        initialDetails: _pendingIntake,
         initialKind: _side == PlatformSide.business
             ? 'business'
             : 'residential',
       ),
     );
     if (result == null) return;
+    _pendingIntake = result;
     if (!mounted) return;
     if (BackendService.user == null) {
       await Navigator.of(
@@ -88,6 +105,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
         profileSnapshot: result.profileSnapshot,
       );
       if (!mounted) return;
+      _pendingIntake = null;
       await Navigator.of(
         context,
       ).push(MaterialPageRoute<void>(builder: (_) => DealRoomPage(room: room)));
@@ -165,32 +183,35 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
           backgroundColor: const Color(0xFFF7F5F0),
           surfaceTintColor: Colors.transparent,
           foregroundColor: _ink,
-          title: const Row(
-            children: [
-              HomeBrandButton(size: 48, dark: false),
-              SizedBox(width: 18),
-              SiteText(
-                contentKey: 'copy.deal_rooms_page.m3',
-                literal: true,
-                'DEAL OS',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 1.3,
+          title: MediaQuery.sizeOf(context).width < 700
+              ? const HomeBrandButton(size: 48, dark: false)
+              : const Row(
+                  children: [
+                    HomeBrandButton(size: 48, dark: false),
+                    SizedBox(width: 18),
+                    SiteText(
+                      contentKey: 'copy.deal_rooms_page.m3',
+                      literal: true,
+                      'DEAL OS',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.3,
+                      ),
+                    ),
+                  ],
+                ),
+          actions: [
+            if (MediaQuery.sizeOf(context).width >= 700)
+              FilledButton.icon(
+                onPressed: _creating ? null : _manualCreate,
+                icon: const Icon(Icons.add_rounded, size: 18),
+                label: SiteText(
+                  contentKey: 'copy.deal_rooms_page.m4',
+                  literal: false,
+                  _creating ? 'CREATING…' : 'NEW DEAL',
                 ),
               ),
-            ],
-          ),
-          actions: [
-            FilledButton.icon(
-              onPressed: _creating ? null : _manualCreate,
-              icon: const Icon(Icons.add_rounded, size: 18),
-              label: SiteText(
-                contentKey: 'copy.deal_rooms_page.m4',
-                literal: false,
-                _creating ? 'CREATING…' : 'NEW DEAL',
-              ),
-            ),
             const SizedBox(width: 8),
             const AppNavigationMenu(side: PlatformSide.business, dark: false),
             const SizedBox(width: 12),
@@ -199,8 +220,30 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
         body: FutureBuilder<List<DealRoom>>(
           future: _rooms,
           builder: (context, snapshot) {
-            if (!snapshot.hasData)
+            if (snapshot.hasError) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const SiteCopyText(
+                        'buyer.load.error',
+                        'Could not load your saved deals. Please try again.',
+                      ),
+                      const SizedBox(height: 12),
+                      OutlinedButton(
+                        onPressed: _refresh,
+                        child: const SiteCopyText('buyer.load.retry', 'Retry'),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+            if (!snapshot.hasData) {
               return const Center(child: CircularProgressIndicator());
+            }
             final allRooms = snapshot.data!
                 .where((room) => room.isBusiness)
                 .toList();
@@ -395,6 +438,39 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                const SiteCopyText(
+                  'buyer.learning.intro',
+                  'Learn the acquisition process, then apply it to a real opportunity. Add a business from Affinity, another website, a broker or a direct conversation. Your private deal keeps the facts, evidence gaps and next steps together.',
+                  style: TextStyle(color: _ink, height: 1.5, fontSize: 15),
+                ),
+                const SizedBox(height: 16),
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  children: [
+                    FilledButton.icon(
+                      onPressed: _creating ? null : _manualCreate,
+                      icon: const Icon(Icons.add),
+                      label: const SiteCopyText(
+                        'buyer.learning.add',
+                        'Add a deal from any source',
+                      ),
+                    ),
+                    OutlinedButton.icon(
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => const TransactionLearningPage(),
+                        ),
+                      ),
+                      icon: const Icon(Icons.menu_book_outlined),
+                      label: const SiteCopyText(
+                        'buyer.learning.room',
+                        'Transaction Room · learn & prepare',
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
                 _attentionStrip(active, blockers, dueSoon),
                 const SizedBox(height: 24),
                 Row(
@@ -593,7 +669,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                       room.purchasePrice <= 0
                           ? 'Price pending'
                           : NumberFormat.compactCurrency(
-                              symbol: r'$',
+                              symbol: '${room.currency} ',
                             ).format(room.purchasePrice),
                       style: const TextStyle(fontWeight: FontWeight.w800),
                     ),
@@ -1142,7 +1218,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                     if (room.city.isNotEmpty) room.city,
                     if (room.purchasePrice > 0)
                       NumberFormat.simpleCurrency(
-                        name: 'CAD',
+                        name: room.currency,
                         decimalDigits: 0,
                       ).format(room.purchasePrice),
                     'Updated ${DateFormat.MMMd().format(room.updatedAt)}',
@@ -1150,7 +1226,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                       'Target ${DateFormat.MMMd().format(room.targetCloseDate!)}',
                   ].join(' · '),
                   style: const TextStyle(
-                    color: Color(0xFFA5A5B5),
+                    color: Color(0xFF575764),
                     fontSize: 12,
                   ),
                 ),
@@ -1189,7 +1265,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: _ink,
                     fontSize: 9,
                     fontWeight: FontWeight.w800,
                     letterSpacing: .45,
@@ -1240,8 +1316,8 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
   );
 }
 
-class _NewDealDetails {
-  const _NewDealDetails({
+class DealIntakeDetails {
+  const DealIntakeDetails({
     required this.title,
     required this.kind,
     required this.location,
@@ -1259,15 +1335,24 @@ class _NewDealDetails {
   final Map<String, dynamic> profileSnapshot;
 }
 
-class _NewDealDialog extends StatefulWidget {
-  const _NewDealDialog({required this.initialKind});
+class DealIntakeDialog extends StatefulWidget {
+  const DealIntakeDialog({
+    super.key,
+    required this.initialKind,
+    this.initialDetails,
+  });
+  final DealIntakeDetails? initialDetails;
   final String initialKind;
 
   @override
-  State<_NewDealDialog> createState() => _NewDealDialogState();
+  State<DealIntakeDialog> createState() => DealIntakeDialogState();
 }
 
-class _NewDealDialogState extends State<_NewDealDialog> {
+class DealIntakeDialogState extends State<DealIntakeDialog> {
+  final _extra = {
+    for (final f in dealIntakeFields) f.key: TextEditingController(),
+  };
+  String? _validationError;
   final _title = TextEditingController();
   final _details = TextEditingController();
   final _location = TextEditingController();
@@ -1286,10 +1371,32 @@ class _NewDealDialogState extends State<_NewDealDialog> {
   void initState() {
     super.initState();
     _kind = widget.initialKind;
+    final draft = widget.initialDetails;
+    if (draft != null) {
+      final snapshot = draft.profileSnapshot;
+      _kind = draft.kind;
+      _title.text = draft.title;
+      _details.text = snapshot['deal_details'] as String? ?? '';
+      _location.text = draft.location;
+      _price.text = draft.purchasePrice == 0 ? '' : '${draft.purchasePrice}';
+      _goals.text = draft.goals;
+      _targetDate = draft.targetCloseDate;
+      _industry = snapshot['industry'] as String? ?? _industry;
+      _financingNeeded = snapshot['financing_needed'] as bool? ?? true;
+      _revenue.text = '${snapshot['annual_revenue'] ?? ''}';
+      _ebitda.text = '${snapshot['reported_ebitda'] ?? ''}';
+      _availableCapital.text = '${snapshot['available_capital'] ?? ''}';
+      for (final entry in _extra.entries) {
+        entry.value.text = '${snapshot[entry.key] ?? ''}';
+      }
+    }
   }
 
   @override
   void dispose() {
+    for (final c in _extra.values) {
+      c.dispose();
+    }
     _title.dispose();
     _details.dispose();
     _location.dispose();
@@ -1312,10 +1419,21 @@ class _NewDealDialogState extends State<_NewDealDialog> {
   }
 
   void _submit() {
+    final extra = {for (final e in _extra.entries) e.key: e.value.text.trim()};
+    final error = validateDealIntake(extra, [
+      _price.text,
+      _revenue.text,
+      _ebitda.text,
+      _availableCapital.text,
+    ]);
+    if (error != null) {
+      setState(() => _validationError = error);
+      return;
+    }
     if (_title.text.trim().isEmpty || _details.text.trim().length < 40) return;
     Navigator.pop(
       context,
-      _NewDealDetails(
+      DealIntakeDetails(
         title: _title.text.trim(),
         kind: _kind,
         location: _location.text.trim(),
@@ -1330,7 +1448,9 @@ class _NewDealDialogState extends State<_NewDealDialog> {
           'reported_ebitda': _money(_ebitda.text),
           'available_capital': _money(_availableCapital.text),
           'financing_needed': _financingNeeded,
-          'wizard_version': 1,
+          ...extra,
+          'currency': extra['currency']!.toUpperCase(),
+          'wizard_version': 2,
         },
       ),
     );
@@ -1425,7 +1545,11 @@ class _NewDealDialogState extends State<_NewDealDialog> {
           const Divider(height: 1, color: _line),
           Padding(
             padding: const EdgeInsets.all(16),
-            child: Row(
+            child: Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 8,
+              runSpacing: 8,
               children: [
                 if (_step > 0)
                   OutlinedButton(
@@ -1436,7 +1560,6 @@ class _NewDealDialogState extends State<_NewDealDialog> {
                       'BACK',
                     ),
                   ),
-                const Spacer(),
                 SiteText(
                   templateValues: {'value1': '${_step + 1}'},
                   contentKey: 'copy.deal_rooms_page.m40',
@@ -1448,7 +1571,6 @@ class _NewDealDialogState extends State<_NewDealDialog> {
                     fontWeight: FontWeight.w900,
                   ),
                 ),
-                const SizedBox(width: 14),
                 FilledButton(
                   onPressed: _step == 3
                       ? (_title.text.trim().isEmpty ||
@@ -1565,6 +1687,7 @@ class _NewDealDialogState extends State<_NewDealDialog> {
         'The opportunity',
         'Give the workspace a useful identity. Keep seller-sensitive information out of the title.',
       ),
+      DealIntakeForm(controllers: _extra, stage: 0),
       TextField(
         controller: _title,
         autofocus: true,
@@ -1585,6 +1708,7 @@ class _NewDealDialogState extends State<_NewDealDialog> {
       const SizedBox(height: 13),
       DropdownButtonFormField<String>(
         initialValue: _industry,
+        isExpanded: true,
         decoration: const InputDecoration(
           label: SiteText(
             'Industry',
@@ -1665,6 +1789,7 @@ class _NewDealDialogState extends State<_NewDealDialog> {
         'What you know today',
         'These figures are optional. Blank information becomes part of the diligence plan rather than blocking you.',
       ),
+      DealIntakeForm(controllers: _extra, stage: 1),
       _moneyField(_price, 'Expected purchase price', 'Unknown is okay'),
       const SizedBox(height: 13),
       _moneyField(
@@ -1697,7 +1822,7 @@ class _NewDealDialogState extends State<_NewDealDialog> {
         hint,
         contentKey: 'copy.deal_rooms_page.field.dynamic2',
       ),
-      prefixText: r'$ ',
+      prefixText: '${_extra['currency']!.text.trim().toUpperCase()} ',
     ),
   );
 
@@ -1709,6 +1834,7 @@ class _NewDealDialogState extends State<_NewDealDialog> {
         'Your acquisition plan',
         'Record the decision context. Affinity will turn this into tasks, evidence requests, and professional needs.',
       ),
+      DealIntakeForm(controllers: _extra, stage: 2),
       _moneyField(
         _availableCapital,
         'Capital currently available',
@@ -1781,6 +1907,21 @@ class _NewDealDialogState extends State<_NewDealDialog> {
             ? 'A private name is required'
             : _title.text.trim(),
       ),
+      if (_validationError != null)
+        Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: Text(
+            _validationError!,
+            style: const TextStyle(color: Color(0xFF9D2018)),
+          ),
+        ),
+      for (final f in dealIntakeFields)
+        _reviewLine(
+          f.label,
+          _extra[f.key]!.text.trim().isEmpty
+              ? 'Unknown — follow up'
+              : _extra[f.key]!.text.trim(),
+        ),
       _reviewLine('Industry', _industry),
       _reviewLine(
         'Deal details',
@@ -1797,7 +1938,9 @@ class _NewDealDialogState extends State<_NewDealDialog> {
         _money(_price.text) == null
             ? 'Not known yet'
             : NumberFormat.simpleCurrency(
-                name: 'CAD',
+                name: _extra['currency']!.text.trim().isEmpty
+                    ? 'CAD'
+                    : _extra['currency']!.text.trim().toUpperCase(),
                 decimalDigits: 0,
               ).format(_money(_price.text)),
       ),
@@ -1806,7 +1949,9 @@ class _NewDealDialogState extends State<_NewDealDialog> {
         _money(_revenue.text) == null
             ? 'Not known yet'
             : NumberFormat.simpleCurrency(
-                name: 'CAD',
+                name: _extra['currency']!.text.trim().isEmpty
+                    ? 'CAD'
+                    : _extra['currency']!.text.trim().toUpperCase(),
                 decimalDigits: 0,
               ).format(_money(_revenue.text)),
       ),
@@ -2116,6 +2261,9 @@ class _DealRoomPageState extends State<DealRoomPage> {
   final _timeline = TextEditingController();
   final _goals = TextEditingController();
   final _dealTitle = TextEditingController();
+  final _extra = {
+    for (final f in dealIntakeFields) f.key: TextEditingController(),
+  };
   final _dealDetails = TextEditingController();
   final _dealLocation = TextEditingController();
   final _dealPrice = TextEditingController();
@@ -2133,6 +2281,10 @@ class _DealRoomPageState extends State<DealRoomPage> {
   void initState() {
     super.initState();
     _room = widget.room;
+    for (final e in _extra.entries) {
+      e.value.text =
+          '${_room.propertySnapshot[e.key] ?? (e.key == "currency" ? "CAD" : "")}';
+    }
     _timeline.text = _room.timeline;
     _goals.text = _room.goals;
     _dealTitle.text = _room.title;
@@ -2140,7 +2292,7 @@ class _DealRoomPageState extends State<DealRoomPage> {
     _dealLocation.text = _room.city;
     _dealPrice.text = _room.purchasePrice <= 0
         ? ''
-        : _room.purchasePrice.toStringAsFixed(0);
+        : _room.purchasePrice.toString();
     _dealRevenue.text = _snapshotNumber('annual_revenue');
     _dealEbitda.text = _snapshotNumber('reported_ebitda');
     _dealCapital.text = _snapshotNumber('available_capital');
@@ -2155,6 +2307,9 @@ class _DealRoomPageState extends State<DealRoomPage> {
     _timeline.dispose();
     _goals.dispose();
     _dealTitle.dispose();
+    for (final c in _extra.values) {
+      c.dispose();
+    }
     _dealDetails.dispose();
     _dealLocation.dispose();
     _dealPrice.dispose();
@@ -2166,7 +2321,7 @@ class _DealRoomPageState extends State<DealRoomPage> {
 
   String _snapshotNumber(String key) {
     final value = _room.propertySnapshot[key];
-    return value is num && value != 0 ? value.toStringAsFixed(0) : '';
+    return value is num ? value.toString() : '';
   }
 
   void _refresh() => setState(() {
@@ -2222,13 +2377,34 @@ class _DealRoomPageState extends State<DealRoomPage> {
 
   Future<void> _saveDealProfile() async {
     if (_dealTitle.text.trim().isEmpty) return;
+    final extra = {for (final e in _extra.entries) e.key: e.value.text.trim()};
+    final error = validateDealIntake(extra, [
+      _dealPrice.text,
+      _dealRevenue.text,
+      _dealEbitda.text,
+      _dealCapital.text,
+    ], requireCountry: false);
+    if (error != null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error)));
+      return;
+    }
     setState(() => _saving = true);
     try {
       final snapshot = Map<String, dynamic>.from(_room.propertySnapshot)
+        ..addAll(extra)
+        ..['currency'] = extra['currency']!.toUpperCase()
         ..['deal_details'] = _dealDetails.text.trim()
-        ..['annual_revenue'] = _fieldNumber(_dealRevenue)
-        ..['reported_ebitda'] = _fieldNumber(_dealEbitda)
-        ..['available_capital'] = _fieldNumber(_dealCapital);
+        ..['annual_revenue'] = (_dealRevenue.text.trim().isEmpty
+            ? null
+            : _fieldNumber(_dealRevenue))
+        ..['reported_ebitda'] = (_dealEbitda.text.trim().isEmpty
+            ? null
+            : _fieldNumber(_dealEbitda))
+        ..['available_capital'] = (_dealCapital.text.trim().isEmpty
+            ? null
+            : _fieldNumber(_dealCapital));
       final price = _fieldNumber(_dealPrice);
       await DealRoomService.updateDealProfile(
         roomId: _room.id,
@@ -2274,6 +2450,16 @@ class _DealRoomPageState extends State<DealRoomPage> {
         );
       }
       _refresh();
+    } catch (_) {
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: SiteCopyText(
+              'buyer.intake.save.error',
+              'Could not save the deal profile. Your entries are still here; please try again.',
+            ),
+          ),
+        );
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -2962,7 +3148,9 @@ class _DealRoomPageState extends State<DealRoomPage> {
               'CASH AFTER OWNER',
               cash == null
                   ? 'PENDING'
-                  : NumberFormat.compactCurrency(symbol: r'$').format(cash),
+                  : NumberFormat.compactCurrency(
+                      symbol: '${_room.currency} ',
+                    ).format(cash),
             ),
             _metric(
               'ACQUISITION DSCR',
@@ -3002,7 +3190,7 @@ class _DealRoomPageState extends State<DealRoomPage> {
             label,
             contentKey: 'copy.deal_rooms_page.field.dynamic3',
           ),
-          prefixText: r'$ ',
+          prefixText: '${_room.currency} ',
           hint: SiteText(
             'Not known yet',
             contentKey: 'copy.deal_rooms_page.mfield1',
@@ -4061,7 +4249,7 @@ class _DealRoomPageState extends State<DealRoomPage> {
               : _room.purchasePrice <= 0
               ? '—'
               : NumberFormat.compactCurrency(
-                  symbol: r'$',
+                  symbol: '${_room.currency} ',
                 ).format(_room.purchasePrice),
         ),
         _metric(
@@ -4096,7 +4284,7 @@ class _DealRoomPageState extends State<DealRoomPage> {
               ? 'PRIVATE'
               : _room.isBusiness
               ? NumberFormat.simpleCurrency(
-                  name: 'CAD',
+                  name: _room.currency,
                   decimalDigits: 0,
                 ).format(
                   (_room.riskSnapshot['cash_after_owner_salary'] as num?)
@@ -4106,7 +4294,7 @@ class _DealRoomPageState extends State<DealRoomPage> {
               : monthly == null
               ? '—'
               : NumberFormat.simpleCurrency(
-                  name: 'CAD',
+                  name: _room.currency,
                   decimalDigits: 0,
                 ).format(monthly),
         ),
@@ -4178,6 +4366,7 @@ class _DealRoomPageState extends State<DealRoomPage> {
     'Deal brief',
     Column(
       children: [
+        if (_room.ownedByCurrentUser) DealIntakeForm(controllers: _extra),
         TextField(
           controller: _dealDetails,
           enabled: _room.ownedByCurrentUser,
@@ -4564,6 +4753,19 @@ class _DealRoomPageState extends State<DealRoomPage> {
       Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          OutlinedButton.icon(
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const TransactionLearningPage(),
+              ),
+            ),
+            icon: const Icon(Icons.school_outlined),
+            label: const SiteCopyText(
+              'transaction.open.library',
+              'Learn this process · document examples & templates',
+            ),
+          ),
+          const SizedBox(height: 16),
           Row(
             children: [
               Expanded(
@@ -4689,7 +4891,7 @@ class _DealRoomPageState extends State<DealRoomPage> {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.fromLTRB(10, 8, 8, 8),
       decoration: BoxDecoration(
-        color: task.blocked ? const Color(0xFF321C26) : const Color(0xFF1A1A2E),
+        color: task.blocked ? const Color(0xFFFFF0ED) : Colors.white,
         borderRadius: BorderRadius.circular(13),
         border: Border.all(
           color: task.blocked
@@ -4784,7 +4986,7 @@ class _DealRoomPageState extends State<DealRoomPage> {
   Widget _taskTag(String label, bool alert) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
     decoration: BoxDecoration(
-      color: alert ? const Color(0xFF4A2027) : _purple.withValues(alpha: .14),
+      color: alert ? const Color(0xFFFFE2DC) : _purple.withValues(alpha: .1),
       borderRadius: BorderRadius.circular(8),
     ),
     child: SiteText(
@@ -4852,7 +5054,7 @@ class _DealRoomPageState extends State<DealRoomPage> {
               decoration: BoxDecoration(
                 color: note.mine
                     ? _purple.withValues(alpha: .14)
-                    : const Color(0xFF1A1A2E),
+                    : const Color(0xFFF0EDF7),
                 borderRadius: BorderRadius.circular(13),
               ),
               child: Column(

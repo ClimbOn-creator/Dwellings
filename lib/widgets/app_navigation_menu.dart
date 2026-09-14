@@ -1,4 +1,7 @@
+import '../screens/deal_rooms_page.dart';
+import '../screens/transaction_learning_page.dart';
 import 'site_text.dart';
+import 'site_copy_text.dart';
 import 'package:flutter/material.dart';
 
 import '../models/platform_side.dart';
@@ -19,10 +22,12 @@ import 'profile_photo.dart';
 enum AppNavigationDestination {
   overview,
   dealComparison,
-  bulletinBoard,
+  buyerDashboard,
+  transactionRoom,
   memberStudio,
   consulting,
   profile,
+  bulletinBoard,
 }
 
 class AppNavigationMenu extends StatefulWidget {
@@ -54,6 +59,8 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
 
   String _label(AppNavigationDestination destination) => switch (destination) {
     AppNavigationDestination.overview => 'Acquisition workspace',
+    AppNavigationDestination.buyerDashboard => 'Buyer dashboard',
+    AppNavigationDestination.transactionRoom => 'Transaction Room',
     AppNavigationDestination.dealComparison => 'Deal comparison quiz',
     AppNavigationDestination.bulletinBoard => 'Businesses for sale',
     AppNavigationDestination.memberStudio => 'Professional Member Studio',
@@ -66,6 +73,10 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
     AppNavigationDestination destination,
   ) => switch (destination) {
     AppNavigationDestination.overview => const AcquisitionSupportPage(),
+    AppNavigationDestination.buyerDashboard => const DealRoomsPage(
+      initialSide: PlatformSide.business,
+    ),
+    AppNavigationDestination.transactionRoom => const TransactionLearningPage(),
     AppNavigationDestination.dealComparison => const DealComparisonPage(),
     AppNavigationDestination.bulletinBoard => const BusinessSaleBulletinPage(),
     AppNavigationDestination.memberStudio => const MemberStudioPage(),
@@ -180,16 +191,32 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
             PopupMenuItem(
               value: destination,
               height: 43,
-              child: SiteText(
-                contentKey: 'copy.app_navigation_menu.m2',
-                literal: false,
-                _label(destination),
-                style: TextStyle(
-                  color: widget.dark ? Colors.white : const Color(0xFF161616),
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+              child:
+                  destination == AppNavigationDestination.buyerDashboard ||
+                      destination == AppNavigationDestination.transactionRoom
+                  ? SiteCopyText(
+                      'navigation.${destination.name}',
+                      _label(destination),
+                      style: TextStyle(
+                        color: widget.dark
+                            ? Colors.white
+                            : const Color(0xFF161616),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    )
+                  : SiteText(
+                      contentKey: 'copy.app_navigation_menu.m2',
+                      literal: false,
+                      _label(destination),
+                      style: TextStyle(
+                        color: widget.dark
+                            ? Colors.white
+                            : const Color(0xFF161616),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
             ),
           ],
         ],
