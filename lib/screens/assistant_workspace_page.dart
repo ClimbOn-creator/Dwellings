@@ -679,11 +679,30 @@ class _PersonalizedConsultingPageState
   static const _paper = Color(0xFFF5F5F7);
 
   final _scrollController = ScrollController();
+  late bool _motionEnabled;
+
+  @override
+  void initState() {
+    super.initState();
+    _motionEnabled = true;
+    SharedPreferences.getInstance().then((preferences) {
+      final saved = preferences.getBool('affinity.consulting.motion');
+      if (mounted && saved != null) setState(() => _motionEnabled = saved);
+    });
+  }
 
   @override
   void dispose() {
     _scrollController.dispose();
     super.dispose();
+  }
+
+  Future<void> _setMotion(bool value) async {
+    setState(() => _motionEnabled = value);
+    await (await SharedPreferences.getInstance()).setBool(
+      'affinity.consulting.motion',
+      value,
+    );
   }
 
   Future<void> _book(BuildContext context) async {
@@ -1114,31 +1133,45 @@ class _PersonalizedConsultingPageState
   );
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    backgroundColor: _night,
-    body: CustomScrollView(
-      controller: _scrollController,
-      slivers: [
-        SliverAppBar(
-          pinned: true,
-          automaticallyImplyLeading: false,
-          toolbarHeight: 78,
-          elevation: 0,
-          scrolledUnderElevation: 0,
-          backgroundColor: _night.withValues(alpha: .94),
-          surfaceTintColor: Colors.transparent,
-          title: const HomeBrandButton(size: 58, dark: true),
-          actions: const [
-            AppNavigationMenu(side: PlatformSide.business),
-            SizedBox(width: 12),
-          ],
-        ),
-        SliverToBoxAdapter(child: _hero(context)),
-        _reveal(_perspectiveSection(context)),
-        _reveal(_questionSection(context)),
-        _reveal(_closing(context)),
-        const SliverToBoxAdapter(child: MembershipFooter()),
-      ],
+  Widget build(BuildContext context) => MediaQuery(
+    data: MediaQuery.of(context).copyWith(disableAnimations: !_motionEnabled),
+    child: Scaffold(
+      backgroundColor: _night,
+      body: CustomScrollView(
+        controller: _scrollController,
+        slivers: [
+          SliverAppBar(
+            pinned: true,
+            automaticallyImplyLeading: false,
+            toolbarHeight: 78,
+            elevation: 0,
+            scrolledUnderElevation: 0,
+            backgroundColor: Colors.white.withValues(alpha: .96),
+            surfaceTintColor: Colors.transparent,
+            title: const HomeBrandButton(size: 58, dark: false),
+            actions: [
+              TextButton.icon(
+                onPressed: () => _setMotion(!_motionEnabled),
+                style: TextButton.styleFrom(foregroundColor: _night),
+                icon: Icon(
+                  _motionEnabled
+                      ? Icons.pause_circle_outline
+                      : Icons.play_circle_outline,
+                  size: 20,
+                ),
+                label: Text(_motionEnabled ? 'Motion on' : 'Enable motion'),
+              ),
+              const AppNavigationMenu(side: PlatformSide.business, dark: false),
+              const SizedBox(width: 12),
+            ],
+          ),
+          SliverToBoxAdapter(child: _hero(context)),
+          _reveal(_perspectiveSection(context)),
+          _reveal(_questionSection(context)),
+          _reveal(_closing(context)),
+          const SliverToBoxAdapter(child: MembershipFooter()),
+        ],
+      ),
     ),
   );
 }
