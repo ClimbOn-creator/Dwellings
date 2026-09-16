@@ -176,15 +176,34 @@ void main() {
     await tester.pumpAndSettle();
     final example = find.text('DOWNLOAD COMPLETED EXAMPLE');
     for (var i = 0; i < 8 && example.evaluate().isEmpty; i++) {
-      await tester.drag(
-        find.byType(SingleChildScrollView),
-        const Offset(0, -600),
-      );
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, -600));
       await tester.pumpAndSettle();
     }
     expect(example, findsWidgets);
     expect(find.text('DOWNLOAD EDITABLE TEMPLATE'), findsWidgets);
     expect(find.text('WORD · .docx'), findsWidgets);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('desktop scroll exposes orientation and first document', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    tester.view.physicalSize = const Size(1280, 720);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(const MaterialApp(home: TransactionLearningPage()));
+    await tester.pumpAndSettle();
+    await tester.drag(find.byType(CustomScrollView), const Offset(0, -650));
+    await tester.pumpAndSettle();
+    expect(
+      find.text('Use the right document at the right moment.'),
+      findsOneWidget,
+    );
+    await tester.drag(find.byType(CustomScrollView), const Offset(0, -650));
+    await tester.pumpAndSettle();
+    expect(find.text('Deal brief & buyer criteria'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }

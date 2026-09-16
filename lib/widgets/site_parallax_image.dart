@@ -91,14 +91,19 @@ class _PhotoFlow extends FlowDelegate {
 
   @override
   void paintChildren(FlowPaintingContext context) {
-    final box = section.findRenderObject() as RenderBox;
-    final top = box.localToGlobal(Offset.zero).dy;
-    final travel = still
-        ? 0.0
-        : ((viewportHeight / 2 - top - context.size.height / 2) * .16).clamp(
-            -54.0,
-            54.0,
-          );
+    // A Flow delegate can briefly outlive its section during scrolling.
+    // Paint at the neutral position until its RenderBox is attached again.
+    var travel = 0.0;
+    if (!still && section.mounted) {
+      final renderObject = section.findRenderObject();
+      if (renderObject is RenderBox &&
+          renderObject.attached &&
+          renderObject.hasSize) {
+        final top = renderObject.localToGlobal(Offset.zero).dy;
+        travel = ((viewportHeight / 2 - top - context.size.height / 2) * .16)
+            .clamp(-54.0, 54.0);
+      }
+    }
     context.paintChild(
       0,
       transform: Matrix4.translationValues(0, -64 + travel, 0),

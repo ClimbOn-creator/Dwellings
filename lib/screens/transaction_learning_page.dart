@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -6,28 +8,41 @@ import 'package:url_launcher/url_launcher.dart';
 import '../services/transaction_learning.dart';
 import '../widgets/app_navigation_menu.dart';
 import '../widgets/home_brand_button.dart';
-import '../widgets/personal_motion.dart';
 import '../widgets/site_copy_text.dart';
-import '../widgets/site_parallax_image.dart';
+import '../widgets/site_image.dart';
 
-class TransactionLearningPage extends StatelessWidget {
+const _night = Color(0xFF070717);
+const _ink = Color(0xFF11111F);
+const _blue = Color(0xFF526DFF);
+const _lilac = Color(0xFFC8B8FF);
+const _lime = Color(0xFFD7FF78);
+const _coral = Color(0xFFFF8B79);
+const _paper = Color(0xFFF5F5F7);
+const _muted = Color(0xFF5C6074);
+const _sectionColors = [
+  Color(0xFFE8E2FF),
+  Color(0xFFDDF5EC),
+  Color(0xFFFFE2DC),
+  Color(0xFFDCE5FF),
+  Color(0xFFFFF2D7),
+];
+
+class TransactionLearningPage extends StatefulWidget {
   const TransactionLearningPage({super.key});
 
-  static const _night = Color(0xFF070717);
-  static const _ink = Color(0xFF11111F);
-  static const _blue = Color(0xFF526DFF);
-  static const _lilac = Color(0xFFC8B8FF);
-  static const _lime = Color(0xFFD7FF78);
-  static const _coral = Color(0xFFFF8B79);
-  static const _paper = Color(0xFFF5F5F7);
-  static const _muted = Color(0xFF5C6074);
-  static const _sectionColors = [
-    Color(0xFFE8E2FF),
-    Color(0xFFDDF5EC),
-    Color(0xFFFFE2DC),
-    Color(0xFFDCE5FF),
-    Color(0xFFFFF2D7),
-  ];
+  @override
+  State<TransactionLearningPage> createState() =>
+      _TransactionLearningPageState();
+}
+
+class _TransactionLearningPageState extends State<TransactionLearningPage> {
+  final _scroll = ScrollController();
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
 
   Future<void> _download(
     BuildContext context,
@@ -55,47 +70,42 @@ class TransactionLearningPage extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) => PersonalMotion(
-    builder: (context, scroll, motionToggle) => Scaffold(
-      backgroundColor: Colors.transparent,
+  Widget build(BuildContext context) {
+    final sections = _lessonSections(_scroll).toList();
+    return Scaffold(
+      backgroundColor: _paper,
       appBar: AppBar(
         backgroundColor: Colors.white,
         foregroundColor: _ink,
         surfaceTintColor: Colors.white,
         title: const HomeBrandButton(size: 48, dark: false),
-        actions: [motionToggle, const AppNavigationMenu(dark: false)],
+        actions: const [AppNavigationMenu(dark: false)],
       ),
-      body: SingleChildScrollView(
-        controller: scroll,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _hero(context, scroll),
-            const _Orientation(),
-            ..._lessonSections(scroll),
-            _closing(),
-          ],
-        ),
+      body: CustomScrollView(
+        controller: _scroll,
+        slivers: [
+          SliverToBoxAdapter(child: _hero(context, _scroll)),
+          const SliverToBoxAdapter(child: _Orientation()),
+          SliverList.builder(
+            itemCount: sections.length,
+            itemBuilder: (context, index) => sections[index],
+          ),
+          SliverToBoxAdapter(child: _closing()),
+        ],
       ),
-    ),
-  );
+    );
+  }
 
   Widget _hero(BuildContext context, ScrollController scroll) {
     final compact = MediaQuery.sizeOf(context).width < 720;
     return SizedBox(
       height: compact ? 980 : 700,
-      child: SiteParallaxImage(
+      child: _TransactionParallaxImage(
         controller: scroll,
         contentKey: 'image.transaction.hero',
         asset: 'assets/images/affinity-deal-screen.jpg',
         child: DecoratedBox(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xEF070717), Color(0xB5070717), Color(0xE0070717)],
-            ),
-          ),
+          decoration: const BoxDecoration(color: Color(0xB9070717)),
           child: Stack(
             children: [
               Positioned(
@@ -106,12 +116,7 @@ class TransactionLearningPage extends StatelessWidget {
                   height: compact ? 370 : 540,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: [
-                        _blue.withValues(alpha: .68),
-                        Colors.transparent,
-                      ],
-                    ),
+                    color: _blue.withValues(alpha: .22),
                   ),
                 ),
               ),
@@ -302,23 +307,18 @@ class TransactionLearningPage extends StatelessWidget {
       ],
     ),
     clipBehavior: Clip.antiAlias,
-    child: SiteParallaxImage(
+    child: _TransactionParallaxImage(
       controller: scroll,
       contentKey: 'image.transaction.${lesson.id}.preview',
       asset: lesson.previewAsset,
       child: Stack(
         children: [
-          const Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Colors.transparent, Color(0x99070717)],
-                  stops: [.58, 1],
-                ),
-              ),
-            ),
+          const Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: 66,
+            child: ColoredBox(color: Color(0xC9070717)),
           ),
           Positioned(
             left: 20,
@@ -630,6 +630,53 @@ class _HeroFact extends StatelessWidget {
   );
 }
 
+/// A composited transform keeps the preview in the normal paint tree.
+/// The shared Flow-based effect can drop an entire long web frame when an
+/// off-screen section repaints, so this page uses a bounded image translation.
+class _TransactionParallaxImage extends StatelessWidget {
+  const _TransactionParallaxImage({
+    required this.controller,
+    required this.contentKey,
+    required this.asset,
+    required this.child,
+  });
+
+  final ScrollController controller;
+  final String contentKey;
+  final String asset;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => ClipRect(
+    child: Stack(
+      children: [
+        Positioned.fill(
+          top: -26,
+          bottom: -26,
+          child: AnimatedBuilder(
+            animation: controller,
+            child: SiteImage(
+              contentKey: contentKey,
+              original: Image.asset(asset, fit: BoxFit.cover),
+            ),
+            builder: (context, image) {
+              final offset = controller.hasClients ? controller.offset : 0.0;
+              final travel = MediaQuery.disableAnimationsOf(context)
+                  ? 0.0
+                  : math.sin(offset / 560) * 20;
+              return Transform.translate(
+                offset: Offset(0, travel),
+                child: image,
+              );
+            },
+          ),
+        ),
+        child,
+      ],
+    ),
+  );
+}
+
 class _Orientation extends StatelessWidget {
   const _Orientation();
 
@@ -654,7 +701,7 @@ class _Orientation extends StatelessWidget {
       ),
     ];
     return ColoredBox(
-      color: TransactionLearningPage._paper,
+      color: _paper,
       child: Padding(
         padding: EdgeInsets.symmetric(
           horizontal: compact ? 20 : 50,
@@ -670,7 +717,7 @@ class _Orientation extends StatelessWidget {
                   'transaction.orientation.kicker',
                   'A BUYER’S WORKING LIBRARY',
                   style: TextStyle(
-                    color: TransactionLearningPage._blue,
+                    color: _blue,
                     fontWeight: FontWeight.w800,
                     letterSpacing: 1.1,
                   ),
@@ -680,7 +727,7 @@ class _Orientation extends StatelessWidget {
                   'transaction.orientation.title',
                   'Use the right document at the right moment.',
                   style: TextStyle(
-                    color: TransactionLearningPage._ink,
+                    color: _ink,
                     fontSize: 46,
                     height: 1.04,
                     fontWeight: FontWeight.w800,
@@ -693,11 +740,7 @@ class _Orientation extends StatelessWidget {
                   child: const SiteCopyText(
                     'transaction.orientation.intro',
                     'A good transaction room does more than store files. It tells a first-time buyer what each item is for, where its information comes from, who should challenge it, and what not to assume from it.',
-                    style: TextStyle(
-                      color: TransactionLearningPage._muted,
-                      fontSize: 18,
-                      height: 1.5,
-                    ),
+                    style: TextStyle(color: _muted, fontSize: 18, height: 1.5),
                   ),
                 ),
                 const SizedBox(height: 42),
@@ -708,7 +751,7 @@ class _Orientation extends StatelessWidget {
                   ]
                 else
                   Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       for (var i = 0; i < cards.length; i++) ...[
                         Expanded(
@@ -744,7 +787,7 @@ class _Orientation extends StatelessWidget {
             Text(
               number,
               style: const TextStyle(
-                color: TransactionLearningPage._coral,
+                color: _coral,
                 fontWeight: FontWeight.w800,
               ),
             ),
@@ -752,19 +795,13 @@ class _Orientation extends StatelessWidget {
             Text(
               title,
               style: const TextStyle(
-                color: TransactionLearningPage._ink,
+                color: _ink,
                 fontSize: 20,
                 fontWeight: FontWeight.w800,
               ),
             ),
             const SizedBox(height: 10),
-            Text(
-              body,
-              style: const TextStyle(
-                color: TransactionLearningPage._muted,
-                height: 1.5,
-              ),
-            ),
+            Text(body, style: const TextStyle(color: _muted, height: 1.5)),
           ],
         ),
       );
