@@ -32,3 +32,4 @@ flutter:
     - assets/images/
     - assets/brand/
     - assets/transaction_templates/
+    - assets/transaction_previews/

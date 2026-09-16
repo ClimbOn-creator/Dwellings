@@ -45,6 +45,11 @@ void main() {
       expect(transactionLessons.map((e) => e.id).toSet().length, 11);
       for (final lesson in transactionLessons) {
         expect(['docx', 'xlsx'], contains(lesson.fileExtension));
+        expect(lesson.previewAsset, endsWith('${lesson.id}.png'));
+        expect(lesson.whenToUse, isNotEmpty);
+        expect(lesson.whatToComplete, isNotEmpty);
+        expect(lesson.reviewedBy, isNotEmpty);
+        expect(lesson.buyerWatchOut, isNotEmpty);
         expect(
           lesson.assetPath(filled: false),
           endsWith('${lesson.id}-template.${lesson.fileExtension}'),
@@ -168,11 +173,14 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     await tester.pumpWidget(const MaterialApp(home: TransactionLearningPage()));
     await tester.pumpAndSettle();
-    final example = find.text('Download completed example').first;
-    await tester.ensureVisible(example);
+    final example = find.text('DOWNLOAD COMPLETED EXAMPLE');
+    for (var i = 0; i < 8 && example.evaluate().isEmpty; i++) {
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, -600));
+      await tester.pumpAndSettle();
+    }
     expect(example, findsWidgets);
-    expect(find.text('Download editable template'), findsWidgets);
-    expect(find.text('Word · .docx'), findsWidgets);
+    expect(find.text('DOWNLOAD EDITABLE TEMPLATE'), findsWidgets);
+    expect(find.text('WORD · .docx'), findsWidgets);
     expect(tester.takeException(), isNull);
   });
 }
