@@ -1,7 +1,6 @@
 import '../services/deal_intake_fields.dart';
 import '../widgets/deal_intake_form.dart';
 import '../widgets/site_copy_text.dart';
-import 'transaction_learning_page.dart';
 import '../widgets/site_text.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -454,18 +453,6 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                       label: const SiteCopyText(
                         'buyer.learning.add',
                         'Add a deal from any source',
-                      ),
-                    ),
-                    OutlinedButton.icon(
-                      onPressed: () => Navigator.of(context).push(
-                        MaterialPageRoute<void>(
-                          builder: (_) => const TransactionLearningPage(),
-                        ),
-                      ),
-                      icon: const Icon(Icons.menu_book_outlined),
-                      label: const SiteCopyText(
-                        'buyer.learning.room',
-                        'Transaction Room · learn & prepare',
                       ),
                     ),
                   ],
@@ -4753,19 +4740,6 @@ class _DealRoomPageState extends State<DealRoomPage> {
       Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          OutlinedButton.icon(
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (_) => const TransactionLearningPage(),
-              ),
-            ),
-            icon: const Icon(Icons.school_outlined),
-            label: const SiteCopyText(
-              'transaction.open.library',
-              'Learn this process · document examples & templates',
-            ),
-          ),
-          const SizedBox(height: 16),
           Row(
             children: [
               Expanded(

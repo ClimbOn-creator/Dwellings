@@ -3,14 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../models/platform_side.dart';
 import '../services/transaction_learning.dart';
 import '../widgets/app_navigation_menu.dart';
 import '../widgets/home_brand_button.dart';
 import '../widgets/personal_motion.dart';
 import '../widgets/site_copy_text.dart';
 import '../widgets/site_parallax_image.dart';
-import 'deal_rooms_page.dart';
 
 class TransactionLearningPage extends StatelessWidget {
   const TransactionLearningPage({super.key});
@@ -56,17 +54,6 @@ class TransactionLearningPage extends StatelessWidget {
     }
   }
 
-  void _openDeals(BuildContext context, {bool startIntake = false}) {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => DealRoomsPage(
-          initialSide: PlatformSide.business,
-          startIntake: startIntake,
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) => PersonalMotion(
     builder: (context, scroll, motionToggle) => Scaffold(
@@ -78,14 +65,17 @@ class TransactionLearningPage extends StatelessWidget {
         title: const HomeBrandButton(size: 48, dark: false),
         actions: [motionToggle, const AppNavigationMenu(dark: false)],
       ),
-      body: CustomScrollView(
+      body: SingleChildScrollView(
         controller: scroll,
-        slivers: [
-          SliverToBoxAdapter(child: _hero(context, scroll)),
-          const SliverToBoxAdapter(child: _Orientation()),
-          ..._lessonSlivers(scroll),
-          SliverToBoxAdapter(child: _closing(context)),
-        ],
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _hero(context, scroll),
+            const _Orientation(),
+            ..._lessonSections(scroll),
+            _closing(),
+          ],
+        ),
       ),
     ),
   );
@@ -175,44 +165,17 @@ class TransactionLearningPage extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 30),
-                        Wrap(
+                        const Wrap(
                           spacing: 12,
                           runSpacing: 12,
                           children: [
-                            FilledButton.icon(
-                              style: FilledButton.styleFrom(
-                                backgroundColor: _lime,
-                                foregroundColor: _night,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 22,
-                                  vertical: 18,
-                                ),
-                              ),
-                              onPressed: () =>
-                                  _openDeals(context, startIntake: true),
-                              icon: const Icon(Icons.add_rounded),
-                              label: const SiteCopyText(
-                                'transaction.library.start',
-                                'Start a buyer deal',
-                                style: TextStyle(fontWeight: FontWeight.w800),
-                              ),
+                            _HeroFact(
+                              icon: Icons.description_outlined,
+                              label: '11 DOCUMENT GUIDES',
                             ),
-                            OutlinedButton.icon(
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: Colors.white,
-                                side: const BorderSide(color: Colors.white54),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 22,
-                                  vertical: 18,
-                                ),
-                              ),
-                              onPressed: () => _openDeals(context),
-                              icon: const Icon(Icons.dashboard_outlined),
-                              label: const SiteCopyText(
-                                'transaction.library.saved',
-                                'Open my buyer dashboard',
-                                style: TextStyle(fontWeight: FontWeight.w700),
-                              ),
+                            _HeroFact(
+                              icon: Icons.edit_document,
+                              label: 'WORD + EXCEL DOWNLOADS',
                             ),
                           ],
                         ),
@@ -237,16 +200,16 @@ class TransactionLearningPage extends StatelessWidget {
     child: child,
   );
 
-  Iterable<Widget> _lessonSlivers(ScrollController scroll) sync* {
+  Iterable<Widget> _lessonSections(ScrollController scroll) sync* {
     var lessonIndex = 0;
     final stages = transactionLessons.map((lesson) => lesson.stage).toSet();
     for (final stage in stages) {
-      yield SliverToBoxAdapter(child: _stageBanner(stage));
+      yield _stageBanner(stage);
       for (final lesson in transactionLessons.where(
         (item) => item.stage == stage,
       )) {
         final index = lessonIndex++;
-        yield SliverToBoxAdapter(child: _lessonSection(lesson, index, scroll));
+        yield _lessonSection(lesson, index, scroll);
       }
     }
   }
@@ -554,7 +517,7 @@ class TransactionLearningPage extends StatelessWidget {
         ),
       );
 
-  Widget _closing(BuildContext context) => Container(
+  Widget _closing() => Container(
     color: _lilac,
     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 84),
     child: Center(
@@ -582,21 +545,21 @@ class TransactionLearningPage extends StatelessWidget {
               style: TextStyle(color: _ink, fontSize: 17, height: 1.55),
             ),
             const SizedBox(height: 28),
-            FilledButton.icon(
-              style: FilledButton.styleFrom(
-                backgroundColor: _night,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 22,
-                  vertical: 18,
-                ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+              decoration: BoxDecoration(
+                color: _night,
+                borderRadius: BorderRadius.circular(999),
               ),
-              onPressed: () => _openDeals(context, startIntake: true),
-              icon: const Icon(Icons.arrow_forward_rounded),
-              label: const SiteCopyText(
-                'transaction.closing.action',
-                'PUT THE LIBRARY TO WORK',
-                style: TextStyle(fontWeight: FontWeight.w800),
+              child: const Text(
+                'PUBLIC LEARNING RESOURCE · NO SIGN-IN REQUIRED',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: .7,
+                ),
               ),
             ),
             const SizedBox(height: 34),
@@ -630,6 +593,39 @@ class TransactionLearningPage extends StatelessWidget {
           ],
         ),
       ),
+    ),
+  );
+}
+
+class _HeroFact extends StatelessWidget {
+  const _HeroFact({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 17, vertical: 14),
+    decoration: BoxDecoration(
+      color: Colors.white.withValues(alpha: .1),
+      borderRadius: BorderRadius.circular(999),
+      border: Border.all(color: Colors.white38),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, color: Colors.white, size: 18),
+        const SizedBox(width: 9),
+        Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 12,
+            fontWeight: FontWeight.w800,
+            letterSpacing: .6,
+          ),
+        ),
+      ],
     ),
   );
 }

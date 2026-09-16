@@ -150,7 +150,7 @@ void main() {
     },
   );
   testWidgets(
-    'buyer dashboard offers learning and external intake on a phone',
+    'buyer dashboard stays separate from the public learning library',
     (tester) async {
       SharedPreferences.setMockInitialValues({});
       tester.view.physicalSize = const Size(390, 844);
@@ -160,6 +160,7 @@ void main() {
       await tester.pumpWidget(const MaterialApp(home: DealRoomsPage()));
       await tester.pumpAndSettle();
       expect(find.text('Add a deal from any source'), findsOneWidget);
+      expect(find.textContaining('Transaction Room'), findsNothing);
       expect(tester.takeException(), isNull);
     },
   );
@@ -175,7 +176,10 @@ void main() {
     await tester.pumpAndSettle();
     final example = find.text('DOWNLOAD COMPLETED EXAMPLE');
     for (var i = 0; i < 8 && example.evaluate().isEmpty; i++) {
-      await tester.drag(find.byType(CustomScrollView), const Offset(0, -600));
+      await tester.drag(
+        find.byType(SingleChildScrollView),
+        const Offset(0, -600),
+      );
       await tester.pumpAndSettle();
     }
     expect(example, findsWidgets);
