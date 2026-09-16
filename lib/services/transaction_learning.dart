@@ -8,6 +8,22 @@ class TransactionLesson {
     this.example,
   );
   final String id, stage, title, purpose, fields, example;
+
+  static const _wordLessonIds = {
+    'deal-brief',
+    'nda-brief',
+    'loi-brief',
+    'agreement-review',
+    'closing',
+  };
+
+  String get fileExtension => _wordLessonIds.contains(id) ? 'docx' : 'xlsx';
+  String get fileTypeLabel => fileExtension == 'docx' ? 'Word' : 'Excel';
+  String assetPath({required bool filled}) =>
+      'assets/transaction_templates/$id-${filled ? "example" : "template"}.$fileExtension';
+  String fileName({required bool filled}) =>
+      '$id-${filled ? "example" : "template"}.$fileExtension';
+
   String document({required bool filled}) =>
       '# $title\n\n${filled ? "FICTIONAL WORKED EXAMPLE" : "BLANK LEARNING TEMPLATE"}\n\n$purpose\n\nDeal: ${filled ? "Harbour Services (fictional)" : "[Deal name]"}\nJurisdiction: ${filled ? "Canada / BC — illustrative only" : "[Country and local jurisdiction]"}\nCurrency: ${filled ? "CAD" : "[Currency code]"}\nPrepared by / date: [Name / date]\n\n${filled ? example : fields}\n\nReview notes: [Evidence, open questions, owner and due date]\n\nEducational preparation material. Legal and lender documents must be prepared or approved for the specific transaction and jurisdiction; this is not an agreement to sign.\n';
 }

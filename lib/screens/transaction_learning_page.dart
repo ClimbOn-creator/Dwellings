@@ -1,11 +1,8 @@
-import 'dart:convert';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../services/transaction_learning.dart';
-import '../services/site_content_service.dart';
 import '../models/platform_side.dart';
 import '../widgets/site_copy_text.dart';
 import '../widgets/home_brand_button.dart';
@@ -14,76 +11,29 @@ import 'deal_rooms_page.dart';
 
 class TransactionLearningPage extends StatelessWidget {
   const TransactionLearningPage({super.key});
-  Future<void> _document(
+  Future<void> _download(
     BuildContext context,
     TransactionLesson lesson,
     bool example,
   ) async {
-    final key = 'transaction.${lesson.id}.${example ? 'example' : 'template'}';
-    final fallback = lesson.document(filled: example);
-    String currentText() => SiteContentService.text(key, fallback);
-    await showDialog<void>(
-      context: context,
-      builder: (dialog) => AlertDialog(
-        title: Text(
-          '${example ? "Worked example" : "Blank template"} · ${lesson.title}',
-        ),
-        content: SizedBox(
-          width: 760,
-          child: SingleChildScrollView(
-            child: SelectionArea(
-              child: SiteCopyText(
-                key,
-                fallback,
-                style: const TextStyle(height: 1.6),
-              ),
-            ),
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final data = await rootBundle.load(lesson.assetPath(filled: example));
+      await FilePicker.platform.saveFile(
+        dialogTitle:
+            'Save ${example ? "completed example" : "editable template"}',
+        fileName: lesson.fileName(filled: example),
+        bytes: data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes),
+      );
+    } catch (_) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            'Could not download the ${lesson.fileTypeLabel} file. Please try again.',
           ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialog),
-            child: const SiteCopyText('transaction.action.close', 'Close'),
-          ),
-          TextButton(
-            onPressed: () async {
-              await Clipboard.setData(ClipboardData(text: currentText()));
-              if (dialog.mounted)
-                ScaffoldMessenger.of(dialog).showSnackBar(
-                  const SnackBar(content: Text('Copied to clipboard')),
-                );
-            },
-            child: const SiteCopyText('transaction.action.copy', 'Copy'),
-          ),
-          FilledButton.icon(
-            onPressed: () async {
-              try {
-                await FilePicker.platform.saveFile(
-                  dialogTitle: 'Save learning document',
-                  fileName:
-                      '${lesson.id}-${example ? "example" : "template"}.md',
-                  bytes: Uint8List.fromList(utf8.encode(currentText())),
-                );
-              } catch (_) {
-                if (dialog.mounted)
-                  ScaffoldMessenger.of(dialog).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        'Could not download. Use Copy to keep the document.',
-                      ),
-                    ),
-                  );
-              }
-            },
-            icon: const Icon(Icons.download),
-            label: const SiteCopyText(
-              'transaction.action.download',
-              'Download .md',
-            ),
-          ),
-        ],
-      ),
-    );
+      );
+    }
   }
 
   @override
@@ -164,13 +114,13 @@ class TransactionLearningPage extends StatelessWidget {
               const SizedBox(height: 24),
               const SiteCopyText(
                 'transaction.library.how',
-                '1. Read the purpose.  2. Inspect the fictional worked example.  3. Download or copy the blank template.  4. Record the facts, gaps and adviser questions in your private deal. Use its task plan and document vault to track real work.',
+                '1. Read the purpose.  2. Download the completed fictional example.  3. Download the blank Word or Excel template.  4. Replace the placeholders, attach evidence and record open adviser questions in your private deal.',
                 style: TextStyle(height: 1.6),
               ),
               const SizedBox(height: 14),
               const SiteCopyText(
                 'transaction.library.scope',
-                'These are typical preparation documents, not a universal list of legal requirements. Your country, deal structure, lender and advisers determine what is required. Agreement examples are preparation briefs—not contracts to sign. Template downloads are editable Markdown files; they do not automatically update your private deal.',
+                'Every item includes an editable blank file and a completed fictional example. Word files cover briefs and review checklists; Excel files cover registers, financial schedules and operating plans. These are preparation documents, not contracts, legal advice, tax advice, lender approval or verified transaction evidence.',
               ),
               const SizedBox(height: 30),
               for (final stage
@@ -215,24 +165,42 @@ class TransactionLearningPage extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 16),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFEDE9FE),
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            child: Text(
+                              '${lesson.fileTypeLabel} · .${lesson.fileExtension}',
+                              style: const TextStyle(
+                                color: Color(0xFF5544A0),
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 14),
                           Wrap(
                             spacing: 10,
                             runSpacing: 10,
                             children: [
                               OutlinedButton(
                                 onPressed: () =>
-                                    _document(context, lesson, true),
+                                    _download(context, lesson, true),
                                 child: const SiteCopyText(
                                   'transaction.action.example',
-                                  'View worked example',
+                                  'Download completed example',
                                 ),
                               ),
                               FilledButton(
                                 onPressed: () =>
-                                    _document(context, lesson, false),
+                                    _download(context, lesson, false),
                                 child: const SiteCopyText(
                                   'transaction.action.template',
-                                  'Open blank template',
+                                  'Download editable template',
                                 ),
                               ),
                             ],
