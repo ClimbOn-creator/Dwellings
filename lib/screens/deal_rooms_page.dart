@@ -17,6 +17,7 @@ import '../widgets/home_brand_button.dart';
 import '../widgets/topo_background.dart';
 import '../widgets/profile_photo.dart';
 import '../widgets/app_navigation_menu.dart';
+import '../widgets/dashboard_ui.dart';
 import 'acquisition_support_page.dart';
 import 'business_acquisition_page.dart';
 import 'auth_page.dart';
@@ -48,6 +49,8 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
   bool _creating = false;
   bool _showAll = true;
   bool _showArchived = false;
+  bool _classicView = false;
+  String _dashboardSearch = '';
 
   @override
   void initState() {
@@ -64,8 +67,9 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
 
   Future<void> _managePersonalTeam() async {
     if (BackendService.user == null) {
-      await Navigator.of(context)
-          .push(MaterialPageRoute<void>(builder: (_) => const AuthPage()));
+      await Navigator.of(
+        context,
+      ).push(MaterialPageRoute<void>(builder: (_) => const AuthPage()));
       if (!mounted || BackendService.user == null) return;
     }
     await showDialog<void>(
@@ -81,8 +85,9 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
       1 => const BuyerReadinessPage(),
       _ => const BusinessAcquisitionPage(),
     };
-    Navigator.of(context)
-        .pushReplacement(MaterialPageRoute<void>(builder: (_) => page));
+    Navigator.of(
+      context,
+    ).pushReplacement(MaterialPageRoute<void>(builder: (_) => page));
   }
 
   DealIntakeDetails? _pendingIntake;
@@ -101,8 +106,9 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
     _pendingIntake = result;
     if (!mounted) return;
     if (BackendService.user == null) {
-      await Navigator.of(context)
-          .push(MaterialPageRoute<void>(builder: (_) => const AuthPage()));
+      await Navigator.of(
+        context,
+      ).push(MaterialPageRoute<void>(builder: (_) => const AuthPage()));
       if (!mounted || BackendService.user == null) return;
     }
     setState(() => _creating = true);
@@ -181,15 +187,9 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
   Widget build(BuildContext context) {
     final base = Theme.of(context);
     return Theme(
-      data: base.copyWith(
-        colorScheme: const ColorScheme.light(
-          primary: _purple,
-          surface: _surface,
-        ),
-        textTheme: base.textTheme.apply(bodyColor: _ink, displayColor: _ink),
-      ),
+      data: DashboardUi.theme(base),
       child: Scaffold(
-        backgroundColor: _paper,
+        backgroundColor: DashboardUi.canvas,
         appBar: AppBar(
           toolbarHeight: 72,
           backgroundColor: const Color(0xFFF7F5F0),
@@ -214,6 +214,12 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                   ],
                 ),
           actions: [
+            if (_classicView && MediaQuery.sizeOf(context).width < 800)
+              IconButton(
+                tooltip: 'Dashboard view',
+                onPressed: () => setState(() => _classicView = false),
+                icon: const Icon(Icons.dashboard_outlined),
+              ),
             if (MediaQuery.sizeOf(context).width >= 700)
               FilledButton.icon(
                 onPressed: _creating ? null : _manualCreate,
@@ -261,21 +267,25 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                 .toList();
             return LayoutBuilder(
               builder: (context, box) {
-                final desktop = box.maxWidth >= 980;
+                final desktop = box.maxWidth >= 800;
                 return desktop
                     ? Row(
                         children: [
-                          _commandCentreRail(),
-                          const VerticalDivider(width: 1, color: _line),
-                          Expanded(child: _commandCentre(allRooms)),
-                          const VerticalDivider(width: 1, color: _line),
-                          SizedBox(
-                            width: 320,
-                            child: _dealIntelligence(allRooms),
+                          _buyerSidebar(),
+                          const VerticalDivider(
+                            width: 1,
+                            color: DashboardUi.line,
+                          ),
+                          Expanded(
+                            child: _classicView
+                                ? _commandCentre(allRooms)
+                                : _buyerDashboard(allRooms),
                           ),
                         ],
                       )
-                    : _mobileCommandCentre(allRooms);
+                    : _classicView
+                    ? _mobileCommandCentre(allRooms)
+                    : _buyerDashboard(allRooms);
               },
             );
           },
@@ -283,6 +293,489 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
       ),
     );
   }
+
+  Widget _buyerSidebar() => Container(
+    width: 212,
+    color: Colors.white,
+    padding: const EdgeInsets.fromLTRB(13, 24, 13, 16),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.fromLTRB(13, 0, 0, 17),
+          child: Text(
+            'WORKSPACE',
+            style: TextStyle(
+              color: DashboardUi.muted,
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 1.2,
+            ),
+          ),
+        ),
+        DashboardUi.nav(
+          'Home',
+          Icons.home_outlined,
+          !_showArchived,
+          () => setState(() => _showArchived = false),
+        ),
+        DashboardUi.nav(
+          'Pipeline',
+          Icons.view_kanban_outlined,
+          !_showArchived,
+          () => setState(() => _showArchived = false),
+        ),
+        DashboardUi.nav(
+          'Deal screen',
+          Icons.calculate_outlined,
+          false,
+          _create,
+        ),
+        DashboardUi.nav(
+          'My team',
+          Icons.group_outlined,
+          false,
+          _managePersonalTeam,
+        ),
+        DashboardUi.nav(
+          'Archive',
+          Icons.inventory_2_outlined,
+          _showArchived,
+          () => setState(() => _showArchived = true),
+        ),
+        DashboardUi.nav(
+          'Detailed view',
+          Icons.view_list_outlined,
+          _classicView,
+          () => setState(() => _classicView = !_classicView),
+        ),
+        const Spacer(),
+        DashboardUi.nav(
+          'Add a deal',
+          Icons.add_circle_outline,
+          false,
+          _manualCreate,
+        ),
+        DashboardUi.nav('Refresh', Icons.refresh_rounded, false, _refresh),
+      ],
+    ),
+  );
+
+  int _dashboardStage(DealRoom room) => switch (room.currentStage) {
+    'discovery' || 'screening' => 0,
+    'underwriting' || 'financing' => 1,
+    'offer' || 'diligence' || 'legal' => 2,
+    _ => 3,
+  };
+
+  Widget _buyerDashboard(List<DealRoom> allRooms) {
+    final active = allRooms
+        .where(
+          (r) => !{'archived', 'completed', 'cancelled'}.contains(r.status),
+        )
+        .toList();
+    final archived = allRooms
+        .where((r) => {'archived', 'completed', 'cancelled'}.contains(r.status))
+        .toList();
+    final shown = (_showArchived ? archived : active)
+        .where(
+          (r) =>
+              r.title.toLowerCase().contains(_dashboardSearch.toLowerCase()) ||
+              r.city.toLowerCase().contains(_dashboardSearch.toLowerCase()),
+        )
+        .toList();
+    final dueSoon = active
+        .where(
+          (r) =>
+              r.nextDueAt != null &&
+              r.nextDueAt!.isBefore(
+                DateTime.now().add(const Duration(days: 8)),
+              ),
+        )
+        .length;
+    final blocked = active.where((r) => r.blockedTaskCount > 0).length;
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(26, 30, 26, 56),
+      child: LayoutBuilder(
+        builder: (context, box) {
+          final narrow = box.maxWidth < 740;
+          final metricWidth = narrow
+              ? (box.maxWidth - 12) / 2
+              : (box.maxWidth - 36) / 4;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (narrow) ...[
+                const Text(
+                  'Good morning 👋',
+                  style: TextStyle(
+                    fontSize: 27,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -.8,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                const Text(
+                  'Keep every acquisition moving.',
+                  style: TextStyle(color: DashboardUi.muted),
+                ),
+                const SizedBox(height: 17),
+                _buyerSearch(),
+              ] else
+                Row(
+                  children: [
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Good morning 👋',
+                            style: TextStyle(
+                              fontSize: 27,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -.8,
+                            ),
+                          ),
+                          SizedBox(height: 5),
+                          Text(
+                            'Keep every acquisition moving.',
+                            style: TextStyle(color: DashboardUi.muted),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(width: 255, child: _buyerSearch()),
+                  ],
+                ),
+              const SizedBox(height: 15),
+              OutlinedButton.icon(
+                onPressed: _creating ? null : _manualCreate,
+                icon: const Icon(Icons.add_rounded, size: 17),
+                label: const SiteCopyText(
+                  'buyer.learning.add',
+                  'Add a deal from any source',
+                ),
+              ),
+              if (narrow)
+                TextButton.icon(
+                  onPressed: () => setState(() => _classicView = true),
+                  icon: const Icon(Icons.view_list_outlined, size: 17),
+                  label: const Text('Detailed view'),
+                ),
+              const SizedBox(height: 25),
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: [
+                  SizedBox(
+                    width: metricWidth,
+                    child: DashboardUi.metric(
+                      'Active deals',
+                      '${active.length}',
+                      'In your pipeline',
+                      Icons.bar_chart_rounded,
+                      DashboardUi.paleBlue,
+                      const Color(0xFF5F91DC),
+                    ),
+                  ),
+                  SizedBox(
+                    width: metricWidth,
+                    child: DashboardUi.metric(
+                      'Under review',
+                      '${active.where((r) => _dashboardStage(r) == 1).length}',
+                      'Screening & finance',
+                      Icons.trending_up_rounded,
+                      DashboardUi.paleGreen,
+                      const Color(0xFF3C9764),
+                    ),
+                  ),
+                  SizedBox(
+                    width: metricWidth,
+                    child: DashboardUi.metric(
+                      'Due soon',
+                      '$dueSoon',
+                      'Next 7 days',
+                      Icons.event_note_outlined,
+                      DashboardUi.paleGold,
+                      const Color(0xFFB88016),
+                    ),
+                  ),
+                  SizedBox(
+                    width: metricWidth,
+                    child: DashboardUi.metric(
+                      'Needs attention',
+                      '$blocked',
+                      'Deals with blockers',
+                      Icons.notifications_active_outlined,
+                      DashboardUi.paleViolet,
+                      const Color(0xFF8A79D5),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              DashboardUi.panel(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: DashboardUi.sectionTitle(
+                            _showArchived ? 'Deal history' : 'Your pipeline',
+                            subtitle: _showArchived
+                                ? 'Completed and archived acquisitions'
+                                : 'Follow each deal from sourcing to close.',
+                          ),
+                        ),
+                        TextButton.icon(
+                          onPressed: _manualCreate,
+                          icon: const Icon(Icons.add, size: 17),
+                          label: const Text('Add deal'),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    if (_showArchived) ...[
+                      if (shown.isEmpty)
+                        const Text(
+                          'No archived deals yet.',
+                          style: TextStyle(color: DashboardUi.muted),
+                        ),
+                      for (final room in shown) _buyerDealTile(room),
+                    ] else
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: List.generate(4, (index) {
+                            const titles = [
+                              'Sourcing',
+                              'Under review',
+                              'LOI / diligence',
+                              'Closing',
+                            ];
+                            final stageRooms = shown
+                                .where((r) => _dashboardStage(r) == index)
+                                .toList();
+                            return Container(
+                              width: narrow ? 214 : (box.maxWidth - 78) / 4,
+                              constraints: const BoxConstraints(minWidth: 185),
+                              margin: EdgeInsets.only(
+                                right: index == 3 ? 0 : 10,
+                              ),
+                              padding: const EdgeInsets.all(9),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF5F8FF),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.fromLTRB(
+                                      3,
+                                      2,
+                                      3,
+                                      10,
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            titles[index],
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w800,
+                                            ),
+                                          ),
+                                        ),
+                                        Text(
+                                          '${stageRooms.length}',
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w800,
+                                            color: DashboardUi.blue,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  if (stageRooms.isEmpty)
+                                    const Padding(
+                                      padding: EdgeInsets.all(10),
+                                      child: Text(
+                                        'No deals here yet',
+                                        style: TextStyle(
+                                          color: DashboardUi.muted,
+                                          fontSize: 11,
+                                        ),
+                                      ),
+                                    ),
+                                  for (final room in stageRooms)
+                                    _buyerDealTile(room),
+                                ],
+                              ),
+                            );
+                          }),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: [
+                  SizedBox(
+                    width: narrow ? box.maxWidth : (box.maxWidth - 24) / 3,
+                    child: _buyerActionCard(
+                      'Deal screen',
+                      'Review a business and build your acquisition plan.',
+                      Icons.calculate_outlined,
+                      _create,
+                    ),
+                  ),
+                  SizedBox(
+                    width: narrow ? box.maxWidth : (box.maxWidth - 24) / 3,
+                    child: _buyerActionCard(
+                      'My personal team',
+                      'Add advisers and collaborators to your team. 🤝',
+                      Icons.group_outlined,
+                      _managePersonalTeam,
+                    ),
+                  ),
+                  SizedBox(
+                    width: narrow ? box.maxWidth : (box.maxWidth - 24) / 3,
+                    child: _buyerActionCard(
+                      'New deal room',
+                      'Bring any opportunity into one private workspace.',
+                      Icons.meeting_room_outlined,
+                      _manualCreate,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buyerSearch() => TextField(
+    onChanged: (value) => setState(() => _dashboardSearch = value),
+    decoration: InputDecoration(
+      hintText: 'Search your deals...',
+      prefixIcon: const Icon(Icons.search, size: 19),
+      isDense: true,
+      filled: true,
+      fillColor: Colors.white,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: DashboardUi.line),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: DashboardUi.line),
+      ),
+    ),
+  );
+
+  Widget _buyerDealTile(DealRoom room) => Padding(
+    padding: const EdgeInsets.only(bottom: 7),
+    child: Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(8),
+      child: InkWell(
+        onTap: () => _openRoom(room),
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            border: Border.all(color: DashboardUi.line),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 9,
+                height: 9,
+                margin: const EdgeInsets.only(top: 4, right: 8),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: room.blockedTaskCount > 0
+                      ? const Color(0xFFE7AE30)
+                      : const Color(0xFF45A470),
+                ),
+              ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      room.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      room.city.isEmpty ? room.currentStage : room.city,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 10,
+                        color: DashboardUi.muted,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.more_horiz, size: 15, color: DashboardUi.muted),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
+
+  Widget _buyerActionCard(
+    String title,
+    String detail,
+    IconData icon,
+    VoidCallback onTap,
+  ) => DashboardUi.panel(
+    child: InkWell(
+      onTap: onTap,
+      child: SizedBox(
+        height: 104,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, color: DashboardUi.blue, size: 21),
+            const SizedBox(height: 10),
+            Text(
+              title,
+              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+            ),
+            const SizedBox(height: 5),
+            Text(
+              detail,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(color: DashboardUi.muted, fontSize: 11),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
 
   Widget _commandCentreRail() => Container(
     width: 78,
@@ -2389,8 +2882,9 @@ class _DealRoomPageState extends State<DealRoomPage> {
       _dealCapital.text,
     ], requireCountry: false);
     if (error != null) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(error)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error)));
       return;
     }
     setState(() => _saving = true);
@@ -2536,8 +3030,9 @@ class _DealRoomPageState extends State<DealRoomPage> {
     data: Theme.of(context).copyWith(
       colorScheme: const ColorScheme.light(primary: _purple, surface: _surface),
       scaffoldBackgroundColor: _paper,
-      textTheme: Theme.of(context).textTheme
-          .apply(bodyColor: _ink, displayColor: _ink),
+      textTheme: Theme.of(
+        context,
+      ).textTheme.apply(bodyColor: _ink, displayColor: _ink),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: Colors.white,
@@ -3138,8 +3633,9 @@ class _DealRoomPageState extends State<DealRoomPage> {
               'CASH AFTER OWNER',
               cash == null
                   ? 'PENDING'
-                  : NumberFormat.compactCurrency(symbol: '${_room.currency} ')
-                        .format(cash),
+                  : NumberFormat.compactCurrency(
+                      symbol: '${_room.currency} ',
+                    ).format(cash),
             ),
             _metric(
               'ACQUISITION DSCR',
@@ -4227,8 +4723,9 @@ class _DealRoomPageState extends State<DealRoomPage> {
               ? 'PRIVATE'
               : _room.purchasePrice <= 0
               ? '—'
-              : NumberFormat.compactCurrency(symbol: '${_room.currency} ')
-                    .format(_room.purchasePrice),
+              : NumberFormat.compactCurrency(
+                  symbol: '${_room.currency} ',
+                ).format(_room.purchasePrice),
         ),
         _metric(
           _room.isBusiness ? 'ACQUISITION RISK' : 'RISK',

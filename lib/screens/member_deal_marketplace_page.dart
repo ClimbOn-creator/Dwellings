@@ -23,6 +23,7 @@ import '../widgets/app_navigation_menu.dart';
 import '../widgets/home_brand_button.dart';
 import '../widgets/profile_photo.dart';
 import '../widgets/site_copy_text.dart';
+import '../widgets/dashboard_ui.dart';
 import 'auth_page.dart';
 import 'bulletin_listing_pages.dart';
 import 'deal_rooms_page.dart';
@@ -37,6 +38,7 @@ const _line = Color(0xFFD6D1C9);
 const _muted = Color(0xFF68635D);
 
 enum _StudioView {
+  home,
   opportunities,
   recommendations,
   opportunityDetail,
@@ -59,7 +61,7 @@ class MemberDealMarketplacePage extends StatefulWidget {
 }
 
 class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
-  _StudioView _view = _StudioView.opportunities;
+  _StudioView _view = _StudioView.home;
   late Future<List<MemberDealOpportunity>> _opportunities;
   late Future<List<MemberDealPitch>> _responses;
   late Future<List<MarketplaceProvider>> _professionals;
@@ -72,6 +74,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
   Timer? _messageRefreshTimer;
   String _professionalQuery = '';
   String _dealQuery = '';
+  String _homeQuery = '';
   String _professionalRoleFilter = 'all';
   String _responseFilter = 'all';
   MemberDealOpportunity? _selectedOpportunity;
@@ -400,7 +403,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: const Color(0xFFF1F3EF),
+    backgroundColor: DashboardUi.canvas,
     appBar: AppBar(
       toolbarHeight: 72,
       backgroundColor: const Color(0xFFF7F5F0),
@@ -453,7 +456,10 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
         const SizedBox(width: 10),
       ],
     ),
-    body: _workspace(),
+    body: Theme(
+      data: DashboardUi.theme(Theme.of(context)),
+      child: _workspace(),
+    ),
   );
 
   void _reloadAndRebuild() => setState(_reload);
@@ -465,8 +471,8 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
 
   Widget _workspace() => Container(
     width: double.infinity,
-    color: const Color(0xFFF1F3EF),
-    padding: const EdgeInsets.all(14),
+    color: DashboardUi.canvas,
+    padding: const EdgeInsets.all(12),
     child: LayoutBuilder(
       builder: (context, box) {
         final desktop = box.maxWidth >= 900;
@@ -488,11 +494,11 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
         return Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            SizedBox(width: 76, child: _dashboardNavigation()),
+            SizedBox(width: 206, child: _dashboardNavigation()),
             const SizedBox(width: 14),
             Expanded(
               child: Material(
-                color: const Color(0xFFF7F5F0),
+                color: DashboardUi.canvas,
                 borderRadius: BorderRadius.circular(20),
                 clipBehavior: Clip.antiAlias,
                 child: SingleChildScrollView(
@@ -502,27 +508,457 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
               ),
             ),
             const SizedBox(width: 14),
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 220),
-              curve: Curves.easeOutCubic,
-              width: _interactionPanelOpen ? 350 : 58,
-              child: _interactionPanelOpen
-                  ? _memberInteractionPanel()
-                  : _collapsedInteractionPanel(),
-            ),
+            if (_view != _StudioView.home)
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 220),
+                curve: Curves.easeOutCubic,
+                width: _interactionPanelOpen ? 350 : 58,
+                child: _interactionPanelOpen
+                    ? _memberInteractionPanel()
+                    : _collapsedInteractionPanel(),
+              ),
           ],
         );
       },
     ),
   );
 
+  Widget _memberHome() => FutureBuilder<List<MemberDealOpportunity>>(
+    future: _opportunities,
+    builder: (context, snapshot) {
+      if (!snapshot.hasData) {
+        if (snapshot.hasError)
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Could not load opportunities.'),
+              TextButton(
+                onPressed: _reloadAndRebuild,
+                child: const Text('Retry'),
+              ),
+            ],
+          );
+        return const Center(child: CircularProgressIndicator());
+      }
+      final opportunities = snapshot.data!;
+      return FutureBuilder<List<MemberDealPitch>>(
+        future: _responses,
+        builder: (context, responseSnapshot) {
+          final responses = responseSnapshot.data ?? const <MemberDealPitch>[];
+          final filtered = opportunities
+              .where(
+                (deal) =>
+                    deal.headline.toLowerCase().contains(
+                      _homeQuery.toLowerCase(),
+                    ) ||
+                    deal.industry.toLowerCase().contains(
+                      _homeQuery.toLowerCase(),
+                    ) ||
+                    deal.region.toLowerCase().contains(
+                      _homeQuery.toLowerCase(),
+                    ),
+              )
+              .toList();
+          final newDeals = filtered
+              .where(
+                (deal) =>
+                    DateTime.now().difference(deal.publishedAt).inDays <= 7,
+              )
+              .take(3)
+              .toList();
+          final recommended = filtered
+              .where((deal) => deal.isRecommended)
+              .take(3)
+              .toList();
+          final saved = filtered
+              .where((deal) => _savedOpportunityIds.contains(deal.id))
+              .take(3)
+              .toList();
+          return LayoutBuilder(
+            builder: (context, box) {
+              final narrow = box.maxWidth < 690;
+              final metricWidth = narrow
+                  ? (box.maxWidth - 12) / 2
+                  : (box.maxWidth - 36) / 4;
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (narrow) ...[
+                    const Text(
+                      'Good morning ✨',
+                      style: TextStyle(
+                        fontSize: 27,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -.8,
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    const Text(
+                      'Discover opportunities and keep buyer conversations moving.',
+                      style: TextStyle(color: DashboardUi.muted),
+                    ),
+                    const SizedBox(height: 16),
+                    _memberHomeSearch(),
+                  ] else
+                    Row(
+                      children: [
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Good morning ✨',
+                                style: TextStyle(
+                                  fontSize: 27,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: -.8,
+                                ),
+                              ),
+                              SizedBox(height: 5),
+                              Text(
+                                'Discover opportunities and keep buyer conversations moving.',
+                                style: TextStyle(color: DashboardUi.muted),
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(width: 235, child: _memberHomeSearch()),
+                      ],
+                    ),
+                  const SizedBox(height: 24),
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 12,
+                    children: [
+                      SizedBox(
+                        width: metricWidth,
+                        child: DashboardUi.metric(
+                          'Opportunities',
+                          '${opportunities.length}',
+                          'Available to explore',
+                          Icons.bar_chart_rounded,
+                          DashboardUi.paleBlue,
+                          const Color(0xFF5F91DC),
+                        ),
+                      ),
+                      SizedBox(
+                        width: metricWidth,
+                        child: DashboardUi.metric(
+                          'Recommended',
+                          '${opportunities.where((d) => d.isRecommended).length}',
+                          'Matched for members',
+                          Icons.auto_awesome_rounded,
+                          DashboardUi.paleGreen,
+                          const Color(0xFF3C9764),
+                        ),
+                      ),
+                      SizedBox(
+                        width: metricWidth,
+                        child: DashboardUi.metric(
+                          'Saved',
+                          '${_savedOpportunityIds.length}',
+                          'Your shortlist',
+                          Icons.bookmark_outline_rounded,
+                          DashboardUi.paleGold,
+                          const Color(0xFFB88016),
+                        ),
+                      ),
+                      SizedBox(
+                        width: metricWidth,
+                        child: DashboardUi.metric(
+                          'Buyer responses',
+                          responseSnapshot.hasData
+                              ? '${responses.length}'
+                              : '—',
+                          'Private introductions',
+                          Icons.mark_email_unread_outlined,
+                          DashboardUi.paleViolet,
+                          const Color(0xFF8A79D5),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 19),
+                  DashboardUi.panel(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: DashboardUi.sectionTitle(
+                                'Your opportunity board',
+                                subtitle:
+                                    'Find a deal, save it, then connect with the buyer.',
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () =>
+                                  _selectView(_StudioView.opportunities),
+                              child: const Text('See all'),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 15),
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _memberBoardColumn(
+                                'New this week',
+                                newDeals,
+                                narrow ? 210 : (box.maxWidth - 60) / 3,
+                              ),
+                              const SizedBox(width: 10),
+                              _memberBoardColumn(
+                                'Recommended',
+                                recommended,
+                                narrow ? 210 : (box.maxWidth - 60) / 3,
+                              ),
+                              const SizedBox(width: 10),
+                              _memberBoardColumn(
+                                'Saved for later',
+                                saved,
+                                narrow ? 210 : (box.maxWidth - 60) / 3,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 12,
+                    children: [
+                      SizedBox(
+                        width: narrow ? box.maxWidth : (box.maxWidth - 24) / 3,
+                        child: _memberActionCard(
+                          'Explore opportunities',
+                          'Browse reviewed deals and buyer needs. 🔎',
+                          Icons.work_outline_rounded,
+                          () => _selectView(_StudioView.opportunities),
+                        ),
+                      ),
+                      SizedBox(
+                        width: narrow ? box.maxWidth : (box.maxWidth - 24) / 3,
+                        child: _memberActionCard(
+                          'Buyer inbox',
+                          'Read and manage your deal responses.',
+                          Icons.inbox_outlined,
+                          () => _selectView(_StudioView.dealResponses),
+                        ),
+                      ),
+                      SizedBox(
+                        width: narrow ? box.maxWidth : (box.maxWidth - 24) / 3,
+                        child: _memberActionCard(
+                          'Professional network',
+                          'Find people to work with. 🤝',
+                          Icons.people_outline_rounded,
+                          () => _selectView(_StudioView.professionals),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              );
+            },
+          );
+        },
+      );
+    },
+  );
+
+  Widget _memberHomeSearch() => TextField(
+    onChanged: (value) => setState(() => _homeQuery = value),
+    decoration: InputDecoration(
+      hintText: 'Search opportunities...',
+      prefixIcon: const Icon(Icons.search, size: 19),
+      isDense: true,
+      filled: true,
+      fillColor: Colors.white,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: DashboardUi.line),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: DashboardUi.line),
+      ),
+    ),
+  );
+
+  Widget _memberBoardColumn(
+    String title,
+    List<MemberDealOpportunity> deals,
+    double width,
+  ) => Container(
+    width: width,
+    constraints: const BoxConstraints(minWidth: 190),
+    padding: const EdgeInsets.all(9),
+    decoration: BoxDecoration(
+      color: const Color(0xFFF5F8FF),
+      borderRadius: BorderRadius.circular(10),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(3, 2, 3, 10),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              Text(
+                '${deals.length}',
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  color: DashboardUi.blue,
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (deals.isEmpty)
+          const Padding(
+            padding: EdgeInsets.all(10),
+            child: Text(
+              'Nothing here yet',
+              style: TextStyle(color: DashboardUi.muted, fontSize: 11),
+            ),
+          ),
+        for (final deal in deals)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 7),
+            child: Material(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
+              child: InkWell(
+                onTap: () => _openOpportunity(deal),
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: DashboardUi.line),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 9,
+                        height: 9,
+                        margin: const EdgeInsets.only(top: 4, right: 8),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: deal.isRecommended
+                              ? const Color(0xFF45A470)
+                              : const Color(0xFFE7AE30),
+                        ),
+                      ),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              deal.headline,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '${deal.industry} · ${deal.region}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 10,
+                                color: DashboardUi.muted,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(
+                        Icons.more_horiz,
+                        size: 15,
+                        color: DashboardUi.muted,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
+    ),
+  );
+
+  Widget _memberActionCard(
+    String title,
+    String detail,
+    IconData icon,
+    VoidCallback onTap,
+  ) => DashboardUi.panel(
+    child: InkWell(
+      onTap: onTap,
+      child: SizedBox(
+        height: 104,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, color: DashboardUi.blue, size: 21),
+            const SizedBox(height: 10),
+            Text(
+              title,
+              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+            ),
+            const SizedBox(height: 5),
+            Text(
+              detail,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(color: DashboardUi.muted, fontSize: 11),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+
   Widget _dashboardNavigation() => Material(
     color: Colors.white,
-    borderRadius: BorderRadius.circular(20),
+    borderRadius: BorderRadius.circular(14),
     child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 18),
       child: ListView(
         children: [
+          const Padding(
+            padding: EdgeInsets.fromLTRB(12, 0, 0, 15),
+            child: Text(
+              'MEMBER STUDIO',
+              style: TextStyle(
+                color: DashboardUi.muted,
+                fontSize: 10,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 1.1,
+              ),
+            ),
+          ),
+          _dashboardNavItem(_StudioView.home, Icons.home_outlined, 'Home'),
           _dashboardNavItem(
             _StudioView.opportunities,
             Icons.work_outline_rounded,
@@ -559,30 +995,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
   );
 
   Widget _dashboardNavItem(_StudioView view, IconData icon, String label) =>
-      Padding(
-        padding: const EdgeInsets.only(bottom: 8),
-        child: Tooltip(
-          message: label,
-          child: InkWell(
-            borderRadius: BorderRadius.circular(13),
-            onTap: () => _selectView(view),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 160),
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: _view == view ? _green : const Color(0xFFF4F1EB),
-                borderRadius: BorderRadius.circular(13),
-              ),
-              child: Icon(
-                icon,
-                size: 20,
-                color: _view == view ? Colors.white : _green,
-              ),
-            ),
-          ),
-        ),
-      );
+      DashboardUi.nav(label, icon, _view == view, () => _selectView(view));
 
   Widget _collapsedInteractionPanel() => Material(
     color: Colors.white,
@@ -1443,6 +1856,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
     spacing: 9,
     runSpacing: 9,
     children: [
+      _viewChip(_StudioView.home, 'HOME'),
       _viewChip(_StudioView.opportunities, 'OPPORTUNITIES'),
       _viewChip(_StudioView.recommendations, 'RECOMMENDATIONS'),
       _viewChip(_StudioView.saved, 'SAVED'),
@@ -1490,6 +1904,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
       );
     }
     return switch (_view) {
+      _StudioView.home => _memberHome(),
       _StudioView.opportunities => _opportunityFeed(),
       _StudioView.recommendations => _matchedOpportunities(),
       _StudioView.opportunityDetail => _expandedOpportunity(),
