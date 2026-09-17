@@ -2,6 +2,7 @@ import '../services/deal_intake_fields.dart';
 import '../widgets/deal_intake_form.dart';
 import '../widgets/site_copy_text.dart';
 import '../widgets/site_text.dart';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -9,6 +10,8 @@ import 'package:intl/intl.dart';
 import '../models/platform_side.dart';
 import '../services/backend_service.dart';
 import '../services/deal_room_service.dart';
+import '../services/account_service.dart';
+import '../services/marketplace_service.dart';
 import '../services/member_deal_marketplace_service.dart';
 import '../widgets/home_brand_button.dart';
 import '../widgets/topo_background.dart';
@@ -59,6 +62,18 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
 
   void _refresh() => setState(() => _rooms = DealRoomService.loadRooms());
 
+  Future<void> _managePersonalTeam() async {
+    if (BackendService.user == null) {
+      await Navigator.of(context)
+          .push(MaterialPageRoute<void>(builder: (_) => const AuthPage()));
+      if (!mounted || BackendService.user == null) return;
+    }
+    await showDialog<void>(
+      context: context,
+      builder: (_) => const _PersonalTeamDialog(),
+    );
+  }
+
   void _goStep(int step) {
     if (step == 3) return;
     final page = switch (step) {
@@ -66,9 +81,8 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
       1 => const BuyerReadinessPage(),
       _ => const BusinessAcquisitionPage(),
     };
-    Navigator.of(
-      context,
-    ).pushReplacement(MaterialPageRoute<void>(builder: (_) => page));
+    Navigator.of(context)
+        .pushReplacement(MaterialPageRoute<void>(builder: (_) => page));
   }
 
   DealIntakeDetails? _pendingIntake;
@@ -87,9 +101,8 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
     _pendingIntake = result;
     if (!mounted) return;
     if (BackendService.user == null) {
-      await Navigator.of(
-        context,
-      ).push(MaterialPageRoute<void>(builder: (_) => const AuthPage()));
+      await Navigator.of(context)
+          .push(MaterialPageRoute<void>(builder: (_) => const AuthPage()));
       if (!mounted || BackendService.user == null) return;
     }
     setState(() => _creating = true);
@@ -454,6 +467,11 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                         'buyer.learning.add',
                         'Add a deal from any source',
                       ),
+                    ),
+                    OutlinedButton.icon(
+                      onPressed: _managePersonalTeam,
+                      icon: const Icon(Icons.group_add_outlined),
+                      label: const Text('Add team members'),
                     ),
                   ],
                 ),
@@ -2235,7 +2253,6 @@ enum _DealWorkspaceView {
   financials,
   evaluation,
   plan,
-  vault,
   team,
   timeline,
   privacy,
@@ -2372,9 +2389,8 @@ class _DealRoomPageState extends State<DealRoomPage> {
       _dealCapital.text,
     ], requireCountry: false);
     if (error != null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(error)));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(error)));
       return;
     }
     setState(() => _saving = true);
@@ -2520,9 +2536,8 @@ class _DealRoomPageState extends State<DealRoomPage> {
     data: Theme.of(context).copyWith(
       colorScheme: const ColorScheme.light(primary: _purple, surface: _surface),
       scaffoldBackgroundColor: _paper,
-      textTheme: Theme.of(
-        context,
-      ).textTheme.apply(bodyColor: _ink, displayColor: _ink),
+      textTheme: Theme.of(context).textTheme
+          .apply(bodyColor: _ink, displayColor: _ink),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: Colors.white,
@@ -2728,11 +2743,6 @@ class _DealRoomPageState extends State<DealRoomPage> {
                 'Plan',
               ),
               _railButton(
-                _DealWorkspaceView.vault,
-                Icons.folder_copy_outlined,
-                'Vault',
-              ),
-              _railButton(
                 _DealWorkspaceView.team,
                 Icons.groups_2_outlined,
                 'Team',
@@ -2853,7 +2863,6 @@ class _DealRoomPageState extends State<DealRoomPage> {
     _DealWorkspaceView.financials => 'Acquisition economics',
     _DealWorkspaceView.evaluation => 'Evidence and risk',
     _DealWorkspaceView.plan => 'Guided execution',
-    _DealWorkspaceView.vault => 'Secure records',
     _DealWorkspaceView.team => 'People and decisions',
     _DealWorkspaceView.timeline => 'Stage and activity',
     _DealWorkspaceView.privacy => 'Anonymous publishing controls',
@@ -2865,7 +2874,6 @@ class _DealRoomPageState extends State<DealRoomPage> {
     _DealWorkspaceView.financials => 'Financial model',
     _DealWorkspaceView.evaluation => 'Affinity evaluation',
     _DealWorkspaceView.plan => 'Transaction plan',
-    _DealWorkspaceView.vault => 'Document vault',
     _DealWorkspaceView.team => 'Deal team',
     _DealWorkspaceView.timeline => 'Deal timeline',
     _DealWorkspaceView.privacy => 'Privacy preview',
@@ -2911,11 +2919,6 @@ class _DealRoomPageState extends State<DealRoomPage> {
     _DealWorkspaceView.financials => _financialWorkspace(),
     _DealWorkspaceView.evaluation => _evaluationWorkspace(),
     _DealWorkspaceView.plan => _checklist(bundle.tasks, bundle.members),
-    _DealWorkspaceView.vault =>
-      (_room.ownedByCurrentUser ||
-              _room.sharingPreferences['documents'] == true)
-          ? _documents(bundle.documents, bundle.documentEvents)
-          : _restrictedVault(),
     _DealWorkspaceView.team => Column(
       children: [
         _team(bundle.members),
@@ -3135,9 +3138,8 @@ class _DealRoomPageState extends State<DealRoomPage> {
               'CASH AFTER OWNER',
               cash == null
                   ? 'PENDING'
-                  : NumberFormat.compactCurrency(
-                      symbol: '${_room.currency} ',
-                    ).format(cash),
+                  : NumberFormat.compactCurrency(symbol: '${_room.currency} ')
+                        .format(cash),
             ),
             _metric(
               'ACQUISITION DSCR',
@@ -3463,11 +3465,6 @@ class _DealRoomPageState extends State<DealRoomPage> {
               'risk',
               'Share Affinity evaluation',
               'Approved deal-team professionals can view risk and viability outputs.',
-            ),
-            _privacyToggle(
-              'documents',
-              'Allow document access',
-              'Only explicitly approved participants can open the private vault.',
             ),
           ],
         ),
@@ -3982,11 +3979,6 @@ class _DealRoomPageState extends State<DealRoomPage> {
               'Plan',
             ),
             _mobileNav(
-              _DealWorkspaceView.vault,
-              Icons.folder_copy_outlined,
-              'Vault',
-            ),
-            _mobileNav(
               _DealWorkspaceView.team,
               Icons.groups_2_outlined,
               'Team',
@@ -4235,9 +4227,8 @@ class _DealRoomPageState extends State<DealRoomPage> {
               ? 'PRIVATE'
               : _room.purchasePrice <= 0
               ? '—'
-              : NumberFormat.compactCurrency(
-                  symbol: '${_room.currency} ',
-                ).format(_room.purchasePrice),
+              : NumberFormat.compactCurrency(symbol: '${_room.currency} ')
+                    .format(_room.purchasePrice),
         ),
         _metric(
           _room.isBusiness ? 'ACQUISITION RISK' : 'RISK',
@@ -4562,17 +4553,6 @@ class _DealRoomPageState extends State<DealRoomPage> {
             ),
             contentPadding: EdgeInsets.zero,
           ),
-          if (!_room.isBusiness)
-            SwitchListTile(
-              value: _room.sharingPreferences['documents'] == true,
-              onChanged: (value) => _setSharing('documents', value),
-              title: const SiteText(
-                contentKey: 'copy.deal_rooms_page.24',
-                literal: true,
-                'Allow document access',
-              ),
-              contentPadding: EdgeInsets.zero,
-            ),
         ],
       ],
     ),
@@ -5233,6 +5213,185 @@ class _DealRoomPageState extends State<DealRoomPage> {
         const SizedBox(height: 16),
         child,
       ],
+    ),
+  );
+}
+
+class _PersonalTeamDialog extends StatefulWidget {
+  const _PersonalTeamDialog();
+
+  @override
+  State<_PersonalTeamDialog> createState() => _PersonalTeamDialogState();
+}
+
+class _PersonalTeamDialogState extends State<_PersonalTeamDialog> {
+  late Future<void> _ready;
+  MarketplaceCity _city = MarketplaceService.cities.first;
+  List<MarketplaceProvider> _providers = [];
+  Set<String> _selected = {};
+  String _query = '';
+  String? _busyId;
+
+  @override
+  void initState() {
+    super.initState();
+    _ready = _load();
+  }
+
+  Future<void> _load() async {
+    final results = await Future.wait([
+      MarketplaceService.load(_city, side: PlatformSide.business),
+      AccountService.loadTeam(),
+    ]);
+    final team = results[1] as List<MarketplaceProvider>;
+    _providers = (results[0] as MarketplaceDirectory).providers
+        .where((provider) => !provider.isExample)
+        .toList();
+    for (final provider in team) {
+      if (!_providers.any((item) => item.id == provider.id))
+        _providers.add(provider);
+    }
+    _selected = team.map((provider) => provider.id).toSet();
+  }
+
+  Future<void> _toggle(MarketplaceProvider provider) async {
+    setState(() => _busyId = provider.id);
+    try {
+      if (_selected.contains(provider.id)) {
+        await MarketplaceService.removeFromTeam(provider.id);
+        _selected.remove(provider.id);
+      } else {
+        await MarketplaceService.addToTeam(provider);
+        _selected.add(provider.id);
+      }
+      if (mounted) setState(() {});
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not update your team: $error')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busyId = null);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => Dialog(
+    child: ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 620, maxHeight: 700),
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Expanded(
+                  child: Text(
+                    'Your personal team',
+                    style: TextStyle(fontSize: 25, fontWeight: FontWeight.w700),
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  tooltip: 'Close',
+                  icon: const Icon(Icons.close),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              'Add professionals to your account so they are easy to find across your deals.',
+            ),
+            const SizedBox(height: 18),
+            DropdownButtonFormField<MarketplaceCity>(
+              initialValue: _city,
+              decoration: const InputDecoration(labelText: 'Search near'),
+              items: MarketplaceService.cities
+                  .map(
+                    (city) =>
+                        DropdownMenuItem(value: city, child: Text(city.label)),
+                  )
+                  .toList(),
+              onChanged: (city) {
+                if (city == null) return;
+                setState(() {
+                  _city = city;
+                  _ready = _load();
+                });
+              },
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              decoration: const InputDecoration(
+                prefixIcon: Icon(Icons.search),
+                hintText: 'Search professionals',
+              ),
+              onChanged: (value) =>
+                  setState(() => _query = value.toLowerCase().trim()),
+            ),
+            const SizedBox(height: 14),
+            Expanded(
+              child: FutureBuilder<void>(
+                future: _ready,
+                builder: (context, snapshot) {
+                  if (snapshot.hasError) {
+                    return const Center(
+                      child: Text(
+                        'Could not load professionals. Please try again later.',
+                      ),
+                    );
+                  }
+                  if (snapshot.connectionState != ConnectionState.done) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  final visible = _providers.where((provider) {
+                    final text =
+                        '${provider.name} ${provider.company} ${provider.specialty}'
+                            .toLowerCase();
+                    return text.contains(_query);
+                  }).toList();
+                  if (visible.isEmpty) {
+                    return const Center(
+                      child: Text('No professionals found for this search.'),
+                    );
+                  }
+                  return ListView.separated(
+                    itemCount: visible.length,
+                    separatorBuilder: (_, _) => const Divider(height: 1),
+                    itemBuilder: (context, index) {
+                      final provider = visible[index];
+                      final selected = _selected.contains(provider.id);
+                      return ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(provider.name),
+                        subtitle: Text(
+                          '${provider.company} · ${provider.specialty}',
+                        ),
+                        trailing: _busyId == provider.id
+                            ? const SizedBox.square(
+                                dimension: 22,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : TextButton.icon(
+                                onPressed: _busyId == null
+                                    ? () => _toggle(provider)
+                                    : null,
+                                icon: Icon(selected ? Icons.remove : Icons.add),
+                                label: Text(selected ? 'Remove' : 'Add'),
+                              ),
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
     ),
   );
 }

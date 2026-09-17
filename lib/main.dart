@@ -1,7 +1,9 @@
 import 'screens/transaction_learning_page.dart';
 import 'widgets/site_inline_editor.dart';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'models/platform_side.dart';
 import 'screens/deal_rooms_page.dart';
@@ -21,6 +23,9 @@ import 'services/site_content_service.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await BackendService.initialize();
+  final preferences = await SharedPreferences.getInstance();
+  await preferences.setBool('affinity.landing.motion', true);
+  await preferences.setBool('affinity.consulting.motion', true);
   await SiteContentService.initialize();
   await AcquisitionFoundation.load();
   runApp(const AffinityApp());

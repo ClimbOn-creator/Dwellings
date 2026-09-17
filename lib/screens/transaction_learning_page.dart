@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:async';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -28,9 +29,27 @@ class TransactionLearningPage extends StatefulWidget {
 
 class _TransactionLearningPageState extends State<TransactionLearningPage> {
   final _scroll = ScrollController();
+  Timer? _messageTimer;
+  int _messageIndex = 0;
+
+  static const _messages = [
+    'Understand the purpose',
+    'Explore a worked example',
+    'Download your editable file',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _messageTimer = Timer.periodic(const Duration(seconds: 4), (_) {
+      if (mounted)
+        setState(() => _messageIndex = (_messageIndex + 1) % _messages.length);
+    });
+  }
 
   @override
   void dispose() {
+    _messageTimer?.cancel();
     _scroll.dispose();
     super.dispose();
   }
@@ -69,7 +88,23 @@ class _TransactionLearningPageState extends State<TransactionLearningPage> {
         backgroundColor: Colors.white,
         foregroundColor: _ink,
         surfaceTintColor: Colors.white,
-        title: const HomeBrandButton(size: 48, dark: false),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const HomeBrandButton(size: 48, dark: false),
+            if (MediaQuery.sizeOf(context).width >= 620) ...[
+              const SizedBox(width: 18),
+              const Text(
+                'DOCUMENT GUIDES',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1.2,
+                ),
+              ),
+            ],
+          ],
+        ),
         actions: const [AppNavigationMenu(dark: false)],
       ),
       body: CustomScrollView(
@@ -90,7 +125,7 @@ class _TransactionLearningPageState extends State<TransactionLearningPage> {
   Widget _hero(BuildContext context, ScrollController scroll) {
     final compact = MediaQuery.sizeOf(context).width < 720;
     return SizedBox(
-      height: compact ? 980 : 700,
+      height: compact ? 640 : 440,
       child: _TransactionParallaxImage(
         controller: scroll,
         contentKey: 'image.transaction.hero',
@@ -100,8 +135,8 @@ class _TransactionLearningPageState extends State<TransactionLearningPage> {
           child: Stack(
             children: [
               Positioned(
-                right: compact ? -150 : -80,
-                top: -120,
+                right: compact ? -170 : -80,
+                top: -190,
                 child: Container(
                   width: compact ? 370 : 540,
                   height: compact ? 370 : 540,
@@ -118,7 +153,7 @@ class _TransactionLearningPageState extends State<TransactionLearningPage> {
                   child: Padding(
                     padding: EdgeInsets.symmetric(
                       horizontal: compact ? 24 : 54,
-                      vertical: 46,
+                      vertical: 24,
                     ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -135,32 +170,61 @@ class _TransactionLearningPageState extends State<TransactionLearningPage> {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 26),
+                        const SizedBox(height: 16),
                         SiteCopyText(
                           'transaction.library.title',
-                          'Transaction\nRoom',
+                          'The deal,\nmade clear.',
                           style: TextStyle(
                             color: Colors.white,
-                            fontSize: compact ? 56 : 72,
-                            height: .92,
+                            fontSize: compact ? 46 : 58,
+                            height: .98,
                             fontWeight: FontWeight.w800,
-                            letterSpacing: -3.6,
+                            letterSpacing: -2.4,
                           ),
                         ),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 14),
                         ConstrainedBox(
                           constraints: const BoxConstraints(maxWidth: 730),
                           child: const SiteCopyText(
                             'transaction.library.intro',
-                            'A practical buyer’s library for understanding each deal document: what it is, when to use it, what evidence belongs inside it, and which adviser should review it before you rely on it.',
+                            'Understand each document, see how it works, and take the next step with confidence.',
                             style: TextStyle(
                               color: Color(0xFFEAEAF3),
-                              fontSize: 20,
-                              height: 1.5,
+                              fontSize: 17,
+                              height: 1.4,
                             ),
                           ),
                         ),
-                        const SizedBox(height: 30),
+                        const SizedBox(height: 18),
+                        SizedBox(
+                          height: 30,
+                          child: AnimatedSwitcher(
+                            duration: MediaQuery.disableAnimationsOf(context)
+                                ? Duration.zero
+                                : const Duration(milliseconds: 550),
+                            transitionBuilder: (child, animation) =>
+                                FadeTransition(
+                                  opacity: animation,
+                                  child: SlideTransition(
+                                    position: Tween<Offset>(
+                                      begin: const Offset(0, .35),
+                                      end: Offset.zero,
+                                    ).animate(animation),
+                                    child: child,
+                                  ),
+                                ),
+                            child: Text(
+                              _messages[_messageIndex],
+                              key: ValueKey(_messageIndex),
+                              style: const TextStyle(
+                                color: Color(0xFFBFC9FF),
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 14),
                         const Wrap(
                           spacing: 12,
                           runSpacing: 12,
