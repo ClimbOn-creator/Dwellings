@@ -14,18 +14,9 @@ import '../widgets/site_image.dart';
 const _night = Color(0xFF070717);
 const _ink = Color(0xFF11111F);
 const _blue = Color(0xFF526DFF);
-const _lilac = Color(0xFFC8B8FF);
-const _lime = Color(0xFFD7FF78);
-const _coral = Color(0xFFFF8B79);
 const _paper = Color(0xFFF5F5F7);
 const _muted = Color(0xFF5C6074);
-const _sectionColors = [
-  Color(0xFFE8E2FF),
-  Color(0xFFDDF5EC),
-  Color(0xFFFFE2DC),
-  Color(0xFFDCE5FF),
-  Color(0xFFFFF2D7),
-];
+const _sectionColors = [Color(0xFFF5F5F7), Color(0xFFFFFFFF)];
 
 class TransactionLearningPage extends StatefulWidget {
   const TransactionLearningPage({super.key});
@@ -116,7 +107,7 @@ class _TransactionLearningPageState extends State<TransactionLearningPage> {
                   height: compact ? 370 : 540,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: _blue.withValues(alpha: .22),
+                    color: _blue.withValues(alpha: .16),
                   ),
                 ),
               ),
@@ -199,7 +190,7 @@ class _TransactionLearningPageState extends State<TransactionLearningPage> {
   static Widget _pill({required Widget child}) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 9),
     decoration: BoxDecoration(
-      color: _lime,
+      color: Colors.white,
       borderRadius: BorderRadius.circular(999),
     ),
     child: child,
@@ -227,7 +218,7 @@ class _TransactionLearningPageState extends State<TransactionLearningPage> {
         constraints: const BoxConstraints(maxWidth: 1180),
         child: Row(
           children: [
-            Container(width: 38, height: 4, color: _coral),
+            Container(width: 38, height: 4, color: _blue),
             const SizedBox(width: 15),
             Expanded(
               child: SiteCopyText(
@@ -311,6 +302,7 @@ class _TransactionLearningPageState extends State<TransactionLearningPage> {
       controller: scroll,
       contentKey: 'image.transaction.${lesson.id}.preview',
       asset: lesson.previewAsset,
+      fit: BoxFit.contain,
       child: Stack(
         children: [
           const Positioned(
@@ -330,7 +322,7 @@ class _TransactionLearningPageState extends State<TransactionLearningPage> {
                 const SizedBox(width: 9),
                 Expanded(
                   child: Text(
-                    'ACTUAL COMPLETED EXAMPLE · ${lesson.fileTypeLabel.toUpperCase()}',
+                    'FICTIONAL WORKED EXAMPLE · ${lesson.fileTypeLabel.toUpperCase()}',
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 12,
@@ -431,7 +423,7 @@ class _TransactionLearningPageState extends State<TransactionLearningPage> {
             const Text(
               'BUYER WATCH-OUT',
               style: TextStyle(
-                color: _coral,
+                color: const Color(0xFFAEBBFF),
                 fontSize: 12,
                 fontWeight: FontWeight.w800,
                 letterSpacing: 1,
@@ -465,7 +457,7 @@ class _TransactionLearningPageState extends State<TransactionLearningPage> {
             icon: const Icon(Icons.image_outlined),
             label: const SiteCopyText(
               'transaction.action.example',
-              'DOWNLOAD COMPLETED EXAMPLE',
+              'DOWNLOAD WORKED EXAMPLE',
               style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
             ),
           ),
@@ -518,7 +510,7 @@ class _TransactionLearningPageState extends State<TransactionLearningPage> {
       );
 
   Widget _closing() => Container(
-    color: _lilac,
+    color: _night,
     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 84),
     child: Center(
       child: ConstrainedBox(
@@ -530,7 +522,7 @@ class _TransactionLearningPageState extends State<TransactionLearningPage> {
               'Prepared is not the same as advised.',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: _ink,
+                color: Colors.white,
                 fontSize: 42,
                 height: 1.05,
                 fontWeight: FontWeight.w800,
@@ -542,13 +534,17 @@ class _TransactionLearningPageState extends State<TransactionLearningPage> {
               'transaction.library.scope',
               'These editable tools help you organize facts, requests, calculations and adviser questions. They are not contracts, legal or tax advice, lender approval, a valuation, or verified transaction evidence. Confirm deal-specific decisions with qualified legal, accounting, tax and financing professionals.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: _ink, fontSize: 17, height: 1.55),
+              style: TextStyle(
+                color: Color(0xFFD7D7E2),
+                fontSize: 17,
+                height: 1.55,
+              ),
             ),
             const SizedBox(height: 28),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
               decoration: BoxDecoration(
-                color: _night,
+                color: Colors.white.withValues(alpha: .09),
                 borderRadius: BorderRadius.circular(999),
               ),
               child: const Text(
@@ -564,9 +560,13 @@ class _TransactionLearningPageState extends State<TransactionLearningPage> {
             ),
             const SizedBox(height: 34),
             const Text(
-              'FURTHER LEARNING · CONFIRM LOCAL REQUIREMENTS PROFESSIONALLY',
+              'REFERENCE GUIDANCE',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+              ),
             ),
             const SizedBox(height: 8),
             Wrap(
@@ -639,12 +639,14 @@ class _TransactionParallaxImage extends StatelessWidget {
     required this.contentKey,
     required this.asset,
     required this.child,
+    this.fit = BoxFit.cover,
   });
 
   final ScrollController controller;
   final String contentKey;
   final String asset;
   final Widget child;
+  final BoxFit fit;
 
   @override
   Widget build(BuildContext context) => ClipRect(
@@ -657,7 +659,7 @@ class _TransactionParallaxImage extends StatelessWidget {
             animation: controller,
             child: SiteImage(
               contentKey: contentKey,
-              original: Image.asset(asset, fit: BoxFit.cover),
+              original: Image.asset(asset, fit: fit),
             ),
             builder: (context, image) {
               final offset = controller.hasClients ? controller.offset : 0.0;
@@ -691,7 +693,7 @@ class _Orientation extends StatelessWidget {
       ),
       (
         '02',
-        'Inspect a real example',
+        'Inspect a worked example',
         'Scroll the completed fictional preview to understand the expected structure before opening the editable file.',
       ),
       (
@@ -786,10 +788,7 @@ class _Orientation extends StatelessWidget {
           children: [
             Text(
               number,
-              style: const TextStyle(
-                color: _coral,
-                fontWeight: FontWeight.w800,
-              ),
+              style: const TextStyle(color: _blue, fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 18),
             Text(

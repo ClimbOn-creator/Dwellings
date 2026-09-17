@@ -29,7 +29,7 @@ class TransactionLesson {
     'deal-brief' =>
       'Use it as soon as a listing, broker package or direct opportunity looks interesting—before an NDA, offer or paid diligence work. Update it when the seller clarifies the price, structure or inclusions.',
     'nda-brief' =>
-      'Use it before financial statements, customer information, employee records or other confidential material changes hands. Send the completed brief to local counsel so the NDA reflects the actual parties and access plan.',
+      'Use it before financial statements, customer information, employee records or other confidential material changes hands. Have local counsel review and adapt the draft before either party signs or opens the data room.',
     'request-list' =>
       'Start it immediately after confidentiality is in place and keep it active throughout diligence. Every requested file, missing answer and follow-up should have one row, one owner and a current status.',
     'earnings' =>
@@ -37,7 +37,7 @@ class TransactionLesson {
     'working-capital' =>
       'Use it while defining what the price includes and again when negotiating the closing adjustment. It becomes essential before finalizing sources and uses or estimating the cash needed on Day 1.',
     'loi-brief' =>
-      'Use it after the initial facts support a serious proposal but before anyone drafts or sends an LOI. Resolve the commercial instructions with your advisers first.',
+      'Use it after initial screening supports a serious proposal and before full diligence. Have counsel and the accountant settle the proposed economics, conditions and binding provisions before sending it to the seller.',
     'risk-log' =>
       'Use it from the first diligence review until conditions are waived or the buyer walks away. Add a finding when evidence changes the economics, timing, legal exposure or operating plan.',
     'funding' =>
@@ -55,7 +55,7 @@ class TransactionLesson {
     'deal-brief' =>
       'Source, business model, proposed structure, asking price, included assets, buyer role, capital limits, return criteria, hard limits, known gaps and the initial proceed/pause/decline decision.',
     'nda-brief' =>
-      'Exact legal names, permitted purpose, authorised advisers, expected information, access controls, contact restrictions, return or deletion needs, duration questions and governing-law instructions.',
+      'Exact legal names and addresses, permitted purpose, recipients, expected information, contact and privacy restrictions, return or deletion obligations, duration, notice details and governing law.',
     'request-list' =>
       'Request ID, category, document and period, person responsible, request and due dates, received date, review owner, evidence location, follow-up, status and decision impact.',
     'earnings' =>
@@ -63,7 +63,7 @@ class TransactionLesson {
     'working-capital' =>
       'Receivables, inventory, prepaids, payables, accruals, normalized target, debt and lien payouts, included assets, condition, estimated value, title evidence and opening cash reserve.',
     'loi-brief' =>
-      'Buyer and seller entities, asset/share structure, price, payment mix, working-capital treatment, diligence and financing conditions, consents, dates, exclusivity and intended binding-term questions.',
+      'Buyer and seller entities, assets and excluded liabilities, price and payment mix, working-capital mechanism, diligence and financing conditions, consents, dates, exclusivity, expenses and intended binding sections.',
     'risk-log' =>
       'One evidence-based finding per row with category, source, likelihood, impact, mitigation, owner, deadline, decision, status and the evidence required to close it.',
     'funding' =>
@@ -107,7 +107,7 @@ class TransactionLesson {
     'deal-brief' =>
       'Treat listing claims as unverified. The brief is a screening record, not a valuation, offer or reason to relax a hard limit.',
     'nda-brief' =>
-      'An NDA can contain binding restrictions. Do not copy boilerplate blindly or assume it permits sharing with a lender, partner or adviser.',
+      'This is a legal agreement, not a questionnaire. The sample is a drafting reference only; a local lawyer must adapt it to the parties, privacy rules and disclosure plan before signature.',
     'request-list' =>
       'Received is not reviewed, and reviewed is not verified. Keep the original source, version and unresolved follow-up visible.',
     'earnings' =>
@@ -115,7 +115,7 @@ class TransactionLesson {
     'working-capital' =>
       'A cash-free/debt-free headline does not explain the operating cash delivered at closing. Obsolete inventory and uncollectible receivables can overstate value.',
     'loi-brief' =>
-      'Some LOI provisions may bind the parties even when the price is described as non-binding. Do not send or sign the preparation brief.',
+      'Exclusivity, confidentiality, expenses and governing-law provisions may bind the parties even when the proposed purchase terms do not. Do not send the sample without counsel’s review.',
     'risk-log' =>
       'A proposed mitigation does not close a finding. Record the decision, residual exposure and actual completion evidence.',
     'funding' =>
@@ -145,8 +145,8 @@ const transactionLessons = [
   TransactionLesson(
     'nda-brief',
     '1 · Understand the deal',
-    'Confidentiality / NDA preparation brief',
-    'Help local counsel identify who needs protection and what information may be disclosed before sensitive records are shared.',
+    'Confidentiality and non disclosure agreement',
+    'A transaction-specific draft to control how a potential buyer receives, uses and shares the seller’s confidential information.',
     'Parties and advisers: [ ]\nInformation to disclose: [ ]\nPermitted purpose and recipients: [ ]\nExisting confidentiality restrictions: [ ]\nReturn / deletion needs: [ ]\nQuestions for counsel: [ ]',
     'Buyer wants financial statements and customer concentration data. Ask counsel to address access by the accountant and lender, permitted use, retention obligations and restrictions on contacting customers. No seller records shared until the approved agreement and access rules are in place.',
   ),
@@ -177,8 +177,8 @@ const transactionLessons = [
   TransactionLesson(
     'loi-brief',
     '3 · Structure the offer',
-    'Letter of intent / offer preparation brief',
-    'Record proposed commercial terms for professional review. An LOI may contain binding provisions even when other terms are preliminary.',
+    'Letter of intent for an asset purchase',
+    'Set out the proposed economics and process before a definitive agreement, separating non-binding business terms from provisions intended to bind the parties.',
     'Buyer/seller legal entities: [ ]\nAssets or shares: [ ]\nPrice / payment structure: [ ]\nWorking-capital treatment: [ ]\nDiligence and financing conditions: [ ]\nTarget timetable: [ ]\nExclusivity / confidentiality questions: [ ]\nBinding terms and local-law review: [ ]',
     'Proposed asset purchase: CAD 500,000; financing and diligence to be explored. Inventory treatment remains open. Buyer asks counsel to draft conditions, identify any binding provisions and advise on exclusivity. This brief is not sent as an offer or signed.',
   ),

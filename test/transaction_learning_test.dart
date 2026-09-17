@@ -174,7 +174,7 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     await tester.pumpWidget(const MaterialApp(home: TransactionLearningPage()));
     await tester.pumpAndSettle();
-    final example = find.text('DOWNLOAD COMPLETED EXAMPLE');
+    final example = find.text('DOWNLOAD WORKED EXAMPLE');
     for (var i = 0; i < 8 && example.evaluate().isEmpty; i++) {
       await tester.drag(find.byType(CustomScrollView), const Offset(0, -600));
       await tester.pumpAndSettle();
