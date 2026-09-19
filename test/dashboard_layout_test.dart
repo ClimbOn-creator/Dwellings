@@ -76,11 +76,22 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     await tester.pumpWidget(const MaterialApp(home: DealRoomsPage()));
     await tester.pumpAndSettle();
+    expect(
+      tester.getTopLeft(find.text('Businesses for sale').first).dy,
+      greaterThan(tester.getTopLeft(find.text('My team').first).dy),
+    );
     await tester.tap(find.text('Businesses for sale').first);
     await tester.pumpAndSettle();
     expect(find.text('Businesses for sale 🏪'), findsOneWidget);
-    expect(find.textContaining('Affinity score'), findsWidgets);
+    expect(find.textContaining('Deal Compare Quiz'), findsWidgets);
     expect(find.text('Harbour Advisory Studio'), findsOneWidget);
+    expect(find.byType(Image), findsWidgets);
+    await tester.tap(find.byTooltip('Back to dashboard'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('My team').first);
+    await tester.pumpAndSettle();
+    expect(find.text('My team 🤝'), findsOneWidget);
+    expect(find.byType(Dialog), findsNothing);
     await tester.tap(find.byTooltip('Back to dashboard'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Transaction plan').first);

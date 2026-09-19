@@ -26,6 +26,7 @@ import '../widgets/app_navigation_menu.dart';
 import '../widgets/dashboard_ui.dart';
 import 'acquisition_support_page.dart';
 import 'business_acquisition_page.dart';
+import 'bulletin_listing_pages.dart';
 import 'deal_comparison_page.dart';
 import 'auth_page.dart';
 
@@ -36,7 +37,7 @@ const _lilac = Color(0xFF64645F);
 const _surface = Color(0xFFFCFBF8);
 const _line = Color(0xFFD6D1C9);
 
-enum _BuyerDashboardView { home, dealScreen, businesses, transactionPlan }
+enum _BuyerDashboardView { home, dealScreen, businesses, transactionPlan, team }
 
 class DealRoomsPage extends StatefulWidget {
   const DealRoomsPage({
@@ -66,6 +67,10 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
   String _businessSearch = '';
   BusinessSaleBulletin? _selectedBulletin;
   String? _plannerRoomId;
+  MarketplaceCity _teamCity = MarketplaceService.cities.first;
+  String _teamQuery = '';
+  String? _teamBusyId;
+  Future<(List<MarketplaceProvider>, Set<String>)>? _teamData;
   late final Timer _greetingTimer;
   DateTime _greetingTime = DateTime.now();
   final _screenName = TextEditingController();
@@ -354,6 +359,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                                 _buyerBusinesses(),
                               _BuyerDashboardView.transactionPlan =>
                                 _transactionPlanner(),
+                              _BuyerDashboardView.team => _buyerTeamPage(),
                               _ => _buyerDashboard(allRooms),
                             },
                           ),
@@ -365,6 +371,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                         _BuyerDashboardView.businesses => _buyerBusinesses(),
                         _BuyerDashboardView.transactionPlan =>
                           _transactionPlanner(),
+                        _BuyerDashboardView.team => _buyerTeamPage(),
                         _ => _buyerDashboard(allRooms),
                       };
               },
@@ -413,12 +420,6 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
           }),
         ),
         DashboardUi.nav(
-          'Businesses for sale',
-          Icons.storefront_outlined,
-          _dashboardView == _BuyerDashboardView.businesses,
-          () => setState(() => _dashboardView = _BuyerDashboardView.businesses),
-        ),
-        DashboardUi.nav(
           'Deal screen',
           Icons.calculate_outlined,
           _dashboardView == _BuyerDashboardView.dealScreen,
@@ -436,10 +437,19 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
         DashboardUi.nav(
           'My team',
           Icons.group_outlined,
-          false,
-          _managePersonalTeam,
+          _dashboardView == _BuyerDashboardView.team,
+          () => setState(() {
+            _dashboardView = _BuyerDashboardView.team;
+            _teamData ??= _loadTeamPageData();
+          }),
         ),
         const Spacer(),
+        DashboardUi.nav(
+          'Businesses for sale',
+          Icons.storefront_outlined,
+          _dashboardView == _BuyerDashboardView.businesses,
+          () => setState(() => _dashboardView = _BuyerDashboardView.businesses),
+        ),
         DashboardUi.nav(
           'Add a deal',
           Icons.add_circle_outline,
@@ -752,7 +762,10 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                       'My personal team',
                       'Add advisers and collaborators to your team. 🤝',
                       Icons.group_outlined,
-                      _managePersonalTeam,
+                      () => setState(() {
+                        _dashboardView = _BuyerDashboardView.team;
+                        _teamData ??= _loadTeamPageData();
+                      }),
                     ),
                   ),
                   SizedBox(
@@ -986,7 +999,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                               SizedBox(
                                 width: compact
                                     ? box.maxWidth
-                                    : (box.maxWidth - 48) / 3,
+                                    : (box.maxWidth - 24) / 2,
                                 child: _buyerBusinessCard(
                                   listing,
                                   hasPreferences
@@ -1036,92 +1049,13 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
     ),
   );
 
-  Widget _buyerBusinessCard(
-    BusinessSaleBulletin listing,
-    int? score,
-  ) => Material(
-    color: const Color(0xFFF8FAFE),
-    borderRadius: BorderRadius.circular(11),
-    child: InkWell(
-      onTap: () => setState(() => _selectedBulletin = listing),
-      borderRadius: BorderRadius.circular(11),
-      child: Container(
-        constraints: const BoxConstraints(minHeight: 185),
-        padding: const EdgeInsets.all(15),
-        decoration: BoxDecoration(
-          border: Border.all(color: DashboardUi.line),
-          borderRadius: BorderRadius.circular(11),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Text(
-                    listing.title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Container(
-                  width: 46,
-                  height: 46,
-                  decoration: const BoxDecoration(
-                    color: DashboardUi.paleBlue,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: Text(
-                      score == null ? '—' : '$score',
-                      style: const TextStyle(
-                        color: DashboardUi.blue,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            Text(
-              score == null ? 'Affinity score after quiz' : 'Affinity score',
-              style: const TextStyle(
-                color: DashboardUi.muted,
-                fontSize: 9,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              '${listing.industry} · ${listing.region}',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: DashboardUi.muted, fontSize: 11),
-            ),
-            const SizedBox(height: 5),
-            Text(
-              listing.askingPriceBand,
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: 9),
-            Text(
-              listing.summary,
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 11, height: 1.4),
-            ),
-          ],
-        ),
-      ),
-    ),
-  );
+  Widget _buyerBusinessCard(BusinessSaleBulletin listing, int? score) =>
+      BulletinMarketplaceCard(
+        bulletin: listing,
+        dealScore: score,
+        onOpen: () => setState(() => _selectedBulletin = listing),
+        onSave: () => _toggleSavedBusiness(listing),
+      );
 
   Widget _buyerBusinessDetail(BusinessSaleBulletin listing, int? score) =>
       DashboardUi.panel(
@@ -1282,6 +1216,399 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
     });
   }
 
+  Future<(List<MarketplaceProvider>, Set<String>)> _loadTeamPageData() async {
+    if (BackendService.user == null) {
+      return (const <MarketplaceProvider>[], <String>{});
+    }
+    final values = await Future.wait([
+      MarketplaceService.load(_teamCity, side: PlatformSide.business),
+      AccountService.loadTeam(),
+    ]);
+    final directory = values[0] as MarketplaceDirectory;
+    final team = values[1] as List<MarketplaceProvider>;
+    final providers = directory.providers
+        .where((provider) => !provider.isExample)
+        .toList();
+    for (final provider in team) {
+      if (!providers.any((item) => item.id == provider.id)) {
+        providers.add(provider);
+      }
+    }
+    return (providers, team.map((provider) => provider.id).toSet());
+  }
+
+  Widget _buyerTeamPage() {
+    if (BackendService.user == null) {
+      return SingleChildScrollView(
+        padding: const EdgeInsets.all(26),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'My team 🤝',
+              style: TextStyle(
+                fontSize: 27,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -.8,
+              ),
+            ),
+            const SizedBox(height: 18),
+            DashboardUi.panel(
+              child: Column(
+                children: [
+                  const Icon(
+                    Icons.group_outlined,
+                    color: DashboardUi.blue,
+                    size: 38,
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Sign in to build your acquisition team',
+                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+                  ),
+                  const SizedBox(height: 7),
+                  const Text(
+                    'Your advisers stay connected to your account and can be added to active transactions.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: DashboardUi.muted, height: 1.45),
+                  ),
+                  const SizedBox(height: 16),
+                  FilledButton(
+                    onPressed: () async {
+                      await Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => const AuthPage(),
+                        ),
+                      );
+                      if (mounted && BackendService.user != null) {
+                        setState(() => _teamData = _loadTeamPageData());
+                      }
+                    },
+                    child: const Text('Sign in'),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    _teamData ??= _loadTeamPageData();
+    return FutureBuilder<(List<MarketplaceProvider>, Set<String>)>(
+      future: _teamData,
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Center(
+            child: TextButton.icon(
+              onPressed: () => setState(() => _teamData = _loadTeamPageData()),
+              icon: const Icon(Icons.refresh),
+              label: const Text('Retry My Team'),
+            ),
+          );
+        }
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        final providers = snapshot.data!.$1;
+        final selected = snapshot.data!.$2;
+        final query = _teamQuery.trim().toLowerCase();
+        final visible = providers.where((provider) {
+          final text =
+              '${provider.name} ${provider.company} ${provider.specialty} ${provider.jobTitle}'
+                  .toLowerCase();
+          return query.isEmpty ||
+              query.split(RegExp(r'\s+')).every(text.contains);
+        }).toList();
+        final myTeam = providers
+            .where((provider) => selected.contains(provider.id))
+            .toList();
+        final available = visible
+            .where((provider) => !selected.contains(provider.id))
+            .toList();
+        return SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(26, 28, 26, 56),
+          child: LayoutBuilder(
+            builder: (context, box) {
+              final compact = box.maxWidth < 720;
+              final cardWidth = compact
+                  ? box.maxWidth
+                  : (box.maxWidth - 16) / 2;
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'My team 🤝',
+                    style: TextStyle(
+                      fontSize: 27,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -.8,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  const Text(
+                    'Build the professional team that supports every acquisition.',
+                    style: TextStyle(color: DashboardUi.muted),
+                  ),
+                  const SizedBox(height: 20),
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 12,
+                    children: [
+                      SizedBox(
+                        width: compact ? (box.maxWidth - 12) / 2 : 210,
+                        child: DashboardUi.metric(
+                          'Team members',
+                          '${myTeam.length}',
+                          'Saved to your account',
+                          Icons.groups_outlined,
+                          DashboardUi.paleBlue,
+                          const Color(0xFF5F91DC),
+                        ),
+                      ),
+                      SizedBox(
+                        width: compact ? (box.maxWidth - 12) / 2 : 210,
+                        child: DashboardUi.metric(
+                          'Available nearby',
+                          '${available.length}',
+                          _teamCity.label,
+                          Icons.location_on_outlined,
+                          DashboardUi.paleGreen,
+                          const Color(0xFF3C9764),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 18),
+                  if (myTeam.isNotEmpty) ...[
+                    DashboardUi.sectionTitle(
+                      'Your acquisition team',
+                      subtitle: 'The professionals saved to your account.',
+                    ),
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 16,
+                      runSpacing: 16,
+                      children: [
+                        for (final provider in myTeam)
+                          SizedBox(
+                            width: cardWidth,
+                            child: _teamProviderCard(provider, selected: true),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+                  DashboardUi.panel(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        DashboardUi.sectionTitle(
+                          'Find professionals',
+                          subtitle:
+                              'Search business acquisition advisers and add them directly to your team.',
+                        ),
+                        const SizedBox(height: 15),
+                        if (compact) ...[
+                          _teamCityDropdown(),
+                          const SizedBox(height: 10),
+                          _teamSearchField(),
+                        ] else
+                          Row(
+                            children: [
+                              SizedBox(width: 250, child: _teamCityDropdown()),
+                              const SizedBox(width: 10),
+                              Expanded(child: _teamSearchField()),
+                            ],
+                          ),
+                        const SizedBox(height: 16),
+                        if (available.isEmpty)
+                          const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 30),
+                            child: Center(
+                              child: Text(
+                                'No additional professionals match this search.',
+                                style: TextStyle(color: DashboardUi.muted),
+                              ),
+                            ),
+                          )
+                        else
+                          Wrap(
+                            spacing: 16,
+                            runSpacing: 16,
+                            children: [
+                              for (final provider in available)
+                                SizedBox(
+                                  width: compact
+                                      ? box.maxWidth
+                                      : (box.maxWidth - 60) / 2,
+                                  child: _teamProviderCard(
+                                    provider,
+                                    selected: false,
+                                  ),
+                                ),
+                            ],
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _teamCityDropdown() => DropdownButtonFormField<MarketplaceCity>(
+    initialValue: _teamCity,
+    isExpanded: true,
+    decoration: const InputDecoration(
+      labelText: 'Search near',
+      prefixIcon: Icon(Icons.location_on_outlined),
+    ),
+    items: [
+      for (final city in MarketplaceService.cities)
+        DropdownMenuItem(value: city, child: Text(city.label)),
+    ],
+    onChanged: (city) {
+      if (city == null) return;
+      setState(() {
+        _teamCity = city;
+        _teamData = _loadTeamPageData();
+      });
+    },
+  );
+
+  Widget _teamSearchField() => TextField(
+    onChanged: (value) => setState(() => _teamQuery = value),
+    decoration: const InputDecoration(
+      labelText: 'Search professionals',
+      hintText: 'Name, company, or specialty',
+      prefixIcon: Icon(Icons.search),
+    ),
+  );
+
+  Widget _teamProviderCard(
+    MarketplaceProvider provider, {
+    required bool selected,
+  }) => DashboardUi.panel(
+    padding: const EdgeInsets.all(15),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ProfilePhoto(
+          size: 58,
+          photoUrl: provider.photoUrl,
+          exampleIndex: provider.photoIndex,
+        ),
+        const SizedBox(width: 13),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      provider.name,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                  if (provider.verified)
+                    const Icon(
+                      Icons.verified_rounded,
+                      color: DashboardUi.blue,
+                      size: 17,
+                    ),
+                ],
+              ),
+              const SizedBox(height: 3),
+              Text(
+                provider.company,
+                style: const TextStyle(color: DashboardUi.muted, fontSize: 11),
+              ),
+              const SizedBox(height: 7),
+              Text(
+                provider.specialty,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 11, height: 1.35),
+              ),
+              const SizedBox(height: 11),
+              Row(
+                children: [
+                  if (provider.reviewCount > 0) ...[
+                    const Icon(
+                      Icons.star_rounded,
+                      color: Color(0xFFE7AE30),
+                      size: 15,
+                    ),
+                    const SizedBox(width: 3),
+                    Text(
+                      '${provider.reviewScore.toStringAsFixed(1)} (${provider.reviewCount})',
+                      style: const TextStyle(
+                        color: DashboardUi.muted,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ],
+                  const Spacer(),
+                  _teamBusyId == provider.id
+                      ? const SizedBox.square(
+                          dimension: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : selected
+                      ? OutlinedButton.icon(
+                          onPressed: _teamBusyId == null
+                              ? () => _toggleTeamPageProvider(provider, true)
+                              : null,
+                          icon: const Icon(Icons.remove_rounded, size: 16),
+                          label: const Text('Remove'),
+                        )
+                      : FilledButton.icon(
+                          onPressed: _teamBusyId == null
+                              ? () => _toggleTeamPageProvider(provider, false)
+                              : null,
+                          icon: const Icon(Icons.add_rounded, size: 16),
+                          label: const Text('Add to team'),
+                        ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
+
+  Future<void> _toggleTeamPageProvider(
+    MarketplaceProvider provider,
+    bool selected,
+  ) async {
+    setState(() => _teamBusyId = provider.id);
+    try {
+      if (selected) {
+        await MarketplaceService.removeFromTeam(provider.id);
+      } else {
+        await MarketplaceService.addToTeam(provider);
+      }
+      if (mounted) setState(() => _teamData = _loadTeamPageData());
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not update your team: $error')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _teamBusyId = null);
+    }
+  }
+
   Widget _transactionPlanner() {
     _plannerBundles ??= _loadPlannerBundles();
     return FutureBuilder<List<DealRoomBundle>>(
@@ -1297,8 +1624,9 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
             ),
           );
         }
-        if (!snapshot.hasData)
+        if (!snapshot.hasData) {
           return const Center(child: CircularProgressIndicator());
+        }
         final bundles = snapshot.data!;
         if (bundles.isEmpty) {
           return SingleChildScrollView(
@@ -1333,7 +1661,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                       ),
                       const SizedBox(height: 7),
                       const Text(
-                        'Add a deal to create its checklist and schedule.',
+                        'Add a deal to create its complete checklist and schedule.',
                         style: TextStyle(color: DashboardUi.muted),
                       ),
                       const SizedBox(height: 16),
@@ -1349,289 +1677,256 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
             ),
           );
         }
-        final selectedId = _plannerRoomId;
         final bundle = bundles.firstWhere(
-          (item) => item.room.id == selectedId,
+          (item) => item.room.id == _plannerRoomId,
           orElse: () => bundles.first,
         );
         _plannerRoomId ??= bundle.room.id;
-        final today = DateUtils.dateOnly(DateTime.now());
-        final open = bundle.tasks.where((task) => !task.completed).toList()
-          ..sort((a, b) {
-            if (a.dueAt == null && b.dueAt == null)
-              return a.position.compareTo(b.position);
-            if (a.dueAt == null) return 1;
-            if (b.dueAt == null) return -1;
-            return a.dueAt!.compareTo(b.dueAt!);
-          });
-        final overdue = open
-            .where(
-              (task) =>
-                  task.dueAt != null &&
-                  DateUtils.dateOnly(task.dueAt!).isBefore(today),
-            )
-            .toList();
-        final thisWeek = open
-            .where(
-              (task) =>
-                  task.dueAt != null &&
-                  !DateUtils.dateOnly(task.dueAt!).isBefore(today) &&
-                  task.dueAt!.isBefore(today.add(const Duration(days: 8))),
-            )
-            .toList();
-        final later = open
-            .where(
-              (task) => !overdue.contains(task) && !thisWeek.contains(task),
-            )
-            .toList();
+        final stages = DealRoomService.stagesFor(bundle.room.dealKind);
         return SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(26, 28, 26, 56),
-          child: LayoutBuilder(
-            builder: (context, box) {
-              final compact = box.maxWidth < 760;
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Transaction plan 📅',
-                    style: TextStyle(
-                      fontSize: 27,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -.8,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Transaction plan 📅',
+                style: TextStyle(
+                  fontSize: 27,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -.8,
+                ),
+              ),
+              const SizedBox(height: 5),
+              const Text(
+                'Choose a deal, then work through its complete transaction from start to close.',
+                style: TextStyle(color: DashboardUi.muted),
+              ),
+              const SizedBox(height: 20),
+              DashboardUi.panel(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'DEAL TO VIEW',
+                      style: TextStyle(
+                        color: DashboardUi.blue,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.1,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 5),
-                  const Text(
-                    'A checklist and schedule for every active acquisition.',
-                    style: TextStyle(color: DashboardUi.muted),
-                  ),
-                  const SizedBox(height: 18),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
+                    const SizedBox(height: 8),
+                    DropdownButtonFormField<String>(
+                      initialValue: bundle.room.id,
+                      isExpanded: true,
+                      decoration: InputDecoration(
+                        prefixIcon: const Icon(Icons.business_center_outlined),
+                        filled: true,
+                        fillColor: const Color(0xFFF8FAFE),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(color: DashboardUi.line),
+                        ),
+                      ),
+                      items: [
                         for (final item in bundles)
-                          Padding(
-                            padding: const EdgeInsets.only(right: 8),
-                            child: ChoiceChip(
-                              label: Text(item.room.title),
-                              selected: item.room.id == bundle.room.id,
-                              onSelected: (_) =>
-                                  setState(() => _plannerRoomId = item.room.id),
-                              selectedColor: DashboardUi.paleBlue,
-                              side: const BorderSide(color: DashboardUi.line),
-                            ),
+                          DropdownMenuItem(
+                            value: item.room.id,
+                            child: Text(item.room.title),
                           ),
                       ],
+                      onChanged: (id) {
+                        if (id != null) setState(() => _plannerRoomId = id);
+                      },
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  DashboardUi.panel(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    const SizedBox(height: 18),
+                    Row(
                       children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    bundle.room.title,
-                                    style: const TextStyle(
-                                      fontSize: 19,
-                                      fontWeight: FontWeight.w800,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    '${bundle.room.completedTaskCount} of ${bundle.room.totalTaskCount} checklist items complete',
-                                    style: const TextStyle(
-                                      color: DashboardUi.muted,
-                                      fontSize: 11,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            TextButton.icon(
-                              onPressed: () => _openRoom(bundle.room),
-                              icon: const Icon(Icons.open_in_new, size: 16),
-                              label: const Text('Open full room'),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 13),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(20),
-                          child: LinearProgressIndicator(
-                            value: bundle.room.progress,
-                            minHeight: 8,
-                            backgroundColor: DashboardUi.paleBlue,
-                            color: const Color(0xFF45A470),
-                          ),
-                        ),
-                        if (bundle.room.targetCloseDate != null) ...[
-                          const SizedBox(height: 12),
-                          Row(
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Icon(
-                                Icons.flag_outlined,
-                                size: 16,
-                                color: DashboardUi.blue,
-                              ),
-                              const SizedBox(width: 6),
                               Text(
-                                'Target close · ${DateFormat.yMMMd().format(bundle.room.targetCloseDate!)}',
+                                bundle.room.title,
                                 style: const TextStyle(
+                                  fontSize: 19,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '${bundle.room.completedTaskCount} of ${bundle.room.totalTaskCount} items complete',
+                                style: const TextStyle(
+                                  color: DashboardUi.muted,
                                   fontSize: 11,
-                                  fontWeight: FontWeight.w700,
                                 ),
                               ),
                             ],
                           ),
+                        ),
+                        TextButton.icon(
+                          onPressed: () => _openRoom(bundle.room),
+                          icon: const Icon(Icons.open_in_new, size: 16),
+                          label: const Text('Open full room'),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: LinearProgressIndicator(
+                        value: bundle.room.progress,
+                        minHeight: 9,
+                        backgroundColor: DashboardUi.paleBlue,
+                        color: const Color(0xFF45A470),
+                      ),
+                    ),
+                    if (bundle.room.targetCloseDate != null) ...[
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.flag_outlined,
+                            size: 16,
+                            color: DashboardUi.blue,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Target close · ${DateFormat.yMMMd().format(bundle.room.targetCloseDate!)}',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
                         ],
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  if (compact) ...[
-                    _plannerTaskSection(
-                      'Overdue',
-                      'Needs attention now',
-                      overdue,
-                      const Color(0xFFFFECE8),
-                      bundle,
-                    ),
-                    const SizedBox(height: 12),
-                    _plannerTaskSection(
-                      'This week',
-                      'Next seven days',
-                      thisWeek,
-                      DashboardUi.paleGold,
-                      bundle,
-                    ),
-                    const SizedBox(height: 12),
-                    _plannerTaskSection(
-                      'Coming up',
-                      'Later or not scheduled',
-                      later,
-                      DashboardUi.paleBlue,
-                      bundle,
-                    ),
-                  ] else
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: _plannerTaskSection(
-                            'Overdue',
-                            'Needs attention now',
-                            overdue,
-                            const Color(0xFFFFECE8),
-                            bundle,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _plannerTaskSection(
-                            'This week',
-                            'Next seven days',
-                            thisWeek,
-                            DashboardUi.paleGold,
-                            bundle,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _plannerTaskSection(
-                            'Coming up',
-                            'Later or not scheduled',
-                            later,
-                            DashboardUi.paleBlue,
-                            bundle,
-                          ),
-                        ),
-                      ],
-                    ),
-                ],
-              );
-            },
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(height: 18),
+              for (var index = 0; index < stages.length; index++) ...[
+                _transactionStage(
+                  stages[index],
+                  index,
+                  stages.length,
+                  bundle.tasks
+                      .where((task) => task.stage == stages[index])
+                      .toList()
+                    ..sort((a, b) => a.position.compareTo(b.position)),
+                  bundle,
+                ),
+                if (index != stages.length - 1) const SizedBox(height: 12),
+              ],
+            ],
           ),
         );
       },
     );
   }
 
-  Widget _plannerTaskSection(
-    String title,
-    String subtitle,
+  Widget _transactionStage(
+    String stage,
+    int index,
+    int total,
     List<DealRoomTask> tasks,
-    Color tint,
     DealRoomBundle bundle,
-  ) => Container(
-    padding: const EdgeInsets.all(13),
-    decoration: BoxDecoration(
-      color: tint,
-      borderRadius: BorderRadius.circular(13),
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  Text(
-                    subtitle,
-                    style: const TextStyle(
-                      color: DashboardUi.muted,
-                      fontSize: 10,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                '${tasks.length}',
-                style: const TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 11),
-        if (tasks.isEmpty)
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 18),
-            child: Center(
-              child: Text(
-                'Nothing scheduled here ✓',
-                style: TextStyle(color: DashboardUi.muted, fontSize: 11),
+  ) {
+    final completed = tasks.where((task) => task.completed).length;
+    final active = bundle.room.currentStage == stage;
+    final title = stage
+        .split('_')
+        .map(
+          (part) => part.isEmpty
+              ? part
+              : '${part[0].toUpperCase()}${part.substring(1)}',
+        )
+        .join(' ');
+    return DashboardUi.panel(
+      padding: EdgeInsets.zero,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            width: 7,
+            decoration: BoxDecoration(
+              color: active
+                  ? DashboardUi.blue
+                  : completed == tasks.length && tasks.isNotEmpty
+                  ? const Color(0xFF45A470)
+                  : DashboardUi.line,
+              borderRadius: const BorderRadius.horizontal(
+                left: Radius.circular(16),
               ),
             ),
           ),
-        for (final task in tasks) _plannerTaskTile(task, bundle),
-      ],
-    ),
-  );
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(17),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 16,
+                        backgroundColor: active
+                            ? DashboardUi.paleBlue
+                            : const Color(0xFFF1F4F8),
+                        child: Text(
+                          '${index + 1}',
+                          style: TextStyle(
+                            color: active
+                                ? DashboardUi.blue
+                                : DashboardUi.muted,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          title,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        '$completed/${tasks.length}',
+                        style: const TextStyle(
+                          color: DashboardUi.muted,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (tasks.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.fromLTRB(42, 12, 0, 3),
+                      child: Text(
+                        'No checklist items in this stage.',
+                        style: TextStyle(
+                          color: DashboardUi.muted,
+                          fontSize: 11,
+                        ),
+                      ),
+                    )
+                  else ...[
+                    const SizedBox(height: 12),
+                    for (final task in tasks) _plannerTaskTile(task, bundle),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _plannerTaskTile(DealRoomTask task, DealRoomBundle bundle) =>
       Container(
