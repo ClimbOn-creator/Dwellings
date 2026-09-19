@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import '../services/deal_intake_fields.dart';
 import '../widgets/deal_intake_form.dart';
 import '../widgets/site_copy_text.dart';
@@ -8,11 +10,13 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../models/platform_side.dart';
+import '../models/business_model.dart';
 import '../services/backend_service.dart';
 import '../services/deal_room_service.dart';
 import '../services/account_service.dart';
 import '../services/marketplace_service.dart';
 import '../services/member_deal_marketplace_service.dart';
+import '../services/business_service.dart';
 import '../widgets/home_brand_button.dart';
 import '../widgets/topo_background.dart';
 import '../widgets/profile_photo.dart';
@@ -28,6 +32,8 @@ const _purple = Color(0xFF053827);
 const _lilac = Color(0xFF64645F);
 const _surface = Color(0xFFFCFBF8);
 const _line = Color(0xFFD6D1C9);
+
+enum _BuyerDashboardView { home, dealScreen }
 
 class DealRoomsPage extends StatefulWidget {
   const DealRoomsPage({
@@ -49,19 +55,55 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
   bool _creating = false;
   bool _showAll = true;
   bool _showArchived = false;
-  bool _classicView = false;
+  _BuyerDashboardView _dashboardView = _BuyerDashboardView.home;
   String _dashboardSearch = '';
+  late final Timer _greetingTimer;
+  DateTime _greetingTime = DateTime.now();
+  final _screenName = TextEditingController();
+  final _screenPrice = TextEditingController();
+  final _screenRevenue = TextEditingController();
+  final _screenEbitda = TextEditingController();
+  final _screenDownPayment = TextEditingController(text: '25');
+  final _screenInterest = TextEditingController(text: '7');
+  final _screenTerm = TextEditingController(text: '7');
+  BusinessResult? _dashboardScreenResult;
+  BusinessInputs? _dashboardScreenInputs;
+  bool _savingDashboardScreen = false;
 
   @override
   void initState() {
     super.initState();
     _side = widget.initialSide;
     _rooms = DealRoomService.loadRooms();
+    _greetingTimer = Timer.periodic(const Duration(minutes: 1), (_) {
+      if (mounted) setState(() => _greetingTime = DateTime.now());
+    });
     if (widget.startIntake)
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _manualCreate();
       });
   }
+
+  @override
+  void dispose() {
+    _greetingTimer.cancel();
+    _screenName.dispose();
+    _screenPrice.dispose();
+    _screenRevenue.dispose();
+    _screenEbitda.dispose();
+    _screenDownPayment.dispose();
+    _screenInterest.dispose();
+    _screenTerm.dispose();
+    super.dispose();
+  }
+
+  String get _liveGreeting => switch (_greetingTime.hour) {
+    < 5 => 'Working late',
+    < 12 => 'Good morning',
+    < 17 => 'Good afternoon',
+    < 21 => 'Good evening',
+    _ => 'Working late',
+  };
 
   void _refresh() => setState(() => _rooms = DealRoomService.loadRooms());
 
@@ -214,11 +256,12 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                   ],
                 ),
           actions: [
-            if (_classicView && MediaQuery.sizeOf(context).width < 800)
+            if (_dashboardView == _BuyerDashboardView.dealScreen)
               IconButton(
-                tooltip: 'Dashboard view',
-                onPressed: () => setState(() => _classicView = false),
-                icon: const Icon(Icons.dashboard_outlined),
+                tooltip: 'Back to dashboard',
+                onPressed: () =>
+                    setState(() => _dashboardView = _BuyerDashboardView.home),
+                icon: const Icon(Icons.arrow_back_rounded),
               ),
             if (MediaQuery.sizeOf(context).width >= 700)
               FilledButton.icon(
@@ -277,14 +320,15 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                             color: DashboardUi.line,
                           ),
                           Expanded(
-                            child: _classicView
-                                ? _commandCentre(allRooms)
+                            child:
+                                _dashboardView == _BuyerDashboardView.dealScreen
+                                ? _dashboardDealScreen()
                                 : _buyerDashboard(allRooms),
                           ),
                         ],
                       )
-                    : _classicView
-                    ? _mobileCommandCentre(allRooms)
+                    : _dashboardView == _BuyerDashboardView.dealScreen
+                    ? _dashboardDealScreen()
                     : _buyerDashboard(allRooms);
               },
             );
@@ -316,20 +360,26 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
         DashboardUi.nav(
           'Home',
           Icons.home_outlined,
-          !_showArchived,
-          () => setState(() => _showArchived = false),
+          _dashboardView == _BuyerDashboardView.home && !_showArchived,
+          () => setState(() {
+            _dashboardView = _BuyerDashboardView.home;
+            _showArchived = false;
+          }),
         ),
         DashboardUi.nav(
           'Pipeline',
           Icons.view_kanban_outlined,
-          !_showArchived,
-          () => setState(() => _showArchived = false),
+          _dashboardView == _BuyerDashboardView.home && !_showArchived,
+          () => setState(() {
+            _dashboardView = _BuyerDashboardView.home;
+            _showArchived = false;
+          }),
         ),
         DashboardUi.nav(
           'Deal screen',
           Icons.calculate_outlined,
-          false,
-          _create,
+          _dashboardView == _BuyerDashboardView.dealScreen,
+          () => setState(() => _dashboardView = _BuyerDashboardView.dealScreen),
         ),
         DashboardUi.nav(
           'My team',
@@ -341,13 +391,10 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
           'Archive',
           Icons.inventory_2_outlined,
           _showArchived,
-          () => setState(() => _showArchived = true),
-        ),
-        DashboardUi.nav(
-          'Detailed view',
-          Icons.view_list_outlined,
-          _classicView,
-          () => setState(() => _classicView = !_classicView),
+          () => setState(() {
+            _dashboardView = _BuyerDashboardView.home;
+            _showArchived = true;
+          }),
         ),
         const Spacer(),
         DashboardUi.nav(
@@ -406,9 +453,9 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (narrow) ...[
-                const Text(
-                  'Good morning 👋',
-                  style: TextStyle(
+                Text(
+                  '$_liveGreeting 👋',
+                  style: const TextStyle(
                     fontSize: 27,
                     fontWeight: FontWeight.w800,
                     letterSpacing: -.8,
@@ -424,20 +471,20 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
               ] else
                 Row(
                   children: [
-                    const Expanded(
+                    Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Good morning 👋',
-                            style: TextStyle(
+                            '$_liveGreeting 👋',
+                            style: const TextStyle(
                               fontSize: 27,
                               fontWeight: FontWeight.w800,
                               letterSpacing: -.8,
                             ),
                           ),
-                          SizedBox(height: 5),
-                          Text(
+                          const SizedBox(height: 5),
+                          const Text(
                             'Keep every acquisition moving.',
                             style: TextStyle(color: DashboardUi.muted),
                           ),
@@ -456,12 +503,6 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                   'Add a deal from any source',
                 ),
               ),
-              if (narrow)
-                TextButton.icon(
-                  onPressed: () => setState(() => _classicView = true),
-                  icon: const Icon(Icons.view_list_outlined, size: 17),
-                  label: const Text('Detailed view'),
-                ),
               const SizedBox(height: 25),
               Wrap(
                 spacing: 12,
@@ -634,7 +675,9 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                       'Deal screen',
                       'Review a business and build your acquisition plan.',
                       Icons.calculate_outlined,
-                      _create,
+                      () => setState(
+                        () => _dashboardView = _BuyerDashboardView.dealScreen,
+                      ),
                     ),
                   ),
                   SizedBox(
@@ -682,6 +725,427 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
       ),
     ),
   );
+
+  double _screenNumber(TextEditingController controller) =>
+      double.tryParse(controller.text.replaceAll(',', '').trim()) ?? 0;
+
+  void _runDashboardScreen() {
+    final price = _screenNumber(_screenPrice);
+    final revenue = _screenNumber(_screenRevenue);
+    final ebitda = _screenNumber(_screenEbitda);
+    if (price <= 0 || revenue <= 0 || ebitda <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Add a purchase price, annual revenue, and EBITDA.'),
+        ),
+      );
+      return;
+    }
+    final downPayment = _screenNumber(
+      _screenDownPayment,
+    ).clamp(0, 100).toDouble();
+    final inputs = BusinessInputs(
+      businessName: _screenName.text.trim(),
+      industry: '',
+      location: '',
+      values: {
+        'askingPrice': price,
+        'revenue': revenue,
+        'ebitda': ebitda,
+        'debtPercent': 100 - downPayment,
+        'interestRate': _screenNumber(_screenInterest),
+        'amortizationYears': _screenNumber(_screenTerm).clamp(1, 30).toDouble(),
+      },
+    );
+    setState(() {
+      _dashboardScreenInputs = inputs;
+      _dashboardScreenResult = analyzeBusiness(inputs);
+    });
+  }
+
+  Future<void> _createDashboardRoom() async {
+    final inputs = _dashboardScreenInputs;
+    final result = _dashboardScreenResult;
+    if (inputs == null || result == null) return;
+    if (BackendService.user == null) {
+      await Navigator.of(
+        context,
+      ).push(MaterialPageRoute<void>(builder: (_) => const AuthPage()));
+      if (!mounted || BackendService.user == null) return;
+    }
+    setState(() => _savingDashboardScreen = true);
+    try {
+      final assessmentId = await BusinessService.saveAssessment(inputs, result);
+      final room = await BusinessService.createAcquisitionRoom(
+        assessmentId: assessmentId,
+        inputs: inputs,
+        result: result,
+      );
+      if (!mounted) return;
+      await Navigator.of(
+        context,
+      ).push(MaterialPageRoute<void>(builder: (_) => DealRoomPage(room: room)));
+      _refresh();
+      if (mounted) {
+        setState(() => _dashboardView = _BuyerDashboardView.home);
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not create deal room: $error')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _savingDashboardScreen = false);
+    }
+  }
+
+  Widget _dashboardDealScreen() => SingleChildScrollView(
+    padding: const EdgeInsets.fromLTRB(26, 28, 26, 56),
+    child: LayoutBuilder(
+      builder: (context, box) {
+        final compact = box.maxWidth < 760;
+        final form = DashboardUi.panel(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              DashboardUi.sectionTitle(
+                'Initial deal screen',
+                subtitle: 'Enter the headline numbers for a fast first look.',
+              ),
+              const SizedBox(height: 18),
+              _screenField(
+                'Business name',
+                _screenName,
+                'Optional name',
+                numeric: false,
+              ),
+              const SizedBox(height: 12),
+              _screenField('Purchase price', _screenPrice, '1,200,000'),
+              const SizedBox(height: 12),
+              _screenField('Annual revenue', _screenRevenue, '1,800,000'),
+              const SizedBox(height: 12),
+              _screenField('Reported EBITDA', _screenEbitda, '260,000'),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: _screenField(
+                      'Down payment %',
+                      _screenDownPayment,
+                      '25',
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _screenField('Interest %', _screenInterest, '7'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              _screenField('Loan term (years)', _screenTerm, '7'),
+              const SizedBox(height: 18),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: _runDashboardScreen,
+                  icon: const Icon(Icons.auto_graph_rounded),
+                  label: const Text('Run initial screen'),
+                ),
+              ),
+            ],
+          ),
+        );
+        final results = _dashboardScreenResults();
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                IconButton(
+                  onPressed: () =>
+                      setState(() => _dashboardView = _BuyerDashboardView.home),
+                  icon: const Icon(Icons.arrow_back_rounded),
+                  tooltip: 'Back to dashboard',
+                ),
+                const SizedBox(width: 4),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Deal screen',
+                        style: TextStyle(
+                          fontSize: 27,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -.8,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'A quick acquisition check, built into your buyer dashboard.',
+                        style: TextStyle(color: DashboardUi.muted),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 22),
+            if (compact) ...[
+              form,
+              const SizedBox(height: 16),
+              results,
+            ] else
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(width: 330, child: form),
+                  const SizedBox(width: 16),
+                  Expanded(child: results),
+                ],
+              ),
+          ],
+        );
+      },
+    ),
+  );
+
+  Widget _screenField(
+    String label,
+    TextEditingController controller,
+    String hint, {
+    bool numeric = true,
+  }) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        label,
+        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
+      ),
+      const SizedBox(height: 6),
+      TextField(
+        controller: controller,
+        keyboardType: numeric
+            ? const TextInputType.numberWithOptions(decimal: true)
+            : TextInputType.text,
+        decoration: InputDecoration(
+          hintText: hint,
+          isDense: true,
+          filled: true,
+          fillColor: const Color(0xFFF8FAFE),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(9),
+            borderSide: const BorderSide(color: DashboardUi.line),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(9),
+            borderSide: const BorderSide(color: DashboardUi.line),
+          ),
+        ),
+      ),
+    ],
+  );
+
+  Widget _dashboardScreenResults() {
+    final result = _dashboardScreenResult;
+    if (result == null) {
+      return DashboardUi.panel(
+        child: const SizedBox(
+          height: 420,
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircleAvatar(
+                  radius: 30,
+                  backgroundColor: DashboardUi.paleBlue,
+                  child: Icon(
+                    Icons.calculate_outlined,
+                    color: DashboardUi.blue,
+                    size: 28,
+                  ),
+                ),
+                SizedBox(height: 14),
+                Text(
+                  'Your screen will appear here',
+                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+                ),
+                SizedBox(height: 6),
+                Text(
+                  'Use the headline numbers to see price, debt coverage, cash flow, and risk signals.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: DashboardUi.muted, height: 1.5),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+    final money = NumberFormat.compactCurrency(symbol: r'$', decimalDigits: 0);
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 260),
+      child: Column(
+        key: ValueKey(result.hashCode),
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          DashboardUi.panel(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'INITIAL ACQUISITION SCREEN',
+                  style: TextStyle(
+                    color: DashboardUi.blue,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1.1,
+                  ),
+                ),
+                const SizedBox(height: 9),
+                Text(
+                  result.verdict,
+                  style: const TextStyle(
+                    fontSize: 24,
+                    height: 1.15,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -.5,
+                  ),
+                ),
+                const SizedBox(height: 18),
+                LayoutBuilder(
+                  builder: (context, box) {
+                    final width = box.maxWidth < 520
+                        ? (box.maxWidth - 10) / 2
+                        : (box.maxWidth - 30) / 4;
+                    return Wrap(
+                      spacing: 10,
+                      runSpacing: 10,
+                      children: [
+                        SizedBox(
+                          width: width,
+                          child: DashboardUi.metric(
+                            'Viability',
+                            '${result.viabilityScore.round()}/100',
+                            'Initial score',
+                            Icons.speed_rounded,
+                            DashboardUi.paleBlue,
+                            const Color(0xFF5F91DC),
+                          ),
+                        ),
+                        SizedBox(
+                          width: width,
+                          child: DashboardUi.metric(
+                            'Price / EBITDA',
+                            '${result.priceToEbitda.toStringAsFixed(1)}×',
+                            'Headline multiple',
+                            Icons.stacked_line_chart,
+                            DashboardUi.paleGreen,
+                            const Color(0xFF3C9764),
+                          ),
+                        ),
+                        SizedBox(
+                          width: width,
+                          child: DashboardUi.metric(
+                            'Debt coverage',
+                            '${result.dscr.toStringAsFixed(2)}×',
+                            'Modeled DSCR',
+                            Icons.account_balance_outlined,
+                            DashboardUi.paleGold,
+                            const Color(0xFFB88016),
+                          ),
+                        ),
+                        SizedBox(
+                          width: width,
+                          child: DashboardUi.metric(
+                            'Annual cash flow',
+                            money.format(result.cashAfterOwnerSalary),
+                            'After modeled debt',
+                            Icons.payments_outlined,
+                            DashboardUi.paleViolet,
+                            const Color(0xFF8A79D5),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+          DashboardUi.panel(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                DashboardUi.sectionTitle(
+                  'Signals to review',
+                  subtitle: 'Use these as questions for diligence.',
+                ),
+                const SizedBox(height: 14),
+                if (result.flags.isEmpty)
+                  const Text(
+                    '✓ No immediate warning signals from the headline numbers.',
+                    style: TextStyle(
+                      color: Color(0xFF3C9764),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                for (final flag in result.flags.take(4))
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 9),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          '●',
+                          style: TextStyle(
+                            color: Color(0xFFE7AE30),
+                            fontSize: 11,
+                          ),
+                        ),
+                        const SizedBox(width: 9),
+                        Expanded(
+                          child: Text(
+                            flag,
+                            style: const TextStyle(fontSize: 12, height: 1.4),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                const SizedBox(height: 8),
+                FilledButton.icon(
+                  onPressed: _savingDashboardScreen
+                      ? null
+                      : _createDashboardRoom,
+                  icon: _savingDashboardScreen
+                      ? const SizedBox.square(
+                          dimension: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.meeting_room_outlined),
+                  label: Text(
+                    _savingDashboardScreen ? 'Creating…' : 'Create deal room',
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
+          const Text(
+            'Educational screening only. Confirm financial, legal, tax, and lending assumptions with qualified advisers.',
+            style: TextStyle(
+              color: DashboardUi.muted,
+              fontSize: 10,
+              height: 1.4,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _buyerDealTile(DealRoom room) => Padding(
     padding: const EdgeInsets.only(bottom: 7),
