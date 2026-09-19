@@ -11,12 +11,14 @@ import 'package:intl/intl.dart';
 
 import '../models/platform_side.dart';
 import '../models/business_model.dart';
+import '../models/buyer_comparison_profile.dart';
 import '../services/backend_service.dart';
 import '../services/deal_room_service.dart';
 import '../services/account_service.dart';
 import '../services/marketplace_service.dart';
 import '../services/member_deal_marketplace_service.dart';
 import '../services/business_service.dart';
+import '../services/business_sale_bulletin_service.dart';
 import '../widgets/home_brand_button.dart';
 import '../widgets/topo_background.dart';
 import '../widgets/profile_photo.dart';
@@ -24,6 +26,7 @@ import '../widgets/app_navigation_menu.dart';
 import '../widgets/dashboard_ui.dart';
 import 'acquisition_support_page.dart';
 import 'business_acquisition_page.dart';
+import 'deal_comparison_page.dart';
 import 'auth_page.dart';
 
 const _ink = Color(0xFF171717);
@@ -33,7 +36,7 @@ const _lilac = Color(0xFF64645F);
 const _surface = Color(0xFFFCFBF8);
 const _line = Color(0xFFD6D1C9);
 
-enum _BuyerDashboardView { home, dealScreen }
+enum _BuyerDashboardView { home, dealScreen, businesses, transactionPlan }
 
 class DealRoomsPage extends StatefulWidget {
   const DealRoomsPage({
@@ -51,12 +54,18 @@ class DealRoomsPage extends StatefulWidget {
 
 class _DealRoomsPageState extends State<DealRoomsPage> {
   late Future<List<DealRoom>> _rooms;
+  late Future<List<BusinessSaleBulletin>> _businesses;
+  late Future<AcquisitionFoundation> _buyerFoundation;
+  Future<List<DealRoomBundle>>? _plannerBundles;
   late PlatformSide _side;
   bool _creating = false;
   bool _showAll = true;
   bool _showArchived = false;
   _BuyerDashboardView _dashboardView = _BuyerDashboardView.home;
   String _dashboardSearch = '';
+  String _businessSearch = '';
+  BusinessSaleBulletin? _selectedBulletin;
+  String? _plannerRoomId;
   late final Timer _greetingTimer;
   DateTime _greetingTime = DateTime.now();
   final _screenName = TextEditingController();
@@ -75,6 +84,8 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
     super.initState();
     _side = widget.initialSide;
     _rooms = DealRoomService.loadRooms();
+    _businesses = BusinessSaleBulletinService.load(includeExamples: true);
+    _buyerFoundation = AcquisitionFoundation.load();
     _greetingTimer = Timer.periodic(const Duration(minutes: 1), (_) {
       if (mounted) setState(() => _greetingTime = DateTime.now());
     });
@@ -105,7 +116,23 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
     _ => 'Working late',
   };
 
-  void _refresh() => setState(() => _rooms = DealRoomService.loadRooms());
+  void _refresh() => setState(() {
+    _rooms = DealRoomService.loadRooms();
+    _businesses = BusinessSaleBulletinService.load(includeExamples: true);
+    _buyerFoundation = AcquisitionFoundation.load();
+    _plannerBundles = null;
+  });
+
+  Future<List<DealRoomBundle>> _loadPlannerBundles() async {
+    final rooms = (await _rooms)
+        .where(
+          (room) =>
+              room.isBusiness &&
+              !{'archived', 'completed', 'cancelled'}.contains(room.status),
+        )
+        .toList();
+    return Future.wait(rooms.map(DealRoomService.loadBundle));
+  }
 
   Future<void> _managePersonalTeam() async {
     if (BackendService.user == null) {
@@ -256,7 +283,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                   ],
                 ),
           actions: [
-            if (_dashboardView == _BuyerDashboardView.dealScreen)
+            if (_dashboardView != _BuyerDashboardView.home)
               IconButton(
                 tooltip: 'Back to dashboard',
                 onPressed: () =>
@@ -320,16 +347,26 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                             color: DashboardUi.line,
                           ),
                           Expanded(
-                            child:
-                                _dashboardView == _BuyerDashboardView.dealScreen
-                                ? _dashboardDealScreen()
-                                : _buyerDashboard(allRooms),
+                            child: switch (_dashboardView) {
+                              _BuyerDashboardView.dealScreen =>
+                                _dashboardDealScreen(),
+                              _BuyerDashboardView.businesses =>
+                                _buyerBusinesses(),
+                              _BuyerDashboardView.transactionPlan =>
+                                _transactionPlanner(),
+                              _ => _buyerDashboard(allRooms),
+                            },
                           ),
                         ],
                       )
-                    : _dashboardView == _BuyerDashboardView.dealScreen
-                    ? _dashboardDealScreen()
-                    : _buyerDashboard(allRooms);
+                    : switch (_dashboardView) {
+                        _BuyerDashboardView.dealScreen =>
+                          _dashboardDealScreen(),
+                        _BuyerDashboardView.businesses => _buyerBusinesses(),
+                        _BuyerDashboardView.transactionPlan =>
+                          _transactionPlanner(),
+                        _ => _buyerDashboard(allRooms),
+                      };
               },
             );
           },
@@ -376,25 +413,31 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
           }),
         ),
         DashboardUi.nav(
+          'Businesses for sale',
+          Icons.storefront_outlined,
+          _dashboardView == _BuyerDashboardView.businesses,
+          () => setState(() => _dashboardView = _BuyerDashboardView.businesses),
+        ),
+        DashboardUi.nav(
           'Deal screen',
           Icons.calculate_outlined,
           _dashboardView == _BuyerDashboardView.dealScreen,
           () => setState(() => _dashboardView = _BuyerDashboardView.dealScreen),
         ),
         DashboardUi.nav(
+          'Transaction plan',
+          Icons.event_note_outlined,
+          _dashboardView == _BuyerDashboardView.transactionPlan,
+          () => setState(() {
+            _dashboardView = _BuyerDashboardView.transactionPlan;
+            _plannerBundles ??= _loadPlannerBundles();
+          }),
+        ),
+        DashboardUi.nav(
           'My team',
           Icons.group_outlined,
           false,
           _managePersonalTeam,
-        ),
-        DashboardUi.nav(
-          'Archive',
-          Icons.inventory_2_outlined,
-          _showArchived,
-          () => setState(() {
-            _dashboardView = _BuyerDashboardView.home;
-            _showArchived = true;
-          }),
         ),
         const Spacer(),
         DashboardUi.nav(
@@ -683,6 +726,29 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                   SizedBox(
                     width: narrow ? box.maxWidth : (box.maxWidth - 24) / 3,
                     child: _buyerActionCard(
+                      'Businesses for sale',
+                      'See deals ranked by your Affinity preferences.',
+                      Icons.storefront_outlined,
+                      () => setState(
+                        () => _dashboardView = _BuyerDashboardView.businesses,
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                    width: narrow ? box.maxWidth : (box.maxWidth - 24) / 3,
+                    child: _buyerActionCard(
+                      'Transaction plan',
+                      'Schedule and complete each deal checklist. 📅',
+                      Icons.event_note_outlined,
+                      () => setState(() {
+                        _dashboardView = _BuyerDashboardView.transactionPlan;
+                        _plannerBundles ??= _loadPlannerBundles();
+                      }),
+                    ),
+                  ),
+                  SizedBox(
+                    width: narrow ? box.maxWidth : (box.maxWidth - 24) / 3,
+                    child: _buyerActionCard(
                       'My personal team',
                       'Add advisers and collaborators to your team. 🤝',
                       Icons.group_outlined,
@@ -725,6 +791,950 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
       ),
     ),
   );
+
+  Widget _buyerBusinesses() => FutureBuilder<List<BusinessSaleBulletin>>(
+    future: _businesses,
+    builder: (context, listingSnapshot) => FutureBuilder<AcquisitionFoundation>(
+      future: _buyerFoundation,
+      builder: (context, foundationSnapshot) {
+        if (!listingSnapshot.hasData || !foundationSnapshot.hasData) {
+          if (listingSnapshot.hasError || foundationSnapshot.hasError) {
+            return Center(
+              child: TextButton.icon(
+                onPressed: _refresh,
+                icon: const Icon(Icons.refresh),
+                label: const Text('Retry businesses for sale'),
+              ),
+            );
+          }
+          return const Center(child: CircularProgressIndicator());
+        }
+        final foundation = foundationSnapshot.data!;
+        final blueprint = foundation.blueprint;
+        final rawProfile = blueprint['comparisonProfile'];
+        final profile = rawProfile is Map
+            ? BuyerComparisonProfile.fromJson(
+                Map<String, dynamic>.from(rawProfile),
+              )
+            : const BuyerComparisonProfile();
+        final matcher = BuyerDealMatcher(
+          profile: profile,
+          blueprint: blueprint,
+        );
+        final hasPreferences =
+            profile.answeredCount > 0 ||
+            [
+              'industries',
+              'geography',
+              'minPrice',
+              'maxPrice',
+            ].any((key) => '${blueprint[key] ?? ''}'.trim().isNotEmpty);
+        final query = _businessSearch.trim().toLowerCase();
+        final listings = listingSnapshot.data!.where((listing) {
+          final text =
+              '${listing.title} ${listing.industry} ${listing.region} ${listing.summary}'
+                  .toLowerCase();
+          return query.isEmpty ||
+              query.split(RegExp(r'\s+')).every(text.contains);
+        }).toList();
+        if (hasPreferences) {
+          listings.sort(
+            (a, b) => _bulletinScore(
+              matcher,
+              b,
+            ).compareTo(_bulletinScore(matcher, a)),
+          );
+        }
+        return SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(26, 28, 26, 56),
+          child: LayoutBuilder(
+            builder: (context, box) {
+              final compact = box.maxWidth < 760;
+              final selected = _selectedBulletin;
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (compact) ...[
+                    const Text(
+                      'Businesses for sale 🏪',
+                      style: TextStyle(
+                        fontSize: 27,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -.8,
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    const Text(
+                      'Deals ranked around what you told Dwellings you want.',
+                      style: TextStyle(color: DashboardUi.muted),
+                    ),
+                    const SizedBox(height: 16),
+                    _businessSearchField(),
+                  ] else
+                    Row(
+                      children: [
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Businesses for sale 🏪',
+                                style: TextStyle(
+                                  fontSize: 27,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: -.8,
+                                ),
+                              ),
+                              SizedBox(height: 5),
+                              Text(
+                                'Deals ranked around what you told Dwellings you want.',
+                                style: TextStyle(color: DashboardUi.muted),
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(width: 250, child: _businessSearchField()),
+                      ],
+                    ),
+                  const SizedBox(height: 20),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: hasPreferences
+                          ? DashboardUi.paleGreen
+                          : DashboardUi.paleGold,
+                      borderRadius: BorderRadius.circular(13),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          hasPreferences
+                              ? Icons.auto_awesome_rounded
+                              : Icons.tune_rounded,
+                          color: hasPreferences
+                              ? const Color(0xFF3C9764)
+                              : const Color(0xFFB88016),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            hasPreferences
+                                ? 'Your Affinity scores use your Deal Compare Quiz and acquisition preferences.'
+                                : 'Complete the Deal Compare Quiz to rank every business around your goals.',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: _openDealCompareQuiz,
+                          child: Text(
+                            hasPreferences ? 'Update quiz' : 'Take quiz',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  if (selected != null) ...[
+                    _buyerBusinessDetail(
+                      selected,
+                      hasPreferences ? _bulletinScore(matcher, selected) : null,
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                  DashboardUi.panel(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: DashboardUi.sectionTitle(
+                                'Matched opportunities',
+                                subtitle: hasPreferences
+                                    ? 'Highest Affinity score first.'
+                                    : 'Complete the quiz to personalize this order.',
+                              ),
+                            ),
+                            Text(
+                              '${listings.length} deals',
+                              style: const TextStyle(
+                                color: DashboardUi.muted,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 15),
+                        if (listings.isEmpty)
+                          const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 30),
+                            child: Center(
+                              child: Text(
+                                'No businesses match that search.',
+                                style: TextStyle(color: DashboardUi.muted),
+                              ),
+                            ),
+                          ),
+                        Wrap(
+                          spacing: 12,
+                          runSpacing: 12,
+                          children: [
+                            for (final listing in listings)
+                              SizedBox(
+                                width: compact
+                                    ? box.maxWidth
+                                    : (box.maxWidth - 48) / 3,
+                                child: _buyerBusinessCard(
+                                  listing,
+                                  hasPreferences
+                                      ? _bulletinScore(matcher, listing)
+                                      : null,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        );
+      },
+    ),
+  );
+
+  int _bulletinScore(BuyerDealMatcher matcher, BusinessSaleBulletin listing) =>
+      matcher.score(
+        title: listing.title,
+        industry: listing.industry,
+        region: listing.region,
+        askingPriceBand: listing.askingPriceBand,
+        summary: listing.summary,
+      );
+
+  Widget _businessSearchField() => TextField(
+    onChanged: (value) => setState(() => _businessSearch = value),
+    decoration: InputDecoration(
+      hintText: 'Search businesses...',
+      prefixIcon: const Icon(Icons.search, size: 19),
+      isDense: true,
+      filled: true,
+      fillColor: Colors.white,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: DashboardUi.line),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: DashboardUi.line),
+      ),
+    ),
+  );
+
+  Widget _buyerBusinessCard(
+    BusinessSaleBulletin listing,
+    int? score,
+  ) => Material(
+    color: const Color(0xFFF8FAFE),
+    borderRadius: BorderRadius.circular(11),
+    child: InkWell(
+      onTap: () => setState(() => _selectedBulletin = listing),
+      borderRadius: BorderRadius.circular(11),
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 185),
+        padding: const EdgeInsets.all(15),
+        decoration: BoxDecoration(
+          border: Border.all(color: DashboardUi.line),
+          borderRadius: BorderRadius.circular(11),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Text(
+                    listing.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  width: 46,
+                  height: 46,
+                  decoration: const BoxDecoration(
+                    color: DashboardUi.paleBlue,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: Text(
+                      score == null ? '—' : '$score',
+                      style: const TextStyle(
+                        color: DashboardUi.blue,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            Text(
+              score == null ? 'Affinity score after quiz' : 'Affinity score',
+              style: const TextStyle(
+                color: DashboardUi.muted,
+                fontSize: 9,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              '${listing.industry} · ${listing.region}',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(color: DashboardUi.muted, fontSize: 11),
+            ),
+            const SizedBox(height: 5),
+            Text(
+              listing.askingPriceBand,
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 9),
+            Text(
+              listing.summary,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 11, height: 1.4),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+
+  Widget _buyerBusinessDetail(BusinessSaleBulletin listing, int? score) =>
+      DashboardUi.panel(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        listing.title,
+                        style: const TextStyle(
+                          fontSize: 21,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -.4,
+                        ),
+                      ),
+                      const SizedBox(height: 5),
+                      Text(
+                        '${listing.industry} · ${listing.region}',
+                        style: const TextStyle(
+                          color: DashboardUi.muted,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 13,
+                    vertical: 9,
+                  ),
+                  decoration: BoxDecoration(
+                    color: DashboardUi.paleBlue,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    score == null ? 'Quiz for score' : '$score% Affinity',
+                    style: const TextStyle(
+                      color: DashboardUi.blue,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => setState(() => _selectedBulletin = null),
+                  icon: const Icon(Icons.close),
+                  tooltip: 'Close details',
+                ),
+              ],
+            ),
+            const SizedBox(height: 13),
+            Text(
+              listing.summary,
+              style: const TextStyle(height: 1.5, fontSize: 12),
+            ),
+            const SizedBox(height: 14),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                _businessFact('Asking price', listing.askingPriceBand),
+                if (listing.detail('revenue').isNotEmpty)
+                  _businessFact('Revenue', listing.detail('revenue')),
+                if (listing.detail('cash_flow').isNotEmpty)
+                  _businessFact('Cash flow', listing.detail('cash_flow')),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Wrap(
+              spacing: 9,
+              runSpacing: 9,
+              children: [
+                FilledButton.icon(
+                  onPressed: () => _screenBusiness(listing),
+                  icon: const Icon(Icons.calculate_outlined),
+                  label: const Text('Screen this deal'),
+                ),
+                OutlinedButton.icon(
+                  onPressed: () => _toggleSavedBusiness(listing),
+                  icon: Icon(
+                    listing.isSaved ? Icons.bookmark : Icons.bookmark_border,
+                  ),
+                  label: Text(listing.isSaved ? 'Saved' : 'Save deal'),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+
+  Widget _businessFact(String label, String value) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 10),
+    decoration: BoxDecoration(
+      color: const Color(0xFFF5F8FF),
+      borderRadius: BorderRadius.circular(9),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(color: DashboardUi.muted, fontSize: 9),
+        ),
+        const SizedBox(height: 3),
+        Text(
+          value,
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
+        ),
+      ],
+    ),
+  );
+
+  Future<void> _openDealCompareQuiz() async {
+    await Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (_) => const DealComparisonPage()));
+    if (mounted)
+      setState(() => _buyerFoundation = AcquisitionFoundation.load());
+  }
+
+  Future<void> _toggleSavedBusiness(BusinessSaleBulletin listing) async {
+    try {
+      await BusinessSaleBulletinService.setSaved(listing.id, !listing.isSaved);
+      if (!mounted) return;
+      setState(() {
+        _selectedBulletin = null;
+        _businesses = BusinessSaleBulletinService.load(includeExamples: true);
+      });
+    } catch (error) {
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not update saved deal: $error')),
+        );
+    }
+  }
+
+  void _screenBusiness(BusinessSaleBulletin listing) {
+    _screenName.text = listing.title;
+    final range = BuyerDealMatcher.priceRange(listing.askingPriceBand);
+    if (range != null && range.$1.isFinite)
+      _screenPrice.text = range.$1.round().toString();
+    _screenRevenue.text = listing
+        .detail('revenue')
+        .replaceAll(RegExp(r'[^0-9.]'), '');
+    _screenEbitda.text = listing
+        .detail('cash_flow')
+        .replaceAll(RegExp(r'[^0-9.]'), '');
+    setState(() {
+      _dashboardScreenResult = null;
+      _dashboardScreenInputs = null;
+      _dashboardView = _BuyerDashboardView.dealScreen;
+    });
+  }
+
+  Widget _transactionPlanner() {
+    _plannerBundles ??= _loadPlannerBundles();
+    return FutureBuilder<List<DealRoomBundle>>(
+      future: _plannerBundles,
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Center(
+            child: TextButton.icon(
+              onPressed: () =>
+                  setState(() => _plannerBundles = _loadPlannerBundles()),
+              icon: const Icon(Icons.refresh),
+              label: const Text('Retry transaction plan'),
+            ),
+          );
+        }
+        if (!snapshot.hasData)
+          return const Center(child: CircularProgressIndicator());
+        final bundles = snapshot.data!;
+        if (bundles.isEmpty) {
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(26),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Transaction plan 📅',
+                  style: TextStyle(
+                    fontSize: 27,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -.8,
+                  ),
+                ),
+                const SizedBox(height: 18),
+                DashboardUi.panel(
+                  child: Column(
+                    children: [
+                      const Icon(
+                        Icons.event_note_outlined,
+                        color: DashboardUi.blue,
+                        size: 36,
+                      ),
+                      const SizedBox(height: 12),
+                      const Text(
+                        'No active transactions yet',
+                        style: TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: 7),
+                      const Text(
+                        'Add a deal to create its checklist and schedule.',
+                        style: TextStyle(color: DashboardUi.muted),
+                      ),
+                      const SizedBox(height: 16),
+                      FilledButton.icon(
+                        onPressed: _manualCreate,
+                        icon: const Icon(Icons.add),
+                        label: const Text('Add a deal'),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+        final selectedId = _plannerRoomId;
+        final bundle = bundles.firstWhere(
+          (item) => item.room.id == selectedId,
+          orElse: () => bundles.first,
+        );
+        _plannerRoomId ??= bundle.room.id;
+        final today = DateUtils.dateOnly(DateTime.now());
+        final open = bundle.tasks.where((task) => !task.completed).toList()
+          ..sort((a, b) {
+            if (a.dueAt == null && b.dueAt == null)
+              return a.position.compareTo(b.position);
+            if (a.dueAt == null) return 1;
+            if (b.dueAt == null) return -1;
+            return a.dueAt!.compareTo(b.dueAt!);
+          });
+        final overdue = open
+            .where(
+              (task) =>
+                  task.dueAt != null &&
+                  DateUtils.dateOnly(task.dueAt!).isBefore(today),
+            )
+            .toList();
+        final thisWeek = open
+            .where(
+              (task) =>
+                  task.dueAt != null &&
+                  !DateUtils.dateOnly(task.dueAt!).isBefore(today) &&
+                  task.dueAt!.isBefore(today.add(const Duration(days: 8))),
+            )
+            .toList();
+        final later = open
+            .where(
+              (task) => !overdue.contains(task) && !thisWeek.contains(task),
+            )
+            .toList();
+        return SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(26, 28, 26, 56),
+          child: LayoutBuilder(
+            builder: (context, box) {
+              final compact = box.maxWidth < 760;
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Transaction plan 📅',
+                    style: TextStyle(
+                      fontSize: 27,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -.8,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  const Text(
+                    'A checklist and schedule for every active acquisition.',
+                    style: TextStyle(color: DashboardUi.muted),
+                  ),
+                  const SizedBox(height: 18),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        for (final item in bundles)
+                          Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: ChoiceChip(
+                              label: Text(item.room.title),
+                              selected: item.room.id == bundle.room.id,
+                              onSelected: (_) =>
+                                  setState(() => _plannerRoomId = item.room.id),
+                              selectedColor: DashboardUi.paleBlue,
+                              side: const BorderSide(color: DashboardUi.line),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  DashboardUi.panel(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    bundle.room.title,
+                                    style: const TextStyle(
+                                      fontSize: 19,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    '${bundle.room.completedTaskCount} of ${bundle.room.totalTaskCount} checklist items complete',
+                                    style: const TextStyle(
+                                      color: DashboardUi.muted,
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            TextButton.icon(
+                              onPressed: () => _openRoom(bundle.room),
+                              icon: const Icon(Icons.open_in_new, size: 16),
+                              label: const Text('Open full room'),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 13),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(20),
+                          child: LinearProgressIndicator(
+                            value: bundle.room.progress,
+                            minHeight: 8,
+                            backgroundColor: DashboardUi.paleBlue,
+                            color: const Color(0xFF45A470),
+                          ),
+                        ),
+                        if (bundle.room.targetCloseDate != null) ...[
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.flag_outlined,
+                                size: 16,
+                                color: DashboardUi.blue,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Target close · ${DateFormat.yMMMd().format(bundle.room.targetCloseDate!)}',
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  if (compact) ...[
+                    _plannerTaskSection(
+                      'Overdue',
+                      'Needs attention now',
+                      overdue,
+                      const Color(0xFFFFECE8),
+                      bundle,
+                    ),
+                    const SizedBox(height: 12),
+                    _plannerTaskSection(
+                      'This week',
+                      'Next seven days',
+                      thisWeek,
+                      DashboardUi.paleGold,
+                      bundle,
+                    ),
+                    const SizedBox(height: 12),
+                    _plannerTaskSection(
+                      'Coming up',
+                      'Later or not scheduled',
+                      later,
+                      DashboardUi.paleBlue,
+                      bundle,
+                    ),
+                  ] else
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: _plannerTaskSection(
+                            'Overdue',
+                            'Needs attention now',
+                            overdue,
+                            const Color(0xFFFFECE8),
+                            bundle,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _plannerTaskSection(
+                            'This week',
+                            'Next seven days',
+                            thisWeek,
+                            DashboardUi.paleGold,
+                            bundle,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _plannerTaskSection(
+                            'Coming up',
+                            'Later or not scheduled',
+                            later,
+                            DashboardUi.paleBlue,
+                            bundle,
+                          ),
+                        ),
+                      ],
+                    ),
+                ],
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _plannerTaskSection(
+    String title,
+    String subtitle,
+    List<DealRoomTask> tasks,
+    Color tint,
+    DealRoomBundle bundle,
+  ) => Container(
+    padding: const EdgeInsets.all(13),
+    decoration: BoxDecoration(
+      color: tint,
+      borderRadius: BorderRadius.circular(13),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      color: DashboardUi.muted,
+                      fontSize: 10,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                '${tasks.length}',
+                style: const TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 11),
+        if (tasks.isEmpty)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 18),
+            child: Center(
+              child: Text(
+                'Nothing scheduled here ✓',
+                style: TextStyle(color: DashboardUi.muted, fontSize: 11),
+              ),
+            ),
+          ),
+        for (final task in tasks) _plannerTaskTile(task, bundle),
+      ],
+    ),
+  );
+
+  Widget _plannerTaskTile(DealRoomTask task, DealRoomBundle bundle) =>
+      Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.fromLTRB(5, 7, 8, 7),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(9),
+          border: Border.all(color: DashboardUi.line),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Checkbox(
+              value: task.completed,
+              onChanged: (value) => _togglePlannerTask(task, value == true),
+              visualDensity: VisualDensity.compact,
+            ),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    task.title,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  InkWell(
+                    onTap: () => _schedulePlannerTask(task),
+                    child: Row(
+                      children: [
+                        Icon(
+                          task.dueAt == null
+                              ? Icons.add_circle_outline
+                              : Icons.calendar_today_outlined,
+                          size: 13,
+                          color: DashboardUi.blue,
+                        ),
+                        const SizedBox(width: 5),
+                        Flexible(
+                          child: Text(
+                            task.dueAt == null
+                                ? 'Schedule'
+                                : DateFormat.MMMd().format(task.dueAt!),
+                            style: const TextStyle(
+                              color: DashboardUi.blue,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (task.blocked)
+              const Tooltip(
+                message: 'Blocked',
+                child: Icon(
+                  Icons.warning_amber_rounded,
+                  color: Color(0xFFE7AE30),
+                  size: 17,
+                ),
+              ),
+          ],
+        ),
+      );
+
+  Future<void> _togglePlannerTask(DealRoomTask task, bool completed) async {
+    await DealRoomService.toggleTask(task, completed);
+    if (mounted)
+      setState(() {
+        _rooms = DealRoomService.loadRooms();
+        _plannerBundles = _loadPlannerBundles();
+      });
+  }
+
+  Future<void> _schedulePlannerTask(DealRoomTask task) async {
+    final chosen = await showDatePicker(
+      context: context,
+      initialDate: task.dueAt ?? DateTime.now().add(const Duration(days: 1)),
+      firstDate: DateTime.now().subtract(const Duration(days: 365)),
+      lastDate: DateTime.now().add(const Duration(days: 3650)),
+    );
+    if (chosen == null) return;
+    await DealRoomService.updateTask(
+      taskId: task.id,
+      status: task.status,
+      blockerNote: task.blockerNote,
+      dueAt: chosen,
+      assignedProviderId: task.assignedProviderId,
+    );
+    if (mounted)
+      setState(() {
+        _rooms = DealRoomService.loadRooms();
+        _plannerBundles = _loadPlannerBundles();
+      });
+  }
 
   double _screenNumber(TextEditingController controller) =>
       double.tryParse(controller.text.replaceAll(',', '').trim()) ?? 0;

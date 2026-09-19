@@ -16,6 +16,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Your pipeline'), findsOneWidget);
       expect(find.text('Detailed view'), findsNothing);
+      expect(find.text('Archive'), findsNothing);
       expect(
         find.textContaining(
           RegExp(r'Good morning|Good afternoon|Good evening|Working late'),
@@ -62,6 +63,30 @@ void main() {
     expect(find.text('INITIAL ACQUISITION SCREEN'), findsOneWidget);
     expect(find.text('Price / EBITDA'), findsOneWidget);
     expect(find.text('Create deal room'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('buyer businesses and transaction plan stay in dashboard', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    tester.view.physicalSize = const Size(1440, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(const MaterialApp(home: DealRoomsPage()));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Businesses for sale').first);
+    await tester.pumpAndSettle();
+    expect(find.text('Businesses for sale 🏪'), findsOneWidget);
+    expect(find.textContaining('Affinity score'), findsWidgets);
+    expect(find.text('Harbour Advisory Studio'), findsOneWidget);
+    await tester.tap(find.byTooltip('Back to dashboard'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Transaction plan').first);
+    await tester.pumpAndSettle();
+    expect(find.text('Transaction plan 📅'), findsOneWidget);
+    expect(find.text('No active transactions yet'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }
