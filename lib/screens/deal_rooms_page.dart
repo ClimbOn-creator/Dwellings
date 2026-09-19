@@ -28,6 +28,7 @@ import 'acquisition_support_page.dart';
 import 'business_acquisition_page.dart';
 import 'bulletin_listing_pages.dart';
 import 'deal_comparison_page.dart';
+import 'member_profile_page.dart';
 import 'auth_page.dart';
 
 const _ink = Color(0xFF171717);
@@ -58,6 +59,14 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
   late Future<List<BusinessSaleBulletin>> _businesses;
   late Future<AcquisitionFoundation> _buyerFoundation;
   Future<List<DealRoomBundle>>? _plannerBundles;
+  Future<
+    (
+      List<DealRoomBundle>,
+      List<BusinessSaleBulletin>,
+      List<MarketplaceProvider>,
+    )
+  >?
+  _buyerBroadcast;
   late PlatformSide _side;
   bool _creating = false;
   bool _showAll = true;
@@ -91,6 +100,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
     _rooms = DealRoomService.loadRooms();
     _businesses = BusinessSaleBulletinService.load(includeExamples: true);
     _buyerFoundation = AcquisitionFoundation.load();
+    _buyerBroadcast = _loadBuyerBroadcast();
     _greetingTimer = Timer.periodic(const Duration(minutes: 1), (_) {
       if (mounted) setState(() => _greetingTime = DateTime.now());
     });
@@ -126,6 +136,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
     _businesses = BusinessSaleBulletinService.load(includeExamples: true);
     _buyerFoundation = AcquisitionFoundation.load();
     _plannerBundles = null;
+    _buyerBroadcast = _loadBuyerBroadcast();
   });
 
   Future<List<DealRoomBundle>> _loadPlannerBundles() async {
@@ -137,6 +148,26 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
         )
         .toList();
     return Future.wait(rooms.map(DealRoomService.loadBundle));
+  }
+
+  Future<
+    (
+      List<DealRoomBundle>,
+      List<BusinessSaleBulletin>,
+      List<MarketplaceProvider>,
+    )
+  >
+  _loadBuyerBroadcast() async {
+    final values = await Future.wait([
+      _loadPlannerBundles(),
+      _businesses,
+      AccountService.loadTeam(),
+    ]);
+    return (
+      values[0] as List<DealRoomBundle>,
+      values[1] as List<BusinessSaleBulletin>,
+      values[2] as List<MarketplaceProvider>,
+    );
   }
 
   Future<void> _managePersonalTeam() async {
@@ -295,16 +326,6 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                     setState(() => _dashboardView = _BuyerDashboardView.home),
                 icon: const Icon(Icons.arrow_back_rounded),
               ),
-            if (MediaQuery.sizeOf(context).width >= 700)
-              FilledButton.icon(
-                onPressed: _creating ? null : _manualCreate,
-                icon: const Icon(Icons.add_rounded, size: 18),
-                label: SiteText(
-                  contentKey: 'copy.deal_rooms_page.m4',
-                  literal: false,
-                  _creating ? 'CREATING…' : 'NEW DEAL',
-                ),
-              ),
             const SizedBox(width: 8),
             const AppNavigationMenu(side: PlatformSide.business, dark: false),
             const SizedBox(width: 12),
@@ -360,7 +381,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                               _BuyerDashboardView.transactionPlan =>
                                 _transactionPlanner(),
                               _BuyerDashboardView.team => _buyerTeamPage(),
-                              _ => _buyerDashboard(allRooms),
+                              _ => _buyerDashboardLive(allRooms),
                             },
                           ),
                         ],
@@ -372,7 +393,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                         _BuyerDashboardView.transactionPlan =>
                           _transactionPlanner(),
                         _BuyerDashboardView.team => _buyerTeamPage(),
-                        _ => _buyerDashboard(allRooms),
+                        _ => _buyerDashboardLive(allRooms),
                       };
               },
             );
@@ -450,12 +471,6 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
           _dashboardView == _BuyerDashboardView.businesses,
           () => setState(() => _dashboardView = _BuyerDashboardView.businesses),
         ),
-        DashboardUi.nav(
-          'Add a deal',
-          Icons.add_circle_outline,
-          false,
-          _manualCreate,
-        ),
         DashboardUi.nav('Refresh', Icons.refresh_rounded, false, _refresh),
       ],
     ),
@@ -468,7 +483,38 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
     _ => 3,
   };
 
-  Widget _buyerDashboard(List<DealRoom> allRooms) {
+  Widget _buyerDashboardLive(List<DealRoom> allRooms) =>
+      FutureBuilder<
+        (
+          List<DealRoomBundle>,
+          List<BusinessSaleBulletin>,
+          List<MarketplaceProvider>,
+        )
+      >(
+        future: _buyerBroadcast,
+        builder: (context, snapshot) => _buyerDashboard(
+          allRooms,
+          bundles: snapshot.data?.$1 ?? const [],
+          savedBusinesses: (snapshot.data?.$2 ?? const [])
+              .where((business) => business.isSaved)
+              .toList(),
+          team: snapshot.data?.$3 ?? const [],
+        ),
+      );
+
+  Widget _buyerDashboard(
+    List<DealRoom> allRooms, {
+    List<DealRoomBundle> bundles = const [],
+    List<BusinessSaleBulletin> savedBusinesses = const [],
+    List<MarketplaceProvider> team = const [],
+  }) {
+    DealRoomBundle? bundleFor(DealRoom room) {
+      for (final bundle in bundles) {
+        if (bundle.room.id == room.id) return bundle;
+      }
+      return null;
+    }
+
     final active = allRooms
         .where(
           (r) => !{'archived', 'completed', 'cancelled'}.contains(r.status),
@@ -547,15 +593,6 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                     SizedBox(width: 255, child: _buyerSearch()),
                   ],
                 ),
-              const SizedBox(height: 15),
-              OutlinedButton.icon(
-                onPressed: _creating ? null : _manualCreate,
-                icon: const Icon(Icons.add_rounded, size: 17),
-                label: const SiteCopyText(
-                  'buyer.learning.add',
-                  'Add a deal from any source',
-                ),
-              ),
               const SizedBox(height: 25),
               Wrap(
                 spacing: 12,
@@ -622,11 +659,6 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                                 : 'Follow each deal from sourcing to close.',
                           ),
                         ),
-                        TextButton.icon(
-                          onPressed: _manualCreate,
-                          icon: const Icon(Icons.add, size: 17),
-                          label: const Text('Add deal'),
-                        ),
                       ],
                     ),
                     const SizedBox(height: 16),
@@ -636,7 +668,8 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                           'No archived deals yet.',
                           style: TextStyle(color: DashboardUi.muted),
                         ),
-                      for (final room in shown) _buyerDealTile(room),
+                      for (final room in shown)
+                        _buyerDealTile(room, bundle: bundleFor(room)),
                     ] else
                       SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
@@ -707,7 +740,10 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                                       ),
                                     ),
                                   for (final room in stageRooms)
-                                    _buyerDealTile(room),
+                                    _buyerDealTile(
+                                      room,
+                                      bundle: bundleFor(room),
+                                    ),
                                 ],
                               ),
                             );
@@ -718,6 +754,14 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                 ),
               ),
               const SizedBox(height: 16),
+              _pipelineBroadcastSections(
+                savedBusinesses,
+                team,
+                narrow: narrow,
+                width: box.maxWidth,
+              ),
+              if (savedBusinesses.isNotEmpty || team.isNotEmpty)
+                const SizedBox(height: 16),
               Wrap(
                 spacing: 12,
                 runSpacing: 12,
@@ -768,20 +812,252 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                       }),
                     ),
                   ),
-                  SizedBox(
-                    width: narrow ? box.maxWidth : (box.maxWidth - 24) / 3,
-                    child: _buyerActionCard(
-                      'New deal room',
-                      'Bring any opportunity into one private workspace.',
-                      Icons.meeting_room_outlined,
-                      _manualCreate,
-                    ),
-                  ),
                 ],
               ),
             ],
           );
         },
+      ),
+    );
+  }
+
+  Widget _pipelineBroadcastSections(
+    List<BusinessSaleBulletin> savedBusinesses,
+    List<MarketplaceProvider> team, {
+    required bool narrow,
+    required double width,
+  }) {
+    if (savedBusinesses.isEmpty && team.isEmpty) return const SizedBox.shrink();
+    final saved = DashboardUi.panel(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: DashboardUi.sectionTitle(
+                  'Saved businesses',
+                  subtitle: 'Listings you follow and their latest changes.',
+                ),
+              ),
+              TextButton(
+                onPressed: () => setState(
+                  () => _dashboardView = _BuyerDashboardView.businesses,
+                ),
+                child: const Text('View all'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (savedBusinesses.isEmpty)
+            const Text(
+              'Save a business to follow it here.',
+              style: TextStyle(color: DashboardUi.muted, fontSize: 11),
+            )
+          else
+            for (final business in savedBusinesses.take(3))
+              _savedBusinessBroadcast(business),
+        ],
+      ),
+    );
+    final people = DashboardUi.panel(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: DashboardUi.sectionTitle(
+                  'My personal team',
+                  subtitle: 'Your advisers, available from every deal.',
+                ),
+              ),
+              TextButton(
+                onPressed: () => setState(() {
+                  _dashboardView = _BuyerDashboardView.team;
+                  _teamData ??= _loadTeamPageData();
+                }),
+                child: const Text('Manage'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (team.isEmpty)
+            const Text(
+              'Add professionals to build your acquisition team.',
+              style: TextStyle(color: DashboardUi.muted, fontSize: 11),
+            )
+          else
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                for (final provider in team.take(6))
+                  InkWell(
+                    onTap: () => _openTeamProfile(provider),
+                    borderRadius: BorderRadius.circular(10),
+                    child: Container(
+                      width: narrow ? width - 74 : 185,
+                      padding: const EdgeInsets.all(9),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF7F9FD),
+                        border: Border.all(color: DashboardUi.line),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        children: [
+                          ProfilePhoto(
+                            size: 38,
+                            photoUrl: provider.photoUrl,
+                            exampleIndex: provider.photoIndex,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  provider.name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                                Text(
+                                  provider.specialty,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    color: DashboardUi.muted,
+                                    fontSize: 9,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const Icon(
+                            Icons.chevron_right_rounded,
+                            size: 16,
+                            color: DashboardUi.muted,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+        ],
+      ),
+    );
+    return narrow
+        ? Column(children: [saved, const SizedBox(height: 12), people])
+        : Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: saved),
+              const SizedBox(width: 12),
+              Expanded(child: people),
+            ],
+          );
+  }
+
+  Widget _savedBusinessBroadcast(BusinessSaleBulletin business) {
+    final changed =
+        business.updatedAt != null &&
+        business.updatedAt!.isAfter(
+          business.postedAt.add(const Duration(minutes: 1)),
+        );
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: InkWell(
+        onTap: () => setState(() {
+          _selectedBulletin = business;
+          _dashboardView = _BuyerDashboardView.businesses;
+        }),
+        borderRadius: BorderRadius.circular(9),
+        child: Container(
+          padding: const EdgeInsets.all(9),
+          decoration: BoxDecoration(
+            color: changed ? DashboardUi.paleGold : const Color(0xFFF7F9FD),
+            border: Border.all(color: DashboardUi.line),
+            borderRadius: BorderRadius.circular(9),
+          ),
+          child: Row(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(7),
+                child: business.isExample
+                    ? Image.asset(
+                        business.exampleAsset,
+                        width: 48,
+                        height: 42,
+                        fit: BoxFit.cover,
+                      )
+                    : business.photos.isNotEmpty
+                    ? Image.network(
+                        business.photos.first,
+                        width: 48,
+                        height: 42,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) => const SizedBox(
+                          width: 48,
+                          height: 42,
+                          child: Icon(Icons.storefront_outlined),
+                        ),
+                      )
+                    : const SizedBox(
+                        width: 48,
+                        height: 42,
+                        child: Icon(Icons.storefront_outlined),
+                      ),
+              ),
+              const SizedBox(width: 9),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      business.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      changed
+                          ? 'Listing updated · review price and details'
+                          : business.askingPriceBand,
+                      style: TextStyle(
+                        color: changed
+                            ? const Color(0xFFB36D08)
+                            : DashboardUi.muted,
+                        fontSize: 9,
+                        fontWeight: changed ? FontWeight.w700 : FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (changed)
+                const Icon(
+                  Icons.notifications_active_outlined,
+                  size: 17,
+                  color: Color(0xFFB36D08),
+                )
+              else
+                const Icon(
+                  Icons.chevron_right_rounded,
+                  size: 17,
+                  color: DashboardUi.muted,
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -1189,6 +1465,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
       setState(() {
         _selectedBulletin = null;
         _businesses = BusinessSaleBulletinService.load(includeExamples: true);
+        _buyerBroadcast = _loadBuyerBroadcast();
       });
     } catch (error) {
       if (mounted)
@@ -1492,99 +1769,121 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
   Widget _teamProviderCard(
     MarketplaceProvider provider, {
     required bool selected,
-  }) => DashboardUi.panel(
-    padding: const EdgeInsets.all(15),
-    child: Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        ProfilePhoto(
-          size: 58,
-          photoUrl: provider.photoUrl,
-          exampleIndex: provider.photoIndex,
-        ),
-        const SizedBox(width: 13),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      provider.name,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ),
-                  if (provider.verified)
-                    const Icon(
-                      Icons.verified_rounded,
-                      color: DashboardUi.blue,
-                      size: 17,
-                    ),
-                ],
-              ),
-              const SizedBox(height: 3),
-              Text(
-                provider.company,
-                style: const TextStyle(color: DashboardUi.muted, fontSize: 11),
-              ),
-              const SizedBox(height: 7),
-              Text(
-                provider.specialty,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 11, height: 1.35),
-              ),
-              const SizedBox(height: 11),
-              Row(
-                children: [
-                  if (provider.reviewCount > 0) ...[
-                    const Icon(
-                      Icons.star_rounded,
-                      color: Color(0xFFE7AE30),
-                      size: 15,
-                    ),
-                    const SizedBox(width: 3),
-                    Text(
-                      '${provider.reviewScore.toStringAsFixed(1)} (${provider.reviewCount})',
-                      style: const TextStyle(
-                        color: DashboardUi.muted,
-                        fontSize: 10,
-                      ),
-                    ),
-                  ],
-                  const Spacer(),
-                  _teamBusyId == provider.id
-                      ? const SizedBox.square(
-                          dimension: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : selected
-                      ? OutlinedButton.icon(
-                          onPressed: _teamBusyId == null
-                              ? () => _toggleTeamPageProvider(provider, true)
-                              : null,
-                          icon: const Icon(Icons.remove_rounded, size: 16),
-                          label: const Text('Remove'),
-                        )
-                      : FilledButton.icon(
-                          onPressed: _teamBusyId == null
-                              ? () => _toggleTeamPageProvider(provider, false)
-                              : null,
-                          icon: const Icon(Icons.add_rounded, size: 16),
-                          label: const Text('Add to team'),
-                        ),
-                ],
-              ),
-            ],
+  }) => GestureDetector(
+    onTap: () => _openTeamProfile(provider),
+    child: DashboardUi.panel(
+      padding: const EdgeInsets.all(15),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ProfilePhoto(
+            size: 58,
+            photoUrl: provider.photoUrl,
+            exampleIndex: provider.photoIndex,
           ),
-        ),
-      ],
+          const SizedBox(width: 13),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        provider.name,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                    if (provider.verified)
+                      const Icon(
+                        Icons.verified_rounded,
+                        color: DashboardUi.blue,
+                        size: 17,
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  provider.company,
+                  style: const TextStyle(
+                    color: DashboardUi.muted,
+                    fontSize: 11,
+                  ),
+                ),
+                const SizedBox(height: 7),
+                Text(
+                  provider.specialty,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 11, height: 1.35),
+                ),
+                const SizedBox(height: 11),
+                Row(
+                  children: [
+                    if (provider.reviewCount > 0) ...[
+                      const Icon(
+                        Icons.star_rounded,
+                        color: Color(0xFFE7AE30),
+                        size: 15,
+                      ),
+                      const SizedBox(width: 3),
+                      Text(
+                        '${provider.reviewScore.toStringAsFixed(1)} (${provider.reviewCount})',
+                        style: const TextStyle(
+                          color: DashboardUi.muted,
+                          fontSize: 10,
+                        ),
+                      ),
+                    ],
+                    TextButton.icon(
+                      onPressed: () => _openTeamProfile(provider),
+                      icon: const Icon(Icons.person_search_outlined, size: 16),
+                      label: const Text('Profile & reviews'),
+                    ),
+                    _teamBusyId == provider.id
+                        ? const SizedBox.square(
+                            dimension: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : selected
+                        ? OutlinedButton.icon(
+                            onPressed: _teamBusyId == null
+                                ? () => _toggleTeamPageProvider(provider, true)
+                                : null,
+                            icon: const Icon(Icons.remove_rounded, size: 16),
+                            label: const Text('Remove'),
+                          )
+                        : FilledButton.icon(
+                            onPressed: _teamBusyId == null
+                                ? () => _toggleTeamPageProvider(provider, false)
+                                : null,
+                            icon: const Icon(Icons.add_rounded, size: 16),
+                            label: const Text('Add to team'),
+                          ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     ),
   );
+
+  Future<void> _openTeamProfile(MarketplaceProvider provider) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => MemberProfilePage(provider: provider),
+      ),
+    );
+    if (mounted) setState(() => _teamData = _loadTeamPageData());
+  }
 
   Future<void> _toggleTeamPageProvider(
     MarketplaceProvider provider,
@@ -1597,7 +1896,12 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
       } else {
         await MarketplaceService.addToTeam(provider);
       }
-      if (mounted) setState(() => _teamData = _loadTeamPageData());
+      if (mounted) {
+        setState(() {
+          _teamData = _loadTeamPageData();
+          _buyerBroadcast = _loadBuyerBroadcast();
+        });
+      }
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1666,9 +1970,11 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                       ),
                       const SizedBox(height: 16),
                       FilledButton.icon(
-                        onPressed: _manualCreate,
-                        icon: const Icon(Icons.add),
-                        label: const Text('Add a deal'),
+                        onPressed: () => setState(
+                          () => _dashboardView = _BuyerDashboardView.dealScreen,
+                        ),
+                        icon: const Icon(Icons.calculate_outlined),
+                        label: const Text('Open Deal Screen'),
                       ),
                     ],
                   ),
@@ -2006,6 +2312,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
       setState(() {
         _rooms = DealRoomService.loadRooms();
         _plannerBundles = _loadPlannerBundles();
+        _buyerBroadcast = _loadBuyerBroadcast();
       });
   }
 
@@ -2028,6 +2335,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
       setState(() {
         _rooms = DealRoomService.loadRooms();
         _plannerBundles = _loadPlannerBundles();
+        _buyerBroadcast = _loadBuyerBroadcast();
       });
   }
 
@@ -2452,67 +2760,111 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
     );
   }
 
-  Widget _buyerDealTile(DealRoom room) => Padding(
-    padding: const EdgeInsets.only(bottom: 7),
-    child: Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(8),
-      child: InkWell(
-        onTap: () => _openRoom(room),
+  Widget _buyerDealTile(DealRoom room, {DealRoomBundle? bundle}) {
+    final stageTasks =
+        bundle?.tasks
+            .where((task) => task.stage == room.currentStage)
+            .toList() ??
+        const <DealRoomTask>[];
+    final stageDone = stageTasks.where((task) => task.completed).length;
+    final stageTitle = room.currentStage
+        .split('_')
+        .map(
+          (part) => part.isEmpty
+              ? part
+              : '${part[0].toUpperCase()}${part.substring(1)}',
+        )
+        .join(' ');
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 7),
+      child: Material(
+        color: Colors.white,
         borderRadius: BorderRadius.circular(8),
-        child: Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            border: Border.all(color: DashboardUi.line),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 9,
-                height: 9,
-                margin: const EdgeInsets.only(top: 4, right: 8),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: room.blockedTaskCount > 0
-                      ? const Color(0xFFE7AE30)
-                      : const Color(0xFF45A470),
+        child: InkWell(
+          onTap: () => _openRoom(room),
+          borderRadius: BorderRadius.circular(8),
+          child: Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              border: Border.all(color: DashboardUi.line),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 9,
+                  height: 9,
+                  margin: const EdgeInsets.only(top: 4, right: 8),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: room.blockedTaskCount > 0
+                        ? const Color(0xFFE7AE30)
+                        : const Color(0xFF45A470),
+                  ),
                 ),
-              ),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      room.title,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        room.title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      room.city.isEmpty ? room.currentStage : room.city,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 10,
-                        color: DashboardUi.muted,
+                      const SizedBox(height: 4),
+                      Text(
+                        stageTasks.isEmpty
+                            ? (room.city.isEmpty ? stageTitle : room.city)
+                            : '$stageDone of ${stageTasks.length} $stageTitle checkpoints complete',
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 10,
+                          color: DashboardUi.muted,
+                        ),
                       ),
-                    ),
-                  ],
+                      if (stageTasks.isNotEmpty) ...[
+                        const SizedBox(height: 6),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(6),
+                          child: LinearProgressIndicator(
+                            value: stageDone / stageTasks.length,
+                            minHeight: 4,
+                            backgroundColor: DashboardUi.paleBlue,
+                            color: const Color(0xFF45A470),
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+                        Text(
+                          room.currentStep,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: DashboardUi.muted,
+                            fontSize: 9,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
                 ),
-              ),
-              const Icon(Icons.more_horiz, size: 15, color: DashboardUi.muted),
-            ],
+                const Icon(
+                  Icons.more_horiz,
+                  size: 15,
+                  color: DashboardUi.muted,
+                ),
+              ],
+            ),
           ),
         ),
       ),
-    ),
-  );
+    );
+  }
 
   Widget _buyerActionCard(
     String title,

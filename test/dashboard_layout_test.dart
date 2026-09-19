@@ -17,6 +17,8 @@ void main() {
       expect(find.text('Your pipeline'), findsOneWidget);
       expect(find.text('Detailed view'), findsNothing);
       expect(find.text('Archive'), findsNothing);
+      expect(find.text('Add a deal'), findsNothing);
+      expect(find.text('New deal room'), findsNothing);
       expect(
         find.textContaining(
           RegExp(r'Good morning|Good afternoon|Good evening|Working late'),

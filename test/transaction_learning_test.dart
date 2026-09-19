@@ -159,7 +159,8 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
       await tester.pumpWidget(const MaterialApp(home: DealRoomsPage()));
       await tester.pumpAndSettle();
-      expect(find.text('Add a deal from any source'), findsOneWidget);
+      expect(find.text('Deal screen'), findsWidgets);
+      expect(find.text('Add a deal from any source'), findsNothing);
       expect(find.textContaining('Transaction Room'), findsNothing);
       expect(tester.takeException(), isNull);
     },
