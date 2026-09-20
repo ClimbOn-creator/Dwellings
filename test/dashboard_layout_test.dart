@@ -99,6 +99,7 @@ void main() {
     await tester.tap(find.text('Transaction plan').first);
     await tester.pumpAndSettle();
     expect(find.text('Transaction plan 📅'), findsOneWidget);
+    expect(find.text('Open full room'), findsNothing);
     expect(find.text('No active transactions yet'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });

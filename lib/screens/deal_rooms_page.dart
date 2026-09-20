@@ -79,6 +79,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
   MarketplaceCity _teamCity = MarketplaceService.cities.first;
   String _teamQuery = '';
   String? _teamBusyId;
+  bool _teamDiscovering = false;
   Future<(List<MarketplaceProvider>, Set<String>)>? _teamData;
   late final Timer _greetingTimer;
   DateTime _greetingTime = DateTime.now();
@@ -89,6 +90,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
   final _screenDownPayment = TextEditingController(text: '25');
   final _screenInterest = TextEditingController(text: '7');
   final _screenTerm = TextEditingController(text: '7');
+  final _transactionNote = TextEditingController();
   BusinessResult? _dashboardScreenResult;
   BusinessInputs? _dashboardScreenInputs;
   bool _savingDashboardScreen = false;
@@ -120,6 +122,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
     _screenDownPayment.dispose();
     _screenInterest.dispose();
     _screenTerm.dispose();
+    _transactionNote.dispose();
     super.dispose();
   }
 
@@ -1613,13 +1616,34 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'My team 🤝',
-                    style: TextStyle(
-                      fontSize: 27,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -.8,
-                    ),
+                  Row(
+                    children: [
+                      const Expanded(
+                        child: Text(
+                          'My team 🤝',
+                          style: TextStyle(
+                            fontSize: 27,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -.8,
+                          ),
+                        ),
+                      ),
+                      OutlinedButton.icon(
+                        onPressed: () => setState(
+                          () => _teamDiscovering = !_teamDiscovering,
+                        ),
+                        icon: Icon(
+                          _teamDiscovering
+                              ? Icons.close_rounded
+                              : Icons.person_add_alt_1_outlined,
+                        ),
+                        label: Text(
+                          _teamDiscovering
+                              ? 'Close search'
+                              : 'Add team members',
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 5),
                   const Text(
@@ -1640,17 +1664,6 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                           Icons.groups_outlined,
                           DashboardUi.paleBlue,
                           const Color(0xFF5F91DC),
-                        ),
-                      ),
-                      SizedBox(
-                        width: compact ? (box.maxWidth - 12) / 2 : 210,
-                        child: DashboardUi.metric(
-                          'Available nearby',
-                          '${available.length}',
-                          _teamCity.label,
-                          Icons.location_on_outlined,
-                          DashboardUi.paleGreen,
-                          const Color(0xFF3C9764),
                         ),
                       ),
                     ],
@@ -1674,60 +1687,77 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                       ],
                     ),
                     const SizedBox(height: 24),
-                  ],
-                  DashboardUi.panel(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        DashboardUi.sectionTitle(
-                          'Find professionals',
-                          subtitle:
-                              'Search business acquisition advisers and add them directly to your team.',
+                  ] else if (!_teamDiscovering) ...[
+                    DashboardUi.panel(
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 24),
+                        child: Center(
+                          child: Text(
+                            'You have not added anyone to your team yet.',
+                            style: TextStyle(color: DashboardUi.muted),
+                          ),
                         ),
-                        const SizedBox(height: 15),
-                        if (compact) ...[
-                          _teamCityDropdown(),
-                          const SizedBox(height: 10),
-                          _teamSearchField(),
-                        ] else
-                          Row(
-                            children: [
-                              SizedBox(width: 250, child: _teamCityDropdown()),
-                              const SizedBox(width: 10),
-                              Expanded(child: _teamSearchField()),
-                            ],
-                          ),
-                        const SizedBox(height: 16),
-                        if (available.isEmpty)
-                          const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 30),
-                            child: Center(
-                              child: Text(
-                                'No additional professionals match this search.',
-                                style: TextStyle(color: DashboardUi.muted),
-                              ),
-                            ),
-                          )
-                        else
-                          Wrap(
-                            spacing: 16,
-                            runSpacing: 16,
-                            children: [
-                              for (final provider in available)
-                                SizedBox(
-                                  width: compact
-                                      ? box.maxWidth
-                                      : (box.maxWidth - 60) / 2,
-                                  child: _teamProviderCard(
-                                    provider,
-                                    selected: false,
-                                  ),
-                                ),
-                            ],
-                          ),
-                      ],
+                      ),
                     ),
-                  ),
+                    const SizedBox(height: 20),
+                  ],
+                  if (_teamDiscovering)
+                    DashboardUi.panel(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          DashboardUi.sectionTitle(
+                            'Find professionals',
+                            subtitle:
+                                'Search business acquisition advisers and add them directly to your team.',
+                          ),
+                          const SizedBox(height: 15),
+                          if (compact) ...[
+                            _teamCityDropdown(),
+                            const SizedBox(height: 10),
+                            _teamSearchField(),
+                          ] else
+                            Row(
+                              children: [
+                                SizedBox(
+                                  width: 250,
+                                  child: _teamCityDropdown(),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(child: _teamSearchField()),
+                              ],
+                            ),
+                          const SizedBox(height: 16),
+                          if (available.isEmpty)
+                            const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 30),
+                              child: Center(
+                                child: Text(
+                                  'No additional professionals match this search.',
+                                  style: TextStyle(color: DashboardUi.muted),
+                                ),
+                              ),
+                            )
+                          else
+                            Wrap(
+                              spacing: 16,
+                              runSpacing: 16,
+                              children: [
+                                for (final provider in available)
+                                  SizedBox(
+                                    width: compact
+                                        ? box.maxWidth
+                                        : (box.maxWidth - 60) / 2,
+                                    child: _teamProviderCard(
+                                      provider,
+                                      selected: false,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                        ],
+                      ),
+                    ),
                 ],
               );
             },
@@ -1772,105 +1802,74 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
   }) => GestureDetector(
     onTap: () => _openTeamProfile(provider),
     child: DashboardUi.panel(
-      padding: const EdgeInsets.all(15),
+      padding: const EdgeInsets.all(13),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ProfilePhoto(
-            size: 58,
+            size: 46,
             photoUrl: provider.photoUrl,
             exampleIndex: provider.photoIndex,
           ),
-          const SizedBox(width: 13),
+          const SizedBox(width: 11),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        provider.name,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ),
-                    if (provider.verified)
-                      const Icon(
-                        Icons.verified_rounded,
-                        color: DashboardUi.blue,
-                        size: 17,
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 3),
                 Text(
-                  provider.company,
+                  provider.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    color: DashboardUi.muted,
-                    fontSize: 11,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
-                const SizedBox(height: 7),
-                Text(
-                  provider.specialty,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 11, height: 1.35),
-                ),
-                const SizedBox(height: 11),
+                const SizedBox(height: 5),
                 Row(
                   children: [
-                    if (provider.reviewCount > 0) ...[
-                      const Icon(
-                        Icons.star_rounded,
-                        color: Color(0xFFE7AE30),
-                        size: 15,
+                    for (var index = 1; index <= 5; index++)
+                      Icon(
+                        index <= provider.reviewScore.round()
+                            ? Icons.star_rounded
+                            : Icons.star_border_rounded,
+                        color: const Color(0xFFE7AE30),
+                        size: 14,
                       ),
-                      const SizedBox(width: 3),
-                      Text(
-                        '${provider.reviewScore.toStringAsFixed(1)} (${provider.reviewCount})',
+                    const SizedBox(width: 6),
+                    Flexible(
+                      child: Text(
+                        provider.reviewCount == 0
+                            ? 'No reviews yet'
+                            : '${provider.reviewScore.toStringAsFixed(1)} · ${provider.reviewCount} review${provider.reviewCount == 1 ? '' : 's'}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           color: DashboardUi.muted,
-                          fontSize: 10,
+                          fontSize: 9,
                         ),
                       ),
-                    ],
-                    TextButton.icon(
-                      onPressed: () => _openTeamProfile(provider),
-                      icon: const Icon(Icons.person_search_outlined, size: 16),
-                      label: const Text('Profile & reviews'),
                     ),
-                    _teamBusyId == provider.id
-                        ? const SizedBox.square(
-                            dimension: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : selected
-                        ? OutlinedButton.icon(
-                            onPressed: _teamBusyId == null
-                                ? () => _toggleTeamPageProvider(provider, true)
-                                : null,
-                            icon: const Icon(Icons.remove_rounded, size: 16),
-                            label: const Text('Remove'),
-                          )
-                        : FilledButton.icon(
-                            onPressed: _teamBusyId == null
-                                ? () => _toggleTeamPageProvider(provider, false)
-                                : null,
-                            icon: const Icon(Icons.add_rounded, size: 16),
-                            label: const Text('Add to team'),
-                          ),
                   ],
                 ),
               ],
             ),
           ),
+          const SizedBox(width: 8),
+          if (_teamBusyId == provider.id)
+            const SizedBox.square(
+              dimension: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          else if (selected)
+            const Icon(Icons.chevron_right_rounded, color: DashboardUi.muted)
+          else
+            FilledButton.icon(
+              onPressed: _teamBusyId == null
+                  ? () => _toggleTeamPageProvider(provider, false)
+                  : null,
+              icon: const Icon(Icons.add_rounded, size: 15),
+              label: const Text('Add'),
+            ),
         ],
       ),
     ),
@@ -2046,36 +2045,20 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                       },
                     ),
                     const SizedBox(height: 18),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                bundle.room.title,
-                                style: const TextStyle(
-                                  fontSize: 19,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                '${bundle.room.completedTaskCount} of ${bundle.room.totalTaskCount} items complete',
-                                style: const TextStyle(
-                                  color: DashboardUi.muted,
-                                  fontSize: 11,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        TextButton.icon(
-                          onPressed: () => _openRoom(bundle.room),
-                          icon: const Icon(Icons.open_in_new, size: 16),
-                          label: const Text('Open full room'),
-                        ),
-                      ],
+                    Text(
+                      bundle.room.title,
+                      style: const TextStyle(
+                        fontSize: 19,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${bundle.room.completedTaskCount} of ${bundle.room.totalTaskCount} items complete',
+                      style: const TextStyle(
+                        color: DashboardUi.muted,
+                        fontSize: 11,
+                      ),
                     ),
                     const SizedBox(height: 12),
                     ClipRRect(
@@ -2087,26 +2070,8 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                         color: const Color(0xFF45A470),
                       ),
                     ),
-                    if (bundle.room.targetCloseDate != null) ...[
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.flag_outlined,
-                            size: 16,
-                            color: DashboardUi.blue,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            'Target close · ${DateFormat.yMMMd().format(bundle.room.targetCloseDate!)}',
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+                    const SizedBox(height: 15),
+                    _transactionOverview(bundle),
                   ],
                 ),
               ),
@@ -2124,11 +2089,325 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                 ),
                 if (index != stages.length - 1) const SizedBox(height: 12),
               ],
+              const SizedBox(height: 18),
+              _transactionRoomTeam(bundle),
+              const SizedBox(height: 18),
+              _transactionRoomNotes(bundle),
             ],
           ),
         );
       },
     );
+  }
+
+  Widget _transactionOverview(DealRoomBundle bundle) {
+    final room = bundle.room;
+    final money = NumberFormat.compactCurrency(symbol: r'$', decimalDigits: 0);
+    final stage = room.currentStage
+        .split('_')
+        .map(
+          (part) => part.isEmpty
+              ? part
+              : '${part[0].toUpperCase()}${part.substring(1)}',
+        )
+        .join(' ');
+    return Wrap(
+      spacing: 10,
+      runSpacing: 10,
+      children: [
+        _transactionFact(Icons.route_outlined, 'Current stage', stage),
+        _transactionFact(
+          Icons.payments_outlined,
+          'Purchase price',
+          room.purchasePrice > 0 ? money.format(room.purchasePrice) : 'Not set',
+        ),
+        _transactionFact(
+          Icons.location_on_outlined,
+          'Location',
+          room.city.isNotEmpty
+              ? room.city
+              : room.address.isNotEmpty
+              ? room.address
+              : 'Not set',
+        ),
+        InkWell(
+          onTap: () => _scheduleTargetClose(room),
+          borderRadius: BorderRadius.circular(10),
+          child: _transactionFact(
+            Icons.flag_outlined,
+            'Target close',
+            room.targetCloseDate == null
+                ? 'Set a date'
+                : DateFormat.yMMMd().format(room.targetCloseDate!),
+            action: true,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _transactionFact(
+    IconData icon,
+    String label,
+    String value, {
+    bool action = false,
+  }) => Container(
+    width: 190,
+    padding: const EdgeInsets.all(11),
+    decoration: BoxDecoration(
+      color: const Color(0xFFF8FAFE),
+      borderRadius: BorderRadius.circular(10),
+      border: Border.all(color: DashboardUi.line),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 17, color: DashboardUi.blue),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label.toUpperCase(),
+                style: const TextStyle(
+                  color: DashboardUi.muted,
+                  fontSize: 8,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: .6,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                value,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: action ? DashboardUi.blue : DashboardUi.ink,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
+
+  Widget _transactionRoomTeam(DealRoomBundle bundle) => DashboardUi.panel(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        DashboardUi.sectionTitle(
+          'Transaction team 🤝',
+          subtitle: 'The advisers assigned to this acquisition.',
+        ),
+        const SizedBox(height: 14),
+        if (bundle.members.isEmpty)
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'No advisers are assigned to this deal yet.',
+                style: TextStyle(color: DashboardUi.muted),
+              ),
+              const SizedBox(height: 11),
+              OutlinedButton.icon(
+                onPressed: () =>
+                    setState(() => _dashboardView = _BuyerDashboardView.team),
+                icon: const Icon(Icons.person_add_alt_1_outlined, size: 16),
+                label: const Text('Go to My Team'),
+              ),
+            ],
+          )
+        else
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: [
+              for (final member in bundle.members)
+                InkWell(
+                  onTap: () => _openTeamProfile(member.provider),
+                  borderRadius: BorderRadius.circular(11),
+                  child: Container(
+                    width: 250,
+                    padding: const EdgeInsets.all(11),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF8FAFE),
+                      borderRadius: BorderRadius.circular(11),
+                      border: Border.all(color: DashboardUi.line),
+                    ),
+                    child: Row(
+                      children: [
+                        ProfilePhoto(
+                          size: 40,
+                          photoUrl: member.provider.photoUrl,
+                          exampleIndex: member.provider.photoIndex,
+                        ),
+                        const SizedBox(width: 9),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                member.provider.name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                              const SizedBox(height: 3),
+                              Text(
+                                member.provider.specialty,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: DashboardUi.muted,
+                                  fontSize: 9,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Icon(
+                          Icons.chevron_right_rounded,
+                          color: DashboardUi.muted,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          ),
+      ],
+    ),
+  );
+
+  Widget _transactionRoomNotes(DealRoomBundle bundle) => DashboardUi.panel(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        DashboardUi.sectionTitle(
+          'Deal notes & updates ✍️',
+          subtitle: 'Keep decisions and transaction updates with this deal.',
+        ),
+        const SizedBox(height: 14),
+        TextField(
+          controller: _transactionNote,
+          minLines: 2,
+          maxLines: 4,
+          decoration: InputDecoration(
+            hintText: 'Add an update, decision, or reminder…',
+            filled: true,
+            fillColor: const Color(0xFFF8FAFE),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: DashboardUi.line),
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        Align(
+          alignment: Alignment.centerRight,
+          child: FilledButton.icon(
+            onPressed: () => _addTransactionNote(bundle),
+            icon: const Icon(Icons.add_comment_outlined, size: 16),
+            label: const Text('Add update'),
+          ),
+        ),
+        if (bundle.notes.isNotEmpty) ...[
+          const Divider(height: 30),
+          for (final note in bundle.notes) ...[
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                CircleAvatar(
+                  radius: 15,
+                  backgroundColor: note.mine
+                      ? DashboardUi.paleBlue
+                      : DashboardUi.paleGreen,
+                  child: Icon(
+                    note.mine ? Icons.person_outline : Icons.group_outlined,
+                    size: 15,
+                    color: note.mine
+                        ? DashboardUi.blue
+                        : const Color(0xFF3C9764),
+                  ),
+                ),
+                const SizedBox(width: 9),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        note.text,
+                        style: const TextStyle(fontSize: 11, height: 1.4),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${note.mine ? 'You' : 'Team member'} · ${DateFormat.yMMMd().add_jm().format(note.createdAt.toLocal())}',
+                        style: const TextStyle(
+                          color: DashboardUi.muted,
+                          fontSize: 9,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 13),
+          ],
+        ],
+      ],
+    ),
+  );
+
+  Future<void> _scheduleTargetClose(DealRoom room) async {
+    final chosen = await showDatePicker(
+      context: context,
+      initialDate:
+          room.targetCloseDate ?? DateTime.now().add(const Duration(days: 60)),
+      firstDate: DateTime.now().subtract(const Duration(days: 365)),
+      lastDate: DateTime.now().add(const Duration(days: 3650)),
+    );
+    if (chosen == null) return;
+    await DealRoomService.updateRoom(
+      roomId: room.id,
+      status: room.status,
+      timeline: room.timeline,
+      goals: room.goals,
+      currentStage: room.currentStage,
+      targetCloseDate: chosen,
+    );
+    if (!mounted) return;
+    setState(() {
+      _rooms = DealRoomService.loadRooms();
+      _plannerBundles = _loadPlannerBundles();
+      _buyerBroadcast = _loadBuyerBroadcast();
+    });
+  }
+
+  Future<void> _addTransactionNote(DealRoomBundle bundle) async {
+    final text = _transactionNote.text.trim();
+    if (text.isEmpty) return;
+    try {
+      await DealRoomService.addNote(bundle.room.id, text);
+      _transactionNote.clear();
+      if (!mounted) return;
+      setState(() {
+        _plannerBundles = _loadPlannerBundles();
+        _buyerBroadcast = _loadBuyerBroadcast();
+      });
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not add this update: $error')),
+      );
+    }
   }
 
   Widget _transactionStage(
