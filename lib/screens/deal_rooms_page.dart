@@ -763,8 +763,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                 narrow: narrow,
                 width: box.maxWidth,
               ),
-              if (savedBusinesses.isNotEmpty || team.isNotEmpty)
-                const SizedBox(height: 16),
+              const SizedBox(height: 16),
               Wrap(
                 spacing: 12,
                 runSpacing: 12,
@@ -803,18 +802,6 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                       }),
                     ),
                   ),
-                  SizedBox(
-                    width: narrow ? box.maxWidth : (box.maxWidth - 24) / 3,
-                    child: _buyerActionCard(
-                      'My personal team',
-                      'Add advisers and collaborators to your team. 🤝',
-                      Icons.group_outlined,
-                      () => setState(() {
-                        _dashboardView = _BuyerDashboardView.team;
-                        _teamData ??= _loadTeamPageData();
-                      }),
-                    ),
-                  ),
                 ],
               ),
             ],
@@ -830,7 +817,6 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
     required bool narrow,
     required double width,
   }) {
-    if (savedBusinesses.isEmpty && team.isEmpty) return const SizedBox.shrink();
     final saved = DashboardUi.panel(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1506,9 +1492,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
     ]);
     final directory = values[0] as MarketplaceDirectory;
     final team = values[1] as List<MarketplaceProvider>;
-    final providers = directory.providers
-        .where((provider) => !provider.isExample)
-        .toList();
+    final providers = directory.providers.toList();
     for (final provider in team) {
       if (!providers.any((item) => item.id == provider.id)) {
         providers.add(provider);
@@ -1593,9 +1577,15 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
         final selected = snapshot.data!.$2;
         final query = _teamQuery.trim().toLowerCase();
         final visible = providers.where((provider) {
-          final text =
-              '${provider.name} ${provider.company} ${provider.specialty} ${provider.jobTitle}'
-                  .toLowerCase();
+          final text = [
+            provider.name,
+            provider.company,
+            provider.specialty,
+            provider.jobTitle,
+            ...provider.specialties,
+            ...provider.serviceMarkets,
+            ...provider.locations,
+          ].join(' ').toLowerCase();
           return query.isEmpty ||
               query.split(RegExp(r'\s+')).every(text.contains);
         }).toList();
@@ -1775,7 +1765,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
       prefixIcon: Icon(Icons.location_on_outlined),
     ),
     items: [
-      for (final city in MarketplaceService.cities)
+      for (final city in MarketplaceService.citiesAlphabetically)
         DropdownMenuItem(value: city, child: Text(city.label)),
     ],
     onChanged: (city) {
@@ -1987,7 +1977,10 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
           orElse: () => bundles.first,
         );
         _plannerRoomId ??= bundle.room.id;
-        final stages = DealRoomService.stagesFor(bundle.room.dealKind);
+        final stages = [...DealRoomService.businessStages];
+        for (final task in bundle.tasks) {
+          if (!stages.contains(task.stage)) stages.add(task.stage);
+        }
         return SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(26, 28, 26, 56),
           child: Column(
@@ -2076,19 +2069,45 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                 ),
               ),
               const SizedBox(height: 18),
-              for (var index = 0; index < stages.length; index++) ...[
-                _transactionStage(
-                  stages[index],
-                  index,
-                  stages.length,
-                  bundle.tasks
-                      .where((task) => task.stage == stages[index])
-                      .toList()
-                    ..sort((a, b) => a.position.compareTo(b.position)),
-                  bundle,
-                ),
-                if (index != stages.length - 1) const SizedBox(height: 12),
-              ],
+              DashboardUi.sectionTitle(
+                'Complete acquisition checklist',
+                subtitle:
+                    'Every phase is shown here from discovery through completion.',
+              ),
+              const SizedBox(height: 12),
+              LayoutBuilder(
+                builder: (context, box) {
+                  final columns = box.maxWidth >= 1180
+                      ? 3
+                      : box.maxWidth >= 720
+                      ? 2
+                      : 1;
+                  final cardWidth =
+                      (box.maxWidth - ((columns - 1) * 12)) / columns;
+                  return Wrap(
+                    spacing: 12,
+                    runSpacing: 12,
+                    children: [
+                      for (var index = 0; index < stages.length; index++)
+                        SizedBox(
+                          width: cardWidth,
+                          child: _transactionStage(
+                            stages[index],
+                            index,
+                            stages.length,
+                            bundle.tasks
+                                .where((task) => task.stage == stages[index])
+                                .toList()
+                              ..sort(
+                                (a, b) => a.position.compareTo(b.position),
+                              ),
+                            bundle,
+                          ),
+                        ),
+                    ],
+                  );
+                },
+              ),
               const SizedBox(height: 18),
               _transactionRoomTeam(bundle),
               const SizedBox(height: 18),
@@ -8205,7 +8224,7 @@ class _PersonalTeamDialogState extends State<_PersonalTeamDialog> {
             DropdownButtonFormField<MarketplaceCity>(
               initialValue: _city,
               decoration: const InputDecoration(labelText: 'Search near'),
-              items: MarketplaceService.cities
+              items: MarketplaceService.citiesAlphabetically
                   .map(
                     (city) =>
                         DropdownMenuItem(value: city, child: Text(city.label)),

@@ -65,4 +65,12 @@ void main() {
       isNull,
     );
   });
+
+  test('city dropdown catalogue is alphabetical', () {
+    final labels = MarketplaceService.citiesAlphabetically
+        .map((city) => city.label)
+        .toList();
+    final sorted = [...labels]..sort();
+    expect(labels, sorted);
+  });
 }

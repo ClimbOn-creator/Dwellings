@@ -4,6 +4,20 @@ import 'package:dwelling_iq/services/deal_room_service.dart';
 
 void main() {
   group('guided deal workflows', () {
+    test('business acquisition exposes every transaction phase', () {
+      expect(DealRoomService.businessStages, [
+        'discovery',
+        'screening',
+        'offer',
+        'diligence',
+        'financing',
+        'legal',
+        'closing',
+        'transition',
+        'complete',
+      ]);
+    });
+
     for (final kind in ['residential', 'commercial', 'business']) {
       test('$kind has a complete staged checklist', () {
         final stages = DealRoomService.stagesFor(kind);

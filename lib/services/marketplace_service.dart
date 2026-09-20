@@ -346,6 +346,11 @@ class MarketplaceService {
     MarketplaceCity('Iqaluit', 'NU', 'CA'),
   ];
 
+  static final List<MarketplaceCity> citiesAlphabetically =
+      List<MarketplaceCity>.unmodifiable(
+        [...cities]..sort((a, b) => a.label.compareTo(b.label)),
+      );
+
   static String _normal(String value) =>
       value.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
 
@@ -356,8 +361,10 @@ class MarketplaceService {
   }) {
     final needle = _normal(query.split(',').first);
     final pool = provinceCode == null
-        ? cities
-        : cities.where((city) => city.region == provinceCode).toList();
+        ? citiesAlphabetically
+        : citiesAlphabetically
+              .where((city) => city.region == provinceCode)
+              .toList();
     if (needle.isEmpty) return pool.take(limit).toList();
     final ranked = <(MarketplaceCity, int)>[];
     for (final city in pool) {
