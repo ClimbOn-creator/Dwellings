@@ -164,7 +164,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('My team').first);
     await tester.pumpAndSettle();
-    expect(find.text('My team 🤝'), findsOneWidget);
+    expect(find.text('My team'), findsNWidgets(2));
     expect(find.byType(Dialog), findsNothing);
     await tester.tap(find.byTooltip('Back to dashboard'));
     await tester.pumpAndSettle();

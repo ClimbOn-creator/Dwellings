@@ -1,3 +1,4 @@
+import '../widgets/team_member_portrait.dart';
 import 'buyer_resources_page.dart';
 import 'dart:async';
 
@@ -54,11 +55,14 @@ class DealRoomsPage extends StatefulWidget {
     this.initialSide = PlatformSide.property,
     this.startIntake = false,
     this.loadTransactionBundles,
+    this.loadTeamProviders,
   });
 
   final PlatformSide initialSide;
   final bool startIntake;
   final Future<List<DealRoomBundle>> Function()? loadTransactionBundles;
+  final Future<(List<MarketplaceProvider>, Set<String>)> Function()?
+  loadTeamProviders;
 
   @override
   State<DealRoomsPage> createState() => _DealRoomsPageState();
@@ -89,7 +93,6 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
   MarketplaceCity _teamCity = MarketplaceService.cities.first;
   String _teamQuery = '';
   String? _teamBusyId;
-  bool _teamDiscovering = false;
   Future<(List<MarketplaceProvider>, Set<String>)>? _teamData;
   late final Timer _greetingTimer;
   DateTime _greetingTime = DateTime.now();
@@ -1523,6 +1526,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
   }
 
   Future<(List<MarketplaceProvider>, Set<String>)> _loadTeamPageData() async {
+    if (widget.loadTeamProviders != null) return widget.loadTeamProviders!();
     if (BackendService.user == null) {
       return (const <MarketplaceProvider>[], <String>{});
     }
@@ -1542,14 +1546,14 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
   }
 
   Widget _buyerTeamPage() {
-    if (BackendService.user == null) {
+    if (BackendService.user == null && widget.loadTeamProviders == null) {
       return SingleChildScrollView(
         padding: const EdgeInsets.all(26),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'My team 🤝',
+              'My team',
               style: TextStyle(
                 fontSize: 27,
                 fontWeight: FontWeight.w800,
@@ -1640,163 +1644,108 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
           child: LayoutBuilder(
             builder: (context, box) {
               final compact = box.maxWidth < 720;
-              final cardWidth = compact
-                  ? box.maxWidth
-                  : (box.maxWidth - 16) / 2;
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      const Expanded(
+                  const Center(
+                    child: Text(
+                      'My team',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  if (myTeam.isNotEmpty)
+                    Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 1000),
+                        child: Wrap(
+                          alignment: WrapAlignment.center,
+                          spacing: 24,
+                          runSpacing: 32,
+                          children: [
+                            for (final provider in myTeam)
+                              SizedBox(
+                                width: compact ? (box.maxWidth - 24) / 2 : 160,
+                                child: _teamProviderCard(
+                                  provider,
+                                  selected: true,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    )
+                  else
+                    const Center(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(vertical: 24),
                         child: Text(
-                          'My team 🤝',
-                          style: TextStyle(
-                            fontSize: 27,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -.8,
-                          ),
+                          'Your team is empty. Find members below to get started.',
                         ),
                       ),
-                      OutlinedButton.icon(
-                        onPressed: () => setState(
-                          () => _teamDiscovering = !_teamDiscovering,
-                        ),
-                        icon: Icon(
-                          _teamDiscovering
-                              ? Icons.close_rounded
-                              : Icons.person_add_alt_1_outlined,
-                        ),
-                        label: Text(
-                          _teamDiscovering
-                              ? 'Close search'
-                              : 'Add team members',
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 5),
-                  const Text(
-                    'Build the professional team that supports every acquisition.',
-                    style: TextStyle(color: DashboardUi.muted),
-                  ),
-                  const SizedBox(height: 20),
-                  Wrap(
-                    spacing: 12,
-                    runSpacing: 12,
-                    children: [
-                      SizedBox(
-                        width: compact ? (box.maxWidth - 12) / 2 : 210,
-                        child: DashboardUi.metric(
-                          'Team members',
-                          '${myTeam.length}',
-                          'Saved to your account',
-                          Icons.groups_outlined,
-                          DashboardUi.paleBlue,
-                          const Color(0xFF5F91DC),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 18),
-                  const BuyerResourcesPanel(teamOnly: true),
-                  TextButton.icon(
-                    onPressed: () => setState(
-                      () => _dashboardView = _BuyerDashboardView.resources,
                     ),
-                    icon: const Icon(Icons.add),
-                    label: const Text('Add public resources'),
-                  ),
-                  const SizedBox(height: 24),
-                  if (myTeam.isNotEmpty) ...[
-                    DashboardUi.sectionTitle(
-                      'Your acquisition team',
-                      subtitle: 'The professionals saved to your account.',
-                    ),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 16,
-                      runSpacing: 16,
+                  const SizedBox(height: 40),
+                  DashboardUi.panel(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        for (final provider in myTeam)
-                          SizedBox(
-                            width: cardWidth,
-                            child: _teamProviderCard(provider, selected: true),
+                        DashboardUi.sectionTitle(
+                          'Find professionals',
+                          subtitle:
+                              'Search business acquisition advisers and add them directly to your team.',
+                        ),
+                        const SizedBox(height: 15),
+                        if (compact) ...[
+                          _teamCityDropdown(),
+                          const SizedBox(height: 10),
+                          _teamSearchField(),
+                        ] else
+                          Row(
+                            children: [
+                              SizedBox(width: 250, child: _teamCityDropdown()),
+                              const SizedBox(width: 10),
+                              Expanded(child: _teamSearchField()),
+                            ],
+                          ),
+                        const SizedBox(height: 16),
+                        if (available.isEmpty)
+                          const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 30),
+                            child: Center(
+                              child: Text(
+                                'No additional professionals match this search.',
+                                style: TextStyle(color: DashboardUi.muted),
+                              ),
+                            ),
+                          )
+                        else
+                          Wrap(
+                            alignment: WrapAlignment.center,
+                            spacing: 16,
+                            runSpacing: 16,
+                            children: [
+                              for (final provider in available)
+                                SizedBox(
+                                  width: compact
+                                      ? (box.maxWidth < 380
+                                            ? box.maxWidth - 44
+                                            : (box.maxWidth - 76) / 2)
+                                      : 160,
+                                  child: _teamProviderCard(
+                                    provider,
+                                    selected: false,
+                                  ),
+                                ),
+                            ],
                           ),
                       ],
                     ),
-                    const SizedBox(height: 24),
-                  ] else if (!_teamDiscovering) ...[
-                    DashboardUi.panel(
-                      child: const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 24),
-                        child: Center(
-                          child: Text(
-                            'You have not added anyone to your team yet.',
-                            style: TextStyle(color: DashboardUi.muted),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                  ],
-                  if (_teamDiscovering)
-                    DashboardUi.panel(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          DashboardUi.sectionTitle(
-                            'Find professionals',
-                            subtitle:
-                                'Search business acquisition advisers and add them directly to your team.',
-                          ),
-                          const SizedBox(height: 15),
-                          if (compact) ...[
-                            _teamCityDropdown(),
-                            const SizedBox(height: 10),
-                            _teamSearchField(),
-                          ] else
-                            Row(
-                              children: [
-                                SizedBox(
-                                  width: 250,
-                                  child: _teamCityDropdown(),
-                                ),
-                                const SizedBox(width: 10),
-                                Expanded(child: _teamSearchField()),
-                              ],
-                            ),
-                          const SizedBox(height: 16),
-                          if (available.isEmpty)
-                            const Padding(
-                              padding: EdgeInsets.symmetric(vertical: 30),
-                              child: Center(
-                                child: Text(
-                                  'No additional professionals match this search.',
-                                  style: TextStyle(color: DashboardUi.muted),
-                                ),
-                              ),
-                            )
-                          else
-                            Wrap(
-                              spacing: 16,
-                              runSpacing: 16,
-                              children: [
-                                for (final provider in available)
-                                  SizedBox(
-                                    width: compact
-                                        ? box.maxWidth
-                                        : (box.maxWidth - 60) / 2,
-                                    child: _teamProviderCard(
-                                      provider,
-                                      selected: false,
-                                    ),
-                                  ),
-                              ],
-                            ),
-                        ],
-                      ),
-                    ),
+                  ),
+                  const SizedBox(height: 36),
+                  const BuyerResourcesPanel(teamOnly: true),
                 ],
               );
             },
@@ -1838,80 +1787,15 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
   Widget _teamProviderCard(
     MarketplaceProvider provider, {
     required bool selected,
-  }) => GestureDetector(
-    onTap: () => _openTeamProfile(provider),
-    child: DashboardUi.panel(
-      padding: const EdgeInsets.all(13),
-      child: Row(
-        children: [
-          ProfilePhoto(
-            size: 46,
-            photoUrl: provider.photoUrl,
-            exampleIndex: provider.photoIndex,
-          ),
-          const SizedBox(width: 11),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  provider.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 5),
-                Row(
-                  children: [
-                    for (var index = 1; index <= 5; index++)
-                      Icon(
-                        index <= provider.reviewScore.round()
-                            ? Icons.star_rounded
-                            : Icons.star_border_rounded,
-                        color: const Color(0xFFE7AE30),
-                        size: 14,
-                      ),
-                    const SizedBox(width: 6),
-                    Flexible(
-                      child: Text(
-                        provider.reviewCount == 0
-                            ? 'No reviews yet'
-                            : '${provider.reviewScore.toStringAsFixed(1)} · ${provider.reviewCount} review${provider.reviewCount == 1 ? '' : 's'}',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: DashboardUi.muted,
-                          fontSize: 9,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          if (_teamBusyId == provider.id)
-            const SizedBox.square(
-              dimension: 20,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            )
-          else if (selected)
-            const Icon(Icons.chevron_right_rounded, color: DashboardUi.muted)
-          else
-            FilledButton.icon(
-              onPressed: _teamBusyId == null
-                  ? () => _toggleTeamPageProvider(provider, false)
-                  : null,
-              icon: const Icon(Icons.add_rounded, size: 15),
-              label: const Text('Add'),
-            ),
-        ],
-      ),
-    ),
+  }) => TeamMemberPortrait(
+    key: ValueKey('team-${selected ? 'saved' : 'available'}-${provider.id}'),
+    provider: provider,
+    selected: selected,
+    busy: _teamBusyId == provider.id,
+    onProfile: () => _openTeamProfile(provider),
+    onToggle: _teamBusyId == null
+        ? () => _toggleTeamPageProvider(provider, selected)
+        : null,
   );
 
   Future<void> _openTeamProfile(MarketplaceProvider provider) async {

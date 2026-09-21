@@ -263,11 +263,6 @@ class _BuyerResourcesPanelState extends State<BuyerResourcesPanel> {
               ],
               onChanged: (v) => setState(() => _region = v!),
             ),
-            const SizedBox(height: 6),
-            const Text(
-              'Click a name to explore. Tap + to save to your profile and My Team.',
-              style: TextStyle(color: Color(0xFF536775)),
-            ),
           ],
           if (selection.loading) const LinearProgressIndicator(),
           if (selection.error != null)
