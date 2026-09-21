@@ -92,6 +92,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
   String? _plannerRoomId;
   MarketplaceCity _teamCity = MarketplaceService.cities.first;
   String _teamQuery = '';
+  BuyerTeamProfession? _teamProfession;
   String? _teamBusyId;
   Future<(List<MarketplaceProvider>, Set<String>)>? _teamData;
   late final Timer _greetingTimer;
@@ -1547,57 +1548,78 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
 
   Widget _buyerTeamPage() {
     if (BackendService.user == null && widget.loadTeamProviders == null) {
-      return SingleChildScrollView(
-        padding: const EdgeInsets.all(26),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'My team',
-              style: TextStyle(
-                fontSize: 27,
-                fontWeight: FontWeight.w800,
-                letterSpacing: -.8,
+      return LayoutBuilder(
+        builder: (context, bounds) => SingleChildScrollView(
+          padding: const EdgeInsets.all(26),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: bounds.maxHeight > 52 ? bounds.maxHeight - 52 : 0,
+            ),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 720),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const Text(
+                      'My team',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 27,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -.8,
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    DashboardUi.panel(
+                      child: Column(
+                        children: [
+                          const Icon(
+                            Icons.group_outlined,
+                            color: DashboardUi.blue,
+                            size: 38,
+                          ),
+                          const SizedBox(height: 12),
+                          const Text(
+                            'Sign in to build your acquisition team',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          const SizedBox(height: 7),
+                          const Text(
+                            'Your advisers stay connected to your account and can be added to active transactions.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: DashboardUi.muted,
+                              height: 1.45,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          FilledButton(
+                            onPressed: () async {
+                              await Navigator.of(context).push(
+                                MaterialPageRoute<void>(
+                                  builder: (_) => const AuthPage(),
+                                ),
+                              );
+                              if (mounted && BackendService.user != null) {
+                                setState(() => _teamData = _loadTeamPageData());
+                              }
+                            },
+                            child: const Text('Sign in'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-            const SizedBox(height: 18),
-            DashboardUi.panel(
-              child: Column(
-                children: [
-                  const Icon(
-                    Icons.group_outlined,
-                    color: DashboardUi.blue,
-                    size: 38,
-                  ),
-                  const SizedBox(height: 12),
-                  const Text(
-                    'Sign in to build your acquisition team',
-                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
-                  ),
-                  const SizedBox(height: 7),
-                  const Text(
-                    'Your advisers stay connected to your account and can be added to active transactions.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: DashboardUi.muted, height: 1.45),
-                  ),
-                  const SizedBox(height: 16),
-                  FilledButton(
-                    onPressed: () async {
-                      await Navigator.of(context).push(
-                        MaterialPageRoute<void>(
-                          builder: (_) => const AuthPage(),
-                        ),
-                      );
-                      if (mounted && BackendService.user != null) {
-                        setState(() => _teamData = _loadTeamPageData());
-                      }
-                    },
-                    child: const Text('Sign in'),
-                  ),
-                ],
-              ),
-            ),
-          ],
+          ),
         ),
       );
     }
@@ -1621,10 +1643,14 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
         final selected = snapshot.data!.$2;
         final query = _teamQuery.trim().toLowerCase();
         final visible = providers.where((provider) {
+          if (_teamProfession != null &&
+              provider.category.teamProfession != _teamProfession)
+            return false;
           final text = [
             provider.name,
             provider.company,
             provider.specialty,
+            provider.category.teamProfession.label,
             provider.jobTitle,
             ...provider.specialties,
             ...provider.serviceMarkets,
@@ -1698,6 +1724,53 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                               'Search business acquisition advisers and add them directly to your team.',
                         ),
                         const SizedBox(height: 15),
+                        const Text(
+                          'Choose the roles your deal needs. One member per profession.',
+                          style: TextStyle(color: DashboardUi.muted),
+                        ),
+                        const SizedBox(height: 12),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            ChoiceChip(
+                              label: const Text('All professions'),
+                              selected: _teamProfession == null,
+                              onSelected: (_) => setState(() {
+                                _teamProfession = null;
+                                _teamQuery = '';
+                              }),
+                            ),
+                            for (final profession in BuyerTeamProfession.values)
+                              ChoiceChip(
+                                avatar: Icon(
+                                  myTeam.any(
+                                        (p) =>
+                                            p.category.teamProfession ==
+                                            profession,
+                                      )
+                                      ? Icons.check_circle_outline
+                                      : Icons.add_circle_outline,
+                                  size: 18,
+                                ),
+                                label: Text(
+                                  myTeam.any(
+                                        (p) =>
+                                            p.category.teamProfession ==
+                                            profession,
+                                      )
+                                      ? '${profession.label} added'
+                                      : profession.prompt,
+                                ),
+                                selected: _teamProfession == profession,
+                                onSelected: (_) => setState(() {
+                                  _teamProfession = profession;
+                                  _teamQuery = '';
+                                }),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 18),
                         if (compact) ...[
                           _teamCityDropdown(),
                           const SizedBox(height: 10),
@@ -1722,21 +1795,18 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                             ),
                           )
                         else
-                          Wrap(
-                            alignment: WrapAlignment.center,
-                            spacing: 16,
-                            runSpacing: 16,
+                          Column(
                             children: [
                               for (final provider in available)
-                                SizedBox(
-                                  width: compact
-                                      ? (box.maxWidth < 380
-                                            ? box.maxWidth - 44
-                                            : (box.maxWidth - 76) / 2)
-                                      : 160,
-                                  child: _teamProviderCard(
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 10),
+                                  child: _teamSearchResult(
                                     provider,
-                                    selected: false,
+                                    occupied: myTeam.any(
+                                      (p) =>
+                                          p.category.teamProfession ==
+                                          provider.category.teamProfession,
+                                    ),
                                   ),
                                 ),
                             ],
@@ -1776,11 +1846,87 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
   );
 
   Widget _teamSearchField() => TextField(
+    key: ValueKey(_teamProfession),
     onChanged: (value) => setState(() => _teamQuery = value),
     decoration: const InputDecoration(
       labelText: 'Search professionals',
       hintText: 'Name, company, or specialty',
       prefixIcon: Icon(Icons.search),
+    ),
+  );
+
+  Widget _teamSearchResult(
+    MarketplaceProvider provider, {
+    required bool occupied,
+  }) => DashboardUi.panel(
+    padding: const EdgeInsets.all(14),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ProfilePhoto(
+          size: 44,
+          photoUrl: provider.photoUrl,
+          exampleIndex: provider.photoIndex,
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                provider.category.teamProfession.label,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: DashboardUi.blue,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              TextButton(
+                onPressed: () => _openTeamProfile(provider),
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  alignment: Alignment.centerLeft,
+                ),
+                child: Text(
+                  provider.name,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+              ),
+              Text(
+                [
+                  provider.company,
+                  provider.jobTitle,
+                ].where((v) => v.trim().isNotEmpty).join(' · '),
+                style: const TextStyle(color: DashboardUi.muted, fontSize: 12),
+              ),
+              if (occupied)
+                const Padding(
+                  padding: EdgeInsets.only(top: 8),
+                  child: Text(
+                    'Profession filled — remove your current member to switch.',
+                    style: TextStyle(fontSize: 12, color: DashboardUi.muted),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 8),
+        if (_teamBusyId == provider.id)
+          const SizedBox.square(
+            dimension: 22,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          )
+        else
+          IconButton.filledTonal(
+            tooltip: occupied
+                ? 'Profession already filled'
+                : 'Add ${provider.name} to My Team',
+            onPressed: occupied || _teamBusyId != null
+                ? null
+                : () => _toggleTeamPageProvider(provider, false),
+            icon: const Icon(Icons.add),
+          ),
+      ],
     ),
   );
 

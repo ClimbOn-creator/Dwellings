@@ -71,6 +71,43 @@ extension ProviderCategoryLabel on ProviderCategory {
   };
 }
 
+enum BuyerTeamProfession {
+  lawyer('Lawyer', 'Add a lawyer'),
+  accountant('Accountant', 'Add an accountant'),
+  businessBroker('Business broker', 'Add a business broker'),
+  lender('Lender', 'Add a lender'),
+  taxAdviser('Tax adviser', 'Add a tax adviser'),
+  insurance('Insurance adviser', 'Add an insurance adviser'),
+  hr('HR specialist', 'Add an HR specialist'),
+  cybersecurity('Cybersecurity specialist', 'Add a cybersecurity specialist'),
+  industry('Industry adviser', 'Add an industry adviser'),
+  wealth('Wealth manager', 'Add a wealth manager'),
+  realEstate('Real estate adviser', 'Add a real estate adviser');
+
+  const BuyerTeamProfession(this.label, this.prompt);
+  final String label, prompt;
+}
+
+extension BuyerTeamCategory on ProviderCategory {
+  BuyerTeamProfession get teamProfession => switch (this) {
+    ProviderCategory.lawyer ||
+    ProviderCategory.maLawyer => BuyerTeamProfession.lawyer,
+    ProviderCategory.accountant ||
+    ProviderCategory.qualityOfEarnings => BuyerTeamProfession.accountant,
+    ProviderCategory.lender ||
+    ProviderCategory.commercialLender ||
+    ProviderCategory.mortgageBroker => BuyerTeamProfession.lender,
+    ProviderCategory.businessBroker => BuyerTeamProfession.businessBroker,
+    ProviderCategory.taxAdvisor => BuyerTeamProfession.taxAdviser,
+    ProviderCategory.insuranceAdvisor => BuyerTeamProfession.insurance,
+    ProviderCategory.humanResources => BuyerTeamProfession.hr,
+    ProviderCategory.cybersecurity => BuyerTeamProfession.cybersecurity,
+    ProviderCategory.industryAdvisor => BuyerTeamProfession.industry,
+    ProviderCategory.wealthManager => BuyerTeamProfession.wealth,
+    ProviderCategory.realtor => BuyerTeamProfession.realEstate,
+  };
+}
+
 List<ProviderCategory> providerCategoriesFor(PlatformSide side) =>
     ProviderCategory.values.where((category) => category.side == side).toList();
 
@@ -700,14 +737,56 @@ class MarketplaceService {
     return providers;
   }
 
-  static Future<void> addToTeam(MarketplaceProvider provider) async {
-    final user = BackendService.user;
-    if (user == null) throw StateError('Sign in to build your team.');
-    if (provider.id.startsWith('demo-')) return;
-    await Supabase.instance.client.from('user_team_members').upsert({
-      'user_id': user.id,
-      'provider_id': provider.id,
+  // Serialize saves in this app so simultaneous add actions re-check the team.
+  static Future<void> _teamSaveQueue = Future<void>.value();
+  static Future<void> addToTeam(MarketplaceProvider provider) {
+    final userId = BackendService.user?.id;
+    final operation = _teamSaveQueue.then((_) async {
+      final user = BackendService.user;
+      if (user == null || user.id != userId) {
+        throw StateError('Sign in to build your team.');
+      }
+      if (provider.id.startsWith('demo-')) return;
+      final client = Supabase.instance.client;
+      final rows = await client
+          .from('user_team_members')
+          .select('provider_id, provider_profiles(provider_type, display_name)')
+          .eq('user_id', user.id);
+      if (rows.any((row) => row['provider_id'] == provider.id)) return;
+      for (final row in rows) {
+        final member = row['provider_profiles'];
+        if (member is! Map) {
+          throw StateError(
+            'Could not verify your team. Please refresh and try again.',
+          );
+        }
+        final category = _categoryFromDatabase(
+          member['provider_type'] as String?,
+        );
+        if (category == null) {
+          throw StateError(
+            'Could not verify a saved profession. Please refresh your team.',
+          );
+        }
+        if (category.teamProfession == provider.category.teamProfession) {
+          throw StateError(
+            'You already have a ${provider.category.teamProfession.label.toLowerCase()} on your team. Remove that member before adding another.',
+          );
+        }
+      }
+      if (BackendService.user?.id != user.id) {
+        throw StateError('Your account changed. Please try again.');
+      }
+      await client.from('user_team_members').upsert({
+        'user_id': user.id,
+        'provider_id': provider.id,
+      });
     });
+    _teamSaveQueue = operation.then<void>(
+      (_) {},
+      onError: (Object _, StackTrace _) {},
+    );
+    return operation;
   }
 
   static Future<void> removeFromTeam(String providerId) async {
