@@ -12,12 +12,36 @@ class BuyerResource {
     this.url,
   );
   final String id, name, kind, region, summary, eligibility, url;
+  String get displayName => switch (id) {
+    'bdc-acquisition' => 'BDC',
+    'bc-training' => 'WorkBC',
+    'irap' => 'National Research Council',
+    'canexport' => 'Trade Commissioner Service',
+    'csbfp' => 'Canada Small Business Financing',
+    'canada-support' => 'Government of Canada',
+    _ => name,
+  };
+  String get logoAsset =>
+      'assets/resource_logos/${switch (id) {
+        'community-futures' => 'community-futures.png',
+        'bdc-acquisition' => 'bdc.svg',
+        'bc-training' => 'workbc.svg',
+        'webc' => 'webc.svg',
+        'futurpreneur' => 'futurpreneur.svg',
+        'nacca' => 'nacca.svg',
+        _ => 'canada.svg',
+      }}';
+  List<ResourceProgram> get programs => resourcePrograms
+      .where((p) => p.providerId == id || kind == 'Funding directory')
+      .toList();
   bool matches(String query) => query
       .toLowerCase()
       .trim()
       .split(RegExp(r'\s+'))
       .every(
-        ('$name $kind $region $summary $eligibility').toLowerCase().contains,
+        ('$displayName $name $kind $region $summary $eligibility')
+            .toLowerCase()
+            .contains,
       );
 }
 
@@ -123,26 +147,99 @@ const buyerResources = <BuyerResource>[
   ),
 ];
 
-// Small account preferences use separate metadata keys, so saving one resource
-// does not replace other resource selections or existing profile metadata.
+class ResourceProgram {
+  const ResourceProgram(
+    this.id,
+    this.providerId,
+    this.name,
+    this.kind,
+    this.summary,
+    this.eligibility,
+    this.url,
+  );
+  final String id, providerId, name, kind, summary, eligibility, url;
+  BuyerResource get provider =>
+      buyerResources.firstWhere((r) => r.id == providerId);
+  bool matches(String query) => query
+      .toLowerCase()
+      .trim()
+      .split(RegExp(r'\s+'))
+      .every(
+        ('$name $kind $summary $eligibility ${provider.displayName}')
+            .toLowerCase()
+            .contains,
+      );
+}
+
+final resourcePrograms = <ResourceProgram>[
+  for (final r in buyerResources.where((r) => r.kind != 'Funding directory'))
+    ResourceProgram(
+      'program-${r.id}',
+      r.id,
+      r.name,
+      r.kind,
+      r.summary,
+      r.eligibility,
+      r.url,
+    ),
+  const ResourceProgram(
+    'workbc-wage-subsidy',
+    'bc-training',
+    'WorkBC Wage Subsidy',
+    'Wage subsidy',
+    'Support to hire eligible WorkBC participants who need work experience and on-the-job training.',
+    'Contact a WorkBC Centre to discuss the employer, participant and position requirements before proceeding.',
+    'https://www.workbc.ca/employers-industry/wage-subsidy',
+  ),
+  const ResourceProgram(
+    'community-workforce-response',
+    'bc-training',
+    'Community Workforce Response Grant',
+    'Grants & contributions',
+    'Funding for community-led skills training projects responding to local employment needs.',
+    'For eligible community projects and applicants, not an automatic business-purchase grant. Contact the program before applying.',
+    'https://www.workbc.ca/employers-industry/funding-programs/community-workforce-response-grant/grant-overview',
+  ),
+];
+
+// Stable, separate preference keys preserve existing saved providers and avoid
+// replacing profile metadata or another resource/program selection.
 class BuyerResourceTeam {
   static String key(String id) => 'affinity_resource_team_$id';
-  static Future<Set<String>> load() async {
-    if (BackendService.user == null) return {};
+  static String programKey(String id) => 'affinity_resource_program_$id';
+  static Future<(Set<String>, Set<String>)> loadSelection() async {
+    if (BackendService.user == null) return (<String>{}, <String>{});
     final user = (await Supabase.instance.client.auth.getUser()).user;
-    return {
-      for (final r in buyerResources)
-        if (user?.userMetadata?[key(r.id)] == true) r.id,
-    };
+    return (
+      {
+        for (final r in buyerResources)
+          if (user?.userMetadata?[key(r.id)] == true) r.id,
+      },
+      {
+        for (final p in resourcePrograms)
+          if (user?.userMetadata?[programKey(p.id)] == true) p.id,
+      },
+    );
   }
 
+  static Future<Set<String>> load() async => (await loadSelection()).$1;
+  static Future<Set<String>> loadPrograms() async => (await loadSelection()).$2;
   static Future<void> setSaved(String id, bool saved) async {
+    if (!buyerResources.any((r) => r.id == id)) throw ArgumentError.value(id);
+    await _save(key(id), saved);
+  }
+
+  static Future<void> setProgramSaved(String id, bool saved) async {
+    if (!resourcePrograms.any((p) => p.id == id)) throw ArgumentError.value(id);
+    await _save(programKey(id), saved);
+  }
+
+  static Future<void> _save(String key, bool saved) async {
     if (BackendService.user == null) {
       throw StateError('Sign in to save resources.');
     }
-    if (!buyerResources.any((r) => r.id == id)) throw ArgumentError.value(id);
     await Supabase.instance.client.auth.updateUser(
-      UserAttributes(data: {key(id): saved}),
+      UserAttributes(data: {key: saved}),
     );
   }
 }

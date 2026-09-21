@@ -66,7 +66,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Community Futures BC'), findsOneWidget);
     expect(find.text('BDC business purchase financing'), findsNothing);
-    expect(find.text('Sign in to add to My Team'), findsOneWidget);
+    expect(find.byTooltip('Save Community Futures BC to profile'), findsOneWidget);
     await tester.enterText(find.byType(TextField), 'no such resource');
     await tester.pumpAndSettle();
     expect(

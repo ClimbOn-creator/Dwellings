@@ -93,12 +93,27 @@ void main() {
       await BuyerResourceTeam.setSaved('community-futures', false);
       expect(await BuyerResourceTeam.load(), {'bc-training'});
       expect(metadata['full_name'], 'Existing buyer');
+      await BuyerResourceTeam.setProgramSaved('program-bc-training', true);
+      await BuyerResourceTeam.setProgramSaved('workbc-wage-subsidy', true);
+      expect(await BuyerResourceTeam.loadPrograms(), {
+        'program-bc-training',
+        'workbc-wage-subsidy',
+      });
+      expect(await BuyerResourceTeam.load(), {'bc-training'});
+      await BuyerResourceTeam.setProgramSaved('program-bc-training', false);
+      expect(await BuyerResourceTeam.loadPrograms(), {'workbc-wage-subsidy'});
+      expect(await BuyerResourceTeam.load(), {'bc-training'});
       reject = true;
       await expectLater(
         BuyerResourceTeam.setSaved('bdc-acquisition', true),
         throwsA(isA<AuthException>()),
       );
       expect(await BuyerResourceTeam.load(), {'bc-training'});
+      await expectLater(
+        BuyerResourceTeam.setProgramSaved('program-irap', true),
+        throwsA(isA<AuthException>()),
+      );
+      expect(await BuyerResourceTeam.loadPrograms(), {'workbc-wage-subsidy'});
       await Supabase.instance.client.auth.signOut();
       expect(await BuyerResourceTeam.load(), isEmpty);
       await expectLater(

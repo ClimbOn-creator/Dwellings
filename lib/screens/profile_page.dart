@@ -1,3 +1,4 @@
+import 'buyer_resources_page.dart';
 import '../widgets/site_copy_text.dart';
 import '../widgets/flowing_color_banner.dart';
 import '../widgets/personal_motion.dart';
@@ -392,6 +393,8 @@ class _ProfilePageState extends State<ProfilePage> {
                         )
                       else
                         ..._team.map(_teamRow),
+                      const SizedBox(height: 36),
+                      const BuyerResourcesPanel(teamOnly: true),
                       const SizedBox(height: 32),
                       KeyedSubtree(
                         key: _detailsAnchor,
