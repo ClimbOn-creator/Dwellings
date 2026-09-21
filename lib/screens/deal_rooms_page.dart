@@ -1,3 +1,4 @@
+import 'buyer_resources_page.dart';
 import 'dart:async';
 
 import '../services/deal_intake_fields.dart';
@@ -38,17 +39,26 @@ const _lilac = Color(0xFF64645F);
 const _surface = Color(0xFFFCFBF8);
 const _line = Color(0xFFD6D1C9);
 
-enum _BuyerDashboardView { home, dealScreen, businesses, transactionPlan, team }
+enum _BuyerDashboardView {
+  home,
+  dealScreen,
+  businesses,
+  transactionPlan,
+  team,
+  resources,
+}
 
 class DealRoomsPage extends StatefulWidget {
   const DealRoomsPage({
     super.key,
     this.initialSide = PlatformSide.property,
     this.startIntake = false,
+    this.loadTransactionBundles,
   });
 
   final PlatformSide initialSide;
   final bool startIntake;
+  final Future<List<DealRoomBundle>> Function()? loadTransactionBundles;
 
   @override
   State<DealRoomsPage> createState() => _DealRoomsPageState();
@@ -143,6 +153,9 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
   });
 
   Future<List<DealRoomBundle>> _loadPlannerBundles() async {
+    if (widget.loadTransactionBundles != null) {
+      return widget.loadTransactionBundles!();
+    }
     final rooms = (await _rooms)
         .where(
           (room) =>
@@ -383,6 +396,11 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                                 _buyerBusinesses(),
                               _BuyerDashboardView.transactionPlan =>
                                 _transactionPlanner(),
+                              _BuyerDashboardView.resources =>
+                                const SingleChildScrollView(
+                                  padding: EdgeInsets.all(26),
+                                  child: BuyerResourcesPanel(),
+                                ),
                               _BuyerDashboardView.team => _buyerTeamPage(),
                               _ => _buyerDashboardLive(allRooms),
                             },
@@ -395,6 +413,11 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                         _BuyerDashboardView.businesses => _buyerBusinesses(),
                         _BuyerDashboardView.transactionPlan =>
                           _transactionPlanner(),
+                        _BuyerDashboardView.resources =>
+                          const SingleChildScrollView(
+                            padding: EdgeInsets.all(26),
+                            child: BuyerResourcesPanel(),
+                          ),
                         _BuyerDashboardView.team => _buyerTeamPage(),
                         _ => _buyerDashboardLive(allRooms),
                       };
@@ -457,6 +480,12 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
             _dashboardView = _BuyerDashboardView.transactionPlan;
             _plannerBundles ??= _loadPlannerBundles();
           }),
+        ),
+        DashboardUi.nav(
+          'Resources',
+          Icons.library_books_outlined,
+          _dashboardView == _BuyerDashboardView.resources,
+          () => setState(() => _dashboardView = _BuyerDashboardView.resources),
         ),
         DashboardUi.nav(
           'My team',
@@ -754,6 +783,17 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                         ),
                       ),
                   ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: OutlinedButton.icon(
+                  onPressed: () => setState(
+                    () => _dashboardView = _BuyerDashboardView.resources,
+                  ),
+                  icon: const Icon(Icons.library_books_outlined),
+                  label: const Text('Resources — grants & community support'),
                 ),
               ),
               const SizedBox(height: 16),
@@ -1659,6 +1699,15 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                     ],
                   ),
                   const SizedBox(height: 18),
+                  const BuyerResourcesPanel(teamOnly: true),
+                  TextButton.icon(
+                    onPressed: () => setState(
+                      () => _dashboardView = _BuyerDashboardView.resources,
+                    ),
+                    icon: const Icon(Icons.add),
+                    label: const Text('Add public resources'),
+                  ),
+                  const SizedBox(height: 24),
                   if (myTeam.isNotEmpty) ...[
                     DashboardUi.sectionTitle(
                       'Your acquisition team',
@@ -1902,6 +1951,136 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
     }
   }
 
+  Future<void> _startTransactionPlan() async {
+    if (BackendService.user == null) {
+      await Navigator.of(
+        context,
+      ).push(MaterialPageRoute<void>(builder: (_) => const AuthPage()));
+      if (!mounted || BackendService.user == null) return;
+      setState(() {
+        _rooms = DealRoomService.loadRooms();
+        _plannerBundles = _loadPlannerBundles();
+        _buyerBroadcast = _loadBuyerBroadcast();
+      });
+      return;
+    }
+    setState(() => _dashboardView = _BuyerDashboardView.dealScreen);
+  }
+
+  Widget _transactionPreview() => SingleChildScrollView(
+    padding: const EdgeInsets.fromLTRB(24, 32, 24, 56),
+    child: Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 1100),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text(
+              'Transaction plan 📅',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 30, fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'Your acquisition, step by step.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 21, fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 10),
+            const Text(
+              'See every step of buying a business. Track your checklist, schedule deadlines, '
+              'coordinate advisers, and keep deal notes together from the first conversation through the ownership transition.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: DashboardUi.muted, height: 1.6),
+            ),
+            const SizedBox(height: 22),
+            Center(
+              child: FilledButton.icon(
+                onPressed: _startTransactionPlan,
+                icon: const Icon(Icons.event_note_outlined),
+                label: Text(
+                  BackendService.user == null
+                      ? 'Sign in to save your plan'
+                      : 'Add your first deal',
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              BackendService.user == null
+                  ? 'Explore the full checklist below. Sign in to connect it to your own deal.'
+                  : 'Your checklist is ready. Add a deal to save progress and set dates.',
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: DashboardUi.muted),
+            ),
+            const SizedBox(height: 30),
+            const Text(
+              'Your acquisition roadmap',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 14),
+            for (final stage in DealRoomService.businessStages) ...[
+              DashboardUi.panel(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${DealRoomService.businessStages.indexOf(stage) + 1}. ${stage[0].toUpperCase()}${stage.substring(1)}',
+                      style: const TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    for (final task in DealRoomService.templatesFor(
+                      'business',
+                    ).where((task) => task.stage == stage))
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Icon(
+                              Icons.check_box_outline_blank,
+                              size: 18,
+                              color: DashboardUi.blue,
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    task.title,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    task.details,
+                                    style: const TextStyle(
+                                      color: DashboardUi.muted,
+                                      height: 1.4,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
+          ],
+        ),
+      ),
+    ),
+  );
+
   Widget _transactionPlanner() {
     _plannerBundles ??= _loadPlannerBundles();
     return FutureBuilder<List<DealRoomBundle>>(
@@ -1921,57 +2100,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
           return const Center(child: CircularProgressIndicator());
         }
         final bundles = snapshot.data!;
-        if (bundles.isEmpty) {
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(26),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Transaction plan 📅',
-                  style: TextStyle(
-                    fontSize: 27,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -.8,
-                  ),
-                ),
-                const SizedBox(height: 18),
-                DashboardUi.panel(
-                  child: Column(
-                    children: [
-                      const Icon(
-                        Icons.event_note_outlined,
-                        color: DashboardUi.blue,
-                        size: 36,
-                      ),
-                      const SizedBox(height: 12),
-                      const Text(
-                        'No active transactions yet',
-                        style: TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      const SizedBox(height: 7),
-                      const Text(
-                        'Add a deal to create its complete checklist and schedule.',
-                        style: TextStyle(color: DashboardUi.muted),
-                      ),
-                      const SizedBox(height: 16),
-                      FilledButton.icon(
-                        onPressed: () => setState(
-                          () => _dashboardView = _BuyerDashboardView.dealScreen,
-                        ),
-                        icon: const Icon(Icons.calculate_outlined),
-                        label: const Text('Open Deal Screen'),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          );
-        }
+        if (bundles.isEmpty) return _transactionPreview();
         final bundle = bundles.firstWhere(
           (item) => item.room.id == _plannerRoomId,
           orElse: () => bundles.first,
@@ -2447,86 +2576,57 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
         )
         .join(' ');
     return DashboardUi.panel(
-      padding: EdgeInsets.zero,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 7,
-            decoration: BoxDecoration(
-              color: active
-                  ? DashboardUi.blue
-                  : completed == tasks.length && tasks.isNotEmpty
-                  ? const Color(0xFF45A470)
-                  : DashboardUi.line,
-              borderRadius: const BorderRadius.horizontal(
-                left: Radius.circular(16),
-              ),
-            ),
-          ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(17),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 16,
-                        backgroundColor: active
-                            ? DashboardUi.paleBlue
-                            : const Color(0xFFF1F4F8),
-                        child: Text(
-                          '${index + 1}',
-                          style: TextStyle(
-                            color: active
-                                ? DashboardUi.blue
-                                : DashboardUi.muted,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          title,
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
-                      Text(
-                        '$completed/${tasks.length}',
-                        style: const TextStyle(
-                          color: DashboardUi.muted,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 16,
+                backgroundColor: active
+                    ? DashboardUi.paleBlue
+                    : const Color(0xFFF1F4F8),
+                child: Text(
+                  '${index + 1}',
+                  style: TextStyle(
+                    color: active ? DashboardUi.blue : DashboardUi.muted,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
                   ),
-                  if (tasks.isEmpty)
-                    const Padding(
-                      padding: EdgeInsets.fromLTRB(42, 12, 0, 3),
-                      child: Text(
-                        'No checklist items in this stage.',
-                        style: TextStyle(
-                          color: DashboardUi.muted,
-                          fontSize: 11,
-                        ),
-                      ),
-                    )
-                  else ...[
-                    const SizedBox(height: 12),
-                    for (final task in tasks) _plannerTaskTile(task, bundle),
-                  ],
-                ],
+                ),
               ),
-            ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              Text(
+                '$completed/${tasks.length}',
+                style: const TextStyle(
+                  color: DashboardUi.muted,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
           ),
+          if (tasks.isEmpty)
+            const Padding(
+              padding: EdgeInsets.fromLTRB(42, 12, 0, 3),
+              child: Text(
+                'No checklist items in this stage.',
+                style: TextStyle(color: DashboardUi.muted, fontSize: 11),
+              ),
+            )
+          else ...[
+            const SizedBox(height: 12),
+            for (final task in tasks) _plannerTaskTile(task, bundle),
+          ],
         ],
       ),
     );

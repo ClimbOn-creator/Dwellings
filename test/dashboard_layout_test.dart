@@ -1,3 +1,4 @@
+import 'package:dwelling_iq/services/deal_room_service.dart';
 import 'package:dwelling_iq/screens/deal_rooms_page.dart';
 import 'package:dwelling_iq/screens/member_deal_marketplace_page.dart';
 import 'package:flutter/material.dart';
@@ -40,6 +41,76 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.text('Your opportunity board'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+  }
+
+  for (final width in [390.0, 1440.0]) {
+    testWidgets('populated transaction renders all phases at $width', (
+      tester,
+    ) async {
+      SharedPreferences.setMockInitialValues({});
+      tester.view.physicalSize = Size(width, 900);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final room = DealRoom(
+        id: 'fixture',
+        userId: 'buyer',
+        title: 'Test acquisition',
+        address: '',
+        city: 'Victoria',
+        purchasePrice: 1000000,
+        timeline: '',
+        goals: '',
+        status: 'active',
+        propertySnapshot: {},
+        riskSnapshot: {},
+        sharingPreferences: {},
+        updatedAt: DateTime(2026),
+        transactionType: 'business',
+        dealKind: 'business',
+        totalTaskCount: 18,
+      );
+      final templates = DealRoomService.templatesFor('business');
+      final bundle = DealRoomBundle(
+        room: room,
+        tasks: [
+          for (var i = 0; i < templates.length; i++)
+            DealRoomTask(
+              id: '$i',
+              title: templates[i].title,
+              category: templates[i].category,
+              completed: false,
+              position: i,
+              stage: templates[i].stage,
+              details: templates[i].details,
+            ),
+        ],
+        notes: [],
+        members: [],
+        documents: [],
+        documentEvents: [],
+      );
+      await tester.pumpWidget(
+        MaterialApp(
+          home: DealRoomsPage(loadTransactionBundles: () async => [bundle]),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Transaction plan').first);
+      await tester.tap(find.text('Transaction plan').first);
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      expect(find.byType(Checkbox), findsNWidgets(18));
+      for (final task in templates) {
+        expect(find.text(task.title), findsOneWidget);
+        expect(tester.getSize(find.text(task.title)).height, greaterThan(0));
+      }
+      await tester.ensureVisible(
+        find.text('Close transition and measure thesis'),
+      );
+      await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
     });
   }
@@ -101,7 +172,9 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Transaction plan 📅'), findsOneWidget);
     expect(find.text('Open full room'), findsNothing);
-    expect(find.text('No active transactions yet'), findsOneWidget);
+    expect(find.text('Your acquisition roadmap'), findsOneWidget);
+    expect(find.text('Sign in to save your plan'), findsOneWidget);
+    expect(find.text('Execute 100-day transition plan'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }
