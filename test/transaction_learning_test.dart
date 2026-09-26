@@ -74,8 +74,8 @@ void main() {
         );
       }
       expect(
-        AppNavigationDestination.values.last,
-        AppNavigationDestination.bulletinBoard,
+        AppNavigationDestination.values.map((destination) => destination.name),
+        isNot(contains('bulletinBoard')),
       );
     },
   );

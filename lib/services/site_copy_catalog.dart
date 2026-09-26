@@ -762,7 +762,7 @@ const siteCopyCatalog = <String, String>{
   '1b6d7bdc': "Find local property professionals.",
   'c8f81e9e':
       "Find local realtors, mortgage brokers, property lawyers, accountants and lenders around the market you are analyzing.",
-  'bef07179': "Find matching businesses",
+  'bef07179': "Open buyer dashboard",
   '20201d56':
       "Find member professionals whose services match the financing, legal, diligence, tax, risk, and transition work ahead.",
   'f154bb6': "Find professionals",

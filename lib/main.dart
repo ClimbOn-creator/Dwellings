@@ -8,7 +8,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'models/platform_side.dart';
 import 'screens/deal_rooms_page.dart';
 import 'screens/deal_comparison_page.dart';
-import 'screens/bulletin_listing_pages.dart';
 import 'screens/business_acquisition_page.dart';
 import 'screens/local_network_page.dart';
 import 'screens/member_deal_marketplace_page.dart';
@@ -127,12 +126,9 @@ class AffinityApp extends StatelessWidget {
       ),
       'deal-rooms' => const DealRoomsPage(initialSide: PlatformSide.business),
       'deal-comparison' => const DealComparisonPage(),
-      'bulletin-board' =>
-        Uri.base.queryParameters['bulletin'] == null
-            ? const BusinessSaleBulletinPage()
-            : BusinessListingDetailPage(
-                bulletinId: Uri.base.queryParameters['bulletin']!,
-              ),
+      'bulletin-board' => const DealRoomsPage(
+        initialSide: PlatformSide.business,
+      ),
       'member-studio' => const MemberDealMarketplacePage(),
       'review-desk' => const AffinityReviewDeskPage(),
       'content-studio' => const ContentStudioPage(),

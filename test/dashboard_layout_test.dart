@@ -125,22 +125,43 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Deal screen').first);
     await tester.pumpAndSettle();
-    expect(find.text('Initial deal screen'), findsOneWidget);
-    expect(find.text('Run initial screen'), findsOneWidget);
+    expect(find.text('Business price estimate'), findsOneWidget);
+    expect(find.text('Asset value'), findsOneWidget);
+    expect(find.text('Commercial real estate'), findsOneWidget);
     expect(find.text('Your pipeline'), findsNothing);
-    final fields = find.byType(TextField);
-    await tester.enterText(fields.at(1), '1200000');
-    await tester.enterText(fields.at(2), '1800000');
-    await tester.enterText(fields.at(3), '260000');
-    await tester.tap(find.text('Run initial screen'));
+    await tester.enterText(
+      find.byKey(const Key('field_businessAsk')),
+      '1200000',
+    );
+    await tester.enterText(
+      find.byKey(const Key('field_businessRevenue')),
+      '1800000',
+    );
+    await tester.enterText(
+      find.byKey(const Key('field_businessEbitda')),
+      '260000',
+    );
     await tester.pumpAndSettle();
-    expect(find.text('INITIAL ACQUISITION SCREEN'), findsOneWidget);
-    expect(find.text('Price / EBITDA'), findsOneWidget);
-    expect(find.text('Create deal room'), findsOneWidget);
+    expect(find.text('INDICATIVE ENTERPRISE VALUE'), findsOneWidget);
+    expect(find.text('Asking multiple'), findsOneWidget);
+    expect(find.text('Create business deal room'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('mode_realEstate')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('field_creRent')), findsOneWidget);
+    await tester.enterText(find.byKey(const Key('field_creAsk')), '5000000');
+    await tester.enterText(find.byKey(const Key('field_creRent')), '480000');
+    await tester.enterText(
+      find.byKey(const Key('field_creExpenses')),
+      '140000',
+    );
+    await tester.enterText(find.byKey(const Key('field_creReserve')), '20000');
+    await tester.pumpAndSettle();
+    expect(find.text('INCOME APPROACH VALUE'), findsOneWidget);
+    expect(find.text('Commercial scorecard'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('buyer businesses and transaction plan stay in dashboard', (
+  testWidgets('business listings are removed and transaction plan stays', (
     tester,
   ) async {
     SharedPreferences.setMockInitialValues({});
@@ -150,18 +171,7 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     await tester.pumpWidget(const MaterialApp(home: DealRoomsPage()));
     await tester.pumpAndSettle();
-    expect(
-      tester.getTopLeft(find.text('Businesses for sale').first).dy,
-      greaterThan(tester.getTopLeft(find.text('My team').first).dy),
-    );
-    await tester.tap(find.text('Businesses for sale').first);
-    await tester.pumpAndSettle();
-    expect(find.text('Businesses for sale 🏪'), findsOneWidget);
-    expect(find.textContaining('Deal Compare Quiz'), findsWidgets);
-    expect(find.text('Harbour Advisory Studio'), findsOneWidget);
-    expect(find.byType(Image), findsWidgets);
-    await tester.tap(find.byTooltip('Back to dashboard'));
-    await tester.pumpAndSettle();
+    expect(find.text('Businesses for sale'), findsNothing);
     await tester.tap(find.text('My team').first);
     await tester.pumpAndSettle();
     expect(find.text('My team'), findsNWidgets(2));

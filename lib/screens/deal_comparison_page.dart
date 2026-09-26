@@ -8,7 +8,8 @@ import '../widgets/app_navigation_menu.dart';
 import '../widgets/home_brand_button.dart';
 import 'acquisition_support_page.dart';
 import 'auth_page.dart';
-import 'member_deal_marketplace_page.dart';
+import 'deal_rooms_page.dart';
+import '../models/platform_side.dart';
 
 const _green = Color(0xFF086B4C);
 const _ink = Color(0xFF203435);
@@ -577,7 +578,9 @@ class _DealComparisonPageState extends State<BusinessComparisonQuiz>
                     if (!mounted) return;
                     Navigator.of(context).push(
                       MaterialPageRoute<void>(
-                        builder: (_) => const BusinessSaleBulletinPage(),
+                        builder: (_) => const DealRoomsPage(
+                          initialSide: PlatformSide.business,
+                        ),
                       ),
                     );
                   },
@@ -588,7 +591,7 @@ class _DealComparisonPageState extends State<BusinessComparisonQuiz>
               _error != null
                   ? 'Retry saving'
                   : _savedToAccount
-                  ? 'Find matching businesses'
+                  ? 'Open buyer dashboard'
                   : 'Sign in & save to my account',
             ),
           ),

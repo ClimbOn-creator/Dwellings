@@ -13,7 +13,6 @@ import '../services/site_content_service.dart';
 import '../screens/acquisition_support_page.dart';
 import '../screens/assistant_workspace_page.dart';
 import '../screens/auth_page.dart';
-import '../screens/member_deal_marketplace_page.dart';
 import '../screens/profile_page.dart';
 import '../screens/content_studio_page.dart';
 import '../screens/deal_comparison_page.dart';
@@ -31,7 +30,6 @@ enum AppNavigationDestination {
   memberStudio,
   consulting,
   profile,
-  bulletinBoard,
 }
 
 class AppNavigationMenu extends StatefulWidget {
@@ -68,7 +66,6 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
     AppNavigationDestination.buyerDashboard => 'Buyer dashboard',
     AppNavigationDestination.transactionRoom => 'Transaction Room',
     AppNavigationDestination.dealComparison => 'Deal comparison quiz',
-    AppNavigationDestination.bulletinBoard => 'Businesses for sale',
     AppNavigationDestination.memberStudio => 'Professional Member Studio',
     AppNavigationDestination.consulting => 'Personal consulting',
     AppNavigationDestination.profile => 'My profile',
@@ -86,7 +83,6 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
     ),
     AppNavigationDestination.transactionRoom => const TransactionLearningPage(),
     AppNavigationDestination.dealComparison => const DealComparisonPage(),
-    AppNavigationDestination.bulletinBoard => const BusinessSaleBulletinPage(),
     AppNavigationDestination.memberStudio => const MemberStudioPage(),
     AppNavigationDestination.consulting => const PersonalizedConsultingPage(),
     AppNavigationDestination.profile =>

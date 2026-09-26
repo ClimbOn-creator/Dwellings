@@ -10,7 +10,7 @@ import '../widgets/membership_footer.dart';
 import 'affinity_review_desk_page.dart';
 import 'member_deal_marketplace_page.dart';
 import 'profile_page.dart';
-import 'bulletin_listing_pages.dart';
+import 'deal_rooms_page.dart';
 
 const _green = Color(0xFF053827);
 const _muted = Color(0xFF68635D);
@@ -43,10 +43,9 @@ class _NotificationCenterPageState extends State<NotificationCenterPage> {
     final page = switch (item.actionModule) {
       'review-desk' => const AffinityReviewDeskPage(),
       'profile' => const ProfilePage(),
-      'bulletin-board' =>
-        item.entityId == null
-            ? const BusinessSaleBulletinPage()
-            : BusinessListingDetailPage(bulletinId: item.entityId!),
+      'bulletin-board' => const DealRoomsPage(
+        initialSide: PlatformSide.business,
+      ),
       _ => const MemberDealMarketplacePage(),
     };
     await Navigator.of(
