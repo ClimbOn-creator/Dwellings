@@ -29,6 +29,7 @@ class _BuyerDealScreenState extends State<BuyerDealScreen> {
     decimalDigits: 1,
   );
   final Map<String, TextEditingController> _fields = {};
+  final Map<String, GlobalKey<TooltipState>> _helpKeys = {};
   BuyerScreenMode _mode = BuyerScreenMode.business;
   bool _saving = false;
 
@@ -366,6 +367,47 @@ class _BuyerDealScreenState extends State<BuyerDealScreen> {
     child: DashboardUi.sectionTitle(title, subtitle: description),
   );
 
+  Widget _helpButton(String key, String label) {
+    final tooltipKey = _helpKeys.putIfAbsent(
+      key,
+      () => GlobalKey<TooltipState>(),
+    );
+    return Tooltip(
+      key: tooltipKey,
+      message: _fieldHelp[key]!,
+      triggerMode: TooltipTriggerMode.tap,
+      waitDuration: const Duration(milliseconds: 350),
+      child: Semantics(
+        button: true,
+        label: 'About $label',
+        child: GestureDetector(
+          key: Key('info_$key'),
+          behavior: HitTestBehavior.opaque,
+          onTap: () => tooltipKey.currentState?.ensureTooltipVisible(),
+          child: const SizedBox(
+            width: 28,
+            height: 28,
+            child: Center(
+              child: CircleAvatar(
+                radius: 10,
+                backgroundColor: Color(0xFF0AA9F4),
+                child: Text(
+                  'i',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w900,
+                    height: 1,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _field(
     String key,
     String label,
@@ -389,18 +431,7 @@ class _BuyerDealScreenState extends State<BuyerDealScreen> {
               ),
             ),
             const SizedBox(width: 5),
-            Tooltip(
-              message: _fieldHelp[key]!,
-              triggerMode: TooltipTriggerMode.tap,
-              waitDuration: const Duration(milliseconds: 350),
-              child: Icon(
-                Icons.info_rounded,
-                key: Key('info_$key'),
-                size: 17,
-                color: const Color(0xFF0AA9F4),
-                semanticLabel: 'About $label',
-              ),
-            ),
+            _helpButton(key, label),
           ],
         ),
         const SizedBox(height: 6),
