@@ -123,12 +123,35 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     await tester.pumpWidget(const MaterialApp(home: DealRoomsPage()));
     await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Deal screen').first);
     await tester.tap(find.text('Deal screen').first);
     await tester.pumpAndSettle();
     expect(find.text('Business price estimate'), findsOneWidget);
     expect(find.text('Asset value'), findsOneWidget);
     expect(find.text('Commercial real estate'), findsOneWidget);
     expect(find.text('Your pipeline'), findsNothing);
+    expect(find.text('UNDERWRITE THE OPPORTUNITY'), findsNothing);
+    expect(
+      find.text('One decision workspace. Three ways to value a deal.'),
+      findsNothing,
+    );
+    expect(
+      tester.getSize(find.byKey(const Key('deal_inputs'))).width,
+      greaterThan(tester.getSize(find.byKey(const Key('deal_results'))).width),
+    );
+    final askingField = tester.widget<TextField>(
+      find.byKey(const Key('field_businessAsk')),
+    );
+    expect(askingField.controller!.text, isEmpty);
+    expect(askingField.decoration!.hintText, 'Example → 1,200,000');
+    await tester.tap(find.byKey(const Key('info_businessAsk')));
+    await tester.pumpAndSettle();
+    expect(
+      find.text(
+        'The seller’s requested price for the business, before deal adjustments.',
+      ),
+      findsOneWidget,
+    );
     await tester.enterText(
       find.byKey(const Key('field_businessAsk')),
       '1200000',
@@ -141,23 +164,68 @@ void main() {
       find.byKey(const Key('field_businessEbitda')),
       '260000',
     );
+    expect(find.text('INDICATIVE ENTERPRISE VALUE'), findsNothing);
+    await tester.enterText(find.byKey(const Key('field_multipleLow')), '3');
+    await tester.enterText(find.byKey(const Key('field_multipleHigh')), '5');
+    await tester.enterText(find.byKey(const Key('field_businessDown')), '25');
+    await tester.enterText(
+      find.byKey(const Key('field_businessInterest')),
+      '7',
+    );
+    await tester.enterText(find.byKey(const Key('field_businessYears')), '7');
     await tester.pumpAndSettle();
     expect(find.text('INDICATIVE ENTERPRISE VALUE'), findsOneWidget);
     expect(find.text('Asking multiple'), findsOneWidget);
     expect(find.text('Create business deal room'), findsOneWidget);
+    await tester.ensureVisible(find.byKey(const Key('mode_realEstate')));
     await tester.tap(find.byKey(const Key('mode_realEstate')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('field_creRent')), findsOneWidget);
+    expect(
+      tester
+          .widget<TextField>(find.byKey(const Key('field_creAsk')))
+          .controller!
+          .text,
+      isEmpty,
+    );
     await tester.enterText(find.byKey(const Key('field_creAsk')), '5000000');
     await tester.enterText(find.byKey(const Key('field_creRent')), '480000');
+    await tester.enterText(find.byKey(const Key('field_creVacancy')), '5');
     await tester.enterText(
       find.byKey(const Key('field_creExpenses')),
       '140000',
     );
     await tester.enterText(find.byKey(const Key('field_creReserve')), '20000');
+    await tester.enterText(find.byKey(const Key('field_creCap')), '6');
+    await tester.enterText(find.byKey(const Key('field_creDown')), '30');
+    await tester.enterText(find.byKey(const Key('field_creInterest')), '6.5');
+    await tester.enterText(find.byKey(const Key('field_creYears')), '25');
+    await tester.enterText(find.byKey(const Key('field_creHold')), '5');
+    await tester.enterText(find.byKey(const Key('field_creGrowth')), '2');
+    await tester.enterText(find.byKey(const Key('field_creExitCap')), '6.5');
     await tester.pumpAndSettle();
     expect(find.text('INCOME APPROACH VALUE'), findsOneWidget);
     expect(find.text('Commercial scorecard'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('deal examples and help fit on a phone', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    tester.view.physicalSize = const Size(390, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(const MaterialApp(home: DealRoomsPage()));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Deal screen').first);
+    await tester.tap(find.text('Deal screen').first);
+    await tester.pumpAndSettle();
+    final revenue = tester.widget<TextField>(
+      find.byKey(const Key('field_businessRevenue')),
+    );
+    expect(revenue.controller!.text, isEmpty);
+    expect(revenue.decoration!.hintText, 'Example → 1,800,000');
+    expect(find.byKey(const Key('info_businessRevenue')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -181,6 +249,7 @@ void main() {
     await tester.tap(find.text('Transaction plan').first);
     await tester.pumpAndSettle();
     expect(find.text('Transaction plan 📅'), findsOneWidget);
+    expect(find.text('Your acquisition, step by step.'), findsNothing);
     expect(find.text('Open full room'), findsNothing);
     expect(find.text('Your acquisition roadmap'), findsOneWidget);
     expect(find.text('Sign in to save your plan'), findsOneWidget);

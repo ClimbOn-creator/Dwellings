@@ -1368,19 +1368,6 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 30, fontWeight: FontWeight.w800),
             ),
-            const SizedBox(height: 12),
-            const Text(
-              'Your acquisition, step by step.',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 21, fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 10),
-            const Text(
-              'See every step of buying a business. Track your checklist, schedule deadlines, '
-              'coordinate advisers, and keep deal notes together from the first conversation through the ownership transition.',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: DashboardUi.muted, height: 1.6),
-            ),
             const SizedBox(height: 22),
             Center(
               child: FilledButton.icon(
