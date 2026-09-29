@@ -1,5 +1,5 @@
 import '../screens/buyer_resources_page.dart';
-import '../screens/spot_mistake_page.dart';
+import '../screens/seller_dashboard_page.dart';
 import '../screens/deal_rooms_page.dart';
 import '../screens/transaction_learning_page.dart';
 import 'site_text.dart';
@@ -23,7 +23,7 @@ import 'profile_photo.dart';
 enum AppNavigationDestination {
   overview,
   resources,
-  spotMistake,
+  sellerDashboard,
   dealComparison,
   buyerDashboard,
   transactionRoom,
@@ -61,7 +61,7 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
 
   String _label(AppNavigationDestination destination) => switch (destination) {
     AppNavigationDestination.resources => 'Resources',
-    AppNavigationDestination.spotMistake => 'Spot the mistake',
+    AppNavigationDestination.sellerDashboard => 'Seller dashboard',
     AppNavigationDestination.overview => 'Acquisition workspace',
     AppNavigationDestination.buyerDashboard => 'Buyer dashboard',
     AppNavigationDestination.transactionRoom => 'Transaction Room',
@@ -76,7 +76,7 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
     AppNavigationDestination destination,
   ) => switch (destination) {
     AppNavigationDestination.resources => const BuyerResourcesPage(),
-    AppNavigationDestination.spotMistake => const SpotMistakePage(),
+    AppNavigationDestination.sellerDashboard => const SellerDashboardPage(),
     AppNavigationDestination.overview => const AcquisitionSupportPage(),
     AppNavigationDestination.buyerDashboard => const DealRoomsPage(
       initialSide: PlatformSide.business,
@@ -197,6 +197,7 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
               height: 43,
               child:
                   destination == AppNavigationDestination.buyerDashboard ||
+                      destination == AppNavigationDestination.sellerDashboard ||
                       destination == AppNavigationDestination.transactionRoom
                   ? SiteCopyText(
                       'navigation.${destination.name}',
