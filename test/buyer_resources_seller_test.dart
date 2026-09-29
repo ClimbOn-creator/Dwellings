@@ -90,7 +90,7 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
       await tester.pumpWidget(const MaterialApp(home: SellerDashboardPage()));
       await tester.pumpAndSettle();
-      expect(find.text('Your business, next chapter.'), findsOneWidget);
+      expect(find.textContaining('Good '), findsOneWidget);
       expect(find.byKey(const Key('seller_business_name')), findsNothing);
       await tester.ensureVisible(find.byKey(const Key('seller_tab_settings')));
       await tester.tap(find.byKey(const Key('seller_tab_settings')));
@@ -103,6 +103,22 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Management buyout').last);
       await tester.pumpAndSettle();
+      await tester.ensureVisible(find.byKey(const Key('seller_tab_overview')));
+      await tester.tap(find.byKey(const Key('seller_tab_overview')));
+      await tester.pumpAndSettle();
+      expect(find.text('Harbour Company'), findsOneWidget);
+      await tester.enterText(
+        find.byKey(const Key('seller_pipeline_search')),
+        'unmatched',
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Harbour Company'), findsNothing);
+      await tester.enterText(
+        find.byKey(const Key('seller_pipeline_search')),
+        'Harbour',
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Harbour Company'), findsOneWidget);
       await tester.ensureVisible(find.byKey(const Key('seller_tab_plan')));
       await tester.tap(find.byKey(const Key('seller_tab_plan')));
       await tester.pumpAndSettle();

@@ -109,6 +109,7 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
   Future<MarketplaceDirectory>? _resourceDirectory;
   ProviderCategory? _resourceCategory;
   String _resourceQuery = '';
+  String _pipelineQuery = '';
   String? _resourceBusyId;
   _SellerView _view = _SellerView.overview;
 
@@ -378,7 +379,7 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
                   HomeBrandButton(size: 48, dark: false),
                   SizedBox(width: 18),
                   Text(
-                    'SELLER OS',
+                    'DEAL OS',
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w900,
@@ -425,42 +426,60 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
     width: 212,
     color: Colors.white,
     padding: const EdgeInsets.fromLTRB(13, 24, 13, 16),
-    child: SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Padding(
-            padding: EdgeInsets.fromLTRB(13, 0, 0, 17),
-            child: Text(
-              'WORKSPACE',
-              style: TextStyle(
-                color: DashboardUi.muted,
-                fontSize: 10,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 1.2,
-              ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(13, 0, 0, 17),
+                  child: Text(
+                    'WORKSPACE',
+                    style: TextStyle(
+                      color: DashboardUi.muted,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                ),
+                for (final (view, label, icon) in _views) ...[
+                  KeyedSubtree(
+                    key: Key('seller_tab_${view.name}'),
+                    child: DashboardUi.nav(
+                      label,
+                      icon,
+                      _view == view,
+                      () => _showView(view),
+                    ),
+                  ),
+                  if (view == _SellerView.overview)
+                    DashboardUi.nav(
+                      'Pipeline',
+                      Icons.view_kanban_outlined,
+                      _view == _SellerView.overview,
+                      () => _showView(_SellerView.overview),
+                    ),
+                ],
+              ],
             ),
           ),
-          for (final (view, label, icon) in _views)
-            KeyedSubtree(
-              key: Key('seller_tab_${view.name}'),
-              child: DashboardUi.nav(
-                label,
-                icon,
-                _view == view,
-                () => _showView(view),
-              ),
-            ),
-          const SizedBox(height: 20),
-          const Padding(
-            padding: EdgeInsets.all(13),
-            child: Text(
-              'Your plan and figures stay on this device.',
-              style: TextStyle(color: DashboardUi.muted, fontSize: 11),
-            ),
-          ),
-        ],
-      ),
+        ),
+        DashboardUi.nav('Refresh', Icons.refresh_rounded, false, () {
+          setState(() {
+            if (BackendService.user != null) {
+              _linkedTeam = AccountService.loadTeam();
+            }
+            _resourceDirectory = MarketplaceService.load(
+              _resourceCity,
+              side: PlatformSide.business,
+            );
+          });
+        }),
+      ],
     ),
   );
 
@@ -472,12 +491,18 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
           padding: const EdgeInsets.fromLTRB(26, 30, 26, 56),
           child: Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 1220),
+              constraints: BoxConstraints(
+                maxWidth: _view == _SellerView.overview
+                    ? double.infinity
+                    : 1220,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _viewHeader(),
-                  const SizedBox(height: 24),
+                  if (_view != _SellerView.overview) ...[
+                    _viewHeader(),
+                    const SizedBox(height: 24),
+                  ],
                   switch (_view) {
                     _SellerView.overview => _overview(),
                     _SellerView.value => _valuation(),
@@ -720,319 +745,374 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
   );
 
   Widget _overview() {
+    final hour = DateTime.now().hour;
+    final greeting = hour < 12
+        ? 'Good morning'
+        : hour < 17
+        ? 'Good afternoon'
+        : 'Good evening';
+    final name = _businessController.text.trim();
+    final active = name.isNotEmpty;
     final next = _nextTask;
-    final teamCount = _teamNames.values
-        .where((name) => name.trim().isNotEmpty)
-        .length;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        LayoutBuilder(
-          builder: (context, box) {
-            final width = box.maxWidth < 650
-                ? (box.maxWidth - 10) / 2
-                : (box.maxWidth - 30) / 4;
-            return Wrap(
-              spacing: 10,
-              runSpacing: 10,
+    final stage = next?.stage ?? SellerStage.handover;
+    final column = switch (stage) {
+      SellerStage.direction || SellerStage.prepare => 0,
+      SellerStage.successor => 1,
+      SellerStage.terms || SellerStage.diligence => 2,
+      SellerStage.closing || SellerStage.handover => 3,
+    };
+    final visible =
+        active &&
+        name.toLowerCase().contains(_pipelineQuery.trim().toLowerCase());
+    final now = DateTime.now();
+    final dueSoon = _tasks.where((task) {
+      final date = _suggestedDate(task.stage);
+      return active &&
+          !_completedTasks.contains(task.id) &&
+          date != null &&
+          !date.isBefore(DateTime(now.year, now.month, now.day)) &&
+          date.isBefore(now.add(const Duration(days: 8)));
+    }).length;
+    final overdue = _tasks.where((task) {
+      final date = _suggestedDate(task.stage);
+      return active &&
+          !_completedTasks.contains(task.id) &&
+          date != null &&
+          date.isBefore(DateTime(now.year, now.month, now.day));
+    }).length;
+    return LayoutBuilder(
+      builder: (context, box) {
+        final narrow = box.maxWidth < 740;
+        final heading = Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '$greeting 👋',
+              style: const TextStyle(
+                fontSize: 27,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -.8,
+              ),
+            ),
+            const SizedBox(height: 5),
+            const Text(
+              'Keep every transfer moving.',
+              style: TextStyle(color: DashboardUi.muted),
+            ),
+          ],
+        );
+        final search = TextFormField(
+          initialValue: _pipelineQuery,
+          key: const Key('seller_pipeline_search'),
+          onChanged: (value) => setState(() => _pipelineQuery = value),
+          decoration: InputDecoration(
+            hintText: 'Search your transfers...',
+            prefixIcon: const Icon(Icons.search),
+            filled: true,
+            fillColor: Colors.white,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: DashboardUi.line),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: DashboardUi.line),
+            ),
+          ),
+        );
+        final metricWidth = narrow
+            ? (box.maxWidth - 12) / 2
+            : (box.maxWidth - 36) / 4;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (narrow) ...[
+              heading,
+              const SizedBox(height: 17),
+              search,
+            ] else
+              Row(
+                children: [
+                  Expanded(child: heading),
+                  SizedBox(width: 255, child: search),
+                ],
+              ),
+            const SizedBox(height: 25),
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
               children: [
                 SizedBox(
-                  width: width,
+                  width: metricWidth,
+                  child: DashboardUi.metric(
+                    'Active transfers',
+                    active ? '1' : '0',
+                    'In your pipeline',
+                    Icons.bar_chart_rounded,
+                    DashboardUi.paleBlue,
+                    const Color(0xFF5F91DC),
+                  ),
+                ),
+                SizedBox(
+                  width: metricWidth,
                   child: DashboardUi.metric(
                     'Plan complete',
                     '${(_progress * 100).round()}%',
                     '$_doneCount of ${_tasks.length} steps',
-                    Icons.checklist_rounded,
-                    DashboardUi.paleBlue,
-                    DashboardUi.blue,
-                  ),
-                ),
-                SizedBox(
-                  width: width,
-                  child: DashboardUi.metric(
-                    'Deal pack ready',
-                    '${_readyDocuments.length}/${sellerDealPack.length}',
-                    'Evidence prepared',
-                    Icons.folder_outlined,
+                    Icons.trending_up_rounded,
                     DashboardUi.paleGreen,
-                    const Color(0xFF34785A),
+                    const Color(0xFF3C9764),
                   ),
                 ),
                 SizedBox(
-                  width: width,
+                  width: metricWidth,
                   child: DashboardUi.metric(
-                    'Advisers named',
-                    '$teamCount',
-                    'Roles assigned',
-                    Icons.groups_outlined,
+                    'Due soon',
+                    '$dueSoon',
+                    'Next 7 days',
+                    Icons.event_note_outlined,
                     DashboardUi.paleGold,
-                    const Color(0xFF9A6A16),
+                    const Color(0xFFB88016),
                   ),
                 ),
                 SizedBox(
-                  width: width,
+                  width: metricWidth,
                   child: DashboardUi.metric(
-                    'Target transfer',
-                    _targetDate == null
-                        ? 'Set date'
-                        : DateFormat('MMM y').format(_targetDate!),
-                    'Planning target',
-                    Icons.event_outlined,
+                    'Needs attention',
+                    '$overdue',
+                    'Past suggested dates',
+                    Icons.notifications_active_outlined,
                     DashboardUi.paleViolet,
-                    const Color(0xFF7164A4),
-                  ),
-                ),
-              ],
-            );
-          },
-        ),
-        const SizedBox(height: 16),
-        LayoutBuilder(
-          builder: (context, box) {
-            final narrow = box.maxWidth < 780;
-            return Wrap(
-              spacing: 14,
-              runSpacing: 14,
-              children: [
-                SizedBox(
-                  width: narrow ? box.maxWidth : (box.maxWidth - 14) / 2,
-                  child: DashboardUi.panel(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        DashboardUi.sectionTitle(
-                          'Your next move',
-                          subtitle: next == null
-                              ? 'The current plan is complete.'
-                              : 'The next unfinished step in your ${_path.label.toLowerCase()} plan.',
-                        ),
-                        const SizedBox(height: 16),
-                        if (next != null) ...[
-                          Text(
-                            next.title,
-                            style: const TextStyle(
-                              fontSize: 19,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                          const SizedBox(height: 7),
-                          Text(
-                            next.detail,
-                            style: const TextStyle(
-                              color: DashboardUi.muted,
-                              height: 1.45,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            'Lead: ${_assignedName(next.role)} · ${next.stage.label}',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w700,
-                              color: DashboardUi.blue,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          FilledButton.icon(
-                            onPressed: () => _showView(_SellerView.plan),
-                            icon: const Icon(Icons.arrow_forward_rounded),
-                            label: const Text('Open transaction plan'),
-                          ),
-                        ] else
-                          const Text(
-                            'Review your handover and remaining adviser obligations.',
-                          ),
-                      ],
-                    ),
-                  ),
-                ),
-                SizedBox(
-                  width: narrow ? box.maxWidth : (box.maxWidth - 14) / 2,
-                  child: DashboardUi.panel(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        DashboardUi.sectionTitle(
-                          'Transfer snapshot',
-                          subtitle: 'The choices shaping this workspace.',
-                        ),
-                        const SizedBox(height: 16),
-                        _snapshotLine('Path', _path.label),
-                        _snapshotLine(
-                          'Target',
-                          _targetDate == null
-                              ? 'Add a target date'
-                              : _shortDate.format(_targetDate!),
-                        ),
-                        _snapshotLine(
-                          'Handover',
-                          '$_handoverMonths ${_handoverMonths == 1 ? 'month' : 'months'}',
-                        ),
-                        const SizedBox(height: 10),
-                        OutlinedButton.icon(
-                          onPressed: () => _showView(_SellerView.settings),
-                          icon: const Icon(Icons.tune_rounded),
-                          label: const Text('Edit transfer profile'),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            );
-          },
-        ),
-        const SizedBox(height: 16),
-        DashboardUi.panel(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              DashboardUi.sectionTitle(
-                'Your route to closing',
-                subtitle:
-                    'Seven stages, with suggested timing based on your target date.',
-              ),
-              const SizedBox(height: 16),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    for (final stage in SellerStage.values)
-                      Padding(
-                        padding: const EdgeInsets.only(right: 10),
-                        child: _stageCard(stage),
-                      ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
-        LayoutBuilder(
-          builder: (context, box) {
-            final cards = <Widget>[
-              _quickAction(
-                'Estimate a value range',
-                'Explore earnings, assets and cash at closing.',
-                Icons.calculate_outlined,
-                _SellerView.value,
-              ),
-              _quickAction(
-                'Build your deal pack',
-                'Know what evidence to prepare.',
-                Icons.folder_copy_outlined,
-                _SellerView.dealPack,
-              ),
-              _quickAction(
-                'Find your people',
-                'Meet professionals for your transfer.',
-                Icons.people_outline_rounded,
-                _SellerView.resources,
-              ),
-              _quickAction(
-                'Assign your team',
-                'Give each decision a clear lead.',
-                Icons.groups_outlined,
-                _SellerView.team,
-              ),
-            ];
-            final columns = box.maxWidth >= 980
-                ? 4
-                : box.maxWidth >= 580
-                ? 2
-                : 1;
-            final width = (box.maxWidth - (columns - 1) * 12) / columns;
-            return Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              children: [
-                for (final card in cards) SizedBox(width: width, child: card),
-              ],
-            );
-          },
-        ),
-      ],
-    );
-  }
-
-  Widget _snapshotLine(String label, String value) => Padding(
-    padding: const EdgeInsets.only(bottom: 12),
-    child: Row(
-      children: [
-        Expanded(
-          child: Text(label, style: const TextStyle(color: DashboardUi.muted)),
-        ),
-        Flexible(
-          child: Text(
-            value,
-            textAlign: TextAlign.right,
-            style: const TextStyle(fontWeight: FontWeight.w700),
-          ),
-        ),
-      ],
-    ),
-  );
-
-  Widget _stageCard(SellerStage stage) {
-    final stageTasks = _tasks.where((task) => task.stage == stage).toList();
-    final done = stageTasks
-        .where((task) => _completedTasks.contains(task.id))
-        .length;
-    final suggested = _suggestedDate(stage);
-    return SizedBox(
-      width: 170,
-      child: Material(
-        color: done == stageTasks.length
-            ? DashboardUi.paleGreen
-            : DashboardUi.paleBlue,
-        borderRadius: BorderRadius.circular(12),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: () => _showView(_SellerView.plan),
-          child: Padding(
-            padding: const EdgeInsets.all(14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '${stage.index + 1} / 7',
-                  style: const TextStyle(
-                    color: DashboardUi.blue,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  stage.label,
-                  style: const TextStyle(fontWeight: FontWeight.w800),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  suggested == null
-                      ? 'Set a target date'
-                      : _shortDate.format(suggested),
-                  style: const TextStyle(
-                    color: DashboardUi.muted,
-                    fontSize: 11,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  '$done/${stageTasks.length} steps',
-                  style: const TextStyle(
-                    color: DashboardUi.blue,
-                    fontWeight: FontWeight.w700,
+                    const Color(0xFF8A79D5),
                   ),
                 ),
               ],
             ),
-          ),
-        ),
-      ),
+            const SizedBox(height: 20),
+            DashboardUi.panel(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: DashboardUi.sectionTitle(
+                          'Your pipeline',
+                          subtitle:
+                              'Follow your transfer from preparation to handover.',
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () => _showView(_SellerView.settings),
+                        child: Text(
+                          active ? 'Edit transfer' : 'Set up transfer',
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: List.generate(4, (index) {
+                        const titles = [
+                          'Preparation',
+                          'Successor search',
+                          'Terms / diligence',
+                          'Closing / handover',
+                        ];
+                        final hasTransfer = visible && column == index;
+                        return Container(
+                          key: Key('seller_pipeline_column_$index'),
+                          width: narrow ? 214 : (box.maxWidth - 78) / 4,
+                          constraints: const BoxConstraints(minWidth: 185),
+                          margin: EdgeInsets.only(right: index == 3 ? 0 : 10),
+                          padding: const EdgeInsets.all(9),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF5F8FF),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(3, 2, 3, 10),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        titles[index],
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w800,
+                                        ),
+                                      ),
+                                    ),
+                                    Text(
+                                      hasTransfer ? '1' : '0',
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w800,
+                                        color: DashboardUi.blue,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              if (!hasTransfer)
+                                const Padding(
+                                  padding: EdgeInsets.all(10),
+                                  child: Text(
+                                    'No transfers here yet',
+                                    style: TextStyle(
+                                      color: DashboardUi.muted,
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                )
+                              else
+                                Material(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: InkWell(
+                                    onTap: () => _showView(_SellerView.plan),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(12),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            name,
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.w800,
+                                              fontSize: 13,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 5),
+                                          Text(
+                                            _path.label,
+                                            style: const TextStyle(
+                                              color: DashboardUi.muted,
+                                              fontSize: 11,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            next?.title ?? 'Plan complete',
+                                            style: const TextStyle(
+                                              color: DashboardUi.blue,
+                                              fontSize: 11,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        );
+                      }),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            OutlinedButton.icon(
+              onPressed: () => _showView(_SellerView.resources),
+              icon: const Icon(Icons.library_books_outlined),
+              label: const Text('Resources — find your transfer team'),
+            ),
+            const SizedBox(height: 16),
+            _overviewTeam(),
+            const SizedBox(height: 16),
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: [
+                SizedBox(
+                  width: narrow ? box.maxWidth : (box.maxWidth - 12) / 2,
+                  child: _quickAction(
+                    'Deal screen',
+                    'Explore business value, assets and cash at closing.',
+                    Icons.calculate_outlined,
+                    _SellerView.value,
+                  ),
+                ),
+                SizedBox(
+                  width: narrow ? box.maxWidth : (box.maxWidth - 12) / 2,
+                  child: _quickAction(
+                    'Transaction plan',
+                    'Schedule and complete your transfer checklist. 📅',
+                    Icons.event_note_outlined,
+                    _SellerView.plan,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
     );
   }
+
+  Widget _overviewTeam() => DashboardUi.panel(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: DashboardUi.sectionTitle(
+                'My personal team',
+                subtitle: 'Your advisers, available throughout your transfer.',
+              ),
+            ),
+            TextButton(
+              onPressed: () => _showView(_SellerView.team),
+              child: const Text('Manage'),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        FutureBuilder<List<MarketplaceProvider>>(
+          future: _linkedTeam,
+          builder: (context, snapshot) {
+            final team = snapshot.data ?? const <MarketplaceProvider>[];
+            if (snapshot.hasError) {
+              return const Text(
+                'Could not load your team. Use Refresh to try again.',
+                style: TextStyle(color: DashboardUi.muted, fontSize: 11),
+              );
+            }
+            if (_linkedTeam != null && !snapshot.hasData) {
+              return const LinearProgressIndicator();
+            }
+            if (team.isEmpty) {
+              return const Text(
+                'Add professionals to build your transfer team.',
+                style: TextStyle(color: DashboardUi.muted, fontSize: 11),
+              );
+            }
+            return Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                for (final provider in team)
+                  ActionChip(
+                    label: Text('${provider.name} · ${provider.specialty}'),
+                    onPressed: () => _openProvider(provider),
+                  ),
+              ],
+            );
+          },
+        ),
+      ],
+    ),
+  );
 
   Widget _quickAction(
     String title,
