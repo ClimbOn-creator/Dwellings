@@ -1,3 +1,4 @@
+import 'screens/assistant_workspace_page.dart';
 import 'screens/transaction_learning_page.dart';
 import 'widgets/site_inline_editor.dart';
 
@@ -135,6 +136,7 @@ class AffinityApp extends StatelessWidget {
       ),
       'member-studio' => const MemberDealMarketplacePage(),
       'review-desk' => const AffinityReviewDeskPage(),
+      'personal-consulting' => const PersonalizedConsultingPage(),
       'content-studio' => const ContentStudioPage(),
       'notifications' => const NotificationCenterPage(),
       'professional-onboarding' => const ProfessionalOnboardingPage(),

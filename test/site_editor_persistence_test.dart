@@ -1,3 +1,4 @@
+import 'package:dwelling_iq/widgets/site_section.dart';
 import 'package:dwelling_iq/widgets/site_image.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
@@ -274,6 +275,52 @@ void main() {
       expect(uploads, 1);
       await tester.runAsync(SiteContentService.initialize);
       expect(SiteContentService.published('image.test.permanent'), savedUrl);
+    },
+    skip: !BackendService.configured,
+  );
+  testWidgets(
+    'section visibility persists, restores and survives rejected saves',
+    (tester) async {
+      await tester.runAsync(
+        () => Supabase.instance.client.auth.signInWithPassword(
+          email: 'rw0882308@gmail.com',
+          password: 'fixture',
+        ),
+      );
+      const page = MaterialApp(
+        home: Scaffold(
+          body: SiteSection(
+            id: 'test.consulting',
+            label: 'Approach',
+            child: Text('Saved section content'),
+          ),
+        ),
+      );
+      await tester.pumpWidget(page);
+      SiteContentService.editing.value = true;
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Hide section'));
+      await tester.pumpAndSettle();
+      expect(published['section.test.consulting.hidden'], 'true');
+      expect(find.text('Saved section content'), findsNothing);
+      SiteContentService.editing.value = false;
+      await tester.pumpAndSettle();
+      expect(find.text('Restore section'), findsNothing);
+      await tester.pumpWidget(const SizedBox());
+      await tester.pumpWidget(page);
+      await tester.pumpAndSettle();
+      expect(find.text('Saved section content'), findsNothing);
+      SiteContentService.editing.value = true;
+      await tester.pumpAndSettle();
+      rejectWrites = true;
+      await tester.tap(find.text('Restore section'));
+      await tester.pumpAndSettle();
+      expect(find.text('Saved section content'), findsNothing);
+      rejectWrites = false;
+      await tester.tap(find.text('Restore section'));
+      await tester.pumpAndSettle();
+      expect(find.text('Saved section content'), findsOneWidget);
+      expect(published['section.test.consulting.hidden'], 'false');
     },
     skip: !BackendService.configured,
   );

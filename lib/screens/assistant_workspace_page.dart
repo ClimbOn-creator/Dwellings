@@ -1,5 +1,6 @@
 import '../widgets/site_text.dart';
 import '../widgets/site_parallax_image.dart';
+import '../widgets/site_section.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -671,12 +672,9 @@ class PersonalizedConsultingPage extends StatefulWidget {
 
 class _PersonalizedConsultingPageState
     extends State<PersonalizedConsultingPage> {
-  static const _night = Color(0xFF070717);
-  static const _blue = Color(0xFF526DFF);
-  static const _lilacBright = Color(0xFFC8B8FF);
-  static const _lime = Color(0xFFD7FF78);
-  static const _coral = Color(0xFFFF8B79);
-  static const _paper = Color(0xFFF5F5F7);
+  static const _forest = Color(0xFF053827);
+  static const _cream = Color(0xFFF7F5F0);
+  static const _sage = Color(0xFFEAF0EC);
 
   final _scrollController = ScrollController();
   late bool _motionEnabled;
@@ -720,411 +718,390 @@ class _PersonalizedConsultingPageState
     );
   }
 
-  SliverLayoutBuilder _reveal(Widget child) => SliverLayoutBuilder(
-    builder: (context, sliver) => SliverToBoxAdapter(
-      child: ValueListenableBuilder<bool>(
-        valueListenable: SiteContentService.editing,
-        builder: (context, editing, _) => AnimatedBuilder(
-          animation: _scrollController,
-          child: child,
-          builder: (context, content) {
-            final still = editing || MediaQuery.disableAnimationsOf(context);
-            final viewport = MediaQuery.sizeOf(context).height;
-            final top =
-                sliver.precedingScrollExtent -
-                (_scrollController.hasClients ? _scrollController.offset : 0);
-            final progress = still
-                ? 1.0
-                : ((viewport - top) / (viewport * .52)).clamp(0.0, 1.0);
-            return Opacity(
-              opacity: .18 + progress * .82,
-              child: Transform.translate(
-                offset: Offset(0, (1 - progress) * 86),
-                child: content,
-              ),
-            );
-          },
+  Widget _copy(
+    String key,
+    String fallback, {
+    double size = 16,
+    Color color = ink,
+    bool italic = false,
+  }) => SiteText(
+    fallback,
+    contentKey: key,
+    literal: true,
+    style: TextStyle(
+      color: color,
+      fontSize: size,
+      height: size > 25 ? 1.16 : 1.65,
+      fontWeight: size > 25 ? FontWeight.w500 : FontWeight.w400,
+      fontStyle: italic ? FontStyle.italic : FontStyle.normal,
+      letterSpacing: size > 25 ? -.7 : .15,
+    ),
+  );
+
+  Widget _photo(String key, String asset, double height, {bool arch = false}) =>
+      ClipRRect(
+        borderRadius: arch
+            ? const BorderRadius.only(
+                topLeft: Radius.circular(230),
+                topRight: Radius.circular(230),
+                bottomRight: Radius.circular(130),
+              )
+            : BorderRadius.zero,
+        child: SizedBox(
+          height: height,
+          width: double.infinity,
+          child: SiteParallaxImage(
+            controller: _scrollController,
+            contentKey: key,
+            asset: asset,
+            child: const SizedBox.expand(),
+          ),
         ),
+      );
+
+  Widget _section({
+    required Widget child,
+    Color color = Colors.white,
+    double vertical = 86,
+  }) => Container(
+    width: double.infinity,
+    decoration: BoxDecoration(
+      color: color,
+      border: const Border(top: BorderSide(color: line, width: .7)),
+    ),
+    padding: EdgeInsets.symmetric(
+      horizontal: MediaQuery.sizeOf(context).width < 760 ? 24 : 64,
+      vertical: vertical,
+    ),
+    child: Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 1160),
+        child: child,
       ),
     ),
   );
 
-  Widget _hero(BuildContext context) {
-    final width = MediaQuery.sizeOf(context).width;
-    final compact = width < 760;
-    return SizedBox(
-      height: compact ? 760 : 720,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          SiteParallaxImage(
-            controller: _scrollController,
-            contentKey: 'image.assistant.consulting.background',
-            asset: 'assets/images/affinity-consulting.jpg',
-            child: const DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Color(0xE6070717),
-                    Color(0x9E171747),
-                    Color(0xBC050510),
-                  ],
-                ),
+  Widget _callButton() => OutlinedButton.icon(
+    onPressed: () => _book(context),
+    style: OutlinedButton.styleFrom(
+      foregroundColor: _forest,
+      side: const BorderSide(color: _forest),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 19),
+      shape: const StadiumBorder(),
+    ),
+    icon: const Icon(Icons.arrow_outward, size: 17),
+    label: const SiteText(
+      'SET UP A CALL',
+      contentKey: 'copy.assistant_workspace_page.9',
+      literal: true,
+      style: TextStyle(
+        fontSize: 11,
+        letterSpacing: 1.2,
+        fontWeight: FontWeight.w700,
+      ),
+    ),
+  );
+
+  Widget _hero(BuildContext context) => LayoutBuilder(
+    builder: (context, box) {
+      final compact = box.maxWidth < 800;
+      final words = Padding(
+        padding: EdgeInsets.symmetric(
+          horizontal: compact ? 24 : 64,
+          vertical: compact ? 48 : 72,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _copy(
+              'copy.assistant_workspace_page.m12',
+              'THE PERSON BEHIND THE FRAMEWORK',
+              size: 11,
+            ),
+            const SizedBox(height: 23),
+            SiteText(
+              SiteContentService.text(
+                'consulting.title',
+                'Founder-led acquisition consulting',
+              ),
+              contentKey: 'copy.assistant_workspace_page.m27',
+              literal: false,
+              style: TextStyle(
+                color: _forest,
+                fontSize: compact ? 39 : 52,
+                height: 1.12,
+                letterSpacing: -1.4,
+                fontWeight: FontWeight.w400,
               ),
             ),
-          ),
-          Positioned(
-            top: compact ? 110 : 130,
-            right: compact ? -90 : 42,
-            child: IgnorePointer(
-              child: Container(
-                width: compact ? 260 : 390,
-                height: compact ? 260 : 390,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: [
-                      _blue.withValues(alpha: .72),
-                      _lilacBright.withValues(alpha: .08),
-                      Colors.transparent,
-                    ],
-                  ),
-                ),
+            const SizedBox(height: 24),
+            SiteText(
+              SiteContentService.text(
+                'consulting.subtitle',
+                'A personal, rigorous second set of eyes for the decisions that shape what you buy—and what happens after.',
               ),
+              contentKey: 'copy.assistant_workspace_page.m28',
+              literal: false,
+              style: const TextStyle(color: muted, fontSize: 17, height: 1.65),
             ),
+            const SizedBox(height: 30),
+            _callButton(),
+          ],
+        ),
+      );
+      final photo = _photo(
+        'image.assistant.consulting.background',
+        'assets/images/affinity-consulting.jpg',
+        compact ? 340 : 580,
+      );
+      return ColoredBox(
+        color: _cream,
+        child: compact
+            ? Column(children: [words, photo])
+            : Row(
+                children: [
+                  Expanded(child: words),
+                  Expanded(child: photo),
+                ],
+              ),
+      );
+    },
+  );
+
+  Widget _perspectiveSection(BuildContext context) => _section(
+    color: _cream,
+    child: LayoutBuilder(
+      builder: (context, box) {
+        final compact = box.maxWidth < 740;
+        final image = _photo(
+          'image.assistant_workspace_page.m1',
+          'assets/images/affinity-consulting.jpg',
+          compact ? 370 : 560,
+          arch: true,
+        );
+        final copy = Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _copy(
+              'copy.assistant_workspace_page.m13',
+              'Acquisition decisions deserve more than a spreadsheet.',
+              size: 34,
+            ),
+            const SizedBox(height: 25),
+            _copy(
+              'copy.assistant_workspace_page.m14',
+              'Affinity was created around a simple belief: buyers make stronger choices when their personal goals, financial readiness, and deal criteria are examined together. The founder’s work combines product development, transparent financial modelling, and buyer-first decision systems to turn an intimidating acquisition into a series of clear, defensible choices.',
+              size: 16,
+            ),
+            const SizedBox(height: 18),
+            _copy(
+              'copy.assistant_workspace_page.m15',
+              'The process is practical and candid. A consulting engagement can sharpen an acquisition mandate, identify readiness gaps before a lender does, challenge the assumptions in a live opportunity, or organize the next phase of diligence. The goal is not to make the decision for you. It is to help you see the decision clearly enough to own it.',
+              size: 16,
+            ),
+          ],
+        );
+        return compact
+            ? Column(children: [image, const SizedBox(height: 36), copy])
+            : Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(flex: 4, child: image),
+                  const SizedBox(width: 80),
+                  Expanded(flex: 6, child: copy),
+                ],
+              );
+      },
+    ),
+  );
+
+  Widget _questionSection(BuildContext context) => _section(
+    child: LayoutBuilder(
+      builder: (context, box) {
+        final compact = box.maxWidth < 740;
+        final words = Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _copy(
+              'copy.assistant_workspace_page.m16',
+              'WHEN A CONVERSATION HELPS',
+              size: 11,
+            ),
+            const SizedBox(height: 22),
+            _copy(
+              'copy.assistant_workspace_page.m17',
+              'Bring the question\nthat keeps looping.',
+              size: 38,
+            ),
+            const SizedBox(height: 25),
+            _copy(
+              'copy.assistant_workspace_page.m18',
+              'Consulting is most useful when the numbers are available but the judgment is still hard: choosing a target, preparing to approach lenders, deciding whether to advance a deal, or translating diligence findings into an action plan. Sessions are built around your real situation and end with an explicit next step.',
+              size: 16,
+            ),
+          ],
+        );
+        final photo = ClipRRect(
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(220),
+            bottomLeft: Radius.circular(220),
           ),
-          Padding(
-            padding: EdgeInsets.fromLTRB(
-              compact ? 24 : 58,
-              compact ? 150 : 178,
-              compact ? 24 : 58,
-              64,
+          child: _photo(
+            'image.assistant_workspace_page.m2',
+            'assets/images/commercial-atrium.jpg',
+            compact ? 320 : 490,
+          ),
+        );
+        return compact
+            ? Column(children: [photo, const SizedBox(height: 36), words])
+            : Row(
+                children: [
+                  Expanded(child: words),
+                  const SizedBox(width: 70),
+                  Expanded(child: photo),
+                ],
+              );
+      },
+    ),
+  );
+
+  Widget _focusSection() => _section(
+    color: _sage,
+    child: LayoutBuilder(
+      builder: (context, box) {
+        const areas = <(String, String, String, IconData)>[
+          (
+            'direction',
+            'Acquisition direction',
+            'Clarify what you want to buy, why it fits, and what you need from ownership.',
+            Icons.explore_outlined,
+          ),
+          (
+            'readiness',
+            'Financial readiness',
+            'Prepare the questions and evidence to discuss with your financing team.',
+            Icons.account_balance_outlined,
+          ),
+          (
+            'deal',
+            'Deal decisions',
+            'Test the assumptions behind an opportunity before deciding your next step.',
+            Icons.balance_outlined,
+          ),
+          (
+            'diligence',
+            'Diligence planning',
+            'Turn open questions into a clear work plan with the right professional leads.',
+            Icons.fact_check_outlined,
+          ),
+          (
+            'transition',
+            'Ownership transition',
+            'Think through people, operations and the responsibilities of the handover.',
+            Icons.handshake_outlined,
+          ),
+          (
+            'next',
+            'Your next move',
+            'Leave the conversation with a practical decision or action to move forward.',
+            Icons.arrow_forward_rounded,
+          ),
+        ];
+        final columns = box.maxWidth < 600
+            ? 1
+            : box.maxWidth < 900
+            ? 2
+            : 3;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _copy(
+              'consulting.focus.title',
+              'Focus areas',
+              size: 34,
+              color: _forest,
+              italic: true,
             ),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 1220),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: SizedBox(
-                    width: compact ? double.infinity : 790,
+            const SizedBox(height: 22),
+            const Divider(color: line),
+            const SizedBox(height: 30),
+            Wrap(
+              spacing: 36,
+              runSpacing: 44,
+              children: [
+                for (final (id, title, description, icon) in areas)
+                  SizedBox(
+                    width: (box.maxWidth - (columns - 1) * 36) / columns,
                     child: Column(
-                      mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 10,
-                          ),
-                          decoration: BoxDecoration(
-                            color: _lime,
-                            borderRadius: BorderRadius.circular(999),
-                          ),
-                          child: const SiteText(
-                            contentKey: 'copy.assistant_workspace_page.m12',
-                            literal: true,
-                            'THE PERSON BEHIND THE FRAMEWORK',
-                            style: TextStyle(
-                              color: _night,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 1.4,
-                            ),
-                          ),
+                        Icon(icon, color: _forest, size: 24),
+                        const SizedBox(height: 14),
+                        _copy(
+                          'consulting.focus.$id.title',
+                          title,
+                          size: 19,
+                          color: _forest,
                         ),
-                        const SizedBox(height: 28),
-                        SiteText(
-                          contentKey: 'copy.assistant_workspace_page.m27',
-                          literal: false,
-                          SiteContentService.text(
-                            'consulting.title',
-                            'Founder-led acquisition consulting',
-                          ),
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: compact ? 52 : 78,
-                            height: .96,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: compact ? -2.5 : -4.2,
-                          ),
-                        ),
-                        const SizedBox(height: 26),
-                        ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 660),
-                          child: SiteText(
-                            contentKey: 'copy.assistant_workspace_page.m28',
-                            literal: false,
-                            SiteContentService.text(
-                              'consulting.subtitle',
-                              'A personal, rigorous second set of eyes for the decisions that shape what you buy—and what happens after.',
-                            ),
-                            style: const TextStyle(
-                              color: Color(0xFFE0E3FF),
-                              fontSize: 19,
-                              height: 1.5,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 34),
-                        FilledButton.icon(
-                          onPressed: () => _book(context),
-                          style: FilledButton.styleFrom(
-                            backgroundColor: _blue,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 28,
-                              vertical: 22,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(999),
-                            ),
-                          ),
-                          iconAlignment: IconAlignment.end,
-                          icon: const Icon(Icons.arrow_outward),
-                          label: const SiteText(
-                            contentKey: 'copy.assistant_workspace_page.9',
-                            literal: true,
-                            'SET UP A CALL',
-                            style: TextStyle(fontWeight: FontWeight.w700),
-                          ),
+                        const SizedBox(height: 10),
+                        _copy(
+                          'consulting.focus.$id.body',
+                          description,
+                          size: 15,
+                          color: muted,
                         ),
                       ],
                     ),
                   ),
-                ),
-              ),
+              ],
             ),
-          ),
-        ],
-      ),
-    );
-  }
+          ],
+        );
+      },
+    ),
+  );
 
-  Widget _perspectiveSection(BuildContext context) {
-    final compact = MediaQuery.sizeOf(context).width < 850;
-    final copy = Container(
-      padding: EdgeInsets.all(compact ? 28 : 52),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(32),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x15050510),
-            blurRadius: 42,
-            offset: Offset(0, 20),
-          ),
-        ],
-      ),
-      child: const Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SiteText(
-            contentKey: 'copy.assistant_workspace_page.m13',
-            literal: true,
-            'Acquisition decisions deserve more than a spreadsheet.',
-            style: TextStyle(
-              color: _night,
-              fontSize: 38,
-              height: 1.08,
-              fontWeight: FontWeight.w700,
-              letterSpacing: -1.4,
-            ),
-          ),
-          SizedBox(height: 26),
-          SiteText(
-            contentKey: 'copy.assistant_workspace_page.m14',
-            literal: true,
-            'Affinity was created around a simple belief: buyers make stronger choices when their personal goals, financial readiness, and deal criteria are examined together. The founder’s work combines product development, transparent financial modelling, and buyer-first decision systems to turn an intimidating acquisition into a series of clear, defensible choices.',
-            style: TextStyle(color: muted, fontSize: 17, height: 1.65),
-          ),
-          SizedBox(height: 20),
-          SiteText(
-            contentKey: 'copy.assistant_workspace_page.m15',
-            literal: true,
-            'The process is practical and candid. A consulting engagement can sharpen an acquisition mandate, identify readiness gaps before a lender does, challenge the assumptions in a live opportunity, or organize the next phase of diligence. The goal is not to make the decision for you. It is to help you see the decision clearly enough to own it.',
-            style: TextStyle(color: muted, fontSize: 17, height: 1.65),
-          ),
-        ],
-      ),
-    );
-    final image = Transform.translate(
-      offset: Offset(0, compact ? 0 : 56),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(32),
-        child: SizedBox(
-          height: compact ? 420 : 630,
-          child: SiteParallaxImage(
-            controller: _scrollController,
-            contentKey: 'image.assistant_workspace_page.m1',
-            asset: 'assets/images/affinity-consulting.jpg',
-            child: const DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Colors.transparent, Color(0xA8070717)],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-    return Container(
-      color: _paper,
-      padding: EdgeInsets.fromLTRB(
-        compact ? 22 : 54,
-        compact ? 72 : 118,
-        compact ? 22 : 54,
-        compact ? 76 : 150,
-      ),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1220),
-          child: compact
-              ? Column(children: [image, const SizedBox(height: 24), copy])
-              : Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(flex: 5, child: image),
-                    const SizedBox(width: 34),
-                    Expanded(flex: 6, child: copy),
-                  ],
-                ),
-        ),
-      ),
-    );
-  }
-
-  Widget _questionSection(BuildContext context) {
-    final compact = MediaQuery.sizeOf(context).width < 800;
-    return Container(
-      color: _night,
-      padding: EdgeInsets.symmetric(
-        horizontal: compact ? 22 : 54,
-        vertical: compact ? 74 : 122,
-      ),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1220),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SiteText(
-                contentKey: 'copy.assistant_workspace_page.m16',
-                literal: true,
-                'WHEN A CONVERSATION HELPS',
-                style: TextStyle(
-                  color: _coral,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 1.5,
-                ),
-              ),
-              const SizedBox(height: 22),
-              const SiteText(
-                contentKey: 'copy.assistant_workspace_page.m17',
-                literal: true,
-                'Bring the question\nthat keeps looping.',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 54,
-                  height: 1.02,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: -2.1,
-                ),
-              ),
-              const SizedBox(height: 36),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(34),
-                child: SizedBox(
-                  height: compact ? 400 : 520,
-                  child: SiteParallaxImage(
-                    controller: _scrollController,
-                    contentKey: 'image.assistant_workspace_page.m2',
-                    asset: 'assets/images/commercial-atrium.jpg',
-                    child: Align(
-                      alignment: Alignment.bottomLeft,
-                      child: Container(
-                        width: compact ? double.infinity : 650,
-                        margin: EdgeInsets.all(compact ? 16 : 32),
-                        padding: EdgeInsets.all(compact ? 24 : 36),
-                        decoration: BoxDecoration(
-                          color: _blue.withValues(alpha: .94),
-                          borderRadius: BorderRadius.circular(26),
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: .22),
-                          ),
-                        ),
-                        child: const SiteText(
-                          contentKey: 'copy.assistant_workspace_page.m18',
-                          literal: true,
-                          'Consulting is most useful when the numbers are available but the judgment is still hard: choosing a target, preparing to approach lenders, deciding whether to advance a deal, or translating diligence findings into an action plan. Sessions are built around your real situation and end with an explicit next step.',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            height: 1.6,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _closing(BuildContext context) => Container(
-    color: _lilacBright,
-    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 96),
+  Widget _closing(BuildContext context) => _section(
+    color: _cream,
     child: Center(
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 840),
+        constraints: const BoxConstraints(maxWidth: 760),
         child: Column(
           children: [
-            const Icon(Icons.forum_outlined, color: _night, size: 38),
-            const SizedBox(height: 24),
+            const Icon(Icons.calendar_month_outlined, color: _forest, size: 34),
+            const SizedBox(height: 22),
+            _copy(
+              'consulting.booking.heading',
+              'Make room for a clearer next step.',
+              size: 36,
+              color: _forest,
+            ),
+            const SizedBox(height: 20),
             SiteText(
-              contentKey: 'copy.assistant_workspace_page.m19',
-              literal: false,
               BackendService.user == null
                   ? 'You will be asked to sign in before choosing a time.'
                   : 'Choose a preferred date and time for your call.',
+              contentKey: 'copy.assistant_workspace_page.m19',
+              literal: false,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: _night,
-                fontSize: 30,
-                height: 1.2,
-                fontWeight: FontWeight.w700,
-                letterSpacing: -1,
-              ),
+              style: const TextStyle(color: muted, fontSize: 17, height: 1.6),
             ),
-            const SizedBox(height: 30),
+            const SizedBox(height: 26),
             FilledButton.icon(
+              key: const Key('consulting_calendar'),
               onPressed: () => _book(context),
               style: FilledButton.styleFrom(
-                backgroundColor: _night,
+                backgroundColor: _forest,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 32,
+                  horizontal: 30,
                   vertical: 22,
                 ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(999),
-                ),
+                shape: const StadiumBorder(),
               ),
-              iconAlignment: IconAlignment.end,
               icon: const Icon(Icons.calendar_month_outlined),
-              label: const Text(
-                'SET UP A CALL',
-                style: TextStyle(fontWeight: FontWeight.w700),
-              ),
+              label: const Text('SET UP A CALL'),
             ),
           ],
         ),
@@ -1134,9 +1111,12 @@ class _PersonalizedConsultingPageState
 
   @override
   Widget build(BuildContext context) => MediaQuery(
-    data: MediaQuery.of(context).copyWith(disableAnimations: !_motionEnabled),
+    data: MediaQuery.of(context).copyWith(
+      disableAnimations:
+          !_motionEnabled || MediaQuery.disableAnimationsOf(context),
+    ),
     child: Scaffold(
-      backgroundColor: _night,
+      backgroundColor: _cream,
       body: CustomScrollView(
         controller: _scrollController,
         slivers: [
@@ -1146,29 +1126,53 @@ class _PersonalizedConsultingPageState
             toolbarHeight: 78,
             elevation: 0,
             scrolledUnderElevation: 0,
-            backgroundColor: Colors.white.withValues(alpha: .96),
+            backgroundColor: _cream,
             surfaceTintColor: Colors.transparent,
-            title: const HomeBrandButton(size: 58, dark: false),
+            title: const HomeBrandButton(size: 48, dark: false),
             actions: [
-              TextButton.icon(
+              IconButton(
+                tooltip: _motionEnabled ? 'Pause parallax' : 'Enable parallax',
                 onPressed: () => _setMotion(!_motionEnabled),
-                style: TextButton.styleFrom(foregroundColor: _night),
                 icon: Icon(
                   _motionEnabled
                       ? Icons.pause_circle_outline
                       : Icons.play_circle_outline,
-                  size: 20,
+                  color: _forest,
                 ),
-                label: Text(_motionEnabled ? 'Motion on' : 'Enable motion'),
               ),
               const AppNavigationMenu(side: PlatformSide.business, dark: false),
               const SizedBox(width: 12),
             ],
           ),
-          SliverToBoxAdapter(child: _hero(context)),
-          _reveal(_perspectiveSection(context)),
-          _reveal(_questionSection(context)),
-          _reveal(_closing(context)),
+          SliverToBoxAdapter(
+            child: SiteSection(
+              id: 'consulting.hero',
+              label: 'Introduction',
+              child: _hero(context),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: SiteSection(
+              id: 'consulting.perspective',
+              label: 'Our approach',
+              child: _perspectiveSection(context),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: SiteSection(
+              id: 'consulting.conversation',
+              label: 'When a conversation helps',
+              child: _questionSection(context),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: SiteSection(
+              id: 'consulting.focus',
+              label: 'Focus areas',
+              child: _focusSection(),
+            ),
+          ),
+          SliverToBoxAdapter(child: _closing(context)),
           const SliverToBoxAdapter(child: MembershipFooter()),
         ],
       ),
