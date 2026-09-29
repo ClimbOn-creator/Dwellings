@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../models/platform_side.dart';
 import '../models/seller_workspace.dart';
@@ -14,9 +13,13 @@ import '../services/backend_service.dart';
 import '../services/marketplace_service.dart';
 import '../widgets/app_navigation_menu.dart';
 import '../widgets/dashboard_ui.dart';
+import '../widgets/home_brand_button.dart';
+import 'auth_page.dart';
 import 'local_network_page.dart';
+import 'member_deal_marketplace_page.dart';
+import 'member_profile_page.dart';
 
-enum _SellerView { overview, value, plan, dealPack, team, resources }
+enum _SellerView { overview, value, plan, dealPack, resources, team, settings }
 
 class _SellerRole {
   const _SellerRole(this.id, this.title, this.purpose, this.firstMove);
@@ -77,69 +80,6 @@ const _sellerRoles = <_SellerRole>[
   ),
 ];
 
-class _SellerResource {
-  const _SellerResource(
-    this.title,
-    this.source,
-    this.summary,
-    this.url,
-    this.stage, {
-    this.bcOnly = false,
-  });
-  final String title;
-  final String source;
-  final String summary;
-  final String url;
-  final SellerStage stage;
-  final bool bcOnly;
-}
-
-const _sellerResources = <_SellerResource>[
-  _SellerResource(
-    'Prepare your business for sale',
-    'BDC',
-    'A practical checklist for goals, advisers, business readiness and transfer logistics.',
-    'https://www.bdc.ca/en/articles-tools/entrepreneur-toolkit/templates-business-guides/preparing-to-sell-your-business',
-    SellerStage.direction,
-  ),
-  _SellerResource(
-    'Plan your succession',
-    'BDC',
-    'Guides for choosing and preparing a successor and planning an owner exit.',
-    'https://www.bdc.ca/en/articles-tools/change-ownership/plan-succession',
-    SellerStage.direction,
-  ),
-  _SellerResource(
-    'Selling a business',
-    'Canada Revenue Agency',
-    'Official overview of business numbers, payroll, GST/HST, assets and possible tax questions.',
-    'https://www.canada.ca/en/revenue-agency/services/tax/businesses/topics/business-registration/maintain-business/selling-business.html',
-    SellerStage.terms,
-  ),
-  _SellerResource(
-    'Capital gains deduction',
-    'Canada Revenue Agency',
-    'Eligibility and reporting information to review with your tax adviser if shares may qualify.',
-    'https://www.canada.ca/en/revenue-agency/services/tax/individuals/topics/about-your-tax-return/tax-return/completing-a-tax-return/deductions-credits-expenses/line-25400-capital-gains-deduction.html',
-    SellerStage.terms,
-  ),
-  _SellerResource(
-    'Employment continuity on sale',
-    'Province of British Columbia',
-    'B.C. employment standards guidance on continuity when all or part of a business is sold.',
-    'https://www2.gov.bc.ca/gov/content/employment-business/employment-standards-advice/employment-standards/forms-resources/igm/esa-part-11-section-97',
-    SellerStage.diligence,
-    bcOnly: true,
-  ),
-  _SellerResource(
-    'Sell your business and plan succession',
-    'BDC',
-    'A seller overview covering planning, improving value and possible sale financing.',
-    'https://www.bdc.ca/en/business-transfer/selling-business',
-    SellerStage.handover,
-  ),
-];
-
 class SellerDashboardPage extends StatefulWidget {
   const SellerDashboardPage({super.key});
 
@@ -165,6 +105,11 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
   final Map<String, String> _teamNames = {};
   final Map<String, String> _numbers = {};
   Future<List<MarketplaceProvider>>? _linkedTeam;
+  late MarketplaceCity _resourceCity;
+  Future<MarketplaceDirectory>? _resourceDirectory;
+  ProviderCategory? _resourceCategory;
+  String _resourceQuery = '';
+  String? _resourceBusyId;
   _SellerView _view = _SellerView.overview;
 
   @override
@@ -172,6 +117,7 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
     super.initState();
     _storageKey =
         'affinity.seller_workspace.v1.${BackendService.user?.id ?? 'guest'}';
+    _resourceCity = MarketplaceService.cities.first;
     if (BackendService.user != null) _linkedTeam = AccountService.loadTeam();
     _authSubscription = BackendService.authChanges?.listen((_) {
       final nextKey =
@@ -197,6 +143,7 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
         _linkedTeam = BackendService.user != null
             ? AccountService.loadTeam()
             : null;
+        _resourceBusyId = null;
         _view = _SellerView.overview;
       });
       _load();
@@ -346,13 +293,60 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
     if (selected != null) _change(() => _targetDate = selected);
   }
 
-  Future<void> _openResource(String url) async {
-    final uri = Uri.parse(url);
-    if (!await launchUrl(uri, mode: LaunchMode.externalApplication) &&
-        mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not open this resource.')),
-      );
+  void _showView(_SellerView view) {
+    setState(() {
+      _view = view;
+      if (view == _SellerView.resources) {
+        _resourceDirectory ??= MarketplaceService.load(
+          _resourceCity,
+          side: PlatformSide.business,
+        );
+      }
+    });
+  }
+
+  Future<void> _openProvider(MarketplaceProvider provider) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => MemberProfilePage(
+          provider: provider,
+          messageDestinationBuilder: provider.isExample
+              ? null
+              : (_) => MemberDealMarketplacePage(initialChatProvider: provider),
+        ),
+      ),
+    );
+    if (mounted && BackendService.user != null) {
+      setState(() => _linkedTeam = AccountService.loadTeam());
+    }
+  }
+
+  Future<void> _saveProvider(MarketplaceProvider provider, bool saved) async {
+    if (provider.isExample || _resourceBusyId != null) return;
+    if (BackendService.user == null) {
+      await Navigator.of(
+        context,
+      ).push(MaterialPageRoute<void>(builder: (_) => const AuthPage()));
+      if (!mounted || BackendService.user == null) return;
+    }
+    setState(() => _resourceBusyId = provider.id);
+    try {
+      if (saved) {
+        await MarketplaceService.removeFromTeam(provider.id);
+      } else {
+        await MarketplaceService.addToTeam(provider);
+      }
+      if (mounted) setState(() => _linkedTeam = AccountService.loadTeam());
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not update your team. Please retry.'),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _resourceBusyId = null);
     }
   }
 
@@ -373,77 +367,204 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
     child: Scaffold(
       backgroundColor: DashboardUi.canvas,
       appBar: AppBar(
-        title: const Text('Seller dashboard'),
-        backgroundColor: Colors.white,
+        toolbarHeight: 72,
+        backgroundColor: const Color(0xFFF7F5F0),
         surfaceTintColor: Colors.transparent,
-        actions: const [AppNavigationMenu(dark: false), SizedBox(width: 12)],
+        foregroundColor: DashboardUi.ink,
+        title: MediaQuery.sizeOf(context).width < 700
+            ? const HomeBrandButton(size: 48, dark: false)
+            : const Row(
+                children: [
+                  HomeBrandButton(size: 48, dark: false),
+                  SizedBox(width: 18),
+                  Text(
+                    'SELLER OS',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1.3,
+                    ),
+                  ),
+                ],
+              ),
+        actions: const [
+          AppNavigationMenu(side: PlatformSide.business, dark: false),
+          SizedBox(width: 12),
+        ],
       ),
       body: !_loaded
           ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(22, 28, 22, 60),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 1220),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'SUCCESSION & TRANSFER',
-                        style: TextStyle(
-                          color: DashboardUi.blue,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 1.5,
+          : LayoutBuilder(
+              builder: (context, box) => box.maxWidth >= 800
+                  ? Row(
+                      children: [
+                        _sidebar(),
+                        const VerticalDivider(
+                          width: 1,
+                          color: DashboardUi.line,
                         ),
-                      ),
-                      const SizedBox(height: 7),
-                      const Text(
-                        'Your business. A clear path to its next chapter.',
-                        style: TextStyle(
-                          fontSize: 29,
-                          fontWeight: FontWeight.w800,
-                          color: DashboardUi.ink,
-                          height: 1.15,
-                        ),
-                      ),
-                      const SizedBox(height: 9),
-                      const Text(
-                        'Set your transfer path, build a supportable value story, prepare the evidence and guide the handover. Your plan adapts as you make decisions.',
-                        style: TextStyle(
-                          color: DashboardUi.muted,
-                          height: 1.45,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      _setupCard(),
-                      const SizedBox(height: 18),
-                      _navigation(),
-                      const SizedBox(height: 20),
-                      switch (_view) {
-                        _SellerView.overview => _overview(),
-                        _SellerView.value => _valuation(),
-                        _SellerView.plan => _plan(),
-                        _SellerView.dealPack => _dealPack(),
-                        _SellerView.team => _team(),
-                        _SellerView.resources => _resources(),
-                      },
-                      const SizedBox(height: 22),
-                      const Text(
-                        'Draft progress is saved on this device for this account. Keep confidential records in an adviser-approved secure room, not in these summary fields. Confirm valuation, tax and legal decisions with qualified advisers.',
-                        style: TextStyle(
-                          color: DashboardUi.muted,
-                          fontSize: 12,
-                          height: 1.5,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+                        Expanded(child: _workspace(compact: false)),
+                      ],
+                    )
+                  : _workspace(compact: true),
             ),
     ),
   );
+
+  static const _views = <(_SellerView, String, IconData)>[
+    (_SellerView.overview, 'Home', Icons.home_outlined),
+    (_SellerView.value, 'Deal screen', Icons.calculate_outlined),
+    (_SellerView.plan, 'Transaction plan', Icons.event_note_outlined),
+    (_SellerView.dealPack, 'Deal pack', Icons.folder_copy_outlined),
+    (_SellerView.resources, 'Resources', Icons.people_outline_rounded),
+    (_SellerView.team, 'My team', Icons.groups_outlined),
+    (_SellerView.settings, 'Transfer profile', Icons.tune_rounded),
+  ];
+
+  Widget _sidebar() => Container(
+    width: 212,
+    color: Colors.white,
+    padding: const EdgeInsets.fromLTRB(13, 24, 13, 16),
+    child: SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Padding(
+            padding: EdgeInsets.fromLTRB(13, 0, 0, 17),
+            child: Text(
+              'WORKSPACE',
+              style: TextStyle(
+                color: DashboardUi.muted,
+                fontSize: 10,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 1.2,
+              ),
+            ),
+          ),
+          for (final (view, label, icon) in _views)
+            KeyedSubtree(
+              key: Key('seller_tab_${view.name}'),
+              child: DashboardUi.nav(
+                label,
+                icon,
+                _view == view,
+                () => _showView(view),
+              ),
+            ),
+          const SizedBox(height: 20),
+          const Padding(
+            padding: EdgeInsets.all(13),
+            child: Text(
+              'Your plan and figures stay on this device.',
+              style: TextStyle(color: DashboardUi.muted, fontSize: 11),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+
+  Widget _workspace({required bool compact}) => Column(
+    children: [
+      if (compact) _navigation(),
+      Expanded(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(26, 30, 26, 56),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1220),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _viewHeader(),
+                  const SizedBox(height: 24),
+                  switch (_view) {
+                    _SellerView.overview => _overview(),
+                    _SellerView.value => _valuation(),
+                    _SellerView.plan => _plan(),
+                    _SellerView.dealPack => _dealPack(),
+                    _SellerView.resources => _resources(),
+                    _SellerView.team => _team(),
+                    _SellerView.settings => _setupCard(),
+                  },
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Draft progress is saved on this device for this account. Keep confidential records in an adviser-approved secure room. Confirm valuation, tax and legal decisions with qualified advisers.',
+                    style: TextStyle(
+                      color: DashboardUi.muted,
+                      fontSize: 12,
+                      height: 1.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    ],
+  );
+
+  Widget _viewHeader() {
+    final (title, subtitle) = switch (_view) {
+      _SellerView.overview => (
+        _businessController.text.trim().isEmpty
+            ? 'Your business, next chapter.'
+            : '${_businessController.text.trim()}, next chapter.',
+        'Keep your transfer moving, one clear decision at a time.',
+      ),
+      _SellerView.value => (
+        'Seller deal screen',
+        'Explore value, assets and closing cash with your own figures.',
+      ),
+      _SellerView.plan => (
+        'Transaction plan',
+        'A path-specific plan with owners, milestones and suggested dates.',
+      ),
+      _SellerView.dealPack => (
+        'Deal pack',
+        'Know what to prepare before your advisers open a secure room.',
+      ),
+      _SellerView.resources => (
+        'Find your transfer team.',
+        'Meet the professionals who can help you prepare, negotiate and hand over.',
+      ),
+      _SellerView.team => (
+        'My team',
+        'Keep the right people close and give each decision a lead.',
+      ),
+      _SellerView.settings => (
+        'Transfer profile',
+        'A few choices tailor your plan and planning dates.',
+      ),
+    };
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'SUCCESSION & TRANSFER',
+          style: TextStyle(
+            color: DashboardUi.blue,
+            fontSize: 10,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.4,
+          ),
+        ),
+        const SizedBox(height: 7),
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.w800,
+            color: DashboardUi.ink,
+            letterSpacing: -.7,
+          ),
+        ),
+        const SizedBox(height: 5),
+        Text(subtitle, style: const TextStyle(color: DashboardUi.muted)),
+      ],
+    );
+  }
 
   Widget _setupCard() => DashboardUi.panel(
     child: LayoutBuilder(
@@ -562,42 +683,41 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
     ],
   );
 
-  Widget _navigation() {
-    const entries = <(_SellerView, String, IconData)>[
-      (_SellerView.overview, 'Overview', Icons.dashboard_outlined),
-      (_SellerView.value, 'Calculators', Icons.calculate_outlined),
-      (_SellerView.plan, 'Transaction plan', Icons.route_outlined),
-      (_SellerView.dealPack, 'Deal pack', Icons.folder_copy_outlined),
-      (_SellerView.team, 'My team', Icons.groups_outlined),
-      (_SellerView.resources, 'Resources', Icons.menu_book_outlined),
-    ];
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: [
-        for (final (view, label, icon) in entries)
-          ChoiceChip(
-            key: Key('seller_tab_${view.name}'),
-            selected: _view == view,
-            onSelected: (_) => setState(() => _view = view),
-            avatar: Icon(
-              icon,
-              size: 17,
-              color: _view == view ? Colors.white : DashboardUi.blue,
+  Widget _navigation() => Container(
+    color: Colors.white,
+    padding: const EdgeInsets.symmetric(vertical: 10),
+    child: SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: [
+          for (final (view, label, icon) in _views)
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: ChoiceChip(
+                key: Key('seller_tab_${view.name}'),
+                selected: _view == view,
+                onSelected: (_) => _showView(view),
+                avatar: Icon(
+                  icon,
+                  size: 17,
+                  color: _view == view ? Colors.white : DashboardUi.blue,
+                ),
+                label: Text(label),
+                selectedColor: DashboardUi.blue,
+                backgroundColor: Colors.white,
+                labelStyle: TextStyle(
+                  color: _view == view ? Colors.white : DashboardUi.ink,
+                  fontWeight: FontWeight.w700,
+                ),
+                side: const BorderSide(color: DashboardUi.line),
+                showCheckmark: false,
+              ),
             ),
-            label: Text(label),
-            selectedColor: DashboardUi.blue,
-            backgroundColor: Colors.white,
-            labelStyle: TextStyle(
-              color: _view == view ? Colors.white : DashboardUi.ink,
-              fontWeight: FontWeight.w700,
-            ),
-            side: const BorderSide(color: DashboardUi.line),
-            showCheckmark: false,
-          ),
-      ],
-    );
-  }
+        ],
+      ),
+    ),
+  );
 
   Widget _overview() {
     final next = _nextTask;
@@ -667,53 +787,99 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
           },
         ),
         const SizedBox(height: 16),
-        DashboardUi.panel(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              DashboardUi.sectionTitle(
-                'Your next move',
-                subtitle: next == null
-                    ? 'The current plan is complete.'
-                    : 'The next unfinished step in your ${_path.label.toLowerCase()} plan.',
-              ),
-              const SizedBox(height: 12),
-              if (next != null) ...[
-                Text(
-                  next.title,
-                  style: const TextStyle(
-                    fontSize: 19,
-                    fontWeight: FontWeight.w800,
+        LayoutBuilder(
+          builder: (context, box) {
+            final narrow = box.maxWidth < 780;
+            return Wrap(
+              spacing: 14,
+              runSpacing: 14,
+              children: [
+                SizedBox(
+                  width: narrow ? box.maxWidth : (box.maxWidth - 14) / 2,
+                  child: DashboardUi.panel(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        DashboardUi.sectionTitle(
+                          'Your next move',
+                          subtitle: next == null
+                              ? 'The current plan is complete.'
+                              : 'The next unfinished step in your ${_path.label.toLowerCase()} plan.',
+                        ),
+                        const SizedBox(height: 16),
+                        if (next != null) ...[
+                          Text(
+                            next.title,
+                            style: const TextStyle(
+                              fontSize: 19,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          const SizedBox(height: 7),
+                          Text(
+                            next.detail,
+                            style: const TextStyle(
+                              color: DashboardUi.muted,
+                              height: 1.45,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            'Lead: ${_assignedName(next.role)} · ${next.stage.label}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w700,
+                              color: DashboardUi.blue,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          FilledButton.icon(
+                            onPressed: () => _showView(_SellerView.plan),
+                            icon: const Icon(Icons.arrow_forward_rounded),
+                            label: const Text('Open transaction plan'),
+                          ),
+                        ] else
+                          const Text(
+                            'Review your handover and remaining adviser obligations.',
+                          ),
+                      ],
+                    ),
                   ),
                 ),
-                const SizedBox(height: 5),
-                Text(
-                  next.detail,
-                  style: const TextStyle(
-                    color: DashboardUi.muted,
-                    height: 1.45,
+                SizedBox(
+                  width: narrow ? box.maxWidth : (box.maxWidth - 14) / 2,
+                  child: DashboardUi.panel(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        DashboardUi.sectionTitle(
+                          'Transfer snapshot',
+                          subtitle: 'The choices shaping this workspace.',
+                        ),
+                        const SizedBox(height: 16),
+                        _snapshotLine('Path', _path.label),
+                        _snapshotLine(
+                          'Target',
+                          _targetDate == null
+                              ? 'Add a target date'
+                              : _shortDate.format(_targetDate!),
+                        ),
+                        _snapshotLine(
+                          'Handover',
+                          '$_handoverMonths ${_handoverMonths == 1 ? 'month' : 'months'}',
+                        ),
+                        const SizedBox(height: 10),
+                        OutlinedButton.icon(
+                          onPressed: () => _showView(_SellerView.settings),
+                          icon: const Icon(Icons.tune_rounded),
+                          label: const Text('Edit transfer profile'),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-                const SizedBox(height: 11),
-                Text(
-                  'Lead: ${_assignedName(next.role)} · ${next.stage.label}',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    color: DashboardUi.blue,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                FilledButton.icon(
-                  onPressed: () => setState(() => _view = _SellerView.plan),
-                  icon: const Icon(Icons.arrow_forward_rounded),
-                  label: const Text('Open transaction plan'),
-                ),
-              ] else
-                const Text(
-                  'Review the handover and remaining adviser obligations before considering the transfer complete.',
-                ),
-            ],
-          ),
+              ],
+            );
+          },
         ),
         const SizedBox(height: 16),
         DashboardUi.panel(
@@ -721,17 +887,24 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               DashboardUi.sectionTitle(
-                _businessController.text.trim().isEmpty
-                    ? 'Your route to closing'
-                    : '${_businessController.text.trim()} · route to closing',
+                'Your route to closing',
                 subtitle:
-                    'Planning dates are suggestions, not legal or contractual deadlines.',
+                    'Seven stages, with suggested timing based on your target date.',
               ),
-              const SizedBox(height: 15),
-              for (final stage in SellerStage.values) ...[
-                _stageSummary(stage),
-                if (stage != SellerStage.values.last) const Divider(height: 20),
-              ],
+              const SizedBox(height: 16),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    for (final stage in SellerStage.values)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 10),
+                        child: _stageCard(stage),
+                      ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
@@ -741,39 +914,123 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
             final cards = <Widget>[
               _quickAction(
                 'Estimate a value range',
-                'Compare maintainable earnings with your market multiples.',
+                'Explore earnings, assets and cash at closing.',
                 Icons.calculate_outlined,
                 _SellerView.value,
               ),
               _quickAction(
                 'Build your deal pack',
-                'See the evidence buyers and advisers are likely to ask for.',
+                'Know what evidence to prepare.',
                 Icons.folder_copy_outlined,
                 _SellerView.dealPack,
               ),
               _quickAction(
+                'Find your people',
+                'Meet professionals for your transfer.',
+                Icons.people_outline_rounded,
+                _SellerView.resources,
+              ),
+              _quickAction(
                 'Assign your team',
-                'Give each major decision a clear lead.',
+                'Give each decision a clear lead.',
                 Icons.groups_outlined,
                 _SellerView.team,
               ),
             ];
+            final columns = box.maxWidth >= 980
+                ? 4
+                : box.maxWidth >= 580
+                ? 2
+                : 1;
+            final width = (box.maxWidth - (columns - 1) * 12) / columns;
             return Wrap(
               spacing: 12,
               runSpacing: 12,
               children: [
-                for (final card in cards)
-                  SizedBox(
-                    width: box.maxWidth < 780
-                        ? box.maxWidth
-                        : (box.maxWidth - 24) / 3,
-                    child: card,
-                  ),
+                for (final card in cards) SizedBox(width: width, child: card),
               ],
             );
           },
         ),
       ],
+    );
+  }
+
+  Widget _snapshotLine(String label, String value) => Padding(
+    padding: const EdgeInsets.only(bottom: 12),
+    child: Row(
+      children: [
+        Expanded(
+          child: Text(label, style: const TextStyle(color: DashboardUi.muted)),
+        ),
+        Flexible(
+          child: Text(
+            value,
+            textAlign: TextAlign.right,
+            style: const TextStyle(fontWeight: FontWeight.w700),
+          ),
+        ),
+      ],
+    ),
+  );
+
+  Widget _stageCard(SellerStage stage) {
+    final stageTasks = _tasks.where((task) => task.stage == stage).toList();
+    final done = stageTasks
+        .where((task) => _completedTasks.contains(task.id))
+        .length;
+    final suggested = _suggestedDate(stage);
+    return SizedBox(
+      width: 170,
+      child: Material(
+        color: done == stageTasks.length
+            ? DashboardUi.paleGreen
+            : DashboardUi.paleBlue,
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () => _showView(_SellerView.plan),
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${stage.index + 1} / 7',
+                  style: const TextStyle(
+                    color: DashboardUi.blue,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  stage.label,
+                  style: const TextStyle(fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  suggested == null
+                      ? 'Set a target date'
+                      : _shortDate.format(suggested),
+                  style: const TextStyle(
+                    color: DashboardUi.muted,
+                    fontSize: 11,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  '$done/${stageTasks.length} steps',
+                  style: const TextStyle(
+                    color: DashboardUi.blue,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -784,7 +1041,7 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
     _SellerView view,
   ) => DashboardUi.panel(
     child: InkWell(
-      onTap: () => setState(() => _view = view),
+      onTap: () => _showView(view),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -819,67 +1076,6 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
   String _assignedName(String role) {
     final name = _teamNames[role]?.trim() ?? '';
     return name.isEmpty ? role : '$name ($role)';
-  }
-
-  Widget _stageSummary(SellerStage stage) {
-    final stageTasks = _tasks.where((task) => task.stage == stage).toList();
-    final done = stageTasks
-        .where((task) => _completedTasks.contains(task.id))
-        .length;
-    final suggested = _suggestedDate(stage);
-    return InkWell(
-      onTap: () => setState(() => _view = _SellerView.plan),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 7),
-        child: Row(
-          children: [
-            CircleAvatar(
-              radius: 16,
-              backgroundColor: done == stageTasks.length
-                  ? DashboardUi.paleGreen
-                  : DashboardUi.paleBlue,
-              child: Text(
-                '${stage.index + 1}',
-                style: const TextStyle(
-                  color: DashboardUi.blue,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    stage.label,
-                    style: const TextStyle(fontWeight: FontWeight.w800),
-                  ),
-                  Text(
-                    suggested == null
-                        ? 'Set a target date for suggested timing'
-                        : 'Suggested around ${_shortDate.format(suggested)}',
-                    style: const TextStyle(
-                      fontSize: 11,
-                      color: DashboardUi.muted,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Text(
-              '$done/${stageTasks.length}',
-              style: const TextStyle(
-                color: DashboardUi.blue,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-            const SizedBox(width: 5),
-            const Icon(Icons.chevron_right_rounded, color: DashboardUi.muted),
-          ],
-        ),
-      ),
-    );
   }
 
   Widget _valuation() {
@@ -1523,72 +1719,325 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
     );
   }
 
-  Widget _resources() => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      DashboardUi.sectionTitle(
-        'Trusted resources',
-        subtitle:
-            'Official Canadian guidance to bring into conversations with your advisers.',
-      ),
-      const SizedBox(height: 12),
-      LayoutBuilder(
-        builder: (context, box) => Wrap(
-          spacing: 12,
-          runSpacing: 12,
-          children: [
-            for (final resource in _sellerResources)
-              SizedBox(
-                width: box.maxWidth < 760
-                    ? box.maxWidth
-                    : (box.maxWidth - 12) / 2,
-                child: DashboardUi.panel(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        resource.stage.label.toUpperCase(),
-                        style: const TextStyle(
-                          color: DashboardUi.blue,
-                          fontSize: 10,
-                          letterSpacing: 1.1,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                      const SizedBox(height: 7),
-                      Text(
-                        resource.title,
-                        style: const TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        '${resource.source}${resource.bcOnly ? ' · B.C. only' : ''}',
-                        style: const TextStyle(
-                          color: DashboardUi.muted,
-                          fontSize: 12,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        resource.summary,
-                        style: const TextStyle(height: 1.4),
-                      ),
-                      const SizedBox(height: 11),
-                      TextButton.icon(
-                        onPressed: () => _openResource(resource.url),
-                        icon: const Icon(Icons.open_in_new_rounded, size: 17),
-                        label: const Text('Open official resource'),
-                      ),
+  Widget _resources() {
+    _resourceDirectory ??= MarketplaceService.load(
+      _resourceCity,
+      side: PlatformSide.business,
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        DashboardUi.panel(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              DashboardUi.sectionTitle(
+                'Connect with the right people',
+                subtitle:
+                    'Affinity introduces you to professionals. Choose who fits your transfer and decide when to connect.',
+              ),
+              const SizedBox(height: 16),
+              LayoutBuilder(
+                builder: (context, box) {
+                  final city = DropdownButtonFormField<MarketplaceCity>(
+                    key: ValueKey(_resourceCity),
+                    initialValue: _resourceCity,
+                    isExpanded: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Search near',
+                      prefixIcon: Icon(Icons.location_on_outlined),
+                    ),
+                    items: [
+                      for (final city
+                          in MarketplaceService.citiesAlphabetically)
+                        DropdownMenuItem(value: city, child: Text(city.label)),
                     ],
-                  ),
+                    onChanged: (city) {
+                      if (city == null) return;
+                      setState(() {
+                        _resourceCity = city;
+                        _resourceDirectory = MarketplaceService.load(
+                          city,
+                          side: PlatformSide.business,
+                        );
+                      });
+                    },
+                  );
+                  final search = TextField(
+                    key: const Key('seller_resource_search'),
+                    onChanged: (value) =>
+                        setState(() => _resourceQuery = value),
+                    decoration: const InputDecoration(
+                      labelText: 'Search professionals',
+                      hintText: 'Name, company or specialty',
+                      prefixIcon: Icon(Icons.search_rounded),
+                    ),
+                  );
+                  return box.maxWidth < 660
+                      ? Column(
+                          children: [city, const SizedBox(height: 10), search],
+                        )
+                      : Row(
+                          children: [
+                            SizedBox(width: 250, child: city),
+                            const SizedBox(width: 12),
+                            Expanded(child: search),
+                          ],
+                        );
+                },
+              ),
+              const SizedBox(height: 16),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    for (final category in <ProviderCategory?>[
+                      null,
+                      ...providerCategoriesFor(PlatformSide.business),
+                    ])
+                      Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: ChoiceChip(
+                          key: Key(
+                            'seller_resource_${category?.name ?? 'all'}',
+                          ),
+                          label: Text(category?.label ?? 'All people'),
+                          selected: _resourceCategory == category,
+                          onSelected: (_) =>
+                              setState(() => _resourceCategory = category),
+                        ),
+                      ),
+                  ],
                 ),
               ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        FutureBuilder<MarketplaceDirectory>(
+          future: _resourceDirectory,
+          builder: (context, directorySnapshot) {
+            if (directorySnapshot.hasError) {
+              return DashboardUi.panel(
+                child: TextButton.icon(
+                  onPressed: () => setState(
+                    () => _resourceDirectory = MarketplaceService.load(
+                      _resourceCity,
+                      side: PlatformSide.business,
+                    ),
+                  ),
+                  icon: const Icon(Icons.refresh_rounded),
+                  label: const Text('Retry professional search'),
+                ),
+              );
+            }
+            if (!directorySnapshot.hasData) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            final directory = directorySnapshot.data!;
+            final query = _resourceQuery.trim().toLowerCase();
+            final visible = directory.providers.where((provider) {
+              if (_resourceCategory != null &&
+                  provider.category != _resourceCategory) {
+                return false;
+              }
+              final searchable = [
+                provider.name,
+                provider.company,
+                provider.specialty,
+                provider.category.label,
+                provider.jobTitle,
+                ...provider.specialties,
+                ...provider.serviceMarkets,
+              ].join(' ').toLowerCase();
+              return query.isEmpty ||
+                  query.split(RegExp(r'\s+')).every(searchable.contains);
+            }).toList();
+            return FutureBuilder<List<MarketplaceProvider>>(
+              future: _linkedTeam,
+              builder: (context, teamSnapshot) {
+                final selected =
+                    teamSnapshot.data?.map((provider) => provider.id).toSet() ??
+                    <String>{};
+                final teamReady =
+                    BackendService.user == null || teamSnapshot.hasData;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (teamSnapshot.hasError)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 14),
+                        child: DashboardUi.panel(
+                          child: TextButton.icon(
+                            onPressed: () => setState(
+                              () => _linkedTeam = AccountService.loadTeam(),
+                            ),
+                            icon: const Icon(Icons.refresh_rounded),
+                            label: const Text('Retry saved team status'),
+                          ),
+                        ),
+                      ),
+                    if (directory.isDemo ||
+                        directory.providers.any(
+                          (provider) => provider.isExample,
+                        ))
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 14),
+                        child: DashboardUi.panel(
+                          child: const Row(
+                            children: [
+                              Icon(Icons.info_outline, color: DashboardUi.blue),
+                              SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  'Example profiles are previews only. They cannot be contacted or added to your team.',
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    if (visible.isEmpty)
+                      DashboardUi.panel(
+                        child: const Text(
+                          'No professionals match this search. Try another profession, city or name.',
+                        ),
+                      )
+                    else
+                      LayoutBuilder(
+                        builder: (context, box) {
+                          final columns = box.maxWidth >= 1040
+                              ? 3
+                              : box.maxWidth >= 670
+                              ? 2
+                              : 1;
+                          final width =
+                              (box.maxWidth - (columns - 1) * 12) / columns;
+                          return Wrap(
+                            spacing: 12,
+                            runSpacing: 12,
+                            children: [
+                              for (final provider in visible)
+                                SizedBox(
+                                  width: width,
+                                  child: _resourceProviderCard(
+                                    provider,
+                                    saved: selected.contains(provider.id),
+                                    teamReady: teamReady,
+                                  ),
+                                ),
+                            ],
+                          );
+                        },
+                      ),
+                    const SizedBox(height: 16),
+                    OutlinedButton.icon(
+                      onPressed: _openNetwork,
+                      icon: const Icon(Icons.open_in_new_rounded),
+                      label: const Text('Explore the full Affinity network'),
+                    ),
+                  ],
+                );
+              },
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _resourceProviderCard(
+    MarketplaceProvider provider, {
+    required bool saved,
+    required bool teamReady,
+  }) => DashboardUi.panel(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            CircleAvatar(
+              radius: 23,
+              backgroundColor: DashboardUi.paleBlue,
+              child: Text(
+                provider.name.isEmpty ? '?' : provider.name[0],
+                style: const TextStyle(
+                  color: DashboardUi.blue,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    provider.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  Text(
+                    provider.company,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: DashboardUi.muted,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
-      ),
-    ],
+        const SizedBox(height: 13),
+        Wrap(
+          spacing: 6,
+          runSpacing: 6,
+          children: [
+            Chip(label: Text(provider.category.label)),
+            if (provider.verified) const Chip(label: Text('Verified')),
+            if (provider.sponsored) const Chip(label: Text('Sponsored')),
+            if (provider.isExample) const Chip(label: Text('Example')),
+          ],
+        ),
+        const SizedBox(height: 9),
+        Text(
+          provider.specialty,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(color: DashboardUi.muted, height: 1.35),
+        ),
+        const SizedBox(height: 14),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            OutlinedButton(
+              onPressed: provider.isExample
+                  ? null
+                  : () => _openProvider(provider),
+              child: Text(
+                provider.isExample ? 'Example only' : 'View & connect',
+              ),
+            ),
+            TextButton.icon(
+              onPressed:
+                  provider.isExample || _resourceBusyId != null || !teamReady
+                  ? null
+                  : () => _saveProvider(provider, saved),
+              icon: Icon(saved ? Icons.check_rounded : Icons.add_rounded),
+              label: Text(saved ? 'On my team' : 'Add to team'),
+            ),
+          ],
+        ),
+      ],
+    ),
   );
 }

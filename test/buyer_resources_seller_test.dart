@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dwelling_iq/screens/buyer_resources_page.dart';
 import 'package:dwelling_iq/services/buyer_resources.dart';
+import 'package:dwelling_iq/services/marketplace_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -89,10 +90,11 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
       await tester.pumpWidget(const MaterialApp(home: SellerDashboardPage()));
       await tester.pumpAndSettle();
-      expect(
-        find.text('Your business. A clear path to its next chapter.'),
-        findsOneWidget,
-      );
+      expect(find.text('Your business, next chapter.'), findsOneWidget);
+      expect(find.byKey(const Key('seller_business_name')), findsNothing);
+      await tester.ensureVisible(find.byKey(const Key('seller_tab_settings')));
+      await tester.tap(find.byKey(const Key('seller_tab_settings')));
+      await tester.pumpAndSettle();
       await tester.enterText(
         find.byKey(const Key('seller_business_name')),
         'Harbour Company',
@@ -118,6 +120,9 @@ void main() {
       await tester.pumpWidget(const SizedBox());
       await tester.pumpAndSettle();
       await tester.pumpWidget(const MaterialApp(home: SellerDashboardPage()));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.byKey(const Key('seller_tab_settings')));
+      await tester.tap(find.byKey(const Key('seller_tab_settings')));
       await tester.pumpAndSettle();
       expect(
         tester
@@ -172,7 +177,41 @@ void main() {
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
     }
-    expect(find.text('Trusted resources'), findsOneWidget);
+    expect(find.text('Connect with the right people'), findsOneWidget);
+    expect(find.text('Amelia Foster'), findsOneWidget);
+    expect(find.text('Open official resource'), findsNothing);
+    expect(find.text('Example only'), findsWidgets);
+  });
+  testWidgets('seller resource directory filters people and city on desktop', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1440, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(const MaterialApp(home: SellerDashboardPage()));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('seller_tab_resources')));
+    await tester.pumpAndSettle();
+    expect(find.text('Amelia Foster'), findsOneWidget);
+    await tester.tap(
+      find.byKey(const Key('seller_resource_qualityOfEarnings')),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Grace Okafor'), findsOneWidget);
+    expect(find.text('Amelia Foster'), findsNothing);
+    await tester.tap(find.byType(DropdownButtonFormField<MarketplaceCity>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Victoria, BC').last);
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Victoria ·'), findsWidgets);
+    await tester.enterText(
+      find.byKey(const Key('seller_resource_search')),
+      'no such professional',
+    );
+    await tester.pumpAndSettle();
+    expect(find.textContaining('No professionals match'), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
   test('catalog has distinct account keys and official HTTPS links', () {
     expect(
