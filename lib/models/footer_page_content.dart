@@ -12,6 +12,9 @@ enum FooterTopic {
   terms,
   contact;
 
+  bool get isInformationPage =>
+      this == approach || this == privacy || this == terms || this == contact;
+
   FooterPageContent get content => footerPages[this]!;
   String get slug => switch (this) {
     dealScreen => 'deal-screen',

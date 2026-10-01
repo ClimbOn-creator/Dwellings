@@ -12,40 +12,41 @@ import 'package:dwelling_iq/widgets/app_navigation_menu.dart';
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
-  testWidgets(
-    'all twelve footer links open their own page and preserve return navigation',
-    (tester) async {
-      tester.view.physicalSize = const Size(1440, 1200);
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: SingleChildScrollView(child: MembershipFooter()),
-          ),
-        ),
+  testWidgets('only the four Affinity links open dedicated pages', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1440, 1200);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(body: SingleChildScrollView(child: MembershipFooter())),
+      ),
+    );
+    expect(find.byKey(const Key('footer-link-directory')), findsNothing);
+    expect(find.byKey(const Key('footer-link-buyer-leads')), findsNothing);
+    for (final topic in FooterTopic.values.where(
+      (topic) => topic.isInformationPage,
+    )) {
+      final link = find.byKey(Key('footer-link-${topic.slug}'));
+      await tester.ensureVisible(link);
+      await tester.pumpAndSettle();
+      await tester.tap(link);
+      await tester.pumpAndSettle();
+      expect(
+        tester
+            .widget<FooterInformationPage>(find.byType(FooterInformationPage))
+            .topic,
+        topic,
       );
-      for (final topic in FooterTopic.values) {
-        final link = find.byKey(Key('footer-link-${topic.slug}'));
-        await tester.ensureVisible(link);
-        await tester.pumpAndSettle();
-        await tester.tap(link);
-        await tester.pumpAndSettle();
-        expect(
-          tester
-              .widget<FooterInformationPage>(find.byType(FooterInformationPage))
-              .topic,
-          topic,
-        );
-        expect(find.text(topic.content.headline), findsOneWidget);
-        expect(tester.takeException(), isNull, reason: topic.name);
-        await tester.tap(find.byTooltip('Back'));
-        await tester.pumpAndSettle();
-        expect(find.byType(FooterInformationPage), findsNothing);
-      }
-    },
-  );
+      expect(find.text(topic.content.headline), findsOneWidget);
+      expect(tester.takeException(), isNull, reason: topic.name);
+      await tester.tap(find.byTooltip('Back'));
+      await tester.pumpAndSettle();
+      expect(find.byType(FooterInformationPage), findsNothing);
+    }
+  });
   testWidgets(
     'every footer page fits a phone and section links scroll to content',
     (tester) async {
@@ -53,7 +54,9 @@ void main() {
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
-      for (final topic in FooterTopic.values) {
+      for (final topic in FooterTopic.values.where(
+        (topic) => topic.isInformationPage,
+      )) {
         await tester.pumpWidget(
           MaterialApp(
             key: ValueKey(topic),
@@ -124,19 +127,57 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+  testWidgets('six tool links bypass the introduction pages', (tester) async {
+    tester.view.physicalSize = const Size(1440, 1200);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    const topics = [
+      FooterTopic.blueprint,
+      FooterTopic.readiness,
+      FooterTopic.dealScreen,
+      FooterTopic.pipeline,
+      FooterTopic.memberStudio,
+      FooterTopic.consulting,
+    ];
+    for (final topic in topics) {
+      await tester.pumpWidget(
+        MaterialApp(
+          key: ValueKey(topic),
+          home: const Scaffold(
+            body: SingleChildScrollView(child: MembershipFooter()),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(Key('footer-link-${topic.slug}')));
+      await tester.pumpAndSettle();
+      expect(
+        find.byType(FooterInformationPage),
+        findsNothing,
+        reason: topic.name,
+      );
+      expect(
+        find.byType(footerDestination(topic).runtimeType),
+        findsOneWidget,
+        reason: topic.name,
+      );
+      expect(tester.takeException(), isNull, reason: topic.name);
+    }
+  });
   test(
-    'page actions use the actual app tools and footer module names round trip',
+    'acquisition and professional destinations route directly to existing tools',
     () {
       expect(
-        footerToolDestination(FooterTopic.blueprint),
+        footerDestination(FooterTopic.blueprint),
         isA<AcquisitionBlueprintPage>(),
       );
       expect(
-        footerToolDestination(FooterTopic.readiness),
+        footerDestination(FooterTopic.readiness),
         isA<BuyerReadinessPage>(),
       );
       expect(
-        (footerToolDestination(FooterTopic.dealScreen) as DealRoomsPage)
+        (footerDestination(FooterTopic.dealScreen) as DealRoomsPage)
             .initialView,
         BuyerDashboardView.dealScreen,
       );
@@ -150,6 +191,11 @@ void main() {
             .initialView,
         MemberDashboardView.opportunities,
       );
+      expect(
+        footerDestination(FooterTopic.memberStudio),
+        isA<MemberDealMarketplacePage>(),
+      );
+      expect(footerDestination(FooterTopic.pipeline), isA<DealRoomsPage>());
       for (final topic in FooterTopic.values) {
         expect(FooterTopic.fromModule('footer-${topic.slug}'), topic);
       }

@@ -83,19 +83,16 @@ class AcquisitionEditorialHeader extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 18),
-                  ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 590),
-                    child: SiteText(
-                      contentKey: 'copy.acquisition_editorial_header.m3',
-                      literal: false,
-                      subtitle,
-                      style: TextStyle(
-                        color: studio
-                            ? const Color(0xFFD7E6E3)
-                            : const Color(0xFF625E58),
-                        fontSize: 15,
-                        height: 1.55,
-                      ),
+                  SiteText(
+                    contentKey: 'copy.acquisition_editorial_header.m3',
+                    literal: false,
+                    subtitle,
+                    style: TextStyle(
+                      color: studio
+                          ? const Color(0xFFD7E6E3)
+                          : const Color(0xFF625E58),
+                      fontSize: 15,
+                      height: 1.55,
                     ),
                   ),
                 ],

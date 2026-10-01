@@ -27,12 +27,7 @@ class MembershipFooter extends StatelessWidget {
       ),
       _FooterColumn(
         title: 'PROFESSIONALS',
-        items: [
-          FooterTopic.memberStudio,
-          FooterTopic.directory,
-          FooterTopic.buyerLeads,
-          FooterTopic.consulting,
-        ],
+        items: [FooterTopic.memberStudio, FooterTopic.consulting],
       ),
       _FooterColumn(
         title: 'AFFINITY',
@@ -167,7 +162,7 @@ class _FooterColumn extends StatelessWidget {
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute<void>(
                 settings: RouteSettings(name: '/footer/${item.slug}'),
-                builder: (_) => FooterInformationPage(topic: item),
+                builder: (_) => footerDestination(item),
               ),
             ),
             style: TextButton.styleFrom(

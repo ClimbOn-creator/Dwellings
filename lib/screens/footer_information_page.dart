@@ -28,6 +28,10 @@ class FooterInformationPage extends StatefulWidget {
   State<FooterInformationPage> createState() => _FooterInformationPageState();
 }
 
+Widget footerDestination(FooterTopic topic) => topic.isInformationPage
+    ? FooterInformationPage(topic: topic)
+    : footerToolDestination(topic);
+
 Widget footerToolDestination(FooterTopic topic) => switch (topic) {
   FooterTopic.blueprint => const AcquisitionBlueprintPage(),
   FooterTopic.readiness => const BuyerReadinessPage(),
@@ -461,6 +465,8 @@ class _FooterInformationPageState extends State<FooterInformationPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (!widget.topic.isInformationPage)
+      return footerToolDestination(widget.topic);
     final wide = MediaQuery.sizeOf(context).width >= 960;
     return Scaffold(
       backgroundColor: _cream,

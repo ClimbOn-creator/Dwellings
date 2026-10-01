@@ -115,7 +115,7 @@ class AffinityApp extends StatelessWidget {
   Widget _initialPage() {
     final module = Uri.base.queryParameters['module'];
     final footerTopic = FooterTopic.fromModule(module);
-    if (footerTopic != null) return FooterInformationPage(topic: footerTopic);
+    if (footerTopic != null) return footerDestination(footerTopic);
     final side = Uri.base.queryParameters['side'] == 'business'
         ? PlatformSide.business
         : PlatformSide.property;
