@@ -11,10 +11,12 @@ class BuyerDealScreen extends StatefulWidget {
   const BuyerDealScreen({
     super.key,
     required this.onBack,
+    this.onContinue,
     required this.onCreateBusinessRoom,
   });
 
   final VoidCallback onBack;
+  final VoidCallback? onContinue;
   final Future<void> Function(BusinessInputs, BusinessResult)
   onCreateBusinessRoom;
 
@@ -263,6 +265,17 @@ class _BuyerDealScreenState extends State<BuyerDealScreen> {
                   ),
                 ],
               ),
+            if (widget.onContinue != null) ...[
+              const SizedBox(height: 20),
+              Align(
+                alignment: Alignment.centerRight,
+                child: FilledButton.icon(
+                  onPressed: widget.onContinue,
+                  icon: const Icon(Icons.arrow_forward),
+                  label: const Text('Next: resources'),
+                ),
+              ),
+            ],
           ],
         );
       },

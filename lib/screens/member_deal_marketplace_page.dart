@@ -25,7 +25,6 @@ import '../widgets/profile_photo.dart';
 import '../widgets/site_copy_text.dart';
 import '../widgets/dashboard_ui.dart';
 import 'auth_page.dart';
-import 'journey_page.dart';
 import 'bulletin_listing_pages.dart';
 import 'deal_rooms_page.dart';
 import 'affinity_review_desk_page.dart';
@@ -495,14 +494,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                   padding: const EdgeInsets.only(bottom: 40),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (_view == MemberDashboardView.home)
-                        const Padding(
-                          padding: EdgeInsets.only(bottom: 16),
-                          child: JourneyActions(role: JourneyRole.member),
-                        ),
-                      _currentView(),
-                    ],
+                    children: [_currentView()],
                   ),
                 ),
               ),
@@ -523,14 +515,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                   padding: const EdgeInsets.fromLTRB(28, 26, 28, 60),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (_view == MemberDashboardView.home)
-                        const Padding(
-                          padding: EdgeInsets.only(bottom: 16),
-                          child: JourneyActions(role: JourneyRole.member),
-                        ),
-                      _currentView(),
-                    ],
+                    children: [_currentView()],
                   ),
                 ),
               ),

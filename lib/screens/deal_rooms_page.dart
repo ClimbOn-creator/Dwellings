@@ -1,4 +1,3 @@
-import 'journey_page.dart';
 import '../widgets/team_member_portrait.dart';
 import 'buyer_resources_page.dart';
 import 'dart:async';
@@ -30,6 +29,8 @@ import 'acquisition_support_page.dart';
 import 'business_acquisition_page.dart';
 import 'member_profile_page.dart';
 import 'auth_page.dart';
+import 'deal_comparison_page.dart';
+import 'member_deal_marketplace_page.dart';
 
 const _ink = Color(0xFF171717);
 const _paper = Color(0xFFF4F1EB);
@@ -347,11 +348,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                                 _dashboardDealScreen(),
                               BuyerDashboardView.transactionPlan =>
                                 _transactionPlanner(),
-                              BuyerDashboardView.resources =>
-                                const SingleChildScrollView(
-                                  padding: EdgeInsets.all(26),
-                                  child: BuyerResourcesPanel(),
-                                ),
+                              BuyerDashboardView.resources => _resourcesPage(),
                               BuyerDashboardView.team => _buyerTeamPage(),
                               _ => _buyerDashboardLive(allRooms),
                             },
@@ -362,11 +359,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                         BuyerDashboardView.dealScreen => _dashboardDealScreen(),
                         BuyerDashboardView.transactionPlan =>
                           _transactionPlanner(),
-                        BuyerDashboardView.resources =>
-                          const SingleChildScrollView(
-                            padding: EdgeInsets.all(26),
-                            child: BuyerResourcesPanel(),
-                          ),
+                        BuyerDashboardView.resources => _resourcesPage(),
                         BuyerDashboardView.team => _buyerTeamPage(),
                         _ => _buyerDashboardLive(allRooms),
                       };
@@ -380,74 +373,90 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
 
   Widget _buyerSidebar() => Container(
     width: 212,
+    height: double.infinity,
     color: Colors.white,
     padding: const EdgeInsets.fromLTRB(13, 24, 13, 16),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Padding(
-          padding: EdgeInsets.fromLTRB(13, 0, 0, 17),
-          child: Text(
-            'WORKSPACE',
-            style: TextStyle(
-              color: DashboardUi.muted,
-              fontSize: 10,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 1.2,
+    child: SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Padding(
+            padding: EdgeInsets.fromLTRB(13, 0, 0, 17),
+            child: Text(
+              'WORKSPACE',
+              style: TextStyle(
+                color: DashboardUi.muted,
+                fontSize: 10,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 1.2,
+              ),
             ),
           ),
-        ),
-        DashboardUi.nav(
-          'Home',
-          Icons.home_outlined,
-          _dashboardView == BuyerDashboardView.home && !_showArchived,
-          () => setState(() {
-            _dashboardView = BuyerDashboardView.home;
-            _showArchived = false;
-          }),
-        ),
-        DashboardUi.nav(
-          'Pipeline',
-          Icons.view_kanban_outlined,
-          _dashboardView == BuyerDashboardView.home && !_showArchived,
-          () => setState(() {
-            _dashboardView = BuyerDashboardView.home;
-            _showArchived = false;
-          }),
-        ),
-        DashboardUi.nav(
-          'Deal screen',
-          Icons.calculate_outlined,
-          _dashboardView == BuyerDashboardView.dealScreen,
-          () => setState(() => _dashboardView = BuyerDashboardView.dealScreen),
-        ),
-        DashboardUi.nav(
-          'Transaction plan',
-          Icons.event_note_outlined,
-          _dashboardView == BuyerDashboardView.transactionPlan,
-          () => setState(() {
-            _dashboardView = BuyerDashboardView.transactionPlan;
-            _plannerBundles ??= _loadPlannerBundles();
-          }),
-        ),
-        DashboardUi.nav(
-          'Resources',
-          Icons.library_books_outlined,
-          _dashboardView == BuyerDashboardView.resources,
-          () => setState(() => _dashboardView = BuyerDashboardView.resources),
-        ),
-        DashboardUi.nav(
-          'My team',
-          Icons.group_outlined,
-          _dashboardView == BuyerDashboardView.team,
-          () => setState(() {
-            _dashboardView = BuyerDashboardView.team;
-            _teamData ??= _loadTeamPageData();
-          }),
-        ),
-        const Spacer(),
-        DashboardUi.nav('Refresh', Icons.refresh_rounded, false, _refresh),
-      ],
+          DashboardUi.nav(
+            'Home',
+            Icons.home_outlined,
+            _dashboardView == BuyerDashboardView.home && !_showArchived,
+            () => setState(() {
+              _dashboardView = BuyerDashboardView.home;
+              _showArchived = false;
+            }),
+          ),
+          DashboardUi.nav(
+            'Pipeline',
+            Icons.view_kanban_outlined,
+            _dashboardView == BuyerDashboardView.home && !_showArchived,
+            () => setState(() {
+              _dashboardView = BuyerDashboardView.home;
+              _showArchived = false;
+            }),
+          ),
+          DashboardUi.nav(
+            'Deal screen',
+            Icons.calculate_outlined,
+            _dashboardView == BuyerDashboardView.dealScreen,
+            () =>
+                setState(() => _dashboardView = BuyerDashboardView.dealScreen),
+          ),
+          DashboardUi.nav(
+            'Resources',
+            Icons.library_books_outlined,
+            _dashboardView == BuyerDashboardView.resources,
+            () => setState(() => _dashboardView = BuyerDashboardView.resources),
+          ),
+          DashboardUi.nav(
+            'Messaging',
+            Icons.chat_bubble_outline,
+            false,
+            () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const MemberDealMarketplacePage(
+                  initialView: MemberDashboardView.dealResponses,
+                ),
+              ),
+            ),
+          ),
+          DashboardUi.nav(
+            'My team',
+            Icons.group_outlined,
+            _dashboardView == BuyerDashboardView.team,
+            () => setState(() {
+              _dashboardView = BuyerDashboardView.team;
+              _teamData ??= _loadTeamPageData();
+            }),
+          ),
+          DashboardUi.nav(
+            'Transaction plan',
+            Icons.event_note_outlined,
+            _dashboardView == BuyerDashboardView.transactionPlan,
+            () => setState(() {
+              _dashboardView = BuyerDashboardView.transactionPlan;
+              _plannerBundles ??= _loadPlannerBundles();
+            }),
+          ),
+          const SizedBox(height: 16),
+          DashboardUi.nav('Refresh', Icons.refresh_rounded, false, _refresh),
+        ],
+      ),
     ),
   );
 
@@ -559,7 +568,6 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                   ],
                 ),
               const SizedBox(height: 16),
-              const JourneyActions(role: JourneyRole.buyer),
               const SizedBox(height: 25),
               Wrap(
                 spacing: 12,
@@ -629,6 +637,39 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                       ],
                     ),
                     const SizedBox(height: 16),
+                    if (!_showArchived)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: Wrap(
+                          spacing: 10,
+                          runSpacing: 8,
+                          children: [
+                            FilledButton.icon(
+                              onPressed: () => Navigator.of(context).push(
+                                MaterialPageRoute<void>(
+                                  builder: (_) =>
+                                      const BusinessSaleBulletinPage(),
+                                ),
+                              ),
+                              icon: const Icon(Icons.search),
+                              label: const Text('Search businesses'),
+                            ),
+                            OutlinedButton.icon(
+                              onPressed: _creating ? null : _manualCreate,
+                              icon: const Icon(Icons.add),
+                              label: const Text('Enter a private deal'),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.of(context).push(
+                                MaterialPageRoute<void>(
+                                  builder: (_) => const DealComparisonPage(),
+                                ),
+                              ),
+                              child: const Text('Compare what fits me'),
+                            ),
+                          ],
+                        ),
+                      ),
                     if (_showArchived) ...[
                       if (shown.isEmpty)
                         const Text(
@@ -2152,7 +2193,29 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
     }
   }
 
+  Widget _resourcesPage() => SingleChildScrollView(
+    padding: const EdgeInsets.all(26),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const BuyerResourcesPanel(),
+        const SizedBox(height: 20),
+        Align(
+          alignment: Alignment.centerRight,
+          child: FilledButton.icon(
+            onPressed: () =>
+                setState(() => _dashboardView = BuyerDashboardView.home),
+            icon: const Icon(Icons.arrow_forward),
+            label: const Text('Continue to buyer dashboard'),
+          ),
+        ),
+      ],
+    ),
+  );
+
   Widget _dashboardDealScreen() => BuyerDealScreen(
+    onContinue: () =>
+        setState(() => _dashboardView = BuyerDashboardView.resources),
     onBack: () => setState(() => _dashboardView = BuyerDashboardView.home),
     onCreateBusinessRoom: _createDashboardRoom,
   );
@@ -4751,14 +4814,14 @@ class _DealRoomPageState extends State<DealRoomPage> {
                 'Evaluation',
               ),
               _railButton(
-                _DealWorkspaceView.plan,
-                Icons.account_tree_outlined,
-                'Plan',
-              ),
-              _railButton(
                 _DealWorkspaceView.team,
                 Icons.groups_2_outlined,
                 'Team',
+              ),
+              _railButton(
+                _DealWorkspaceView.plan,
+                Icons.account_tree_outlined,
+                'Plan',
               ),
               _railButton(
                 _DealWorkspaceView.timeline,
@@ -4921,42 +4984,6 @@ class _DealRoomPageState extends State<DealRoomPage> {
       children: [
         if (_room.isBusiness) _businessSecurityBoundary(),
         if (_room.isBusiness) const SizedBox(height: 18),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            OutlinedButton.icon(
-              onPressed: () =>
-                  setState(() => _workspaceView = _DealWorkspaceView.team),
-              icon: const Icon(Icons.chat_bubble_outline),
-              label: const Text("1. Messaging & my team"),
-            ),
-            OutlinedButton.icon(
-              onPressed: () =>
-                  setState(() => _workspaceView = _DealWorkspaceView.plan),
-              icon: const Icon(Icons.calendar_month),
-              label: const Text("2. Transaction plan & schedule"),
-            ),
-            OutlinedButton.icon(
-              onPressed: () =>
-                  setState(() => _workspaceView = _DealWorkspaceView.timeline),
-              icon: const Icon(Icons.flag_outlined),
-              label: const Text("3. Closing & handover"),
-            ),
-            OutlinedButton.icon(
-              onPressed: () => openJourneyPage(
-                context,
-                const DealRoomsPage(
-                  initialSide: PlatformSide.business,
-                  initialView: BuyerDashboardView.resources,
-                ),
-              ),
-              icon: const Icon(Icons.people_outline),
-              label: const Text("Find additional support"),
-            ),
-          ],
-        ),
-        const SizedBox(height: 18),
         _commandBar(bundle.tasks),
         const SizedBox(height: 18),
         _metrics(),

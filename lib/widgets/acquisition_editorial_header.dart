@@ -14,9 +14,11 @@ class AcquisitionEditorialHeader extends StatelessWidget {
     required this.subtitle,
     required this.accent,
     this.studio = false,
+    this.steps,
   });
 
   final bool studio;
+  final List<String>? steps;
   final int currentStep;
   final ValueChanged<int> onSelected;
   final String kicker;
@@ -27,7 +29,11 @@ class AcquisitionEditorialHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Column(
     children: [
-      AcquisitionStepBar(currentStep: currentStep, onSelected: onSelected),
+      AcquisitionStepBar(
+        currentStep: currentStep,
+        onSelected: onSelected,
+        steps: steps,
+      ),
       const SizedBox(height: 20),
       Container(
         width: double.infinity,

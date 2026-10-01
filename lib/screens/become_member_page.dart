@@ -10,6 +10,7 @@ import '../widgets/app_navigation_menu.dart';
 import '../widgets/canadian_city_field.dart';
 import '../widgets/topo_background.dart';
 import 'auth_page.dart';
+import 'member_deal_marketplace_page.dart';
 
 const _ink = Color(0xFF050510);
 const _paper = Color(0xFFF5F5F7);
@@ -875,6 +876,18 @@ class _BecomeMemberPageState extends State<BecomeMemberPage> {
               ),
             ),
             const SizedBox(height: 30),
+            FilledButton.icon(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const MemberDealMarketplacePage(
+                    initialView: MemberDashboardView.profile,
+                  ),
+                ),
+              ),
+              icon: const Icon(Icons.arrow_forward),
+              label: const Text('Continue: create my member profile'),
+            ),
+            const SizedBox(height: 12),
             FilledButton(
               onPressed: widget.onHome,
               style: FilledButton.styleFrom(

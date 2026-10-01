@@ -6,12 +6,15 @@ class AcquisitionStepBar extends StatelessWidget {
     super.key,
     required this.currentStep,
     required this.onSelected,
+    this.steps,
   });
 
   final int currentStep;
   final ValueChanged<int> onSelected;
 
-  static const _steps = ['Blueprint', 'Readiness', 'Deal screen', 'Pipeline'];
+  final List<String>? steps;
+  List<String> get _steps =>
+      steps ?? const ['Blueprint', 'Readiness', 'Deal screen', 'Pipeline'];
 
   @override
   Widget build(BuildContext context) => Container(

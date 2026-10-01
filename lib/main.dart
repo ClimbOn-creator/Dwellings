@@ -1,4 +1,3 @@
-import 'screens/journey_page.dart';
 import 'screens/assistant_workspace_page.dart';
 import 'screens/transaction_learning_page.dart';
 import 'widgets/site_inline_editor.dart';
@@ -126,9 +125,14 @@ class AffinityApp extends StatelessWidget {
       'transaction-room' => const DealRoomsPage(
         initialSide: PlatformSide.business,
       ),
-      'buyer-learning' => const JourneyChoicePage(role: JourneyRole.buyer),
-      'seller-learning' => const JourneyChoicePage(role: JourneyRole.seller),
-      'member-onboarding' => const JourneyChoicePage(role: JourneyRole.member),
+      'buyer-learning' => const AcquisitionBlueprintPage(),
+      'seller-learning' => const SellerDashboardPage(
+        initialView: SellerDashboardView.settings,
+        learning: true,
+      ),
+      'member-onboarding' => const MemberDealMarketplacePage(
+        initialView: MemberDashboardView.profile,
+      ),
       'buyer-dashboard' => const DealRoomsPage(
         initialSide: PlatformSide.business,
       ),

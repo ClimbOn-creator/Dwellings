@@ -1,4 +1,6 @@
-import 'journey_page.dart';
+import 'page_flow.dart';
+import 'bulletin_listing_pages.dart';
+import 'deal_rooms_page.dart';
 import 'dart:async';
 import 'dart:convert';
 
@@ -93,8 +95,10 @@ class SellerDashboardPage extends StatefulWidget {
   const SellerDashboardPage({
     super.key,
     this.initialView = SellerDashboardView.overview,
+    this.learning = false,
   });
   final SellerDashboardView initialView;
+  final bool learning;
 
   @override
   State<SellerDashboardPage> createState() => _SellerDashboardPageState();
@@ -125,11 +129,13 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
   String _pipelineQuery = '';
   String? _resourceBusyId;
   SellerDashboardView _view = SellerDashboardView.overview;
+  late bool _learning;
 
   @override
   void initState() {
     super.initState();
     _view = widget.initialView;
+    _learning = widget.learning;
     _storageKey =
         'affinity.seller_workspace.v1.${BackendService.user?.id ?? 'guest'}';
     _resourceCity = MarketplaceService.cities.first;
@@ -316,6 +322,7 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
   void _showView(SellerDashboardView view) {
     setState(() {
       _view = view;
+      if (view == SellerDashboardView.overview) _learning = false;
       if (view == SellerDashboardView.resources) {
         _resourceDirectory ??= MarketplaceService.load(
           _resourceCity,
@@ -434,10 +441,10 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
   static const _views = <(SellerDashboardView, String, IconData)>[
     (SellerDashboardView.overview, 'Home', Icons.home_outlined),
     (SellerDashboardView.value, 'Deal screen', Icons.calculate_outlined),
-    (SellerDashboardView.plan, 'Transaction plan', Icons.event_note_outlined),
     (SellerDashboardView.dealPack, 'Deal pack', Icons.folder_copy_outlined),
     (SellerDashboardView.resources, 'Resources', Icons.people_outline_rounded),
     (SellerDashboardView.team, 'My team', Icons.groups_outlined),
+    (SellerDashboardView.plan, 'Transaction plan', Icons.event_note_outlined),
     (SellerDashboardView.settings, 'Transfer profile', Icons.tune_rounded),
   ];
 
@@ -487,6 +494,17 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
             ),
           ),
         ),
+        DashboardUi.nav(
+          'Deal workspaces',
+          Icons.folder_open,
+          false,
+          () => Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) =>
+                  const DealRoomsPage(initialSide: PlatformSide.business),
+            ),
+          ),
+        ),
         DashboardUi.nav('Refresh', Icons.refresh_rounded, false, () {
           setState(() {
             if (BackendService.user != null) {
@@ -522,12 +540,6 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
                     _viewHeader(),
                     const SizedBox(height: 24),
                   ],
-                  if (_view == SellerDashboardView.overview ||
-                      _view == SellerDashboardView.dealPack)
-                    const Padding(
-                      padding: EdgeInsets.only(bottom: 20),
-                      child: JourneyActions(role: JourneyRole.seller),
-                    ),
                   switch (_view) {
                     SellerDashboardView.overview => _overview(),
                     SellerDashboardView.value => _valuation(),
@@ -538,6 +550,8 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
                     SellerDashboardView.settings => _setupCard(),
                   },
                   const SizedBox(height: 24),
+                  _nextPageAction(),
+                  const SizedBox(height: 16),
                   const Text(
                     'Draft progress is saved on this device for this account. Keep confidential records in an adviser-approved secure room. Confirm valuation, tax and legal decisions with qualified advisers.',
                     style: TextStyle(
@@ -554,6 +568,70 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
       ),
     ],
   );
+
+  Widget _nextPageAction() {
+    if (_view == SellerDashboardView.overview)
+      return Align(
+        alignment: Alignment.centerLeft,
+        child: TextButton(
+          onPressed: () => startSellerLearning(context),
+          child: const Text(
+            'New to selling or succession? Start with your goals',
+          ),
+        ),
+      );
+    if (_view == SellerDashboardView.dealPack)
+      return Align(
+        alignment: Alignment.centerRight,
+        child: FilledButton.icon(
+          icon: const Icon(Icons.add_business_outlined),
+          label: const Text('Next: create business listing'),
+          onPressed: () async {
+            if (BackendService.user == null) {
+              await Navigator.of(
+                context,
+              ).push(MaterialPageRoute<void>(builder: (_) => const AuthPage()));
+              if (!mounted || BackendService.user == null) return;
+            }
+            final id = await Navigator.of(context).push<String>(
+              MaterialPageRoute<String>(
+                builder: (_) => const BulletinListingEditor(),
+              ),
+            );
+            if (id != null && mounted)
+              await Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => BusinessListingDetailPage(bulletinId: id),
+                ),
+              );
+          },
+        ),
+      );
+    final next = switch (_view) {
+      SellerDashboardView.settings => SellerDashboardView.value,
+      SellerDashboardView.value =>
+        _learning
+            ? SellerDashboardView.resources
+            : SellerDashboardView.dealPack,
+      SellerDashboardView.resources => SellerDashboardView.overview,
+      SellerDashboardView.team => SellerDashboardView.plan,
+      _ => SellerDashboardView.dealPack,
+    };
+    return Align(
+      alignment: Alignment.centerRight,
+      child: FilledButton.icon(
+        onPressed: () => _showView(next),
+        icon: const Icon(Icons.arrow_forward),
+        label: Text(switch (next) {
+          SellerDashboardView.value => 'Next: pricing calculators',
+          SellerDashboardView.resources => 'Next: find advisers',
+          SellerDashboardView.overview => 'Continue to seller dashboard',
+          SellerDashboardView.plan => 'Next: transaction plan',
+          _ => 'Next: prepare deal pack',
+        }),
+      ),
+    );
+  }
 
   Widget _viewHeader() {
     final (title, subtitle) = switch (_view) {

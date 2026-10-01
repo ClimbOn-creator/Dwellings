@@ -1,4 +1,5 @@
-import 'journey_page.dart';
+import 'page_flow.dart';
+import 'seller_dashboard_page.dart';
 import '../widgets/flowing_color_banner.dart';
 import '../widgets/acquisition_step_bar.dart';
 import '../widgets/personal_motion.dart';
@@ -186,18 +187,12 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
               _button(
                 'copy.acquisition_support_page.1',
                 'START MY PATH',
-                () => _open(const JourneyChoicePage(role: JourneyRole.buyer)),
+                () => startBuyerLearning(context),
               ),
             const SizedBox(width: 8),
             const AppNavigationMenu(side: PlatformSide.business, dark: false),
             const SizedBox(width: 12),
           ],
-        ),
-        const SliverToBoxAdapter(
-          child: Padding(
-            padding: EdgeInsets.all(20),
-            child: JourneyEntrances(),
-          ),
         ),
         SliverToBoxAdapter(
           child: AffinityScrollScene(
@@ -237,10 +232,12 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
             builder: (context, progress, height) => AffinityCinemaHero(
               progress: progress,
               height: height,
-              onBuyer: () =>
-                  _open(const JourneyChoicePage(role: JourneyRole.buyer)),
-              onMember: () =>
-                  _open(const JourneyChoicePage(role: JourneyRole.member)),
+              onBuyer: () => _open(
+                const DealRoomsPage(initialSide: PlatformSide.business),
+              ),
+              onMember: () => startMemberSetup(context),
+              onLearn: () => startBuyerLearning(context),
+              onSeller: () => _open(const SellerDashboardPage()),
             ),
           ),
         ),
@@ -325,16 +322,31 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
               color: const Color(0xFFD2DFD9),
             ),
             const SizedBox(height: 34),
+            TextButton(
+              onPressed: () => startBuyerLearning(context),
+              child: const Text(
+                'I want to learn',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+            TextButton(
+              onPressed: () => _open(const SellerDashboardPage()),
+              child: const Text(
+                'Succession or transfer',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
             _button(
               'copy.acquisition_support_page.2',
               'I WANT TO BUY A BUSINESS',
-              () => _open(const JourneyChoicePage(role: JourneyRole.buyer)),
+              () => _open(
+                const DealRoomsPage(initialSide: PlatformSide.business),
+              ),
               light: true,
             ),
             const SizedBox(height: 12),
             TextButton.icon(
-              onPressed: () =>
-                  _open(const JourneyChoicePage(role: JourneyRole.member)),
+              onPressed: () => startMemberSetup(context),
               style: TextButton.styleFrom(
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(
@@ -663,9 +675,8 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
         ),
         const SizedBox(height: 20),
         TextButton.icon(
-          onPressed: () => member
-              ? _open(const JourneyChoicePage(role: JourneyRole.member))
-              : _open(const JourneyChoicePage(role: JourneyRole.buyer)),
+          onPressed: () =>
+              member ? startMemberSetup(context) : startBuyerLearning(context),
           iconAlignment: IconAlignment.end,
           icon: const Icon(Icons.arrow_outward),
           style: TextButton.styleFrom(
@@ -759,12 +770,12 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
             _button(
               'home.closing.buyer',
               'Build my Blueprint',
-              () => _open(const JourneyChoicePage(role: JourneyRole.buyer)),
+              () => startBuyerLearning(context),
             ),
             _button(
               'home.closing.member',
               'Explore membership',
-              () => _open(const JourneyChoicePage(role: JourneyRole.member)),
+              () => startMemberSetup(context),
             ),
           ],
         ),
@@ -898,7 +909,7 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
               runSpacing: 12,
               children: [
                 _HomePathStep('01', 'Blueprint', 'Define the target.', () {
-                  _open(const JourneyChoicePage(role: JourneyRole.buyer));
+                  startBuyerLearning(context);
                 }),
                 _HomePathStep('02', 'Readiness', 'Prepare the buyer.', () {
                   _open(const BuyerReadinessPage());
@@ -1134,6 +1145,14 @@ class _AcquisitionBlueprintPageState extends State<AcquisitionBlueprintPage> {
           ),
         ),
       );
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => const DealRoomsPage(
+            initialSide: PlatformSide.business,
+            initialView: BuyerDashboardView.dealScreen,
+          ),
+        ),
+      );
     }
   }
 
@@ -1141,14 +1160,18 @@ class _AcquisitionBlueprintPageState extends State<AcquisitionBlueprintPage> {
     if (step == 0) return;
     await _updateDraft();
     if (!mounted) return;
-    final page = switch (step) {
-      1 => const BuyerReadinessPage(),
-      2 => const BusinessAcquisitionPage(),
-      _ => const DealRoomsPage(initialSide: PlatformSide.business),
-    };
-    Navigator.of(
-      context,
-    ).pushReplacement(MaterialPageRoute<void>(builder: (_) => page));
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => DealRoomsPage(
+          initialSide: PlatformSide.business,
+          initialView: switch (step) {
+            1 => BuyerDashboardView.dealScreen,
+            2 => BuyerDashboardView.resources,
+            _ => BuyerDashboardView.home,
+          },
+        ),
+      ),
+    );
   }
 
   @override
@@ -2251,6 +2274,14 @@ class _ModuleScaffold extends StatelessWidget {
                               borderRadius: BorderRadius.circular(28),
                               child: AcquisitionEditorialHeader(
                                 studio: motionScroll != null,
+                                steps: currentStep == 0
+                                    ? const [
+                                        "Questionnaire",
+                                        "Deal screen",
+                                        "Resources",
+                                        "Buyer dashboard",
+                                      ]
+                                    : null,
                                 currentStep: currentStep,
                                 onSelected: onStepSelected,
                                 kicker: kicker,
@@ -2288,6 +2319,14 @@ class _ModuleScaffold extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
           child: AcquisitionStepBar(
+            steps: currentStep == 0
+                ? const [
+                    "Questionnaire",
+                    "Deal screen",
+                    "Resources",
+                    "Buyer dashboard",
+                  ]
+                : null,
             currentStep: currentStep,
             onSelected: onStepSelected,
           ),

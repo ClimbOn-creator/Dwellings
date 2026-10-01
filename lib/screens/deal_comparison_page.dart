@@ -1,3 +1,4 @@
+import 'member_deal_marketplace_page.dart';
 import '../widgets/site_text.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -8,8 +9,6 @@ import '../widgets/app_navigation_menu.dart';
 import '../widgets/home_brand_button.dart';
 import 'acquisition_support_page.dart';
 import 'auth_page.dart';
-import 'deal_rooms_page.dart';
-import '../models/platform_side.dart';
 
 const _green = Color(0xFF086B4C);
 const _ink = Color(0xFF203435);
@@ -578,9 +577,7 @@ class _DealComparisonPageState extends State<BusinessComparisonQuiz>
                     if (!mounted) return;
                     Navigator.of(context).push(
                       MaterialPageRoute<void>(
-                        builder: (_) => const DealRoomsPage(
-                          initialSide: PlatformSide.business,
-                        ),
+                        builder: (_) => const BusinessSaleBulletinPage(),
                       ),
                     );
                   },
@@ -591,7 +588,7 @@ class _DealComparisonPageState extends State<BusinessComparisonQuiz>
               _error != null
                   ? 'Retry saving'
                   : _savedToAccount
-                  ? 'Open buyer dashboard'
+                  ? 'Search businesses'
                   : 'Sign in & save to my account',
             ),
           ),

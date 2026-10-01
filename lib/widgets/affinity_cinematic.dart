@@ -72,9 +72,12 @@ class AffinityCinemaHero extends StatefulWidget {
     required this.height,
     required this.onBuyer,
     required this.onMember,
+    this.onLearn,
+    this.onSeller,
   });
   final double progress, height;
   final VoidCallback onBuyer, onMember;
+  final VoidCallback? onLearn, onSeller;
   @override
   State<AffinityCinemaHero> createState() => _AffinityCinemaHeroState();
 }
@@ -239,6 +242,21 @@ class _AffinityCinemaHeroState extends State<AffinityCinemaHero>
                                       widget.onMember,
                                       outline: true,
                                     ),
+                                    if (widget.onSeller != null)
+                                      _CinemaButton(
+                                        'home.seller.action',
+                                        'SUCCESSION OR TRANSFER',
+                                        widget.onSeller!,
+                                        outline: true,
+                                      ),
+                                    if (widget.onLearn != null)
+                                      TextButton(
+                                        onPressed: widget.onLearn,
+                                        child: const Text(
+                                          'I want to learn',
+                                          style: TextStyle(color: Colors.white),
+                                        ),
+                                      ),
                                   ],
                                 ),
                               ],
