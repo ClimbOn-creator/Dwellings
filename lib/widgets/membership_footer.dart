@@ -1,6 +1,8 @@
 import 'site_text.dart';
 import 'package:flutter/material.dart';
 
+import '../models/footer_page_content.dart';
+import '../screens/footer_information_page.dart';
 import 'auth_button.dart';
 import 'brand_logo.dart';
 
@@ -12,24 +14,34 @@ class MembershipFooter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final viewport = MediaQuery.sizeOf(context).width;
-    final compact = viewport < 760;
+    final compact = viewport < 1000;
     final columns = const [
       _FooterColumn(
         title: 'ACQUISITION PATH',
-        items: ['Blueprint', 'Buyer readiness', 'Deal screen', 'Pipeline'],
+        items: [
+          FooterTopic.blueprint,
+          FooterTopic.readiness,
+          FooterTopic.dealScreen,
+          FooterTopic.pipeline,
+        ],
       ),
       _FooterColumn(
         title: 'PROFESSIONALS',
         items: [
-          'Member Studio',
-          'Expert directory',
-          'Buyer leads',
-          'Consulting',
+          FooterTopic.memberStudio,
+          FooterTopic.directory,
+          FooterTopic.buyerLeads,
+          FooterTopic.consulting,
         ],
       ),
       _FooterColumn(
         title: 'AFFINITY',
-        items: ['Our approach', 'Privacy', 'Terms', 'Contact'],
+        items: [
+          FooterTopic.approach,
+          FooterTopic.privacy,
+          FooterTopic.terms,
+          FooterTopic.contact,
+        ],
       ),
     ];
     return UnconstrainedBox(
@@ -129,33 +141,53 @@ class _FooterIdentity extends StatelessWidget {
 class _FooterColumn extends StatelessWidget {
   const _FooterColumn({required this.title, required this.items});
   final String title;
-  final List<String> items;
+  final List<FooterTopic> items;
 
   @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      SiteText(
-        contentKey: 'copy.membership_footer.m3',
-        literal: false,
-        title,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 11,
-          fontWeight: FontWeight.w800,
-          letterSpacing: 1,
-        ),
-      ),
-      const SizedBox(height: 20),
-      for (final item in items) ...[
+  Widget build(BuildContext context) => Material(
+    type: MaterialType.transparency,
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
         SiteText(
-          contentKey: 'copy.membership_footer.m4',
+          contentKey: 'copy.membership_footer.m3',
           literal: false,
-          item,
-          style: const TextStyle(color: Color(0xFFB6C0BA)),
+          title,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 11,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 1,
+          ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 20),
+        for (final item in items) ...[
+          TextButton(
+            key: Key('footer-link-${item.slug}'),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                settings: RouteSettings(name: '/footer/${item.slug}'),
+                builder: (_) => FooterInformationPage(topic: item),
+              ),
+            ),
+            style: TextButton.styleFrom(
+              foregroundColor: const Color(0xFFDEE7E0),
+              alignment: Alignment.centerLeft,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              minimumSize: const Size(0, 44),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+            child: SiteText(
+              contentKey: 'copy.membership_footer.m4',
+              literal: false,
+              item.content.label,
+              style: const TextStyle(color: Color(0xFFB6C0BA)),
+            ),
+          ),
+        ],
       ],
-    ],
+    ),
   );
 }

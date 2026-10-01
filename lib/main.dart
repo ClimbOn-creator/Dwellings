@@ -1,3 +1,5 @@
+import 'models/footer_page_content.dart';
+import 'screens/footer_information_page.dart';
 import 'screens/assistant_workspace_page.dart';
 import 'screens/transaction_learning_page.dart';
 import 'widgets/site_inline_editor.dart';
@@ -112,6 +114,8 @@ class AffinityApp extends StatelessWidget {
 
   Widget _initialPage() {
     final module = Uri.base.queryParameters['module'];
+    final footerTopic = FooterTopic.fromModule(module);
+    if (footerTopic != null) return FooterInformationPage(topic: footerTopic);
     final side = Uri.base.queryParameters['side'] == 'business'
         ? PlatformSide.business
         : PlatformSide.property;
