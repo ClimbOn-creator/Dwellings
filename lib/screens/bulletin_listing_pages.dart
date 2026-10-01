@@ -13,6 +13,8 @@ import '../services/business_sale_bulletin_service.dart';
 import '../widgets/app_navigation_menu.dart';
 import '../widgets/home_brand_button.dart';
 import 'auth_page.dart';
+import 'deal_rooms_page.dart';
+import '../models/platform_side.dart';
 
 const _blue = Color(0xFF154B47);
 const _violet = Color(0xFF245663);
@@ -572,6 +574,39 @@ class _BusinessListingDetailPageState extends State<BusinessListingDetailPage> {
                   constraints: const BoxConstraints(maxWidth: 1160),
                   child: Column(
                     children: [
+                      if (!b.isExample)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: FilledButton.icon(
+                            icon: const Icon(Icons.add_chart),
+                            label: const Text(
+                              "Interested? Add to my buyer dashboard",
+                            ),
+                            onPressed: () => Navigator.of(context).push(
+                              MaterialPageRoute<void>(
+                                builder: (_) => DealRoomsPage(
+                                  initialSide: PlatformSide.business,
+                                  startIntake: true,
+                                  initialIntake: DealIntakeDetails(
+                                    title: b.title,
+                                    kind: "business",
+                                    location: b.region,
+                                    purchasePrice: 0,
+                                    goals:
+                                        "Review this business and contact the seller",
+                                    targetCloseDate: null,
+                                    profileSnapshot: {
+                                      "deal_details": b.summary,
+                                      "source_bulletin_id": b.id,
+                                      "source_url": b.sourceUrl,
+                                      "asking_price_band": b.askingPriceBand,
+                                    },
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
                       BulletinListingBody(
                         bulletin: b,
                         onChanged: () => setState(_refresh),

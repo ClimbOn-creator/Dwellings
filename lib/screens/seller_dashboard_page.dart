@@ -1,3 +1,4 @@
+import 'journey_page.dart';
 import 'dart:async';
 import 'dart:convert';
 
@@ -19,7 +20,15 @@ import 'local_network_page.dart';
 import 'member_deal_marketplace_page.dart';
 import 'member_profile_page.dart';
 
-enum _SellerView { overview, value, plan, dealPack, resources, team, settings }
+enum SellerDashboardView {
+  overview,
+  value,
+  plan,
+  dealPack,
+  resources,
+  team,
+  settings,
+}
 
 class _SellerRole {
   const _SellerRole(this.id, this.title, this.purpose, this.firstMove);
@@ -81,7 +90,11 @@ const _sellerRoles = <_SellerRole>[
 ];
 
 class SellerDashboardPage extends StatefulWidget {
-  const SellerDashboardPage({super.key});
+  const SellerDashboardPage({
+    super.key,
+    this.initialView = SellerDashboardView.overview,
+  });
+  final SellerDashboardView initialView;
 
   @override
   State<SellerDashboardPage> createState() => _SellerDashboardPageState();
@@ -111,14 +124,20 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
   String _resourceQuery = '';
   String _pipelineQuery = '';
   String? _resourceBusyId;
-  _SellerView _view = _SellerView.overview;
+  SellerDashboardView _view = SellerDashboardView.overview;
 
   @override
   void initState() {
     super.initState();
+    _view = widget.initialView;
     _storageKey =
         'affinity.seller_workspace.v1.${BackendService.user?.id ?? 'guest'}';
     _resourceCity = MarketplaceService.cities.first;
+    if (_view == SellerDashboardView.resources)
+      _resourceDirectory = MarketplaceService.load(
+        _resourceCity,
+        side: PlatformSide.business,
+      );
     if (BackendService.user != null) _linkedTeam = AccountService.loadTeam();
     _authSubscription = BackendService.authChanges?.listen((_) {
       final nextKey =
@@ -145,7 +164,7 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
             ? AccountService.loadTeam()
             : null;
         _resourceBusyId = null;
-        _view = _SellerView.overview;
+        _view = SellerDashboardView.overview;
       });
       _load();
     });
@@ -294,10 +313,10 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
     if (selected != null) _change(() => _targetDate = selected);
   }
 
-  void _showView(_SellerView view) {
+  void _showView(SellerDashboardView view) {
     setState(() {
       _view = view;
-      if (view == _SellerView.resources) {
+      if (view == SellerDashboardView.resources) {
         _resourceDirectory ??= MarketplaceService.load(
           _resourceCity,
           side: PlatformSide.business,
@@ -412,14 +431,14 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
     ),
   );
 
-  static const _views = <(_SellerView, String, IconData)>[
-    (_SellerView.overview, 'Home', Icons.home_outlined),
-    (_SellerView.value, 'Deal screen', Icons.calculate_outlined),
-    (_SellerView.plan, 'Transaction plan', Icons.event_note_outlined),
-    (_SellerView.dealPack, 'Deal pack', Icons.folder_copy_outlined),
-    (_SellerView.resources, 'Resources', Icons.people_outline_rounded),
-    (_SellerView.team, 'My team', Icons.groups_outlined),
-    (_SellerView.settings, 'Transfer profile', Icons.tune_rounded),
+  static const _views = <(SellerDashboardView, String, IconData)>[
+    (SellerDashboardView.overview, 'Home', Icons.home_outlined),
+    (SellerDashboardView.value, 'Deal screen', Icons.calculate_outlined),
+    (SellerDashboardView.plan, 'Transaction plan', Icons.event_note_outlined),
+    (SellerDashboardView.dealPack, 'Deal pack', Icons.folder_copy_outlined),
+    (SellerDashboardView.resources, 'Resources', Icons.people_outline_rounded),
+    (SellerDashboardView.team, 'My team', Icons.groups_outlined),
+    (SellerDashboardView.settings, 'Transfer profile', Icons.tune_rounded),
   ];
 
   Widget _sidebar() => Container(
@@ -456,12 +475,12 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
                       () => _showView(view),
                     ),
                   ),
-                  if (view == _SellerView.overview)
+                  if (view == SellerDashboardView.overview)
                     DashboardUi.nav(
                       'Pipeline',
                       Icons.view_kanban_outlined,
-                      _view == _SellerView.overview,
-                      () => _showView(_SellerView.overview),
+                      _view == SellerDashboardView.overview,
+                      () => _showView(SellerDashboardView.overview),
                     ),
                 ],
               ],
@@ -492,25 +511,31 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
           child: Center(
             child: ConstrainedBox(
               constraints: BoxConstraints(
-                maxWidth: _view == _SellerView.overview
+                maxWidth: _view == SellerDashboardView.overview
                     ? double.infinity
                     : 1220,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (_view != _SellerView.overview) ...[
+                  if (_view != SellerDashboardView.overview) ...[
                     _viewHeader(),
                     const SizedBox(height: 24),
                   ],
+                  if (_view == SellerDashboardView.overview ||
+                      _view == SellerDashboardView.dealPack)
+                    const Padding(
+                      padding: EdgeInsets.only(bottom: 20),
+                      child: JourneyActions(role: JourneyRole.seller),
+                    ),
                   switch (_view) {
-                    _SellerView.overview => _overview(),
-                    _SellerView.value => _valuation(),
-                    _SellerView.plan => _plan(),
-                    _SellerView.dealPack => _dealPack(),
-                    _SellerView.resources => _resources(),
-                    _SellerView.team => _team(),
-                    _SellerView.settings => _setupCard(),
+                    SellerDashboardView.overview => _overview(),
+                    SellerDashboardView.value => _valuation(),
+                    SellerDashboardView.plan => _plan(),
+                    SellerDashboardView.dealPack => _dealPack(),
+                    SellerDashboardView.resources => _resources(),
+                    SellerDashboardView.team => _team(),
+                    SellerDashboardView.settings => _setupCard(),
                   },
                   const SizedBox(height: 24),
                   const Text(
@@ -532,33 +557,33 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
 
   Widget _viewHeader() {
     final (title, subtitle) = switch (_view) {
-      _SellerView.overview => (
+      SellerDashboardView.overview => (
         _businessController.text.trim().isEmpty
             ? 'Your business, next chapter.'
             : '${_businessController.text.trim()}, next chapter.',
         'Keep your transfer moving, one clear decision at a time.',
       ),
-      _SellerView.value => (
+      SellerDashboardView.value => (
         'Seller deal screen',
         'Explore value, assets and closing cash with your own figures.',
       ),
-      _SellerView.plan => (
+      SellerDashboardView.plan => (
         'Transaction plan',
         'A path-specific plan with owners, milestones and suggested dates.',
       ),
-      _SellerView.dealPack => (
+      SellerDashboardView.dealPack => (
         'Deal pack',
         'Know what to prepare before your advisers open a secure room.',
       ),
-      _SellerView.resources => (
+      SellerDashboardView.resources => (
         'Find your transfer team.',
         'Meet the professionals who can help you prepare, negotiate and hand over.',
       ),
-      _SellerView.team => (
+      SellerDashboardView.team => (
         'My team',
         'Keep the right people close and give each decision a lead.',
       ),
-      _SellerView.settings => (
+      SellerDashboardView.settings => (
         'Transfer profile',
         'A few choices tailor your plan and planning dates.',
       ),
@@ -903,7 +928,8 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
                         ),
                       ),
                       TextButton(
-                        onPressed: () => _showView(_SellerView.settings),
+                        onPressed: () =>
+                            _showView(SellerDashboardView.settings),
                         child: Text(
                           active ? 'Edit transfer' : 'Set up transfer',
                         ),
@@ -976,7 +1002,8 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
                                   color: Colors.white,
                                   borderRadius: BorderRadius.circular(8),
                                   child: InkWell(
-                                    onTap: () => _showView(_SellerView.plan),
+                                    onTap: () =>
+                                        _showView(SellerDashboardView.plan),
                                     child: Padding(
                                       padding: const EdgeInsets.all(12),
                                       child: Column(
@@ -1022,7 +1049,7 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
             ),
             const SizedBox(height: 16),
             OutlinedButton.icon(
-              onPressed: () => _showView(_SellerView.resources),
+              onPressed: () => _showView(SellerDashboardView.resources),
               icon: const Icon(Icons.library_books_outlined),
               label: const Text('Resources — find your transfer team'),
             ),
@@ -1039,7 +1066,7 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
                     'Deal screen',
                     'Explore business value, assets and cash at closing.',
                     Icons.calculate_outlined,
-                    _SellerView.value,
+                    SellerDashboardView.value,
                   ),
                 ),
                 SizedBox(
@@ -1048,7 +1075,7 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
                     'Transaction plan',
                     'Schedule and complete your transfer checklist. 📅',
                     Icons.event_note_outlined,
-                    _SellerView.plan,
+                    SellerDashboardView.plan,
                   ),
                 ),
               ],
@@ -1072,7 +1099,7 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
               ),
             ),
             TextButton(
-              onPressed: () => _showView(_SellerView.team),
+              onPressed: () => _showView(SellerDashboardView.team),
               child: const Text('Manage'),
             ),
           ],
@@ -1118,7 +1145,7 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
     String title,
     String detail,
     IconData icon,
-    _SellerView view,
+    SellerDashboardView view,
   ) => DashboardUi.panel(
     child: InkWell(
       onTap: () => _showView(view),

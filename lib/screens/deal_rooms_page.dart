@@ -1,3 +1,4 @@
+import 'journey_page.dart';
 import '../widgets/team_member_portrait.dart';
 import 'buyer_resources_page.dart';
 import 'dart:async';
@@ -37,19 +38,23 @@ const _lilac = Color(0xFF64645F);
 const _surface = Color(0xFFFCFBF8);
 const _line = Color(0xFFD6D1C9);
 
-enum _BuyerDashboardView { home, dealScreen, transactionPlan, team, resources }
+enum BuyerDashboardView { home, dealScreen, transactionPlan, team, resources }
 
 class DealRoomsPage extends StatefulWidget {
   const DealRoomsPage({
     super.key,
     this.initialSide = PlatformSide.property,
     this.startIntake = false,
+    this.initialIntake,
+    this.initialView = BuyerDashboardView.home,
     this.loadTransactionBundles,
     this.loadTeamProviders,
   });
 
   final PlatformSide initialSide;
   final bool startIntake;
+  final DealIntakeDetails? initialIntake;
+  final BuyerDashboardView initialView;
   final Future<List<DealRoomBundle>> Function()? loadTransactionBundles;
   final Future<(List<MarketplaceProvider>, Set<String>)> Function()?
   loadTeamProviders;
@@ -66,7 +71,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
   bool _creating = false;
   bool _showAll = true;
   bool _showArchived = false;
-  _BuyerDashboardView _dashboardView = _BuyerDashboardView.home;
+  BuyerDashboardView _dashboardView = BuyerDashboardView.home;
   String _dashboardSearch = '';
   String? _plannerRoomId;
   MarketplaceCity _teamCity = MarketplaceService.cities.first;
@@ -82,6 +87,8 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
   void initState() {
     super.initState();
     _side = widget.initialSide;
+    _pendingIntake = widget.initialIntake;
+    _dashboardView = widget.initialView;
     _rooms = DealRoomService.loadRooms();
     _buyerBroadcast = _loadBuyerBroadcast();
     _greetingTimer = Timer.periodic(const Duration(minutes: 1), (_) {
@@ -281,11 +288,11 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                   ],
                 ),
           actions: [
-            if (_dashboardView != _BuyerDashboardView.home)
+            if (_dashboardView != BuyerDashboardView.home)
               IconButton(
                 tooltip: 'Back to dashboard',
                 onPressed: () =>
-                    setState(() => _dashboardView = _BuyerDashboardView.home),
+                    setState(() => _dashboardView = BuyerDashboardView.home),
                 icon: const Icon(Icons.arrow_back_rounded),
               ),
             const SizedBox(width: 8),
@@ -336,32 +343,31 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                           ),
                           Expanded(
                             child: switch (_dashboardView) {
-                              _BuyerDashboardView.dealScreen =>
+                              BuyerDashboardView.dealScreen =>
                                 _dashboardDealScreen(),
-                              _BuyerDashboardView.transactionPlan =>
+                              BuyerDashboardView.transactionPlan =>
                                 _transactionPlanner(),
-                              _BuyerDashboardView.resources =>
+                              BuyerDashboardView.resources =>
                                 const SingleChildScrollView(
                                   padding: EdgeInsets.all(26),
                                   child: BuyerResourcesPanel(),
                                 ),
-                              _BuyerDashboardView.team => _buyerTeamPage(),
+                              BuyerDashboardView.team => _buyerTeamPage(),
                               _ => _buyerDashboardLive(allRooms),
                             },
                           ),
                         ],
                       )
                     : switch (_dashboardView) {
-                        _BuyerDashboardView.dealScreen =>
-                          _dashboardDealScreen(),
-                        _BuyerDashboardView.transactionPlan =>
+                        BuyerDashboardView.dealScreen => _dashboardDealScreen(),
+                        BuyerDashboardView.transactionPlan =>
                           _transactionPlanner(),
-                        _BuyerDashboardView.resources =>
+                        BuyerDashboardView.resources =>
                           const SingleChildScrollView(
                             padding: EdgeInsets.all(26),
                             child: BuyerResourcesPanel(),
                           ),
-                        _BuyerDashboardView.team => _buyerTeamPage(),
+                        BuyerDashboardView.team => _buyerTeamPage(),
                         _ => _buyerDashboardLive(allRooms),
                       };
               },
@@ -394,48 +400,48 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
         DashboardUi.nav(
           'Home',
           Icons.home_outlined,
-          _dashboardView == _BuyerDashboardView.home && !_showArchived,
+          _dashboardView == BuyerDashboardView.home && !_showArchived,
           () => setState(() {
-            _dashboardView = _BuyerDashboardView.home;
+            _dashboardView = BuyerDashboardView.home;
             _showArchived = false;
           }),
         ),
         DashboardUi.nav(
           'Pipeline',
           Icons.view_kanban_outlined,
-          _dashboardView == _BuyerDashboardView.home && !_showArchived,
+          _dashboardView == BuyerDashboardView.home && !_showArchived,
           () => setState(() {
-            _dashboardView = _BuyerDashboardView.home;
+            _dashboardView = BuyerDashboardView.home;
             _showArchived = false;
           }),
         ),
         DashboardUi.nav(
           'Deal screen',
           Icons.calculate_outlined,
-          _dashboardView == _BuyerDashboardView.dealScreen,
-          () => setState(() => _dashboardView = _BuyerDashboardView.dealScreen),
+          _dashboardView == BuyerDashboardView.dealScreen,
+          () => setState(() => _dashboardView = BuyerDashboardView.dealScreen),
         ),
         DashboardUi.nav(
           'Transaction plan',
           Icons.event_note_outlined,
-          _dashboardView == _BuyerDashboardView.transactionPlan,
+          _dashboardView == BuyerDashboardView.transactionPlan,
           () => setState(() {
-            _dashboardView = _BuyerDashboardView.transactionPlan;
+            _dashboardView = BuyerDashboardView.transactionPlan;
             _plannerBundles ??= _loadPlannerBundles();
           }),
         ),
         DashboardUi.nav(
           'Resources',
           Icons.library_books_outlined,
-          _dashboardView == _BuyerDashboardView.resources,
-          () => setState(() => _dashboardView = _BuyerDashboardView.resources),
+          _dashboardView == BuyerDashboardView.resources,
+          () => setState(() => _dashboardView = BuyerDashboardView.resources),
         ),
         DashboardUi.nav(
           'My team',
           Icons.group_outlined,
-          _dashboardView == _BuyerDashboardView.team,
+          _dashboardView == BuyerDashboardView.team,
           () => setState(() {
-            _dashboardView = _BuyerDashboardView.team;
+            _dashboardView = BuyerDashboardView.team;
             _teamData ??= _loadTeamPageData();
           }),
         ),
@@ -552,6 +558,8 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                     SizedBox(width: 255, child: _buyerSearch()),
                   ],
                 ),
+              const SizedBox(height: 16),
+              const JourneyActions(role: JourneyRole.buyer),
               const SizedBox(height: 25),
               Wrap(
                 spacing: 12,
@@ -717,7 +725,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                 alignment: Alignment.centerLeft,
                 child: OutlinedButton.icon(
                   onPressed: () => setState(
-                    () => _dashboardView = _BuyerDashboardView.resources,
+                    () => _dashboardView = BuyerDashboardView.resources,
                   ),
                   icon: const Icon(Icons.library_books_outlined),
                   label: const Text('Resources — grants & community support'),
@@ -741,7 +749,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                       'Value a business, assets, or commercial property.',
                       Icons.calculate_outlined,
                       () => setState(
-                        () => _dashboardView = _BuyerDashboardView.dealScreen,
+                        () => _dashboardView = BuyerDashboardView.dealScreen,
                       ),
                     ),
                   ),
@@ -752,7 +760,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                       'Schedule and complete each deal checklist. 📅',
                       Icons.event_note_outlined,
                       () => setState(() {
-                        _dashboardView = _BuyerDashboardView.transactionPlan;
+                        _dashboardView = BuyerDashboardView.transactionPlan;
                         _plannerBundles ??= _loadPlannerBundles();
                       }),
                     ),
@@ -785,7 +793,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
               ),
               TextButton(
                 onPressed: () => setState(() {
-                  _dashboardView = _BuyerDashboardView.team;
+                  _dashboardView = BuyerDashboardView.team;
                   _teamData ??= _loadTeamPageData();
                 }),
                 child: const Text('Manage'),
@@ -1352,7 +1360,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
       });
       return;
     }
-    setState(() => _dashboardView = _BuyerDashboardView.dealScreen);
+    setState(() => _dashboardView = BuyerDashboardView.dealScreen);
   }
 
   Widget _transactionPreview() => SingleChildScrollView(
@@ -1738,7 +1746,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
               const SizedBox(height: 11),
               OutlinedButton.icon(
                 onPressed: () =>
-                    setState(() => _dashboardView = _BuyerDashboardView.team),
+                    setState(() => _dashboardView = BuyerDashboardView.team),
                 icon: const Icon(Icons.person_add_alt_1_outlined, size: 16),
                 label: const Text('Go to My Team'),
               ),
@@ -2134,7 +2142,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
         context,
       ).push(MaterialPageRoute<void>(builder: (_) => DealRoomPage(room: room)));
       _refresh();
-      if (mounted) setState(() => _dashboardView = _BuyerDashboardView.home);
+      if (mounted) setState(() => _dashboardView = BuyerDashboardView.home);
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -2145,7 +2153,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
   }
 
   Widget _dashboardDealScreen() => BuyerDealScreen(
-    onBack: () => setState(() => _dashboardView = _BuyerDashboardView.home),
+    onBack: () => setState(() => _dashboardView = BuyerDashboardView.home),
     onCreateBusinessRoom: _createDashboardRoom,
   );
 
@@ -4913,6 +4921,42 @@ class _DealRoomPageState extends State<DealRoomPage> {
       children: [
         if (_room.isBusiness) _businessSecurityBoundary(),
         if (_room.isBusiness) const SizedBox(height: 18),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            OutlinedButton.icon(
+              onPressed: () =>
+                  setState(() => _workspaceView = _DealWorkspaceView.team),
+              icon: const Icon(Icons.chat_bubble_outline),
+              label: const Text("1. Messaging & my team"),
+            ),
+            OutlinedButton.icon(
+              onPressed: () =>
+                  setState(() => _workspaceView = _DealWorkspaceView.plan),
+              icon: const Icon(Icons.calendar_month),
+              label: const Text("2. Transaction plan & schedule"),
+            ),
+            OutlinedButton.icon(
+              onPressed: () =>
+                  setState(() => _workspaceView = _DealWorkspaceView.timeline),
+              icon: const Icon(Icons.flag_outlined),
+              label: const Text("3. Closing & handover"),
+            ),
+            OutlinedButton.icon(
+              onPressed: () => openJourneyPage(
+                context,
+                const DealRoomsPage(
+                  initialSide: PlatformSide.business,
+                  initialView: BuyerDashboardView.resources,
+                ),
+              ),
+              icon: const Icon(Icons.people_outline),
+              label: const Text("Find additional support"),
+            ),
+          ],
+        ),
+        const SizedBox(height: 18),
         _commandBar(bundle.tasks),
         const SizedBox(height: 18),
         _metrics(),

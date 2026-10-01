@@ -1,3 +1,4 @@
+import 'screens/journey_page.dart';
 import 'screens/assistant_workspace_page.dart';
 import 'screens/transaction_learning_page.dart';
 import 'widgets/site_inline_editor.dart';
@@ -121,7 +122,13 @@ class AffinityApp extends StatelessWidget {
       'business-calculator' => const BusinessAcquisitionPage(),
       'property-calculator' => const AcquisitionSupportPage(),
       'network' => LocalNetworkPage(side: side),
-      'transaction-room' => const TransactionLearningPage(),
+      'document-guides' => const TransactionLearningPage(),
+      'transaction-room' => const DealRoomsPage(
+        initialSide: PlatformSide.business,
+      ),
+      'buyer-learning' => const JourneyChoicePage(role: JourneyRole.buyer),
+      'seller-learning' => const JourneyChoicePage(role: JourneyRole.seller),
+      'member-onboarding' => const JourneyChoicePage(role: JourneyRole.member),
       'buyer-dashboard' => const DealRoomsPage(
         initialSide: PlatformSide.business,
       ),
@@ -130,9 +137,7 @@ class AffinityApp extends StatelessWidget {
       'spot-mistake' => const SellerDashboardPage(),
       'deal-rooms' => const DealRoomsPage(initialSide: PlatformSide.business),
       'deal-comparison' => const DealComparisonPage(),
-      'bulletin-board' => const DealRoomsPage(
-        initialSide: PlatformSide.business,
-      ),
+      'bulletin-board' => const BusinessSaleBulletinPage(),
       'member-studio' => const MemberDealMarketplacePage(),
       'review-desk' => const AffinityReviewDeskPage(),
       'personal-consulting' => const PersonalizedConsultingPage(),

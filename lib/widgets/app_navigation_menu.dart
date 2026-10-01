@@ -1,7 +1,6 @@
 import '../screens/buyer_resources_page.dart';
 import '../screens/seller_dashboard_page.dart';
 import '../screens/deal_rooms_page.dart';
-import '../screens/transaction_learning_page.dart';
 import 'site_text.dart';
 import 'site_copy_text.dart';
 import 'package:flutter/material.dart';
@@ -81,7 +80,9 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
     AppNavigationDestination.buyerDashboard => const DealRoomsPage(
       initialSide: PlatformSide.business,
     ),
-    AppNavigationDestination.transactionRoom => const TransactionLearningPage(),
+    AppNavigationDestination.transactionRoom => const DealRoomsPage(
+      initialSide: PlatformSide.business,
+    ),
     AppNavigationDestination.dealComparison => const DealComparisonPage(),
     AppNavigationDestination.memberStudio => const MemberStudioPage(),
     AppNavigationDestination.consulting => const PersonalizedConsultingPage(),

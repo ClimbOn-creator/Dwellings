@@ -1,3 +1,4 @@
+import 'journey_page.dart';
 import '../widgets/flowing_color_banner.dart';
 import '../widgets/acquisition_step_bar.dart';
 import '../widgets/personal_motion.dart';
@@ -23,7 +24,6 @@ import '../widgets/site_copy_text.dart';
 import 'auth_page.dart';
 import 'business_acquisition_page.dart';
 import 'deal_rooms_page.dart';
-import 'assistant_workspace_page.dart';
 
 const _ink = Color(0xFF050510);
 const _green = Color(0xFF252525);
@@ -186,12 +186,18 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
               _button(
                 'copy.acquisition_support_page.1',
                 'START MY PATH',
-                () => _open(const AcquisitionBlueprintPage()),
+                () => _open(const JourneyChoicePage(role: JourneyRole.buyer)),
               ),
             const SizedBox(width: 8),
             const AppNavigationMenu(side: PlatformSide.business, dark: false),
             const SizedBox(width: 12),
           ],
+        ),
+        const SliverToBoxAdapter(
+          child: Padding(
+            padding: EdgeInsets.all(20),
+            child: JourneyEntrances(),
+          ),
         ),
         SliverToBoxAdapter(
           child: AffinityScrollScene(
@@ -231,8 +237,10 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
             builder: (context, progress, height) => AffinityCinemaHero(
               progress: progress,
               height: height,
-              onBuyer: () => _open(const AcquisitionBlueprintPage()),
-              onMember: () => _open(const MemberStudioPage()),
+              onBuyer: () =>
+                  _open(const JourneyChoicePage(role: JourneyRole.buyer)),
+              onMember: () =>
+                  _open(const JourneyChoicePage(role: JourneyRole.member)),
             ),
           ),
         ),
@@ -320,12 +328,13 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
             _button(
               'copy.acquisition_support_page.2',
               'I WANT TO BUY A BUSINESS',
-              () => _open(const AcquisitionBlueprintPage()),
+              () => _open(const JourneyChoicePage(role: JourneyRole.buyer)),
               light: true,
             ),
             const SizedBox(height: 12),
             TextButton.icon(
-              onPressed: () => _open(const MemberStudioPage()),
+              onPressed: () =>
+                  _open(const JourneyChoicePage(role: JourneyRole.member)),
               style: TextButton.styleFrom(
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(
@@ -655,8 +664,8 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
         const SizedBox(height: 20),
         TextButton.icon(
           onPressed: () => member
-              ? _open(const MemberStudioPage())
-              : _open(const AcquisitionBlueprintPage()),
+              ? _open(const JourneyChoicePage(role: JourneyRole.member))
+              : _open(const JourneyChoicePage(role: JourneyRole.buyer)),
           iconAlignment: IconAlignment.end,
           icon: const Icon(Icons.arrow_outward),
           style: TextButton.styleFrom(
@@ -750,12 +759,12 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
             _button(
               'home.closing.buyer',
               'Build my Blueprint',
-              () => _open(const AcquisitionBlueprintPage()),
+              () => _open(const JourneyChoicePage(role: JourneyRole.buyer)),
             ),
             _button(
               'home.closing.member',
               'Explore membership',
-              () => _open(const MemberStudioPage()),
+              () => _open(const JourneyChoicePage(role: JourneyRole.member)),
             ),
           ],
         ),
@@ -889,7 +898,7 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
               runSpacing: 12,
               children: [
                 _HomePathStep('01', 'Blueprint', 'Define the target.', () {
-                  _open(const AcquisitionBlueprintPage());
+                  _open(const JourneyChoicePage(role: JourneyRole.buyer));
                 }),
                 _HomePathStep('02', 'Readiness', 'Prepare the buyer.', () {
                   _open(const BuyerReadinessPage());

@@ -19,11 +19,13 @@ const _lilac = Color(0xFF9B9B98);
 class BecomeMemberPage extends StatefulWidget {
   const BecomeMemberPage({
     super.key,
+    this.initialType = MemberType.homebuyer,
     required this.onHome,
     required this.onAbout,
     required this.onTeam,
   });
 
+  final MemberType initialType;
   final VoidCallback onHome;
   final VoidCallback onAbout;
   final VoidCallback onTeam;
@@ -42,7 +44,7 @@ class _BecomeMemberPageState extends State<BecomeMemberPage> {
   final _markets = TextEditingController();
   final _city = TextEditingController();
   final _notes = TextEditingController();
-  MemberType _type = MemberType.homebuyer;
+  late MemberType _type = widget.initialType;
   String _province = 'BC';
   String _timeline = 'Within 6 months';
   final Set<String> _specialties = {};

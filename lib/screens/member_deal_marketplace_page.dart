@@ -25,6 +25,7 @@ import '../widgets/profile_photo.dart';
 import '../widgets/site_copy_text.dart';
 import '../widgets/dashboard_ui.dart';
 import 'auth_page.dart';
+import 'journey_page.dart';
 import 'bulletin_listing_pages.dart';
 import 'deal_rooms_page.dart';
 import 'affinity_review_desk_page.dart';
@@ -37,7 +38,7 @@ const _surface = Color(0xFFFCFBF8);
 const _line = Color(0xFFD6D1C9);
 const _muted = Color(0xFF68635D);
 
-enum _StudioView {
+enum MemberDashboardView {
   home,
   opportunities,
   recommendations,
@@ -51,7 +52,12 @@ enum _StudioView {
 enum _InteractionMode { inbox, chat, deal }
 
 class MemberDealMarketplacePage extends StatefulWidget {
-  const MemberDealMarketplacePage({super.key, this.initialChatProvider});
+  const MemberDealMarketplacePage({
+    super.key,
+    this.initialChatProvider,
+    this.initialView = MemberDashboardView.home,
+  });
+  final MemberDashboardView initialView;
 
   final MarketplaceProvider? initialChatProvider;
 
@@ -61,7 +67,7 @@ class MemberDealMarketplacePage extends StatefulWidget {
 }
 
 class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
-  _StudioView _view = _StudioView.home;
+  MemberDashboardView _view = MemberDashboardView.home;
   late Future<List<MemberDealOpportunity>> _opportunities;
   late Future<List<MemberDealPitch>> _responses;
   late Future<List<MarketplaceProvider>> _professionals;
@@ -92,6 +98,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
   @override
   void initState() {
     super.initState();
+    _view = widget.initialView;
     _reload();
     _loadSavedOpportunities();
     _replyEmail.text = BackendService.user?.email ?? '';
@@ -464,9 +471,10 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
 
   void _reloadAndRebuild() => setState(_reload);
 
-  void _selectView(_StudioView view) => setState(() {
+  void _selectView(MemberDashboardView view) => setState(() {
     _view = view;
-    if (view == _StudioView.dealResponses) _interactionPanelOpen = false;
+    if (view == MemberDashboardView.dealResponses)
+      _interactionPanelOpen = false;
   });
 
   Widget _workspace() => Container(
@@ -485,7 +493,17 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
               Expanded(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.only(bottom: 40),
-                  child: _currentView(),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (_view == MemberDashboardView.home)
+                        const Padding(
+                          padding: EdgeInsets.only(bottom: 16),
+                          child: JourneyActions(role: JourneyRole.member),
+                        ),
+                      _currentView(),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -503,12 +521,22 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                 clipBehavior: Clip.antiAlias,
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.fromLTRB(28, 26, 28, 60),
-                  child: _currentView(),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (_view == MemberDashboardView.home)
+                        const Padding(
+                          padding: EdgeInsets.only(bottom: 16),
+                          child: JourneyActions(role: JourneyRole.member),
+                        ),
+                      _currentView(),
+                    ],
+                  ),
                 ),
               ),
             ),
             const SizedBox(width: 14),
-            if (_view != _StudioView.home)
+            if (_view != MemberDashboardView.home)
               AnimatedContainer(
                 duration: const Duration(milliseconds: 220),
                 curve: Curves.easeOutCubic,
@@ -693,8 +721,9 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                               ),
                             ),
                             TextButton(
-                              onPressed: () =>
-                                  _selectView(_StudioView.opportunities),
+                              onPressed: () => _selectView(
+                                MemberDashboardView.opportunities,
+                              ),
                               child: const Text('See all'),
                             ),
                           ],
@@ -739,7 +768,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                           'Explore opportunities',
                           'Browse reviewed deals and buyer needs. 🔎',
                           Icons.work_outline_rounded,
-                          () => _selectView(_StudioView.opportunities),
+                          () => _selectView(MemberDashboardView.opportunities),
                         ),
                       ),
                       SizedBox(
@@ -748,7 +777,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                           'Buyer inbox',
                           'Read and manage your deal responses.',
                           Icons.inbox_outlined,
-                          () => _selectView(_StudioView.dealResponses),
+                          () => _selectView(MemberDashboardView.dealResponses),
                         ),
                       ),
                       SizedBox(
@@ -757,7 +786,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                           'Professional network',
                           'Find people to work with. 🤝',
                           Icons.people_outline_rounded,
-                          () => _selectView(_StudioView.professionals),
+                          () => _selectView(MemberDashboardView.professionals),
                         ),
                       ),
                     ],
@@ -958,34 +987,38 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
               ),
             ),
           ),
-          _dashboardNavItem(_StudioView.home, Icons.home_outlined, 'Home'),
           _dashboardNavItem(
-            _StudioView.opportunities,
+            MemberDashboardView.home,
+            Icons.home_outlined,
+            'Home',
+          ),
+          _dashboardNavItem(
+            MemberDashboardView.opportunities,
             Icons.work_outline_rounded,
             'Opportunities',
           ),
           _dashboardNavItem(
-            _StudioView.recommendations,
+            MemberDashboardView.recommendations,
             Icons.auto_awesome_outlined,
             'Recommendations',
           ),
           _dashboardNavItem(
-            _StudioView.saved,
+            MemberDashboardView.saved,
             Icons.bookmark_border_rounded,
             'Saved',
           ),
           _dashboardNavItem(
-            _StudioView.professionals,
+            MemberDashboardView.professionals,
             Icons.people_outline_rounded,
             'Professionals',
           ),
           _dashboardNavItem(
-            _StudioView.dealResponses,
+            MemberDashboardView.dealResponses,
             Icons.inbox_outlined,
             'Buyer inbox',
           ),
           _dashboardNavItem(
-            _StudioView.profile,
+            MemberDashboardView.profile,
             Icons.person_outline_rounded,
             'My profile',
           ),
@@ -994,8 +1027,11 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
     ),
   );
 
-  Widget _dashboardNavItem(_StudioView view, IconData icon, String label) =>
-      DashboardUi.nav(label, icon, _view == view, () => _selectView(view));
+  Widget _dashboardNavItem(
+    MemberDashboardView view,
+    IconData icon,
+    String label,
+  ) => DashboardUi.nav(label, icon, _view == view, () => _selectView(view));
 
   Widget _collapsedInteractionPanel() => Material(
     color: Colors.white,
@@ -1856,17 +1892,17 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
     spacing: 9,
     runSpacing: 9,
     children: [
-      _viewChip(_StudioView.home, 'HOME'),
-      _viewChip(_StudioView.opportunities, 'OPPORTUNITIES'),
-      _viewChip(_StudioView.recommendations, 'RECOMMENDATIONS'),
-      _viewChip(_StudioView.saved, 'SAVED'),
-      _viewChip(_StudioView.professionals, 'PROFESSIONALS'),
-      _viewChip(_StudioView.dealResponses, 'MY DEAL RESPONSES'),
-      _viewChip(_StudioView.profile, 'PROFILE'),
+      _viewChip(MemberDashboardView.home, 'HOME'),
+      _viewChip(MemberDashboardView.opportunities, 'OPPORTUNITIES'),
+      _viewChip(MemberDashboardView.recommendations, 'RECOMMENDATIONS'),
+      _viewChip(MemberDashboardView.saved, 'SAVED'),
+      _viewChip(MemberDashboardView.professionals, 'PROFESSIONALS'),
+      _viewChip(MemberDashboardView.dealResponses, 'MY DEAL RESPONSES'),
+      _viewChip(MemberDashboardView.profile, 'PROFILE'),
     ],
   );
 
-  Widget _viewChip(_StudioView view, String label) => ChoiceChip(
+  Widget _viewChip(MemberDashboardView view, String label) => ChoiceChip(
     label: SiteText(
       contentKey: 'copy.member_deal_marketplace_page.m24',
       literal: false,
@@ -1886,11 +1922,11 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
   );
 
   Widget _currentView() {
-    const privateViews = <_StudioView>{
-      _StudioView.recommendations,
-      _StudioView.saved,
-      _StudioView.dealResponses,
-      _StudioView.profile,
+    const privateViews = <MemberDashboardView>{
+      MemberDashboardView.recommendations,
+      MemberDashboardView.saved,
+      MemberDashboardView.dealResponses,
+      MemberDashboardView.profile,
     };
     if (privateViews.contains(_view) && BackendService.user == null) {
       return _AccessState(
@@ -1904,14 +1940,17 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
       );
     }
     return switch (_view) {
-      _StudioView.home => _memberHome(),
-      _StudioView.opportunities => _opportunityFeed(),
-      _StudioView.recommendations => _matchedOpportunities(),
-      _StudioView.opportunityDetail => _expandedOpportunity(),
-      _StudioView.saved => _savedOpportunities(),
-      _StudioView.professionals => _professionalDirectory(),
-      _StudioView.dealResponses => _pitchList(_responses, buyerView: true),
-      _StudioView.profile => _professionalProfileWorkspace(),
+      MemberDashboardView.home => _memberHome(),
+      MemberDashboardView.opportunities => _opportunityFeed(),
+      MemberDashboardView.recommendations => _matchedOpportunities(),
+      MemberDashboardView.opportunityDetail => _expandedOpportunity(),
+      MemberDashboardView.saved => _savedOpportunities(),
+      MemberDashboardView.professionals => _professionalDirectory(),
+      MemberDashboardView.dealResponses => _pitchList(
+        _responses,
+        buyerView: true,
+      ),
+      MemberDashboardView.profile => _professionalProfileWorkspace(),
     };
   }
 
@@ -1959,7 +1998,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
     MemberDealMarketplaceService.recordEngagement(deal.id, 'open');
     setState(() {
       _selectedOpportunity = deal;
-      _view = _StudioView.opportunityDetail;
+      _view = MemberDashboardView.opportunityDetail;
     });
   }
 
@@ -1982,7 +2021,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
         message:
             'Open a deal from Opportunities, Recommendations, or Saved to see its complete privacy-safe brief.',
         action: 'BROWSE OPPORTUNITIES',
-        onTap: () => _selectView(_StudioView.opportunities),
+        onTap: () => _selectView(MemberDashboardView.opportunities),
       );
     }
     String detail(String key, String fallback) {
@@ -2042,7 +2081,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         TextButton.icon(
-          onPressed: () => _selectView(_StudioView.opportunities),
+          onPressed: () => _selectView(MemberDashboardView.opportunities),
           icon: const Icon(Icons.arrow_back_rounded, size: 17),
           label: const SiteText(
             contentKey: 'copy.member_deal_marketplace_page.16',
@@ -2444,7 +2483,8 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
           message:
               'Open an opportunity and save it from the introduction panel. It will stay organized here while you decide whether to pitch.',
           action: 'BROWSE OPPORTUNITIES',
-          onTap: () => setState(() => _view = _StudioView.opportunities),
+          onTap: () =>
+              setState(() => _view = MemberDashboardView.opportunities),
         );
       }
       return Column(
