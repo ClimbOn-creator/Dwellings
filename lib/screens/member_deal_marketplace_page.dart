@@ -1,3 +1,4 @@
+import '../widgets/personal_experience_editor.dart';
 import '../widgets/marketplace_motion.dart';
 import '../widgets/site_parallax_image.dart';
 import '../widgets/site_text.dart';
@@ -2673,7 +2674,13 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                     'MEMBERSHIP',
                     provider.membershipTier.toUpperCase(),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 20),
+                  PersonalExperienceEditor(
+                    key: ValueKey('experience-${provider.id}'),
+                    provider: provider,
+                    onSaved: _reloadAndRebuild,
+                  ),
+                  const SizedBox(height: 20),
                   FilledButton.icon(
                     onPressed: _openProfessionalOnboarding,
                     icon: const Icon(Icons.edit_outlined, size: 17),

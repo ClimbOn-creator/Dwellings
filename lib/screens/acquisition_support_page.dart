@@ -2120,6 +2120,11 @@ class AcquisitionFoundation {
         final cloud = await AccountService.loadAcquisitionFoundation();
         if (cloud != null && cloud.isNotEmpty) {
           data = cloud;
+          if (cloud['completedModules'] is List)
+            await prefs.setStringList(
+              _completedKey,
+              List<String>.from(cloud['completedModules'] as List),
+            );
           await prefs.setString(_key, jsonEncode(data));
         }
       } catch (_) {

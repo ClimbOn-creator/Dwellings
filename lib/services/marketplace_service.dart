@@ -1,3 +1,4 @@
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
@@ -140,6 +141,7 @@ class MarketplaceProvider {
     required this.experience,
     required this.jobTitle,
     required this.isExample,
+    this.personalExperience = '',
     this.photoIndex,
     this.photoUrl = '',
     this.email = '',
@@ -156,6 +158,7 @@ class MarketplaceProvider {
     this.rateVerifiedAt,
   });
 
+  final String personalExperience;
   final String id;
   final ProviderCategory category;
   final String name;
@@ -706,6 +709,7 @@ class MarketplaceService {
           name: row['display_name'] as String? ?? 'Provider',
           company: row['company_name'] as String? ?? '',
           specialty: row['description'] as String? ?? '',
+          personalExperience: row['description'] as String? ?? '',
           verified: row['verified'] as bool? ?? false,
           sponsored: sponsorships.isNotEmpty,
           reviewScore: (row['review_score'] as num?)?.toDouble() ?? 0,
@@ -811,7 +815,20 @@ class MarketplaceService {
     return row != null;
   }
 
-  static Future<List<ProviderReview>> loadReviews(String providerId) async {
+  static Future<List<ProviderReview>> loadReviews(
+    String providerId, {
+    bool example = false,
+  }) async {
+    if (example) {
+      final prefs = await SharedPreferences.getInstance();
+      final value = prefs.getString(_previewReviewKey(providerId));
+      if (value == null) return [];
+      return [
+        ProviderReview.fromJson(
+          Map<String, dynamic>.from(jsonDecode(value) as Map),
+        ),
+      ];
+    }
     final rows = await Supabase.instance.client
         .from('provider_reviews')
         .select('id, user_id, reviewer_name, rating, review_text, created_at')
@@ -829,16 +846,61 @@ class MarketplaceService {
     required String text,
   }) async {
     final user = BackendService.user;
-    if (user == null) throw StateError('Sign in to leave a review.');
+    if (rating < 1 ||
+        rating > 5 ||
+        text.trim().isEmpty ||
+        text.trim().length > 2000)
+      throw ArgumentError(
+        'Choose 1–5 stars and enter a review of up to 2,000 characters.',
+      );
     if (provider.isExample) {
-      throw StateError('Example profiles cannot receive real reviews.');
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+        _previewReviewKey(provider.id),
+        jsonEncode({
+          'id': 'preview-${provider.id}',
+          'user_id': user?.id ?? 'preview-user',
+          'reviewer_name':
+              user?.userMetadata?['full_name'] ?? 'Preview reviewer',
+          'rating': rating,
+          'review_text': text.trim(),
+          'created_at': DateTime.now().toIso8601String(),
+        }),
+      );
+      return;
     }
+    if (user == null) throw StateError('Sign in to leave a review.');
     await Supabase.instance.client.from('provider_reviews').upsert({
       'provider_id': provider.id,
       'user_id': user.id,
       'rating': rating,
       'review_text': text.trim(),
     }, onConflict: 'provider_id,user_id');
+  }
+
+  static String _previewReviewKey(String providerId) =>
+      'affinity.example_review.v1.${BackendService.user?.id ?? "guest"}.$providerId';
+
+  static int experienceWordCount(String text) =>
+      text.trim().isEmpty ? 0 : text.trim().split(RegExp(r'\s+')).length;
+  static Future<void> savePersonalExperience(
+    String providerId,
+    String text,
+  ) async {
+    final user = BackendService.user;
+    if (user == null) throw StateError('Sign in to update your profile.');
+    if (experienceWordCount(text) > 200)
+      throw ArgumentError('Keep your personal experience to 200 words.');
+    await Supabase.instance.client
+        .from('provider_profiles')
+        .update({
+          'description': text.trim(),
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('id', providerId)
+        .eq('owner_user_id', user.id)
+        .select('id')
+        .single();
   }
 
   static Future<void> requestConnection({
@@ -979,6 +1041,8 @@ class MarketplaceService {
             name: group[index].$1,
             company: group[index].$2,
             specialty: '$cityName · $specialty',
+            personalExperience:
+                'I help business owners and buyers understand their options and prepare for the next stage of a transaction. My approach starts with listening: I want to understand the business, the people behind it, and what a successful outcome means to them. I explain the process in clear language, organize the work into practical steps, and coordinate with the other advisers involved. This fictional profile illustrates where a member can describe their own experience and approach.',
             verified: index < 4,
             sponsored: index == 0,
             reviewScore: 4.9 - index * .1,

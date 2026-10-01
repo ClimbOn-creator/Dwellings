@@ -23,7 +23,6 @@ import '../widgets/app_navigation_menu.dart';
 import '../widgets/topo_background.dart';
 import '../widgets/membership_footer.dart';
 import 'auth_page.dart';
-import 'connection_brief_page.dart';
 import 'deal_rooms_page.dart';
 import 'member_deal_marketplace_page.dart';
 import 'member_profile_page.dart';
@@ -49,7 +48,6 @@ class _ProfilePageState extends State<ProfilePage> {
   AccountProfile? _profile;
   DashboardStats? _stats;
   List<MarketplaceProvider> _team = [];
-  List<IntroductionRequest> _outgoingIntroductions = [];
   List<DealRoom> _deals = [];
   Map<String, dynamic>? _acquisition;
   bool _loading = true;
@@ -97,15 +95,13 @@ class _ProfilePageState extends State<ProfilePage> {
       final values = await Future.wait([
         AccountService.loadStats(),
         AccountService.loadTeam(),
-        AccountService.loadOutgoingIntroductions(),
         DealRoomService.loadRooms(),
       ]);
       if (!mounted) return;
       setState(() {
         _stats = values[0] as DashboardStats;
         _team = values[1] as List<MarketplaceProvider>;
-        _outgoingIntroductions = values[2] as List<IntroductionRequest>;
-        _deals = values[3] as List<DealRoom>;
+        _deals = values[2] as List<DealRoom>;
       });
     } catch (_) {
       // Keep the existing dashboard visible and try again on the next refresh.
@@ -122,7 +118,6 @@ class _ProfilePageState extends State<ProfilePage> {
         AccountService.loadProfile(),
         AccountService.loadStats(),
         AccountService.loadTeam(),
-        AccountService.loadOutgoingIntroductions(),
         DealRoomService.loadRooms(),
       ]);
       final profile = values[0] as AccountProfile?;
@@ -131,8 +126,7 @@ class _ProfilePageState extends State<ProfilePage> {
         _profile = profile;
         _stats = values[1] as DashboardStats;
         _team = values[2] as List<MarketplaceProvider>;
-        _outgoingIntroductions = values[3] as List<IntroductionRequest>;
-        _deals = values[4] as List<DealRoom>;
+        _deals = values[3] as List<DealRoom>;
         _loading = false;
         _name.text = profile?.fullName ?? '';
         _job.text = profile?.jobTitle ?? '';
@@ -221,20 +215,6 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  Future<void> _showIntroductionDialog(MarketplaceProvider provider) async {
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => ConnectionBriefPage(
-          provider: provider,
-          initialContext: _stats?.lastAddress.isNotEmpty == true
-              ? 'I would like help with ${_stats!.lastAddress}.'
-              : '',
-        ),
-      ),
-    );
-    await _refreshActivity();
-  }
-
   Future<void> _signOut() async {
     await BackendService.signOut();
     if (mounted) Navigator.pop(context);
@@ -304,7 +284,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       LayoutBuilder(
                         builder: (context, constraints) {
                           final width = constraints.maxWidth >= 980
-                              ? (constraints.maxWidth - 60) / 6
+                              ? (constraints.maxWidth - 48) / 5
                               : (constraints.maxWidth - 12) / 2;
                           return Wrap(
                             spacing: 12,
@@ -319,11 +299,6 @@ class _ProfilePageState extends State<ProfilePage> {
                                 width: width,
                                 value: '${stats.teamCount}',
                                 label: 'Team members',
-                              ),
-                              _StatCard(
-                                width: width,
-                                value: '${stats.introductionCount}',
-                                label: 'Connections started',
                               ),
                               _StatCard(
                                 width: width,
@@ -355,8 +330,6 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                       const SizedBox(height: 24),
                       _currentDeals(),
-                      const SizedBox(height: 42),
-                      _introductionCentre(),
                       const SizedBox(height: 42),
                       SiteText(
                         key: _teamAnchor,
@@ -786,354 +759,6 @@ class _ProfilePageState extends State<ProfilePage> {
     return parts.isEmpty ? _roleLabel(profile.role) : parts.join(' · ');
   }
 
-  Widget _introductionCentre() => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      const SiteText(
-        contentKey: 'copy.profile_page.8',
-        literal: true,
-        'Connections',
-        style: TextStyle(
-          fontSize: 30,
-          fontWeight: FontWeight.w700,
-          letterSpacing: -1.2,
-        ),
-      ),
-      const SizedBox(height: 8),
-      const SiteText(
-        contentKey: 'copy.profile_page.9',
-        literal: true,
-        'Keep track of the connection briefs you have sent to professionals.',
-        style: TextStyle(color: Color(0xFF666674)),
-      ),
-      const SizedBox(height: 18),
-      if (_outgoingIntroductions.isEmpty)
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(22),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: const SiteText(
-            contentKey: 'copy.profile_page.10',
-            literal: true,
-            'No connections yet. Open a professional profile and build a private brief with the context they need.',
-          ),
-        )
-      else
-        ..._outgoingIntroductions.map(
-          (request) => _introductionRow(request, incoming: false),
-        ),
-    ],
-  );
-
-  Widget _introductionRow(
-    IntroductionRequest request, {
-    required bool incoming,
-  }) => Container(
-    margin: const EdgeInsets.only(bottom: 10),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(16),
-    ),
-    child: ExpansionTile(
-      tilePadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
-      childrenPadding: const EdgeInsets.fromLTRB(18, 0, 18, 18),
-      title: SiteText(
-        contentKey: 'copy.profile_page.m11',
-        literal: false,
-        incoming ? request.requesterName : request.providerName,
-        style: const TextStyle(fontWeight: FontWeight.w700),
-      ),
-      subtitle: SiteText(
-        contentKey: 'copy.profile_page.m12',
-        literal: false,
-        incoming
-            ? 'Request for ${request.providerName}'
-            : request.providerCompany,
-        style: const TextStyle(color: Color(0xFF666674), fontSize: 12),
-      ),
-      trailing: _statusBadge(request.status),
-      children: [
-        Align(
-          alignment: Alignment.centerLeft,
-          child: SiteText(
-            contentKey: 'copy.profile_page.m13',
-            literal: false,
-            request.propertySummary.isEmpty
-                ? 'No property details supplied.'
-                : request.propertySummary,
-            style: const TextStyle(fontSize: 13, height: 1.5),
-          ),
-        ),
-        if (request.memberMessage.isNotEmpty) ...[
-          const SizedBox(height: 12),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: SiteText(
-              templateValues: {'value1': '${request.memberMessage}'},
-              contentKey: 'copy.profile_page.m14',
-              literal: false,
-              "Response: {{value1}}",
-              style: const TextStyle(
-                color: _purple,
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-        ],
-        if (incoming) ...[
-          if (request.nextFollowUpAt != null ||
-              request.providerNotes.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: SiteText(
-                contentKey: 'copy.profile_page.m15',
-                literal: false,
-                [
-                  if (request.nextFollowUpAt != null)
-                    'FOLLOW UP ${DateFormat.yMMMd().format(request.nextFollowUpAt!)}',
-                  if (request.providerNotes.isNotEmpty)
-                    'PRIVATE NOTE · ${request.providerNotes}',
-                ].join('\n'),
-                style: const TextStyle(
-                  color: Color(0xFF5E45D7),
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  height: 1.5,
-                ),
-              ),
-            ),
-          ],
-          const SizedBox(height: 14),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: SelectableText(
-              [
-                request.requesterEmail,
-                if (request.requesterPhone.isNotEmpty) request.requesterPhone,
-              ].join(' · '),
-              style: const TextStyle(
-                color: Color(0xFF4D4D5A),
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          const SizedBox(height: 14),
-          Wrap(
-            spacing: 9,
-            runSpacing: 9,
-            children: [
-              FilledButton.icon(
-                onPressed: () => _respondToIntroduction(request),
-                icon: const Icon(Icons.account_tree_outlined, size: 16),
-                label: const SiteText(
-                  contentKey: 'copy.profile_page.11',
-                  literal: true,
-                  'UPDATE LEAD',
-                ),
-              ),
-            ],
-          ),
-        ],
-      ],
-    ),
-  );
-
-  Widget _statusBadge(String status) {
-    final color = switch (status) {
-      'accepted' ||
-      'qualified' ||
-      'contacted' ||
-      'consultation' ||
-      'won' => const Color(0xFF16825D),
-      'declined' || 'lost' => const Color(0xFFB42318),
-      'closed' => const Color(0xFF666674),
-      _ => _purple,
-    };
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: .1),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: SiteText(
-        contentKey: 'copy.profile_page.m16',
-        literal: false,
-        status.toUpperCase(),
-        style: TextStyle(
-          color: color,
-          fontSize: 8,
-          fontWeight: FontWeight.w900,
-        ),
-      ),
-    );
-  }
-
-  Future<void> _respondToIntroduction(IntroductionRequest request) async {
-    final message = TextEditingController();
-    final notes = TextEditingController(text: request.providerNotes);
-    final reason = TextEditingController(text: request.closedReason);
-    var status = request.status == 'new' ? 'accepted' : request.status;
-    DateTime? followUp = request.nextFollowUpAt;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setModalState) => AlertDialog(
-          title: const SiteText(
-            contentKey: 'copy.profile_page.12',
-            literal: true,
-            'Update lead',
-          ),
-          content: SizedBox(
-            width: 480,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  DropdownButtonFormField<String>(
-                    initialValue: status,
-                    decoration: const InputDecoration(
-                      label: SiteText(
-                        'Pipeline stage',
-                        contentKey: 'copy.profile_page.field1',
-                        literal: true,
-                      ),
-                    ),
-                    items:
-                        const [
-                              'accepted',
-                              'qualified',
-                              'contacted',
-                              'consultation',
-                              'won',
-                              'lost',
-                              'declined',
-                              'closed',
-                            ]
-                            .map(
-                              (value) => DropdownMenuItem(
-                                value: value,
-                                child: SiteText(
-                                  contentKey: 'copy.profile_page.m17',
-                                  literal: false,
-                                  value.toUpperCase(),
-                                ),
-                              ),
-                            )
-                            .toList(),
-                    onChanged: (value) => value == null
-                        ? null
-                        : setModalState(() => status = value),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: message,
-                    minLines: 2,
-                    maxLines: 4,
-                    decoration: const InputDecoration(
-                      label: SiteText(
-                        'Message visible to client (optional)',
-                        contentKey: 'copy.profile_page.field2',
-                        literal: true,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: notes,
-                    minLines: 2,
-                    maxLines: 4,
-                    decoration: const InputDecoration(
-                      label: SiteText(
-                        'Private pipeline notes',
-                        contentKey: 'copy.profile_page.field3',
-                        literal: true,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  OutlinedButton.icon(
-                    onPressed: () async {
-                      final picked = await showDatePicker(
-                        context: context,
-                        initialDate:
-                            followUp ??
-                            DateTime.now().add(const Duration(days: 2)),
-                        firstDate: DateTime.now(),
-                        lastDate: DateTime.now().add(const Duration(days: 730)),
-                      );
-                      if (picked != null) {
-                        setModalState(() => followUp = picked);
-                      }
-                    },
-                    icon: const Icon(Icons.event_outlined),
-                    label: SiteText(
-                      contentKey: 'copy.profile_page.m18',
-                      literal: false,
-                      followUp == null
-                          ? 'SET FOLLOW-UP'
-                          : 'FOLLOW UP ${DateFormat.yMMMd().format(followUp!)}',
-                    ),
-                  ),
-                  if ({'lost', 'declined', 'closed'}.contains(status)) ...[
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: reason,
-                      decoration: const InputDecoration(
-                        label: SiteText(
-                          'Close reason',
-                          contentKey: 'copy.profile_page.field4',
-                          literal: true,
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext, false),
-              child: const SiteText(
-                contentKey: 'copy.profile_page.13',
-                literal: true,
-                'Cancel',
-              ),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(dialogContext, true),
-              child: const SiteText(
-                contentKey: 'copy.profile_page.14',
-                literal: true,
-                'Save update',
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-    if (confirmed == true) {
-      await AccountService.respondToIntroduction(
-        introductionId: request.id,
-        status: status,
-        message: message.text,
-        followUpAt: followUp,
-        privateNotes: notes.text,
-        closedReason: reason.text,
-      );
-      await _refreshActivity();
-    }
-    message.dispose();
-    notes.dispose();
-    reason.dispose();
-  }
-
   Widget _profileEditor(AccountProfile? profile) => Container(
     decoration: BoxDecoration(
       color: Colors.white,
@@ -1375,27 +1000,6 @@ class _ProfilePageState extends State<ProfilePage> {
         const SizedBox(height: 6),
         Row(
           children: [
-            Expanded(
-              child: FilledButton.icon(
-                onPressed: () => _showIntroductionDialog(provider),
-                style: FilledButton.styleFrom(
-                  backgroundColor: _purple,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
-                icon: const Icon(Icons.mark_email_unread_outlined, size: 18),
-                label: SiteText(
-                  contentKey: 'copy.profile_page.m28',
-                  literal: false,
-                  provider.isExample
-                      ? 'PREVIEW CONNECTION'
-                      : 'BUILD CONNECTION BRIEF',
-                  style: const TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-            ),
             const SizedBox(width: 10),
             OutlinedButton.icon(
               onPressed: () async {

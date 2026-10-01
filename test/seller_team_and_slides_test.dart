@@ -70,7 +70,7 @@ void main() {
     },
   );
   testWidgets(
-    'landing advances exactly one slide every seven seconds and pause stops it',
+    'landing advances exactly one slide every four seconds and pause stops it',
     (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
@@ -83,12 +83,12 @@ void main() {
       PageController controller() =>
           tester.widget<PageView>(find.byType(PageView)).controller!;
       expect(controller().page, 0);
-      await tester.pump(const Duration(seconds: 6));
+      await tester.pump(const Duration(seconds: 3));
       expect(controller().page, 0);
       await tester.pump(const Duration(seconds: 1));
       await tester.pump(const Duration(milliseconds: 700));
       expect(controller().page, 1);
-      await tester.pump(const Duration(seconds: 7));
+      await tester.pump(const Duration(seconds: 4));
       await tester.pump(const Duration(milliseconds: 700));
       expect(controller().page, 2);
       await tester.tap(find.byTooltip('Pause automatic slides'));

@@ -656,7 +656,7 @@ const siteCopyCatalog = <String, String>{
   '553eaecf':
       "EXAMPLE PROFESSIONALS · Fictional profiles for previewing team building. They are not verified or available for contact.",
   '8f5edef1':
-      "EXAMPLE PROFILE · This fictional professional demonstrates the public profile experience. Contact actions and reviews activate for verified members.",
+      "EXAMPLE PROFILE · This fictional professional demonstrates the public profile experience. Try a preview review below; it is saved on this device only.",
   '79836105': "EXIT",
   '78827537': "EXIT STRESS",
   'df25669': "EXPERIENCE",
@@ -1628,7 +1628,7 @@ const siteCopyCatalog = <String, String>{
   'e212b2b3': "Share purchase",
   '8ac1f4a3': "Share risk assessment",
   'bff91d01': "Shared notes",
-  '71a6d344': "Short professional introduction",
+  '71a6d344': "Personal experience (up to 200 words)",
   'edeeb263': "Short term · under 5 years",
   'b4fc37df': "Short-term improvement and resale",
   'a545b17c':
@@ -1765,7 +1765,7 @@ const siteCopyCatalog = <String, String>{
   '8b30f4f3':
       "The process is practical and candid. A consulting engagement can sharpen an acquisition mandate, identify readiness gaps before a lender does, challenge the assumptions in a live opportunity, or organize the next phase of diligence. The goal is not to make the decision for you. It is to help you see the decision clearly enough to own it.",
   '52b0444f':
-      "The professional profile is ready. Run the included provider reviews migration to activate ratings.",
+      "Could not load reviews right now. Please reopen this profile to retry.",
   '2639bf6f': "The review desk is active",
   '82d8b634': "The right people.\nIn the right city.",
   'dca40b96': "The title is deliberately broad",
@@ -1913,7 +1913,7 @@ const siteCopyCatalog = <String, String>{
   'a1df1221': "What capital could be available?",
   'be34c98': "What creates value?",
   'c632b7c2':
-      "What do you do, who do you help, and what makes your approach useful in an acquisition?",
+      "Describe your personal experience, past work, and the approach you bring to a deal.",
   '2532a622': "What do you specialize in?",
   '5f07fefd': "What if you could know\nbefore you commit?",
   '86fe65c7': "What is already in motion?",

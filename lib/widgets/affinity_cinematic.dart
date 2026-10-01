@@ -428,7 +428,7 @@ class _AffinityTimedChaptersState extends State<AffinityTimedChapters> {
         SiteContentService.editing.value ||
         MediaQuery.disableAnimationsOf(context))
       return;
-    _timer = Timer.periodic(const Duration(seconds: 7), (_) {
+    _timer = Timer.periodic(const Duration(seconds: 4), (_) {
       if (_pages.hasClients)
         _pages.animateToPage(
           _index + 1,

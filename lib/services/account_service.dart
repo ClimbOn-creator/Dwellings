@@ -271,14 +271,25 @@ class AccountService {
   static Future<Map<String, dynamic>?> loadAcquisitionFoundation() async {
     final user = BackendService.user;
     if (user == null) return null;
-    final row = await _client
-        .from('profiles')
-        .select('acquisition_foundation')
-        .eq('id', user.id)
-        .maybeSingle();
-    final value = row?['acquisition_foundation'];
-    return value is Map ? Map<String, dynamic>.from(value) : null;
+    try {
+      final rows = await _client
+          .from('profiles')
+          .select('acquisition_foundation')
+          .eq('id', user.id)
+          .limit(1);
+      final value = rows.isEmpty ? null : rows.first['acquisition_foundation'];
+      if (value is Map && value.isNotEmpty)
+        return Map<String, dynamic>.from(value);
+    } on PostgrestException catch (error) {
+      if (!_missingFoundationColumn(error)) rethrow;
+    }
+    final fallback = user.userMetadata?['acquisition_foundation'];
+    return fallback is Map ? Map<String, dynamic>.from(fallback) : null;
   }
+
+  static bool _missingFoundationColumn(PostgrestException error) =>
+      {'PGRST204', '42703'}.contains(error.code) &&
+      error.message.contains('acquisition_foundation');
 
   static Future<void> saveAcquisitionFoundation(
     Map<String, dynamic> foundation, {
@@ -286,14 +297,40 @@ class AccountService {
   }) async {
     final user = BackendService.user;
     if (user == null) throw StateError('Sign in required.');
-    await _client
-        .from('profiles')
-        .update({
-          'acquisition_foundation': foundation,
-          'acquisition_completed_modules': completedModules,
-          'updated_at': DateTime.now().toIso8601String(),
-        })
-        .eq('id', user.id);
+    final payload = <String, dynamic>{
+      'acquisition_foundation': {
+        ...foundation,
+        'completedModules': completedModules,
+      },
+      'acquisition_completed_modules': completedModules,
+      'updated_at': DateTime.now().toIso8601String(),
+    };
+    try {
+      await _client.from('profiles').update(payload).eq('id', user.id);
+    } on PostgrestException catch (error) {
+      if (error.code == 'PGRST204' &&
+          error.message.contains('acquisition_completed_modules')) {
+        payload.remove('acquisition_completed_modules');
+        try {
+          await _client.from('profiles').update(payload).eq('id', user.id);
+          return;
+        } on PostgrestException catch (fallbackError) {
+          if (!_missingFoundationColumn(fallbackError)) rethrow;
+        }
+      } else if (!_missingFoundationColumn(error)) {
+        rethrow;
+      }
+      // Keep the private questionnaire in the existing authenticated account
+      // when the deployed profile schema predates both acquisition columns.
+      await _client.auth.updateUser(
+        UserAttributes(
+          data: {
+            ...?user.userMetadata,
+            'acquisition_foundation': payload['acquisition_foundation'],
+          },
+        ),
+      );
+    }
   }
 
   static Future<void> savePreferredLocation(MarketplaceCity city) async {

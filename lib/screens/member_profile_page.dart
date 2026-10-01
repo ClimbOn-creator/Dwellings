@@ -9,7 +9,6 @@ import '../widgets/profile_photo.dart';
 import '../widgets/app_navigation_menu.dart';
 import '../widgets/topo_background.dart';
 import 'auth_page.dart';
-import 'connection_brief_page.dart';
 
 const _ink = Color(0xFF050510);
 const _paper = Color(0xFFF5F5F7);
@@ -46,7 +45,10 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
   @override
   void initState() {
     super.initState();
-    _reviews = MarketplaceService.loadReviews(provider.id);
+    _reviews = MarketplaceService.loadReviews(
+      provider.id,
+      example: provider.isExample,
+    );
     _syncTeam();
   }
 
@@ -91,19 +93,7 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
   }
 
   Future<void> _review() async {
-    if (provider.isExample) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: SiteText(
-            contentKey: 'copy.member_profile_page.m2',
-            literal: true,
-            'Example professionals cannot receive real reviews.',
-          ),
-        ),
-      );
-      return;
-    }
-    if (BackendService.user == null) {
+    if (!provider.isExample && BackendService.user == null) {
       await Navigator.of(
         context,
       ).push(MaterialPageRoute<void>(builder: (_) => const AuthPage()));
@@ -114,14 +104,18 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
       reviews = await _reviews;
     } catch (_) {}
     final mine = reviews
-        .where((review) => review.userId == BackendService.user?.id)
+        .where(
+          (review) =>
+              review.userId == (BackendService.user?.id ?? 'preview-user'),
+        )
         .firstOrNull;
     if (!mounted) return;
     var rating = mine?.rating ?? 5;
     final reviewText = TextEditingController(text: mine?.text ?? '');
     var saving = false;
-    await showDialog<void>(
+    final route = DialogRoute<void>(
       context: context,
+      barrierDismissible: false,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setModalState) => AlertDialog(
           title: SiteText(
@@ -131,51 +125,61 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
           ),
           content: SizedBox(
             width: 460,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: List.generate(
-                    5,
-                    (index) => IconButton(
-                      onPressed: () => setModalState(() => rating = index + 1),
-                      tooltip: '${index + 1} stars',
-                      icon: Icon(
-                        index < rating ? Icons.star : Icons.star_border,
-                        color: _purple,
-                        size: 30,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: List.generate(
+                      5,
+                      (index) => IconButton(
+                        onPressed: () =>
+                            setModalState(() => rating = index + 1),
+                        tooltip: '${index + 1} stars',
+                        icon: Icon(
+                          index < rating ? Icons.star : Icons.star_border,
+                          color: _purple,
+                          size: 30,
+                        ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: reviewText,
-                  onChanged: (_) => setModalState(() {}),
-                  minLines: 4,
-                  maxLines: 7,
-                  maxLength: 2000,
-                  decoration: const InputDecoration(
-                    label: SiteText(
-                      'Your review',
-                      contentKey: 'copy.member_profile_page.field1',
-                      literal: true,
-                    ),
-                    hint: SiteText(
-                      'Describe your experience with this professional.',
-                      contentKey: 'copy.member_profile_page.field2',
-                      literal: true,
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: reviewText,
+                    onChanged: (_) => setModalState(() {}),
+                    minLines: 4,
+                    maxLines: 7,
+                    maxLength: 2000,
+                    decoration: const InputDecoration(
+                      label: SiteText(
+                        'Your review',
+                        contentKey: 'copy.member_profile_page.field1',
+                        literal: true,
+                      ),
+                      hint: SiteText(
+                        'Describe your experience with this professional.',
+                        contentKey: 'copy.member_profile_page.field2',
+                        literal: true,
+                      ),
                     ),
                   ),
-                ),
-                const SiteText(
-                  contentKey: 'copy.member_profile_page.1',
-                  literal: true,
-                  'Your public name will appear with the review. One review is allowed per professional and can be updated.',
-                  style: TextStyle(color: Color(0xFF777785), fontSize: 11),
-                ),
-              ],
+                  if (provider.isExample)
+                    const Padding(
+                      padding: EdgeInsets.only(bottom: 8),
+                      child: Text(
+                        'Preview review · saved on this device only. This does not rate a real member.',
+                      ),
+                    ),
+                  const SiteText(
+                    contentKey: 'copy.member_profile_page.1',
+                    literal: true,
+                    'Your public name will appear with the review. One review is allowed per professional and can be updated.',
+                    style: TextStyle(color: Color(0xFF777785), fontSize: 11),
+                  ),
+                ],
+              ),
             ),
           ),
           actions: [
@@ -203,9 +207,11 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
                         setState(() {
                           _reviews = MarketplaceService.loadReviews(
                             provider.id,
+                            example: provider.isExample,
                           );
                         });
                       } catch (error) {
+                        if (!dialogContext.mounted) return;
                         setModalState(() => saving = false);
                         if (dialogContext.mounted) {
                           ScaffoldMessenger.of(dialogContext).showSnackBar(
@@ -224,28 +230,20 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
               child: SiteText(
                 contentKey: 'copy.member_profile_page.m5',
                 literal: false,
-                saving ? 'Saving…' : 'Publish review',
+                saving
+                    ? 'Saving…'
+                    : provider.isExample
+                    ? 'Save preview review'
+                    : 'Publish review',
               ),
             ),
           ],
         ),
       ),
     );
+    await Navigator.of(context).push(route);
+    await route.completed;
     reviewText.dispose();
-  }
-
-  Future<void> _requestIntroduction() async {
-    if (BackendService.user == null) {
-      await Navigator.of(
-        context,
-      ).push(MaterialPageRoute<void>(builder: (_) => const AuthPage()));
-      if (!mounted || BackendService.user == null) return;
-    }
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => ConnectionBriefPage(provider: provider),
-      ),
-    );
   }
 
   Future<void> _messageMember() async {
@@ -326,6 +324,8 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
                       },
                     ),
                     const SizedBox(height: 38),
+                    _experienceCard(),
+                    const SizedBox(height: 30),
                     _reviewsSection(),
                   ],
                 ),
@@ -485,7 +485,11 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
         SiteText(
           contentKey: 'copy.member_profile_page.m10',
           literal: false,
-          provider.specialty,
+          provider.personalExperience.isEmpty
+              ? provider.specialty
+              : (provider.specialties.isEmpty
+                    ? provider.category.label
+                    : provider.specialties.join(' · ')),
           style: const TextStyle(color: Color(0xFF555562), height: 1.6),
         ),
         const SizedBox(height: 22),
@@ -541,15 +545,6 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
             Icons.location_on_outlined,
             provider.locations.join(', '),
           ),
-        FilledButton.icon(
-          onPressed: _requestIntroduction,
-          icon: const Icon(Icons.handshake_outlined, size: 18),
-          label: const SiteText(
-            contentKey: 'copy.member_profile_page.5',
-            literal: true,
-            'BUILD A CONNECTION BRIEF',
-          ),
-        ),
         if (_canMessage && MediaQuery.sizeOf(context).width < 700) ...[
           const SizedBox(height: 10),
           OutlinedButton.icon(
@@ -600,6 +595,19 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
     ),
   );
 
+  Widget _experienceCard() => _card(
+    title: 'Personal experience',
+    titleKey: 'copy.member_profile_page.personal_experience',
+    child: Text(
+      provider.personalExperience.isNotEmpty
+          ? provider.personalExperience
+          : provider.isExample
+          ? 'I support business owners through preparation, buyer conversations and ownership transitions. I focus on understanding their goals, explaining the process clearly, and helping the team stay organized. This fictional member demonstrates the space for your own experience and approach.'
+          : 'This member has not added an experience write-up yet.',
+      style: const TextStyle(color: Color(0xFF555562), height: 1.65),
+    ),
+  );
+
   Widget _reviewsSection() => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
@@ -637,7 +645,7 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
               child: const SiteText(
                 contentKey: 'copy.member_profile_page.9',
                 literal: true,
-                'The professional profile is ready. Run the included provider reviews migration to activate ratings.',
+                'Could not load reviews right now. Please reopen this profile to retry.',
               ),
             );
           }
@@ -652,7 +660,17 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
               ),
             );
           }
-          return Column(children: reviews.map(_reviewCard).toList());
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '${provider.isExample ? "Preview reviews" : "Member reviews"} · ${reviews.length} · ${(reviews.fold<int>(0, (total, item) => total + item.rating) / reviews.length).toStringAsFixed(1)} / 5',
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 12),
+              ...reviews.map(_reviewCard),
+            ],
+          );
         },
       ),
     ],
@@ -700,7 +718,11 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
     ),
   );
 
-  Widget _card({required String title, required Widget child}) => Container(
+  Widget _card({
+    required String title,
+    required Widget child,
+    String? titleKey,
+  }) => Container(
     width: double.infinity,
     padding: const EdgeInsets.all(24),
     decoration: BoxDecoration(
@@ -712,8 +734,8 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SiteText(
-          contentKey: 'copy.member_profile_page.m15',
-          literal: false,
+          contentKey: titleKey ?? 'copy.member_profile_page.m15',
+          literal: titleKey != null,
           title,
           style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w700),
         ),
@@ -803,7 +825,7 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
     child: const SiteText(
       contentKey: 'copy.member_profile_page.11',
       literal: true,
-      'EXAMPLE PROFILE · This fictional professional demonstrates the public profile experience. Contact actions and reviews activate for verified members.',
+      'EXAMPLE PROFILE · This fictional professional demonstrates the public profile experience. Try a preview review below; it is saved on this device only.',
       style: TextStyle(
         color: Color(0xFF4C348F),
         fontSize: 11,

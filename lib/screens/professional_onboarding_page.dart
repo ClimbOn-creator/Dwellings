@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../models/platform_side.dart';
 import '../services/backend_service.dart';
 import '../services/membership_service.dart';
+import '../services/marketplace_service.dart';
 import '../widgets/app_navigation_menu.dart';
 import '../widgets/home_brand_button.dart';
 import '../widgets/membership_footer.dart';
@@ -320,17 +321,24 @@ class _ProfessionalOnboardingPageState
         const SizedBox(height: 18),
         TextFormField(
           controller: _bio,
-          validator: _required,
+          validator: (value) =>
+              _required(value) ??
+              (MarketplaceService.experienceWordCount(value ?? '') > 200
+                  ? 'Keep your write-up to 200 words.'
+                  : null),
+          onChanged: (_) => setState(() {}),
           minLines: 4,
           maxLines: 7,
-          decoration: const InputDecoration(
-            label: SiteText(
-              'Short professional introduction',
+          decoration: InputDecoration(
+            counterText:
+                '${MarketplaceService.experienceWordCount(_bio.text)} / 200 words',
+            label: const SiteText(
+              'Personal experience (up to 200 words)',
               contentKey: 'copy.professional_onboarding_page.field5',
               literal: true,
             ),
             hint: SiteText(
-              'What do you do, who do you help, and what makes your approach useful in an acquisition?',
+              'Describe your personal experience, past work, and the approach you bring to a deal.',
               contentKey: 'copy.professional_onboarding_page.field6',
               literal: true,
             ),
