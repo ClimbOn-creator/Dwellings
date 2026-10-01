@@ -678,6 +678,11 @@ class _PersonalizedConsultingPageState
 
   final _scrollController = ScrollController();
   late bool _motionEnabled;
+  bool _explicitMotion = false;
+
+  bool _motionActive(BuildContext context) =>
+      _motionEnabled &&
+      (_explicitMotion || !MediaQuery.disableAnimationsOf(context));
 
   @override
   void initState() {
@@ -685,7 +690,12 @@ class _PersonalizedConsultingPageState
     _motionEnabled = true;
     SharedPreferences.getInstance().then((preferences) {
       final saved = preferences.getBool('affinity.consulting.motion');
-      if (mounted && saved != null) setState(() => _motionEnabled = saved);
+      if (mounted && saved != null) {
+        setState(() {
+          _motionEnabled = saved;
+          _explicitMotion = true;
+        });
+      }
     });
   }
 
@@ -696,7 +706,10 @@ class _PersonalizedConsultingPageState
   }
 
   Future<void> _setMotion(bool value) async {
-    setState(() => _motionEnabled = value);
+    setState(() {
+      _motionEnabled = value;
+      _explicitMotion = true;
+    });
     await (await SharedPreferences.getInstance()).setBool(
       'affinity.consulting.motion',
       value,
@@ -754,6 +767,8 @@ class _PersonalizedConsultingPageState
             controller: _scrollController,
             contentKey: key,
             asset: asset,
+            maxTravel: 150,
+            scrollFactor: .42,
             child: const SizedBox.expand(),
           ),
         ),
@@ -1111,10 +1126,9 @@ class _PersonalizedConsultingPageState
 
   @override
   Widget build(BuildContext context) => MediaQuery(
-    data: MediaQuery.of(context).copyWith(
-      disableAnimations:
-          !_motionEnabled || MediaQuery.disableAnimationsOf(context),
-    ),
+    data: MediaQuery.of(
+      context,
+    ).copyWith(disableAnimations: !_motionActive(context)),
     child: Scaffold(
       backgroundColor: _cream,
       body: CustomScrollView(
@@ -1131,10 +1145,12 @@ class _PersonalizedConsultingPageState
             title: const HomeBrandButton(size: 48, dark: false),
             actions: [
               IconButton(
-                tooltip: _motionEnabled ? 'Pause parallax' : 'Enable parallax',
-                onPressed: () => _setMotion(!_motionEnabled),
+                tooltip: _motionActive(context)
+                    ? 'Pause parallax'
+                    : 'Enable parallax',
+                onPressed: () => _setMotion(!_motionActive(context)),
                 icon: Icon(
-                  _motionEnabled
+                  _motionActive(context)
                       ? Icons.pause_circle_outline
                       : Icons.play_circle_outline,
                   color: _forest,

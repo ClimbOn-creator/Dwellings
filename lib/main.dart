@@ -26,7 +26,6 @@ Future<void> main() async {
   await BackendService.initialize();
   final preferences = await SharedPreferences.getInstance();
   await preferences.setBool('affinity.landing.motion', true);
-  await preferences.setBool('affinity.consulting.motion', true);
   await SiteContentService.initialize();
   await AcquisitionFoundation.load();
   runApp(const AffinityApp());

@@ -1,3 +1,5 @@
+import 'package:dwelling_iq/widgets/site_image.dart';
+import 'package:dwelling_iq/services/site_content_service.dart';
 import 'package:dwelling_iq/screens/assistant_workspace_page.dart';
 import 'package:dwelling_iq/widgets/site_parallax_image.dart';
 import 'package:flutter/material.dart';
@@ -51,4 +53,64 @@ void main() {
     expect(find.text('9:00 AM Pacific'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+  testWidgets(
+    'consulting enable overrides reduced motion and visibly moves photos',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      tester.view.physicalSize = const Size(1440, 900);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(() => SiteContentService.editing.value = false);
+      Widget page() => const MaterialApp(
+        home: MediaQuery(
+          data: MediaQueryData(size: Size(1440, 900), disableAnimations: true),
+          child: PersonalizedConsultingPage(),
+        ),
+      );
+      await tester.pumpWidget(page());
+      await tester.pumpAndSettle();
+      expect(find.byTooltip('Enable parallax'), findsOneWidget);
+      final photo = find.byWidgetPredicate(
+        (w) =>
+            w is SiteParallaxImage &&
+            w.contentKey == 'image.assistant.consulting.background',
+      );
+      double translation() {
+        final image = tester.renderObject<RenderBox>(
+          find.descendant(of: photo, matching: find.byType(SiteImage)),
+        );
+        final flow = tester.renderObject<RenderBox>(
+          find.descendant(of: photo, matching: find.byType(Flow)),
+        );
+        return image.getTransformTo(flow).storage[13];
+      }
+
+      expect(translation(), -160);
+      await tester.tap(find.byTooltip('Enable parallax'));
+      await tester.pumpAndSettle();
+      final start = translation();
+      final scroll = tester
+          .widget<CustomScrollView>(find.byType(CustomScrollView))
+          .controller!;
+      scroll.jumpTo(180);
+      await tester.pump();
+      expect((translation() - start).abs(), greaterThan(60));
+      SiteContentService.editing.value = true;
+      await tester.pump();
+      expect(translation(), -160);
+      SiteContentService.editing.value = false;
+      await tester.pump();
+      await tester.tap(find.byTooltip('Pause parallax'));
+      await tester.pumpAndSettle();
+      scroll.jumpTo(80);
+      await tester.pump();
+      expect(translation(), -160);
+      await tester.pumpWidget(const SizedBox());
+      await tester.pumpWidget(page());
+      await tester.pumpAndSettle();
+      expect(find.byTooltip('Enable parallax'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
 }

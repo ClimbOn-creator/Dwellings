@@ -12,10 +12,13 @@ class SiteParallaxImage extends StatelessWidget {
     required this.contentKey,
     required this.asset,
     required this.child,
+    this.maxTravel = 54,
+    this.scrollFactor = .16,
   });
   final ScrollController controller;
   final String contentKey, asset;
   final Widget child;
+  final double maxTravel, scrollFactor;
 
   @override
   Widget build(BuildContext context) {
@@ -32,6 +35,8 @@ class SiteParallaxImage extends StatelessWidget {
                   context,
                   MediaQuery.sizeOf(context).height,
                   reduced || editing,
+                  maxTravel,
+                  scrollFactor,
                 ),
                 children: [
                   RepaintBoundary(
@@ -76,17 +81,25 @@ class SiteParallaxImage extends StatelessWidget {
 
 /// Compute movement at paint time, after scroll layout, to avoid a one-frame lag.
 class _PhotoFlow extends FlowDelegate {
-  _PhotoFlow(this.controller, this.section, this.viewportHeight, this.still)
-    : super(repaint: controller);
+  _PhotoFlow(
+    this.controller,
+    this.section,
+    this.viewportHeight,
+    this.still,
+    this.maxTravel,
+    this.scrollFactor,
+  ) : super(repaint: controller);
   final ScrollController controller;
   final BuildContext section;
   final double viewportHeight;
   final bool still;
+  final double maxTravel, scrollFactor;
+  double get overscan => maxTravel + 10;
 
   @override
   BoxConstraints getConstraintsForChild(int i, BoxConstraints constraints) =>
       BoxConstraints.tight(
-        Size(constraints.maxWidth, constraints.maxHeight + 128),
+        Size(constraints.maxWidth, constraints.maxHeight + overscan * 2),
       );
 
   @override
@@ -100,13 +113,15 @@ class _PhotoFlow extends FlowDelegate {
           renderObject.attached &&
           renderObject.hasSize) {
         final top = renderObject.localToGlobal(Offset.zero).dy;
-        travel = ((viewportHeight / 2 - top - context.size.height / 2) * .16)
-            .clamp(-54.0, 54.0);
+        travel =
+            ((viewportHeight / 2 - top - context.size.height / 2) *
+                    scrollFactor)
+                .clamp(-maxTravel, maxTravel);
       }
     }
     context.paintChild(
       0,
-      transform: Matrix4.translationValues(0, -64 + travel, 0),
+      transform: Matrix4.translationValues(0, -overscan + travel, 0),
     );
   }
 
@@ -115,5 +130,7 @@ class _PhotoFlow extends FlowDelegate {
       oldDelegate.controller != controller ||
       oldDelegate.section != section ||
       oldDelegate.viewportHeight != viewportHeight ||
-      oldDelegate.still != still;
+      oldDelegate.still != still ||
+      oldDelegate.maxTravel != maxTravel ||
+      oldDelegate.scrollFactor != scrollFactor;
 }
