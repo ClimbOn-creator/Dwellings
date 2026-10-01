@@ -127,7 +127,7 @@ class AffinityApp extends StatelessWidget {
       ),
       'buyer-learning' => const AcquisitionBlueprintPage(),
       'seller-learning' => const SellerDashboardPage(
-        initialView: SellerDashboardView.settings,
+        initialView: SellerDashboardView.plan,
         learning: true,
       ),
       'member-onboarding' => const MemberDealMarketplacePage(

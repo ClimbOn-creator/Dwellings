@@ -59,7 +59,7 @@ void main() {
     expect(find.text('Learn'), findsOneWidget);
   });
   testWidgets(
-    'seller pricing continues to deal pack within the same dashboard',
+    'seller pricing continues to transaction plan within the same dashboard',
     (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
@@ -68,11 +68,11 @@ void main() {
       );
       await tester.pumpAndSettle();
       await tester.scrollUntilVisible(
-        find.text('Next: prepare deal pack'),
+        find.text('Next: transaction plan'),
         600,
         scrollable: find.byType(Scrollable).last,
       );
-      await tester.tap(find.text('Next: prepare deal pack'));
+      await tester.tap(find.text('Next: transaction plan'));
       await tester.pumpAndSettle();
       expect(find.byType(SellerDashboardPage), findsOneWidget);
       expect(find.text('Next: create business listing'), findsOneWidget);

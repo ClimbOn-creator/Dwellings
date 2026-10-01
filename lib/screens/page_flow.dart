@@ -25,7 +25,7 @@ Future<void> startBuyerLearning(BuildContext context) =>
 Future<void> startSellerLearning(BuildContext context) => openAccountPage(
   context,
   const SellerDashboardPage(
-    initialView: SellerDashboardView.settings,
+    initialView: SellerDashboardView.plan,
     learning: true,
   ),
 );

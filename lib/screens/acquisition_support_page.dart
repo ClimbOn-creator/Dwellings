@@ -242,18 +242,7 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
           ),
         ),
         _reveal(_goalStatement()),
-        SliverLayoutBuilder(
-          builder: (context, constraints) => SliverToBoxAdapter(
-            child: AffinityScrollScene(
-              controller: _pageScroll,
-              startOffset: constraints.precedingScrollExtent - 82,
-              screens: 4.8,
-              fallback: _movingMarketing(),
-              builder: (context, progress, height) =>
-                  AffinityCinemaChapters(progress: progress),
-            ),
-          ),
-        ),
+        const SliverToBoxAdapter(child: AffinityTimedChapters()),
         _reveal(_buyerBenefits()),
         _reveal(_audiences()),
         _reveal(_path()),

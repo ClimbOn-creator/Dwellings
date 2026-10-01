@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dwelling_iq/screens/buyer_resources_page.dart';
 import 'package:dwelling_iq/services/buyer_resources.dart';
-import 'package:dwelling_iq/services/marketplace_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -92,8 +91,8 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.textContaining('Good '), findsOneWidget);
       expect(find.byKey(const Key('seller_business_name')), findsNothing);
-      await tester.ensureVisible(find.byKey(const Key('seller_tab_settings')));
-      await tester.tap(find.byKey(const Key('seller_tab_settings')));
+      await tester.ensureVisible(find.byKey(const Key('seller_tab_plan')));
+      await tester.tap(find.byKey(const Key('seller_tab_plan')));
       await tester.pumpAndSettle();
       await tester.enterText(
         find.byKey(const Key('seller_business_name')),
@@ -137,8 +136,8 @@ void main() {
       await tester.pumpAndSettle();
       await tester.pumpWidget(const MaterialApp(home: SellerDashboardPage()));
       await tester.pumpAndSettle();
-      await tester.ensureVisible(find.byKey(const Key('seller_tab_settings')));
-      await tester.tap(find.byKey(const Key('seller_tab_settings')));
+      await tester.ensureVisible(find.byKey(const Key('seller_tab_plan')));
+      await tester.tap(find.byKey(const Key('seller_tab_plan')));
       await tester.pumpAndSettle();
       expect(
         tester
@@ -186,49 +185,42 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.textContaining(r'$795,000'), findsOneWidget);
     expect(find.textContaining(r'$1,325,000'), findsOneWidget);
-    for (final tab in ['dealPack', 'team', 'resources']) {
+    for (final tab in ['plan', 'team', 'resources']) {
       final target = find.byKey(Key('seller_tab_$tab'));
       await tester.ensureVisible(target);
       await tester.tap(target);
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
     }
-    expect(find.text('Connect with the right people'), findsOneWidget);
-    expect(find.text('Amelia Foster'), findsOneWidget);
-    expect(find.text('Open official resource'), findsNothing);
-    expect(find.text('Example only'), findsWidgets);
-  });
-  testWidgets('seller resource directory filters people and city on desktop', (
-    tester,
-  ) async {
-    tester.view.physicalSize = const Size(1440, 900);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-    await tester.pumpWidget(const MaterialApp(home: SellerDashboardPage()));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('seller_tab_resources')));
-    await tester.pumpAndSettle();
-    expect(find.text('Amelia Foster'), findsOneWidget);
-    await tester.tap(
-      find.byKey(const Key('seller_resource_qualityOfEarnings')),
-    );
-    await tester.pumpAndSettle();
-    expect(find.text('Grace Okafor'), findsOneWidget);
+    expect(find.byType(BuyerResourcesPanel), findsOneWidget);
+    expect(find.text('Community Futures BC'), findsOneWidget);
     expect(find.text('Amelia Foster'), findsNothing);
-    await tester.tap(find.byType(DropdownButtonFormField<MarketplaceCity>));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Victoria, BC').last);
-    await tester.pumpAndSettle();
-    expect(find.textContaining('Victoria ·'), findsWidgets);
-    await tester.enterText(
-      find.byKey(const Key('seller_resource_search')),
-      'no such professional',
-    );
-    await tester.pumpAndSettle();
-    expect(find.textContaining('No professionals match'), findsOneWidget);
-    expect(tester.takeException(), isNull);
+    expect(find.text('Transfer profile'), findsNothing);
+    expect(find.text('Deal pack'), findsNothing);
   });
+  testWidgets(
+    'seller resources use government programs and filter without sign-in',
+    (tester) async {
+      tester.view.physicalSize = const Size(1440, 900);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(const MaterialApp(home: SellerDashboardPage()));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('seller_tab_resources')));
+      await tester.pumpAndSettle();
+      expect(find.byType(BuyerResourcesPanel), findsOneWidget);
+      await tester.enterText(find.byType(TextField), 'Community Futures');
+      await tester.pumpAndSettle();
+      expect(find.text('Community Futures BC'), findsOneWidget);
+      expect(find.text('BDC business purchase financing'), findsNothing);
+      expect(
+        find.byTooltip('Save Community Futures BC to profile'),
+        findsOneWidget,
+      );
+      expect(tester.takeException(), isNull);
+    },
+  );
   test('catalog has distinct account keys and official HTTPS links', () {
     expect(
       buyerResources.map((r) => BuyerResourceTeam.key(r.id)).toSet().length,

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../services/site_content_service.dart';
 import 'site_copy_text.dart';
@@ -397,6 +398,86 @@ class _CinemaButton extends StatelessWidget {
   );
 }
 
+class AffinityTimedChapters extends StatefulWidget {
+  const AffinityTimedChapters({super.key});
+  @override
+  State<AffinityTimedChapters> createState() => _AffinityTimedChaptersState();
+}
+
+class _AffinityTimedChaptersState extends State<AffinityTimedChapters> {
+  final _pages = PageController();
+  Timer? _timer;
+  int _index = 0;
+  bool _paused = false;
+  @override
+  void initState() {
+    super.initState();
+    SiteContentService.editing.addListener(_restart);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _restart();
+  }
+
+  void _restart() {
+    _timer?.cancel();
+    if (!mounted ||
+        _paused ||
+        SiteContentService.editing.value ||
+        MediaQuery.disableAnimationsOf(context))
+      return;
+    _timer = Timer.periodic(const Duration(seconds: 7), (_) {
+      if (_pages.hasClients)
+        _pages.animateToPage(
+          _index + 1,
+          duration: const Duration(milliseconds: 650),
+          curve: Curves.easeInOutCubic,
+        );
+    });
+  }
+
+  @override
+  void dispose() {
+    SiteContentService.editing.removeListener(_restart);
+    _timer?.cancel();
+    _pages.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+    key: const Key('landing_timed_chapters'),
+    height: MediaQuery.sizeOf(context).width < 760 ? 660 : 700,
+    child: Stack(
+      children: [
+        PageView.builder(
+          controller: _pages,
+          onPageChanged: (index) => setState(() => _index = index),
+          itemBuilder: (_, index) => AffinityCinemaChapters(
+            progress: (index % AffinityCinemaChapters.chapters.length) / 3.75,
+          ),
+        ),
+        Positioned(
+          top: 20,
+          right: 20,
+          child: IconButton.filledTonal(
+            tooltip: _paused
+                ? 'Resume automatic slides'
+                : 'Pause automatic slides',
+            onPressed: () {
+              setState(() => _paused = !_paused);
+              _restart();
+            },
+            icon: Icon(_paused ? Icons.play_arrow : Icons.pause),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
 class AffinityCinemaChapters extends StatelessWidget {
   const AffinityCinemaChapters({super.key, required this.progress});
   final double progress;
@@ -587,7 +668,7 @@ class AffinityCinemaChapters extends StatelessWidget {
                         ),
                       ),
                     const SizedBox(width: 12),
-                    const Icon(Icons.south, size: 20, color: Colors.white),
+                    const Icon(Icons.east, size: 20, color: Colors.white),
                   ],
                 ),
               ),
