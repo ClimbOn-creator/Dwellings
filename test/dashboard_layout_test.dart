@@ -16,7 +16,7 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
       await tester.pumpWidget(const MaterialApp(home: DealRoomsPage()));
       await tester.pumpAndSettle();
-      expect(find.text('Your pipeline'), findsOneWidget);
+      expect(find.text('Your acquisitions'), findsOneWidget);
       expect(find.text('My personal team'), findsOneWidget);
       expect(find.text('Detailed view'), findsNothing);
       expect(find.text('Archive'), findsNothing);
@@ -130,7 +130,7 @@ void main() {
     expect(find.text('Business price estimate'), findsOneWidget);
     expect(find.text('Asset value'), findsOneWidget);
     expect(find.text('Commercial real estate'), findsOneWidget);
-    expect(find.text('Your pipeline'), findsNothing);
+    expect(find.text('Your acquisitions'), findsNothing);
     expect(find.text('UNDERWRITE THE OPPORTUNITY'), findsNothing);
     expect(
       find.text('One decision workspace. Three ways to value a deal.'),

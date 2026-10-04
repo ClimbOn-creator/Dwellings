@@ -1,3 +1,5 @@
+import '../widgets/buyer_command_centre.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/team_workspace.dart';
 import 'buyer_resources_page.dart';
 import 'dart:async';
@@ -78,6 +80,48 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
   late final Timer _greetingTimer;
   DateTime _greetingTime = DateTime.now();
   final _transactionNote = TextEditingController();
+  String _commandName = '';
+  String? _lastRoomId;
+
+  Future<List<DealRoom>> _loadDashboardRooms() async {
+    if (widget.loadTransactionBundles != null) {
+      return (await widget.loadTransactionBundles!())
+          .map((bundle) => bundle.room)
+          .toList();
+    }
+    return DealRoomService.loadRooms();
+  }
+
+  Future<void> _loadCommandContext() async {
+    final user = BackendService.user;
+    final prefs = await SharedPreferences.getInstance();
+    String name = user?.userMetadata?['full_name'] as String? ?? '';
+    if (user != null) {
+      try {
+        name = (await AccountService.loadProfile())?.fullName ?? name;
+      } catch (_) {}
+    }
+    if (!mounted || BackendService.user?.id != user?.id) return;
+    setState(() {
+      _commandName = name;
+      _lastRoomId = prefs.getString(
+        'affinity.command.last_room.${user?.id ?? "guest"}',
+      );
+    });
+  }
+
+  void _openCommandPlan(DealRoom room) {
+    final userId = BackendService.user?.id ?? 'guest';
+    SharedPreferences.getInstance().then(
+      (prefs) => prefs.setString('affinity.command.last_room.$userId', room.id),
+    );
+    setState(() {
+      _lastRoomId = room.id;
+      _plannerRoomId = room.id;
+      _plannerBundles ??= _loadPlannerBundles();
+      _dashboardView = BuyerDashboardView.transactionPlan;
+    });
+  }
 
   @override
   void initState() {
@@ -85,7 +129,8 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
     _side = widget.initialSide;
     _pendingIntake = widget.initialIntake;
     _dashboardView = widget.initialView;
-    _rooms = DealRoomService.loadRooms();
+    _rooms = _loadDashboardRooms();
+    _loadCommandContext();
     _buyerBroadcast = _loadBuyerBroadcast();
     _greetingTimer = Timer.periodic(const Duration(minutes: 1), (_) {
       if (mounted) setState(() => _greetingTime = DateTime.now());
@@ -112,7 +157,8 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
   };
 
   void _refresh() => setState(() {
-    _rooms = DealRoomService.loadRooms();
+    _rooms = _loadDashboardRooms();
+    _loadCommandContext();
     _plannerBundles = null;
     _buyerBroadcast = _loadBuyerBroadcast();
   });
@@ -132,8 +178,14 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
   }
 
   Future<(List<DealRoomBundle>, List<MarketplaceProvider>)>
-  _loadBuyerBroadcast() async =>
-      (await _loadPlannerBundles(), await AccountService.loadTeam());
+  _loadBuyerBroadcast() async {
+    final bundles = await _loadPlannerBundles();
+    List<MarketplaceProvider> team = const [];
+    try {
+      team = await AccountService.loadTeam();
+    } catch (_) {}
+    return (bundles, team);
+  }
 
   Future<void> _managePersonalTeam() async {
     if (BackendService.user == null) {
@@ -468,6 +520,8 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
           allRooms,
           bundles: snapshot.data?.$1 ?? const [],
           team: snapshot.data?.$2 ?? const [],
+          commandLoading: snapshot.connectionState == ConnectionState.waiting,
+          commandError: snapshot.hasError,
         ),
       );
 
@@ -475,6 +529,8 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
     List<DealRoom> allRooms, {
     List<DealRoomBundle> bundles = const [],
     List<MarketplaceProvider> team = const [],
+    bool commandLoading = false,
+    bool commandError = false,
   }) {
     DealRoomBundle? bundleFor(DealRoom room) {
       for (final bundle in bundles) {
@@ -498,173 +554,45 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
               r.city.toLowerCase().contains(_dashboardSearch.toLowerCase()),
         )
         .toList();
-    final dueSoon = active
-        .where(
-          (r) =>
-              r.nextDueAt != null &&
-              r.nextDueAt!.isBefore(
-                DateTime.now().add(const Duration(days: 8)),
-              ),
-        )
-        .length;
-    final blocked = active.where((r) => r.blockedTaskCount > 0).length;
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(26, 30, 26, 56),
       child: LayoutBuilder(
         builder: (context, box) {
           final narrow = box.maxWidth < 740;
-          final metricWidth = narrow
-              ? (box.maxWidth - 12) / 2
-              : (box.maxWidth - 36) / 4;
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (narrow) ...[
-                Text(
-                  '$_liveGreeting 👋',
-                  style: const TextStyle(
-                    fontSize: 27,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -.8,
-                  ),
+              if (!_showArchived)
+                BuyerCommandCentre(
+                  rooms: active,
+                  bundles: bundles,
+                  now: _greetingTime,
+                  greeting: _liveGreeting,
+                  name: _commandName,
+                  lastRoomId: _lastRoomId,
+                  loading: commandLoading,
+                  error: commandError,
+                  filter: _dashboardSearch,
+                  search: _buyerSearch(),
+                  onOpenDeal: _openRoom,
+                  onOpenPlan: _openCommandPlan,
+                  onRetry: _refresh,
                 ),
-                const SizedBox(height: 5),
-                const Text(
-                  'Keep every acquisition moving.',
-                  style: TextStyle(color: DashboardUi.muted),
-                ),
-                const SizedBox(height: 17),
-                _buyerSearch(),
-              ] else
-                Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '$_liveGreeting 👋',
-                            style: const TextStyle(
-                              fontSize: 27,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: -.8,
-                            ),
-                          ),
-                          const SizedBox(height: 5),
-                          const Text(
-                            'Keep every acquisition moving.',
-                            style: TextStyle(color: DashboardUi.muted),
-                          ),
-                        ],
-                      ),
-                    ),
-                    SizedBox(width: 255, child: _buyerSearch()),
-                  ],
-                ),
-              const SizedBox(height: 16),
-              const SizedBox(height: 25),
-              Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                children: [
-                  SizedBox(
-                    width: metricWidth,
-                    child: DashboardUi.metric(
-                      'Active deals',
-                      '${active.length}',
-                      'In your pipeline',
-                      Icons.bar_chart_rounded,
-                      DashboardUi.paleBlue,
-                      const Color(0xFF5F91DC),
-                    ),
-                  ),
-                  SizedBox(
-                    width: metricWidth,
-                    child: DashboardUi.metric(
-                      'Under review',
-                      '${active.where((r) => _dashboardStage(r) == 1).length}',
-                      'Screening & finance',
-                      Icons.trending_up_rounded,
-                      DashboardUi.paleGreen,
-                      const Color(0xFF3C9764),
-                    ),
-                  ),
-                  SizedBox(
-                    width: metricWidth,
-                    child: DashboardUi.metric(
-                      'Due soon',
-                      '$dueSoon',
-                      'Next 7 days',
-                      Icons.event_note_outlined,
-                      DashboardUi.paleGold,
-                      const Color(0xFFB88016),
-                    ),
-                  ),
-                  SizedBox(
-                    width: metricWidth,
-                    child: DashboardUi.metric(
-                      'Needs attention',
-                      '$blocked',
-                      'Deals with blockers',
-                      Icons.notifications_active_outlined,
-                      DashboardUi.paleViolet,
-                      const Color(0xFF8A79D5),
-                    ),
-                  ),
-                ],
-              ),
               const SizedBox(height: 20),
               DashboardUi.panel(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: DashboardUi.sectionTitle(
-                            _showArchived ? 'Deal history' : 'Your pipeline',
-                            subtitle: _showArchived
-                                ? 'Completed and archived acquisitions'
-                                : 'Follow each deal from sourcing to close.',
-                          ),
-                        ),
-                      ],
+                    DashboardUi.sectionTitle(
+                      _showArchived ? 'Deal history' : 'Build your pipeline',
+                      subtitle: _showArchived
+                          ? 'Completed and archived acquisitions'
+                          : 'Find your next opportunity or bring a deal you already know.',
                     ),
                     const SizedBox(height: 16),
-                    if (!_showArchived)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: Wrap(
-                          spacing: 10,
-                          runSpacing: 8,
-                          children: [
-                            FilledButton.icon(
-                              onPressed: () => Navigator.of(context).push(
-                                MaterialPageRoute<void>(
-                                  builder: (_) =>
-                                      const BusinessSaleBulletinPage(),
-                                ),
-                              ),
-                              icon: const Icon(Icons.search),
-                              label: const Text('Search businesses'),
-                            ),
-                            OutlinedButton.icon(
-                              onPressed: _creating ? null : _manualCreate,
-                              icon: const Icon(Icons.add),
-                              label: const Text('Enter a private deal'),
-                            ),
-                            TextButton(
-                              onPressed: () => Navigator.of(context).push(
-                                MaterialPageRoute<void>(
-                                  builder: (_) => const DealComparisonPage(),
-                                ),
-                              ),
-                              child: const Text('Compare what fits me'),
-                            ),
-                          ],
-                        ),
-                      ),
                     if (_showArchived) ...[
+                      _buyerSearch(),
+                      const SizedBox(height: 16),
                       if (shown.isEmpty)
                         const Text(
                           'No archived deals yet.',
@@ -673,84 +601,34 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                       for (final room in shown)
                         _buyerDealTile(room, bundle: bundleFor(room)),
                     ] else
-                      SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: List.generate(4, (index) {
-                            const titles = [
-                              'Sourcing',
-                              'Under review',
-                              'LOI / diligence',
-                              'Closing',
-                            ];
-                            final stageRooms = shown
-                                .where((r) => _dashboardStage(r) == index)
-                                .toList();
-                            return Container(
-                              width: narrow ? 214 : (box.maxWidth - 78) / 4,
-                              constraints: const BoxConstraints(minWidth: 185),
-                              margin: EdgeInsets.only(
-                                right: index == 3 ? 0 : 10,
+                      Wrap(
+                        spacing: 10,
+                        runSpacing: 8,
+                        children: [
+                          FilledButton.icon(
+                            onPressed: () => Navigator.of(context).push(
+                              MaterialPageRoute<void>(
+                                builder: (_) =>
+                                    const BusinessSaleBulletinPage(),
                               ),
-                              padding: const EdgeInsets.all(9),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFF5F8FF),
-                                borderRadius: BorderRadius.circular(10),
+                            ),
+                            icon: const Icon(Icons.search),
+                            label: const Text('Search businesses'),
+                          ),
+                          OutlinedButton.icon(
+                            onPressed: _creating ? null : _manualCreate,
+                            icon: const Icon(Icons.add),
+                            label: const Text('Enter a private deal'),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.of(context).push(
+                              MaterialPageRoute<void>(
+                                builder: (_) => const DealComparisonPage(),
                               ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.fromLTRB(
-                                      3,
-                                      2,
-                                      3,
-                                      10,
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        Expanded(
-                                          child: Text(
-                                            titles[index],
-                                            style: const TextStyle(
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.w800,
-                                            ),
-                                          ),
-                                        ),
-                                        Text(
-                                          '${stageRooms.length}',
-                                          style: const TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w800,
-                                            color: DashboardUi.blue,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  if (stageRooms.isEmpty)
-                                    const Padding(
-                                      padding: EdgeInsets.all(10),
-                                      child: Text(
-                                        'No deals here yet',
-                                        style: TextStyle(
-                                          color: DashboardUi.muted,
-                                          fontSize: 11,
-                                        ),
-                                      ),
-                                    ),
-                                  for (final room in stageRooms)
-                                    _buyerDealTile(
-                                      room,
-                                      bundle: bundleFor(room),
-                                    ),
-                                ],
-                              ),
-                            );
-                          }),
-                        ),
+                            ),
+                            child: const Text('Compare what fits me'),
+                          ),
+                        ],
                       ),
                   ],
                 ),
@@ -2373,10 +2251,17 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
   );
 
   Future<void> _openRoom(DealRoom room) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+      'affinity.command.last_room.${BackendService.user?.id ?? "guest"}',
+      room.id,
+    );
+    if (!mounted) return;
+    setState(() => _lastRoomId = room.id);
     await Navigator.of(
       context,
     ).push(MaterialPageRoute<void>(builder: (_) => DealRoomPage(room: room)));
-    _refresh();
+    if (mounted) _refresh();
   }
 
   Widget _dashboardEmpty() => Container(
@@ -3913,6 +3798,12 @@ class _DealRoomPageState extends State<DealRoomPage> {
   void initState() {
     super.initState();
     _room = widget.room;
+    SharedPreferences.getInstance().then(
+      (prefs) => prefs.setString(
+        'affinity.command.last_room.${BackendService.user?.id ?? "guest"}',
+        _room.id,
+      ),
+    );
     for (final e in _extra.entries) {
       e.value.text =
           '${_room.propertySnapshot[e.key] ?? (e.key == "currency" ? "CAD" : "")}';
