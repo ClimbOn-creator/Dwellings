@@ -128,7 +128,7 @@ void main() {
   );
   for (final width in [390.0, 1440.0]) {
     testWidgets(
-      'command centre shows real actions and opens the selected deal at $width',
+      'secondary dashboard cards show real deadlines and resume the selected deal at $width',
       (tester) async {
         tester.view.physicalSize = Size(width, 1600);
         tester.view.devicePixelRatio = 1;
@@ -141,17 +141,13 @@ void main() {
               body: SingleChildScrollView(
                 child: Padding(
                   padding: const EdgeInsets.all(24),
-                  child: BuyerCommandCentre(
+                  child: BuyerDashboardFollowUp(
                     rooms: [island, abc, dental],
                     bundles: fixtures,
                     now: now,
-                    greeting: 'Good afternoon',
-                    name: 'Will Russell',
                     lastRoomId: abc.id,
-                    search: const SizedBox(),
                     onOpenDeal: (deal) => opened = deal,
                     onOpenPlan: (deal) => planned = deal,
-                    onRetry: () {},
                   ),
                 ),
               ),
@@ -159,14 +155,9 @@ void main() {
           ),
         );
         await tester.pumpAndSettle();
-        expect(find.text('Good afternoon, Will'), findsOneWidget);
-        expect(
-          find.text('3 active acquisitions · 2 actions need attention'),
-          findsOneWidget,
-        );
-        await tester.ensureVisible(find.text('Upload lender package'));
+        await tester.ensureVisible(find.text('Overdue documents'));
         await tester.pumpAndSettle();
-        await tester.tap(find.text('Upload lender package'));
+        await tester.tap(find.text('Overdue documents'));
         expect(planned!.id, abc.id);
         await tester.ensureVisible(
           find.byKey(const Key('continue-acquisition')),
@@ -188,7 +179,17 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.byType(BuyerCommandCentre), findsOneWidget);
+      expect(find.byType(BuyerDashboardFollowUp), findsOneWidget);
+      expect(find.text('Your pipeline'), findsOneWidget);
+      expect(find.text('Your acquisitions'), findsNothing);
+      for (final title in [
+        'Active deals',
+        'Under review',
+        'Due soon',
+        'Needs attention',
+      ]) {
+        expect(find.text(title), findsWidgets);
+      }
       await tester.ensureVisible(find.text('Upload lender package'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Upload lender package'));
@@ -208,7 +209,7 @@ void main() {
         ),
         abc.id,
       );
-      expect(find.byType(BuyerCommandCentre), findsNothing);
+      expect(find.byType(BuyerDashboardFollowUp), findsNothing);
       expect(tester.takeException(), isNull);
     },
   );
@@ -217,16 +218,9 @@ void main() {
   ) async {
     await tester.pumpWidget(const MaterialApp(home: DealRoomsPage()));
     await tester.pumpAndSettle();
-    expect(
-      find.text('0 active acquisitions · 0 actions need attention'),
-      findsOneWidget,
-    );
-    expect(
-      find.text(
-        'No deadlines scheduled. Add dates in a deal’s Transaction Plan.',
-      ),
-      findsOneWidget,
-    );
+    expect(find.text('Your pipeline'), findsOneWidget);
+    expect(find.text('Active deals'), findsOneWidget);
+    expect(find.byType(BuyerDashboardFollowUp), findsNothing);
     expect(find.byKey(const Key('continue-acquisition')), findsNothing);
     expect(tester.takeException(), isNull);
   });

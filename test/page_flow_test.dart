@@ -29,7 +29,7 @@ void main() {
       await tester.ensureVisible(find.text('Continue to buyer dashboard'));
       await tester.tap(find.text('Continue to buyer dashboard'));
       await tester.pumpAndSettle();
-      expect(find.text('Your acquisitions'), findsOneWidget);
+      expect(find.text('Your pipeline'), findsOneWidget);
       expect(find.text('Search businesses'), findsOneWidget);
       expect(find.text('Enter a private deal'), findsOneWidget);
       expect(tester.takeException(), isNull);

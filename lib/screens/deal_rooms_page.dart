@@ -1,3 +1,4 @@
+import '../models/buyer_command_state.dart';
 import '../widgets/buyer_command_centre.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/team_workspace.dart';
@@ -554,45 +555,181 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
               r.city.toLowerCase().contains(_dashboardSearch.toLowerCase()),
         )
         .toList();
+    final command = BuyerCommandState(
+      active,
+      bundles,
+      _greetingTime,
+      lastRoomId: _lastRoomId,
+    );
+    final dueSoon = command.deals
+        .where((deal) => deal.health == AcquisitionHealth.dueSoon)
+        .length;
+    final blocked = command.deals
+        .where((deal) => deal.health == AcquisitionHealth.attention)
+        .length;
+    final greeting =
+        '$_liveGreeting${_commandName.trim().isEmpty ? "" : ", ${_commandName.trim().split(RegExp(r'\s+')).first}"} 👋';
+    final summary = active.isEmpty
+        ? 'Keep every acquisition moving.'
+        : '${active.length} active acquisitions · ${commandLoading
+              ? "Updating actions…"
+              : commandError
+              ? "Action details unavailable"
+              : "${command.attentionCount} actions need attention"}';
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(26, 30, 26, 56),
       child: LayoutBuilder(
         builder: (context, box) {
           final narrow = box.maxWidth < 740;
+          final metricWidth = narrow
+              ? (box.maxWidth - 12) / 2
+              : (box.maxWidth - 36) / 4;
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (!_showArchived)
-                BuyerCommandCentre(
-                  rooms: active,
-                  bundles: bundles,
-                  now: _greetingTime,
-                  greeting: _liveGreeting,
-                  name: _commandName,
-                  lastRoomId: _lastRoomId,
-                  loading: commandLoading,
-                  error: commandError,
-                  filter: _dashboardSearch,
-                  search: _buyerSearch(),
-                  onOpenDeal: _openRoom,
-                  onOpenPlan: _openCommandPlan,
-                  onRetry: _refresh,
+              if (narrow) ...[
+                Text(
+                  greeting,
+                  style: const TextStyle(
+                    fontSize: 27,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -.8,
+                  ),
                 ),
+                const SizedBox(height: 5),
+                Text(summary, style: TextStyle(color: DashboardUi.muted)),
+                const SizedBox(height: 17),
+                _buyerSearch(),
+              ] else
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            greeting,
+                            style: const TextStyle(
+                              fontSize: 27,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -.8,
+                            ),
+                          ),
+                          const SizedBox(height: 5),
+                          Text(
+                            summary,
+                            style: TextStyle(color: DashboardUi.muted),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(width: 255, child: _buyerSearch()),
+                  ],
+                ),
+              const SizedBox(height: 16),
+              const SizedBox(height: 25),
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: [
+                  SizedBox(
+                    width: metricWidth,
+                    child: DashboardUi.metric(
+                      'Active deals',
+                      '${active.length}',
+                      'In your pipeline',
+                      Icons.bar_chart_rounded,
+                      DashboardUi.paleBlue,
+                      const Color(0xFF5F91DC),
+                    ),
+                  ),
+                  SizedBox(
+                    width: metricWidth,
+                    child: DashboardUi.metric(
+                      'Under review',
+                      '${active.where((r) => _dashboardStage(r) == 1).length}',
+                      'Screening & finance',
+                      Icons.trending_up_rounded,
+                      DashboardUi.paleGreen,
+                      const Color(0xFF3C9764),
+                    ),
+                  ),
+                  SizedBox(
+                    width: metricWidth,
+                    child: DashboardUi.metric(
+                      'Due soon',
+                      '$dueSoon',
+                      'Next 7 days',
+                      Icons.event_note_outlined,
+                      DashboardUi.paleGold,
+                      const Color(0xFFB88016),
+                    ),
+                  ),
+                  SizedBox(
+                    width: metricWidth,
+                    child: DashboardUi.metric(
+                      'Needs attention',
+                      '$blocked',
+                      'Blocked or overdue',
+                      Icons.notifications_active_outlined,
+                      DashboardUi.paleViolet,
+                      const Color(0xFF8A79D5),
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 20),
               DashboardUi.panel(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    DashboardUi.sectionTitle(
-                      _showArchived ? 'Deal history' : 'Build your pipeline',
-                      subtitle: _showArchived
-                          ? 'Completed and archived acquisitions'
-                          : 'Find your next opportunity or bring a deal you already know.',
+                    Row(
+                      children: [
+                        Expanded(
+                          child: DashboardUi.sectionTitle(
+                            _showArchived ? 'Deal history' : 'Your pipeline',
+                            subtitle: _showArchived
+                                ? 'Completed and archived acquisitions'
+                                : 'Follow each deal from sourcing to close.',
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 16),
+                    if (!_showArchived)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: Wrap(
+                          spacing: 10,
+                          runSpacing: 8,
+                          children: [
+                            FilledButton.icon(
+                              onPressed: () => Navigator.of(context).push(
+                                MaterialPageRoute<void>(
+                                  builder: (_) =>
+                                      const BusinessSaleBulletinPage(),
+                                ),
+                              ),
+                              icon: const Icon(Icons.search),
+                              label: const Text('Search businesses'),
+                            ),
+                            OutlinedButton.icon(
+                              onPressed: _creating ? null : _manualCreate,
+                              icon: const Icon(Icons.add),
+                              label: const Text('Enter a private deal'),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.of(context).push(
+                                MaterialPageRoute<void>(
+                                  builder: (_) => const DealComparisonPage(),
+                                ),
+                              ),
+                              child: const Text('Compare what fits me'),
+                            ),
+                          ],
+                        ),
+                      ),
                     if (_showArchived) ...[
-                      _buyerSearch(),
-                      const SizedBox(height: 16),
                       if (shown.isEmpty)
                         const Text(
                           'No archived deals yet.',
@@ -601,34 +738,84 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                       for (final room in shown)
                         _buyerDealTile(room, bundle: bundleFor(room)),
                     ] else
-                      Wrap(
-                        spacing: 10,
-                        runSpacing: 8,
-                        children: [
-                          FilledButton.icon(
-                            onPressed: () => Navigator.of(context).push(
-                              MaterialPageRoute<void>(
-                                builder: (_) =>
-                                    const BusinessSaleBulletinPage(),
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: List.generate(4, (index) {
+                            const titles = [
+                              'Sourcing',
+                              'Under review',
+                              'LOI / diligence',
+                              'Closing',
+                            ];
+                            final stageRooms = shown
+                                .where((r) => _dashboardStage(r) == index)
+                                .toList();
+                            return Container(
+                              width: narrow ? 214 : (box.maxWidth - 78) / 4,
+                              constraints: const BoxConstraints(minWidth: 185),
+                              margin: EdgeInsets.only(
+                                right: index == 3 ? 0 : 10,
                               ),
-                            ),
-                            icon: const Icon(Icons.search),
-                            label: const Text('Search businesses'),
-                          ),
-                          OutlinedButton.icon(
-                            onPressed: _creating ? null : _manualCreate,
-                            icon: const Icon(Icons.add),
-                            label: const Text('Enter a private deal'),
-                          ),
-                          TextButton(
-                            onPressed: () => Navigator.of(context).push(
-                              MaterialPageRoute<void>(
-                                builder: (_) => const DealComparisonPage(),
+                              padding: const EdgeInsets.all(9),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF5F8FF),
+                                borderRadius: BorderRadius.circular(10),
                               ),
-                            ),
-                            child: const Text('Compare what fits me'),
-                          ),
-                        ],
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.fromLTRB(
+                                      3,
+                                      2,
+                                      3,
+                                      10,
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            titles[index],
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w800,
+                                            ),
+                                          ),
+                                        ),
+                                        Text(
+                                          '${stageRooms.length}',
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w800,
+                                            color: DashboardUi.blue,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  if (stageRooms.isEmpty)
+                                    const Padding(
+                                      padding: EdgeInsets.all(10),
+                                      child: Text(
+                                        'No deals here yet',
+                                        style: TextStyle(
+                                          color: DashboardUi.muted,
+                                          fontSize: 11,
+                                        ),
+                                      ),
+                                    ),
+                                  for (final room in stageRooms)
+                                    _buyerDealTile(
+                                      room,
+                                      bundle: bundleFor(room),
+                                    ),
+                                ],
+                              ),
+                            );
+                          }),
+                        ),
                       ),
                   ],
                 ),
@@ -650,6 +837,19 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                 narrow: narrow,
                 width: box.maxWidth,
               ),
+              if (!_showArchived && active.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                BuyerDashboardFollowUp(
+                  rooms: active,
+                  bundles: bundles,
+                  now: _greetingTime,
+                  lastRoomId: _lastRoomId,
+                  loading: commandLoading,
+                  error: commandError,
+                  onOpenDeal: _openRoom,
+                  onOpenPlan: _openCommandPlan,
+                ),
+              ],
               const SizedBox(height: 16),
               Wrap(
                 spacing: 12,
@@ -1653,6 +1853,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
   );
 
   Widget _buyerDealTile(DealRoom room, {DealRoomBundle? bundle}) {
+    final command = AcquisitionCommand(room, bundle, _greetingTime);
     final stageTasks =
         bundle?.tasks
             .where((task) => task.stage == room.currentStage)
@@ -1690,9 +1891,12 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                   margin: const EdgeInsets.only(top: 4, right: 8),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: room.blockedTaskCount > 0
-                        ? const Color(0xFFE7AE30)
-                        : const Color(0xFF45A470),
+                    color: switch (command.health) {
+                      AcquisitionHealth.attention => const Color(0xFFB34035),
+                      AcquisitionHealth.dueSoon => const Color(0xFFE7AE30),
+                      AcquisitionHealth.onTrack => const Color(0xFF45A470),
+                      AcquisitionHealth.awaitingDetails => DashboardUi.muted,
+                    },
                   ),
                 ),
                 Expanded(
@@ -1731,17 +1935,25 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                             color: const Color(0xFF45A470),
                           ),
                         ),
-                        const SizedBox(height: 5),
-                        Text(
-                          room.currentStep,
-                          maxLines: 1,
+                      ],
+                      const SizedBox(height: 5),
+                      TextButton(
+                        onPressed: () => _openCommandPlan(room),
+                        style: TextButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          minimumSize: const Size(0, 24),
+                          alignment: Alignment.centerLeft,
+                        ),
+                        child: Text(
+                          command.nextAction,
+                          maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
-                            color: DashboardUi.muted,
-                            fontSize: 9,
+                            color: DashboardUi.blue,
+                            fontSize: 10,
                           ),
                         ),
-                      ],
+                      ),
                     ],
                   ),
                 ),
