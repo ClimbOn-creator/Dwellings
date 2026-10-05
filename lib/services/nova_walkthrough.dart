@@ -19,7 +19,7 @@ class NovaStep {
 List<NovaStep> novaWalkthrough(String role) => [
   NovaStep(
     'welcome',
-    'Hi, I’m Nova.',
+    'Hi, I’m Pebble.',
     'I’ll show you where everything lives, one screen at a time. Use Next and Back to explore. This tour will not create listings, change deals or contact anyone.',
     '$role/home',
     NovaMood.welcome,
@@ -217,7 +217,7 @@ List<NovaStep> novaWalkthrough(String role) => [
   NovaStep(
     'finish',
     'You’re ready to explore.',
-    'You’ve finished the app walkthrough. Nova will stay tucked away after this. You can replay any guide from Nova walkthrough in the menu or from your profile.',
+    'You’ve finished the app walkthrough. Pebble will stay tucked away after this. You can replay any guide from Pebble walkthrough in the menu or from your profile.',
     '$role/home',
     NovaMood.celebrating,
   ),

@@ -61,7 +61,7 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
   }
 
   String _label(AppNavigationDestination destination) => switch (destination) {
-    AppNavigationDestination.novaWalkthrough => 'Nova walkthrough',
+    AppNavigationDestination.novaWalkthrough => 'Pebble walkthrough',
     AppNavigationDestination.resources => 'Resources',
     AppNavigationDestination.sellerDashboard => 'Seller dashboard',
     AppNavigationDestination.overview => 'Acquisition workspace',

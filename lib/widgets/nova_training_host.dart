@@ -270,7 +270,7 @@ class _NovaTrainingHostState extends State<NovaTrainingHost>
   );
 }
 
-/// Place Nova beside the target, choosing the available region with the least
+/// Place Pebble beside the target, choosing the available region with the least
 /// overlap. The character and speech bubble move together; neither is docked.
 Offset novaGuidePosition(
   Size screen,
@@ -357,7 +357,7 @@ class NovaTourCard extends StatelessWidget {
                     children: [
                       const SiteCopyText(
                         'nova.panel.name',
-                        'Nova',
+                        'Pebble',
                         style: TextStyle(
                           color: Color(0xFF164F3D),
                           fontSize: 13,

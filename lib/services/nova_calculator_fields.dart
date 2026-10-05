@@ -1,4 +1,4 @@
-// Field inventory shared by Nova's line-by-line calculator tours.
+// Field inventory shared by Pebble's line-by-line calculator tours.
 class NovaCalculatorField {
   const NovaCalculatorField(
     this.key,

@@ -245,7 +245,7 @@ const siteCopyCatalog = <String, String>{
   'nova.training.seller-result-closing.title': "Cash at closing",
   'nova.training.seller-result-closing.body':
       "Subtract vendor financing, selling fees and debt paid at closing from the expected price. The result is before tax; holdbacks, earn-outs and working-capital adjustments need separate review. Results appear when the required fields are complete.",
-  'nova.training.welcome.title': "Hi, I’m Nova.",
+  'nova.training.welcome.title': "Hi, I’m Pebble.",
   'nova.training.welcome.body':
       "I’ll show you where everything lives, one screen at a time. Use Next and Back to explore. This tour will not create listings, change deals or contact anyone.",
   'nova.training.seller-home.title': "Your next chapter starts here",
@@ -322,12 +322,12 @@ const siteCopyCatalog = <String, String>{
       "Personal consulting explains the support available and keeps the consultation calendar on the page. Use the booking options when you are ready to arrange help.",
   'nova.training.finish.title': "You’re ready to explore.",
   'nova.training.finish.body':
-      "You’ve finished the app walkthrough. Nova will stay tucked away after this. You can replay any guide from Nova walkthrough in the menu or from your profile.",
-  'copy.assistant_workspace_page.3': 'Nova app walkthrough',
+      "You’ve finished the app walkthrough. Pebble will stay tucked away after this. You can replay any guide from Pebble walkthrough in the menu or from your profile.",
+  'copy.assistant_workspace_page.3': 'Pebble app walkthrough',
   'copy.assistant_workspace_page.4':
-      'Explore the app with Nova. Use Next and Back, then replay the tour whenever you need it.',
-  'nova.training.replay': 'Show me around with Nova',
-  'nova.panel.name': 'Nova',
+      'Explore the app with Pebble. Use Next and Back, then replay the tour whenever you need it.',
+  'nova.training.replay': 'Show me around with Pebble',
+  'nova.panel.name': 'Pebble',
   'nova.panel.prompt': 'What would you like to understand?',
   '5e87673b': " years",
   '993d3d4f': " · Example profile",

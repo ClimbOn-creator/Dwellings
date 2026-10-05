@@ -36,7 +36,7 @@ class NovaPanel extends StatelessWidget {
       icon: const NovaCharacter(size: 32),
       label: const SiteCopyText(
         'nova.training.replay',
-        'Show me around with Nova',
+        'Show me around with Pebble',
       ),
       style: TextButton.styleFrom(foregroundColor: const Color(0xFF164F3D)),
     ),

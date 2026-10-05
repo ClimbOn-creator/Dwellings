@@ -181,7 +181,7 @@ void main() {
     },
   );
   testWidgets(
-    'all buyer tabs expose every field to Nova without filling examples',
+    'all buyer tabs expose every field to Pebble without filling examples',
     (tester) async {
       for (final mode in BuyerScreenMode.values) {
         await tester.pumpWidget(
@@ -265,7 +265,7 @@ void main() {
     );
   }
   testWidgets(
-    'Nova scrolls to a deep field and keeps its character outside the bubble',
+    'Pebble scrolls to a deep field and keeps its character outside the bubble',
     (tester) async {
       tester.view.physicalSize = const Size(390, 844);
       tester.view.devicePixelRatio = 1;
@@ -409,7 +409,7 @@ void main() {
       expect(find.byType(NovaTourCard), findsNothing);
     },
   );
-  testWidgets('first load automatically introduces Nova', (tester) async {
+  testWidgets('first load automatically introduces Pebble', (tester) async {
     final controller = NovaTrainingController(
       service: NovaTrainingService(accountId: () => null),
     );
@@ -427,7 +427,7 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(controller.active, isTrue);
-    expect(find.text('Hi, I’m Nova.'), findsOneWidget);
+    expect(find.text('Hi, I’m Pebble.'), findsOneWidget);
     await tester.tap(find.byKey(const Key('nova_pause')));
     await tester.pumpAndSettle();
     expect(controller.service.progress.completed, isFalse);

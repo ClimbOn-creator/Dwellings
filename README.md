@@ -158,6 +158,6 @@ Copy keys embedded in `SiteText`, `SiteCopyText`, `SiteImage` and `SiteBackgroun
 
 Text keys and image slot keys are permanent and do not depend on wording, filenames or image bytes. Saved Supabase values always override bundled defaults. Changes to copy, layout or bundled assets must carry forward those same IDs. The persistence suite tests new text defaults, new asset paths and remounting the app while preserving the owner's saved text and image URL. See `AGENTS.md` for the standing owner instruction governing all future changes.
 
-## Nova app walkthrough
+## Pebble app walkthrough
 
-Nova is a character-led, click-through guide to the dashboards, transaction room and other app tools. Completed training is saved to a signed-in account’s profile and stays hidden until replay is requested. No AI key or additional database migration is required. See [Nova guide behaviour](docs/nova-setup.md).
+Pebble is a character-led, click-through guide to the dashboards, transaction room and other app tools. Completed training is saved to a signed-in account’s profile and stays hidden until replay is requested. No AI key or additional database migration is required. See [Pebble guide behaviour](docs/nova-setup.md).
