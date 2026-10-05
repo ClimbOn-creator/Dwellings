@@ -54,6 +54,7 @@ class DealRoomsPage extends StatefulWidget {
     this.startIntake = false,
     this.initialIntake,
     this.initialView = BuyerDashboardView.home,
+    this.trainingCalculatorMode = BuyerScreenMode.business,
     this.loadTransactionBundles,
     this.loadTeamProviders,
   });
@@ -62,6 +63,7 @@ class DealRoomsPage extends StatefulWidget {
   final bool startIntake;
   final DealIntakeDetails? initialIntake;
   final BuyerDashboardView initialView;
+  final BuyerScreenMode trainingCalculatorMode;
   final Future<List<DealRoomBundle>> Function()? loadTransactionBundles;
   final Future<(List<MarketplaceProvider>, Set<String>)> Function()?
   loadTeamProviders;
@@ -640,46 +642,58 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                 children: [
                   SizedBox(
                     width: metricWidth,
-                    child: DashboardUi.metric(
-                      'Active deals',
-                      '${active.length}',
-                      'In your pipeline',
-                      Icons.bar_chart_rounded,
-                      DashboardUi.paleBlue,
-                      const Color(0xFF5F91DC),
+                    child: NovaTarget(
+                      id: "buyer.home.metric.0",
+                      child: DashboardUi.metric(
+                        'Active deals',
+                        '${active.length}',
+                        'In your pipeline',
+                        Icons.bar_chart_rounded,
+                        DashboardUi.paleBlue,
+                        const Color(0xFF5F91DC),
+                      ),
                     ),
                   ),
                   SizedBox(
                     width: metricWidth,
-                    child: DashboardUi.metric(
-                      'Under review',
-                      '${active.where((r) => _dashboardStage(r) == 1).length}',
-                      'Screening & finance',
-                      Icons.trending_up_rounded,
-                      DashboardUi.paleGreen,
-                      const Color(0xFF3C9764),
+                    child: NovaTarget(
+                      id: "buyer.home.metric.1",
+                      child: DashboardUi.metric(
+                        'Under review',
+                        '${active.where((r) => _dashboardStage(r) == 1).length}',
+                        'Screening & finance',
+                        Icons.trending_up_rounded,
+                        DashboardUi.paleGreen,
+                        const Color(0xFF3C9764),
+                      ),
                     ),
                   ),
                   SizedBox(
                     width: metricWidth,
-                    child: DashboardUi.metric(
-                      'Due soon',
-                      '$dueSoon',
-                      'Next 7 days',
-                      Icons.event_note_outlined,
-                      DashboardUi.paleGold,
-                      const Color(0xFFB88016),
+                    child: NovaTarget(
+                      id: "buyer.home.metric.2",
+                      child: DashboardUi.metric(
+                        'Due soon',
+                        '$dueSoon',
+                        'Next 7 days',
+                        Icons.event_note_outlined,
+                        DashboardUi.paleGold,
+                        const Color(0xFFB88016),
+                      ),
                     ),
                   ),
                   SizedBox(
                     width: metricWidth,
-                    child: DashboardUi.metric(
-                      'Needs attention',
-                      '$blocked',
-                      'Blocked or overdue',
-                      Icons.notifications_active_outlined,
-                      DashboardUi.paleViolet,
-                      const Color(0xFF8A79D5),
+                    child: NovaTarget(
+                      id: "buyer.home.metric.3",
+                      child: DashboardUi.metric(
+                        'Needs attention',
+                        '$blocked',
+                        'Blocked or overdue',
+                        Icons.notifications_active_outlined,
+                        DashboardUi.paleViolet,
+                        const Color(0xFF8A79D5),
+                      ),
                     ),
                   ),
                 ],
@@ -725,34 +739,37 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                     if (!_showArchived)
                       Padding(
                         padding: const EdgeInsets.only(bottom: 16),
-                        child: Wrap(
-                          spacing: 10,
-                          runSpacing: 8,
-                          children: [
-                            FilledButton.icon(
-                              onPressed: () => Navigator.of(context).push(
-                                MaterialPageRoute<void>(
-                                  builder: (_) =>
-                                      const BusinessSaleBulletinPage(),
+                        child: NovaTarget(
+                          id: "buyer.home.start",
+                          child: Wrap(
+                            spacing: 10,
+                            runSpacing: 8,
+                            children: [
+                              FilledButton.icon(
+                                onPressed: () => Navigator.of(context).push(
+                                  MaterialPageRoute<void>(
+                                    builder: (_) =>
+                                        const BusinessSaleBulletinPage(),
+                                  ),
                                 ),
+                                icon: const Icon(Icons.search),
+                                label: const Text('Search businesses'),
                               ),
-                              icon: const Icon(Icons.search),
-                              label: const Text('Search businesses'),
-                            ),
-                            OutlinedButton.icon(
-                              onPressed: _creating ? null : _manualCreate,
-                              icon: const Icon(Icons.add),
-                              label: const Text('Enter a private deal'),
-                            ),
-                            TextButton(
-                              onPressed: () => Navigator.of(context).push(
-                                MaterialPageRoute<void>(
-                                  builder: (_) => const DealComparisonPage(),
+                              OutlinedButton.icon(
+                                onPressed: _creating ? null : _manualCreate,
+                                icon: const Icon(Icons.add),
+                                label: const Text('Enter a private deal'),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.of(context).push(
+                                  MaterialPageRoute<void>(
+                                    builder: (_) => const DealComparisonPage(),
+                                  ),
                                 ),
+                                child: const Text('Compare what fits me'),
                               ),
-                              child: const Text('Compare what fits me'),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     if (_showArchived) ...[
@@ -778,66 +795,71 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                             final stageRooms = shown
                                 .where((r) => _dashboardStage(r) == index)
                                 .toList();
-                            return Container(
-                              width: narrow ? 214 : (box.maxWidth - 78) / 4,
-                              constraints: const BoxConstraints(minWidth: 185),
-                              margin: EdgeInsets.only(
-                                right: index == 3 ? 0 : 10,
-                              ),
-                              padding: const EdgeInsets.all(9),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFF5F8FF),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.fromLTRB(
-                                      3,
-                                      2,
-                                      3,
-                                      10,
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        Expanded(
-                                          child: Text(
-                                            titles[index],
+                            return NovaTarget(
+                              id: 'buyer.home.stage.$index',
+                              child: Container(
+                                width: narrow ? 214 : (box.maxWidth - 78) / 4,
+                                constraints: const BoxConstraints(
+                                  minWidth: 185,
+                                ),
+                                margin: EdgeInsets.only(
+                                  right: index == 3 ? 0 : 10,
+                                ),
+                                padding: const EdgeInsets.all(9),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF5F8FF),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.fromLTRB(
+                                        3,
+                                        2,
+                                        3,
+                                        10,
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              titles[index],
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w800,
+                                              ),
+                                            ),
+                                          ),
+                                          Text(
+                                            '${stageRooms.length}',
                                             style: const TextStyle(
                                               fontSize: 12,
                                               fontWeight: FontWeight.w800,
+                                              color: DashboardUi.blue,
                                             ),
                                           ),
-                                        ),
-                                        Text(
-                                          '${stageRooms.length}',
-                                          style: const TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w800,
-                                            color: DashboardUi.blue,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  if (stageRooms.isEmpty)
-                                    const Padding(
-                                      padding: EdgeInsets.all(10),
-                                      child: Text(
-                                        'No deals here yet',
-                                        style: TextStyle(
-                                          color: DashboardUi.muted,
-                                          fontSize: 11,
-                                        ),
+                                        ],
                                       ),
                                     ),
-                                  for (final room in stageRooms)
-                                    _buyerDealTile(
-                                      room,
-                                      bundle: bundleFor(room),
-                                    ),
-                                ],
+                                    if (stageRooms.isEmpty)
+                                      const Padding(
+                                        padding: EdgeInsets.all(10),
+                                        child: Text(
+                                          'No deals here yet',
+                                          style: TextStyle(
+                                            color: DashboardUi.muted,
+                                            fontSize: 11,
+                                          ),
+                                        ),
+                                      ),
+                                    for (final room in stageRooms)
+                                      _buyerDealTile(
+                                        room,
+                                        bundle: bundleFor(room),
+                                      ),
+                                  ],
+                                ),
                               ),
                             );
                           }),
@@ -918,114 +940,120 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
     required bool narrow,
     required double width,
   }) {
-    final people = DashboardUi.panel(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: DashboardUi.sectionTitle(
-                  'My personal team',
-                  subtitle: 'Your advisers, available from every deal.',
-                ),
-              ),
-              TextButton(
-                onPressed: () => setState(() {
-                  _dashboardView = BuyerDashboardView.team;
-                }),
-                child: const Text('Manage'),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          if (team.isEmpty)
-            const Text(
-              'Add professionals to build your acquisition team.',
-              style: TextStyle(color: DashboardUi.muted, fontSize: 11),
-            )
-          else
-            Wrap(
-              spacing: 10,
-              runSpacing: 10,
+    final people = NovaTarget(
+      id: "buyer.home.team",
+      child: DashboardUi.panel(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
               children: [
-                for (final provider in team.take(6))
-                  InkWell(
-                    onTap: () => _openTeamProfile(provider),
-                    borderRadius: BorderRadius.circular(10),
-                    child: Container(
-                      width: narrow ? width - 74 : 185,
-                      padding: const EdgeInsets.all(9),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF7F9FD),
-                        border: Border.all(color: DashboardUi.line),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Row(
-                        children: [
-                          ProfilePhoto(
-                            size: 38,
-                            photoUrl: provider.photoUrl,
-                            exampleIndex: provider.photoIndex,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  provider.name,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                                ),
-                                Text(
-                                  provider.specialty,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    color: DashboardUi.muted,
-                                    fontSize: 9,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const Icon(
-                            Icons.chevron_right_rounded,
-                            size: 16,
-                            color: DashboardUi.muted,
-                          ),
-                        ],
-                      ),
-                    ),
+                Expanded(
+                  child: DashboardUi.sectionTitle(
+                    'My personal team',
+                    subtitle: 'Your advisers, available from every deal.',
                   ),
+                ),
+                TextButton(
+                  onPressed: () => setState(() {
+                    _dashboardView = BuyerDashboardView.team;
+                  }),
+                  child: const Text('Manage'),
+                ),
               ],
             ),
-        ],
+            const SizedBox(height: 12),
+            if (team.isEmpty)
+              const Text(
+                'Add professionals to build your acquisition team.',
+                style: TextStyle(color: DashboardUi.muted, fontSize: 11),
+              )
+            else
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: [
+                  for (final provider in team.take(6))
+                    InkWell(
+                      onTap: () => _openTeamProfile(provider),
+                      borderRadius: BorderRadius.circular(10),
+                      child: Container(
+                        width: narrow ? width - 74 : 185,
+                        padding: const EdgeInsets.all(9),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF7F9FD),
+                          border: Border.all(color: DashboardUi.line),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Row(
+                          children: [
+                            ProfilePhoto(
+                              size: 38,
+                              photoUrl: provider.photoUrl,
+                              exampleIndex: provider.photoIndex,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    provider.name,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                  Text(
+                                    provider.specialty,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      color: DashboardUi.muted,
+                                      fontSize: 9,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const Icon(
+                              Icons.chevron_right_rounded,
+                              size: 16,
+                              color: DashboardUi.muted,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+          ],
+        ),
       ),
     );
     return people;
   }
 
-  Widget _buyerSearch() => TextField(
-    onChanged: (value) => setState(() => _dashboardSearch = value),
-    decoration: InputDecoration(
-      hintText: 'Search your deals...',
-      prefixIcon: const Icon(Icons.search, size: 19),
-      isDense: true,
-      filled: true,
-      fillColor: Colors.white,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
-        borderSide: const BorderSide(color: DashboardUi.line),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
-        borderSide: const BorderSide(color: DashboardUi.line),
+  Widget _buyerSearch() => NovaTarget(
+    id: "buyer.home.search",
+    child: TextField(
+      onChanged: (value) => setState(() => _dashboardSearch = value),
+      decoration: InputDecoration(
+        hintText: 'Search your deals...',
+        prefixIcon: const Icon(Icons.search, size: 19),
+        isDense: true,
+        filled: true,
+        fillColor: Colors.white,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: DashboardUi.line),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: DashboardUi.line),
+        ),
       ),
     ),
   );
@@ -1887,6 +1915,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
   );
 
   Widget _dashboardDealScreen() => BuyerDealScreen(
+    initialMode: widget.trainingCalculatorMode,
     onContinue: () =>
         setState(() => _dashboardView = BuyerDashboardView.resources),
     onBack: () => setState(() => _dashboardView = BuyerDashboardView.home),

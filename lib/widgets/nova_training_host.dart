@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+import 'buyer_deal_screen.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../services/backend_service.dart';
@@ -36,10 +38,12 @@ class NovaTrainingHost extends StatefulWidget {
   State<NovaTrainingHost> createState() => _NovaTrainingHostState();
 }
 
-class _NovaTrainingHostState extends State<NovaTrainingHost> {
+class _NovaTrainingHostState extends State<NovaTrainingHost>
+    with WidgetsBindingObserver {
   late NovaTrainingController _controller;
   StreamSubscription<dynamic>? _auth;
   Route<void>? _tourRoute;
+  String? _destination;
   String? _account;
   Rect? _highlight;
   final _canvas = GlobalKey();
@@ -47,6 +51,7 @@ class _NovaTrainingHostState extends State<NovaTrainingHost> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _controller = widget.controller ?? NovaTrainingController.instance;
     _controller.hosted = true;
     _controller.navigate = _navigate;
@@ -95,52 +100,69 @@ class _NovaTrainingHostState extends State<NovaTrainingHost> {
   }
 
   void _navigate(NovaStep step) {
-    _highlight = null;
-    if (step.id == 'welcome')
-      return; // Introduce Nova on the page the visitor opened.
+    if (step.id == 'welcome') {
+      setState(() => _highlight = null);
+      return;
+    }
     final nav = widget.navigatorKey.currentState;
     if (nav == null) return;
-    final page = widget.pageBuilder?.call(step) ?? novaTrainingPage(step);
-    final route = PageRouteBuilder<void>(
-      settings: const RouteSettings(name: '/nova-training-preview'),
-      transitionDuration: Duration.zero,
-      reverseTransitionDuration: Duration.zero,
-      pageBuilder: (_, _, _) => page,
-    );
-    if (_tourRoute == null) {
-      nav.push(route);
-    } else {
-      nav.pushReplacement(route);
+    // Keep the actual page and its scroll position while moving field to field.
+    if (_destination != step.destination || _tourRoute == null) {
+      final page = widget.pageBuilder?.call(step) ?? novaTrainingPage(step);
+      final route = PageRouteBuilder<void>(
+        settings: const RouteSettings(name: '/nova-training-preview'),
+        transitionDuration: Duration.zero,
+        reverseTransitionDuration: Duration.zero,
+        pageBuilder: (_, _, _) => page,
+      );
+      if (_tourRoute == null) {
+        nav.push(route);
+      } else {
+        nav.pushReplacement(route);
+      }
+      _tourRoute = route;
+      _destination = step.destination;
     }
-    _tourRoute = route;
     WidgetsBinding.instance.addPostFrameCallback((_) => _locate(step));
   }
 
-  void _locate(NovaStep step, [int attempt = 0]) {
-    if (!mounted || !_controller.active || _controller.step.id != step.id)
-      return;
-    final context = step.target == null
+  Future<void> _locate(NovaStep step, [int attempt = 0]) async {
+    bool current() =>
+        mounted && _controller.active && _controller.step.id == step.id;
+    if (!current()) return;
+    final targetContext = step.target == null
         ? null
         : NovaTarget.contextFor(step.target!);
-    final box = context?.findRenderObject();
+    final box = targetContext?.findRenderObject();
     final canvas = _canvas.currentContext?.findRenderObject();
     if (box is RenderBox &&
         box.hasSize &&
         canvas is RenderBox &&
         canvas.hasSize) {
-      final origin = canvas.globalToLocal(box.localToGlobal(Offset.zero));
-      setState(
-        () => _highlight = (origin & box.size).intersect(
-          Offset.zero & canvas.size,
-        ),
-      );
-    } else if (step.target != null && attempt < 4) {
-      // Rooms load their bundle asynchronously; locate the mounted content,
-      // rather than the previous route's loading frame.
+      Rect bounds() =>
+          canvas.globalToLocal(box.localToGlobal(Offset.zero)) & box.size;
+      var rect = bounds();
+      if (rect.top < 90 ||
+          rect.bottom > canvas.size.height * .64 ||
+          rect.left < 8 ||
+          rect.right > canvas.size.width - 8) {
+        await Scrollable.ensureVisible(
+          targetContext!,
+          alignment: .28,
+          duration: Duration.zero,
+        );
+        await WidgetsBinding.instance.endOfFrame;
+        if (!current() || !box.attached || !canvas.attached) return;
+        rect = bounds();
+      }
+      setState(() => _highlight = rect.intersect(Offset.zero & canvas.size));
+    } else if (step.target != null && attempt < 30) {
       Future<void>.delayed(
-        const Duration(milliseconds: 120),
+        const Duration(milliseconds: 150),
         () => _locate(step, attempt + 1),
       );
+    } else if (current()) {
+      setState(() => _highlight = null);
     }
   }
 
@@ -148,6 +170,7 @@ class _NovaTrainingHostState extends State<NovaTrainingHost> {
     final nav = widget.navigatorKey.currentState;
     final route = _tourRoute;
     _tourRoute = null;
+    _destination = null;
     _highlight = null;
     if (nav == null || route == null) return;
     if (_controller.savedToProfile != null) {
@@ -172,7 +195,17 @@ class _NovaTrainingHostState extends State<NovaTrainingHost> {
   }
 
   @override
+  void didChangeMetrics() {
+    if (_controller.active) {
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _locate(_controller.step),
+      );
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _generation++;
     _auth?.cancel();
     _controller.removeListener(_changed);
@@ -200,19 +233,78 @@ class _NovaTrainingHostState extends State<NovaTrainingHost> {
           ),
         ),
         Positioned.fill(
-          child: SafeArea(
-            child: Align(
-              alignment: Alignment.bottomCenter,
-              child: Padding(
-                padding: const EdgeInsets.all(14),
-                child: NovaTourCard(controller: _controller),
-              ),
-            ),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final size = constraints.biggest;
+              final width = math.min(470.0, size.width - 24);
+              final height = math.min(
+                _controller.step.id == 'welcome' ? 400.0 : 310.0,
+                size.height - MediaQuery.paddingOf(context).vertical - 28,
+              );
+              final position = novaGuidePosition(
+                size,
+                Size(width, height),
+                _highlight,
+                MediaQuery.paddingOf(context),
+              );
+              return Stack(
+                children: [
+                  AnimatedPositioned(
+                    duration: MediaQuery.disableAnimationsOf(context)
+                        ? Duration.zero
+                        : const Duration(milliseconds: 480),
+                    curve: Curves.easeInOutCubic,
+                    left: position.dx,
+                    top: position.dy,
+                    width: width,
+                    height: height,
+                    child: NovaTourCard(controller: _controller),
+                  ),
+                ],
+              );
+            },
           ),
         ),
       ],
     ],
   );
+}
+
+/// Place Nova beside the target, choosing the available region with the least
+/// overlap. The character and speech bubble move together; neither is docked.
+Offset novaGuidePosition(
+  Size screen,
+  Size guide,
+  Rect? target,
+  EdgeInsets insets,
+) {
+  final area = Rect.fromLTRB(
+    12,
+    insets.top + 12,
+    screen.width - 12,
+    screen.height - insets.bottom - 12,
+  );
+  Offset clamp(Offset p) => Offset(
+    p.dx.clamp(area.left, math.max(area.left, area.right - guide.width)),
+    p.dy.clamp(area.top, math.max(area.top, area.bottom - guide.height)),
+  );
+  if (target == null || target.isEmpty)
+    return clamp(Offset(area.right - guide.width, area.top + 80));
+  final choices = [
+    Offset(target.right + 18, target.center.dy - guide.height / 2),
+    Offset(target.left - guide.width - 18, target.center.dy - guide.height / 2),
+    Offset(target.center.dx - guide.width / 2, target.bottom + 18),
+    Offset(target.center.dx - guide.width / 2, target.top - guide.height - 18),
+  ].map(clamp).toList();
+  double score(Offset p) {
+    final rect = p & guide;
+    final overlap = rect.intersect(target.inflate(8));
+    return (overlap.isEmpty ? 0 : overlap.width * overlap.height * 1000) +
+        (rect.center - target.center).distanceSquared;
+  }
+
+  choices.sort((a, b) => score(a).compareTo(score(b)));
+  return choices.first;
 }
 
 class NovaTourCard extends StatelessWidget {
@@ -222,183 +314,178 @@ class NovaTourCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final step = controller.step;
     final compact = MediaQuery.sizeOf(context).width < 650;
-    return Material(
-      color: const Color(0xFFFCFBF5),
-      elevation: 14,
-      shadowColor: const Color(0x553C5044),
-      borderRadius: BorderRadius.circular(22),
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxWidth: 620,
-          maxHeight: MediaQuery.sizeOf(context).height * .62,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Flexible(
-              child: SingleChildScrollView(
-                child: Padding(
-                  padding: EdgeInsets.all(compact ? 18 : 24),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Row(
-                              children: [
-                                const SiteCopyText(
-                                  'nova.panel.name',
-                                  'Nova',
-                                  style: TextStyle(
-                                    color: Color(0xFF164F3D),
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                                ),
-                                const SizedBox(width: 10),
-                                Text(
-                                  '${controller.index + 1} / ${controller.steps.length}',
-                                  style: const TextStyle(
-                                    color: Color(0xFF6E796F),
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          IconButton(
-                            key: const Key('nova_pause'),
-                            // The guide lives above the Navigator; use a semantic label
-                            // instead of a tooltip that requires its Overlay.
-                            onPressed: controller.saving
-                                ? null
-                                : controller.pause,
-                            icon: Semantics(
-                              label: 'Pause walkthrough',
-                              child: const Icon(Icons.close_rounded, size: 19),
-                            ),
-                          ),
-                        ],
-                      ),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          AnimatedSwitcher(
-                            duration: MediaQuery.disableAnimationsOf(context)
-                                ? Duration.zero
-                                : const Duration(milliseconds: 220),
-                            child: NovaCharacter(
-                              key: ValueKey(step.mood),
-                              mood: step.mood,
-                              size: compact ? 86 : 122,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                SiteCopyText(
-                                  'nova.training.${step.id}.title',
-                                  step.title,
-                                  style: TextStyle(
-                                    color: const Color(0xFF164F3D),
-                                    fontSize: compact ? 20 : 25,
-                                    fontWeight: FontWeight.w700,
-                                    height: 1.12,
-                                  ),
-                                ),
-                                const SizedBox(height: 10),
-                                SiteCopyText(
-                                  'nova.training.${step.id}.body',
-                                  step.body,
-                                  style: const TextStyle(
-                                    color: Color(0xFF4C5A53),
-                                    height: 1.5,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      if (step.id == 'welcome') ...[
-                        const SizedBox(height: 16),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: [
-                            for (final (role, label) in [
-                              ('buyer', 'Buying'),
-                              ('seller', 'Selling / succession'),
-                              ('member', 'Professional member'),
-                            ])
-                              ChoiceChip(
-                                label: Text(label),
-                                selected: controller.role == role,
-                                onSelected: (_) => controller.chooseRole(role),
-                              ),
-                          ],
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              ),
+    final reducedMotion = MediaQuery.disableAnimationsOf(context);
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        // The supplied transparent artwork is outside the speech bubble.
+        TweenAnimationBuilder<double>(
+          key: ValueKey('nova-hop-${step.id}'),
+          tween: Tween(begin: 0, end: 1),
+          duration: reducedMotion
+              ? Duration.zero
+              : const Duration(milliseconds: 480),
+          builder: (context, value, child) => Transform.translate(
+            offset: Offset(0, -math.sin(value * math.pi) * 16),
+            child: child,
+          ),
+          child: AnimatedSwitcher(
+            duration: reducedMotion
+                ? Duration.zero
+                : const Duration(milliseconds: 160),
+            child: NovaCharacter(
+              key: ValueKey(step.mood),
+              mood: step.mood,
+              size: compact ? 92 : 142,
             ),
-            Padding(
-              padding: EdgeInsets.fromLTRB(
-                compact ? 18 : 24,
-                0,
-                compact ? 18 : 24,
-                compact ? 18 : 24,
-              ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Material(
+            color: const Color(0xFFFCFBF5),
+            elevation: 10,
+            shadowColor: const Color(0x443C5044),
+            borderRadius: BorderRadius.circular(20),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 16),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: LinearProgressIndicator(
-                      value: (controller.index + 1) / controller.steps.length,
-                      minHeight: 4,
-                      backgroundColor: const Color(0xFFE5EADB),
-                      color: const Color(0xFF699649),
+                  Row(
+                    children: [
+                      const SiteCopyText(
+                        'nova.panel.name',
+                        'Nova',
+                        style: TextStyle(
+                          color: Color(0xFF164F3D),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '${controller.index + 1} / ${controller.steps.length}',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: Color(0xFF6E796F),
+                        ),
+                      ),
+                      const Spacer(),
+                      SizedBox(
+                        width: 28,
+                        height: 28,
+                        child: IconButton(
+                          key: const Key('nova_pause'),
+                          padding: EdgeInsets.zero,
+                          onPressed: controller.saving
+                              ? null
+                              : controller.pause,
+                          icon: const Icon(
+                            Icons.close_rounded,
+                            size: 17,
+                            semanticLabel: 'Pause walkthrough',
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Flexible(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SiteCopyText(
+                            'nova.training.${step.id}.title',
+                            step.title,
+                            style: TextStyle(
+                              color: const Color(0xFF164F3D),
+                              fontSize: compact ? 17 : 20,
+                              fontWeight: FontWeight.w700,
+                              height: 1.15,
+                            ),
+                          ),
+                          const SizedBox(height: 9),
+                          SiteCopyText(
+                            'nova.training.${step.id}.body',
+                            step.body,
+                            style: const TextStyle(
+                              color: Color(0xFF4C5A53),
+                              fontSize: 12,
+                              height: 1.45,
+                            ),
+                          ),
+                          if (step.id == 'welcome') ...[
+                            const SizedBox(height: 12),
+                            Wrap(
+                              spacing: 6,
+                              runSpacing: 5,
+                              children: [
+                                for (final (role, label) in [
+                                  ('buyer', 'Buying'),
+                                  ('seller', 'Selling / succession'),
+                                  ('member', 'Professional member'),
+                                ])
+                                  ChoiceChip(
+                                    label: Text(
+                                      label,
+                                      style: const TextStyle(fontSize: 11),
+                                    ),
+                                    selected: controller.role == role,
+                                    onSelected: (_) =>
+                                        controller.chooseRole(role),
+                                  ),
+                              ],
+                            ),
+                          ],
+                        ],
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 12),
+                  LinearProgressIndicator(
+                    value: (controller.index + 1) / controller.steps.length,
+                    minHeight: 3,
+                    backgroundColor: const Color(0xFFE5EADB),
+                    color: const Color(0xFF699649),
+                  ),
+                  const SizedBox(height: 9),
                   Row(
                     children: [
                       TextButton(
+                        style: TextButton.styleFrom(
+                          minimumSize: const Size(48, 36),
+                          padding: const EdgeInsets.symmetric(horizontal: 6),
+                        ),
                         onPressed: controller.index == 0 || controller.saving
                             ? null
                             : controller.back,
-                        child: const Text('Back'),
-                      ),
-                      if (step.id == 'welcome')
-                        TextButton(
-                          onPressed: controller.pause,
-                          child: const Text('Later'),
+                        child: const Text(
+                          'Back',
+                          style: TextStyle(fontSize: 12),
                         ),
+                      ),
                       Expanded(
                         child: Align(
                           alignment: Alignment.centerRight,
                           child: FilledButton.icon(
-                            onPressed: controller.saving
-                                ? null
-                                : controller.next,
                             style: FilledButton.styleFrom(
                               backgroundColor: const Color(0xFF164F3D),
                               foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                              ),
                             ),
+                            onPressed: controller.saving
+                                ? null
+                                : controller.next,
                             icon: Icon(
                               controller.index == controller.steps.length - 1
                                   ? Icons.check_rounded
                                   : Icons.arrow_forward_rounded,
-                              size: 17,
+                              size: 15,
                             ),
                             label: Text(
                               controller.saving
@@ -407,31 +494,19 @@ class NovaTourCard extends StatelessWidget {
                                         controller.steps.length - 1
                                   ? 'Finish training'
                                   : 'Next',
+                              style: const TextStyle(fontSize: 12),
                             ),
                           ),
                         ),
                       ),
                     ],
                   ),
-                  if (step.id == 'finish')
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8),
-                      child: Text(
-                        controller.service.signedIn
-                            ? 'Completion is saved to your profile. If offline, it stays on this device until the next sync.'
-                            : 'Completion is saved on this device. Sign in to keep training progress with your profile.',
-                        style: const TextStyle(
-                          color: Color(0xFF6E796F),
-                          fontSize: 11,
-                        ),
-                      ),
-                    ),
                 ],
               ),
             ),
-          ],
+          ),
         ),
-      ),
+      ],
     );
   }
 }
@@ -469,6 +544,10 @@ Widget novaTrainingPage(NovaStep step) {
   final view = parts.length > 1 ? parts[1] : 'home';
   return switch (parts[0]) {
     'buyer' => DealRoomsPage(
+      trainingCalculatorMode: BuyerScreenMode.values.firstWhere(
+        (m) => parts.length > 2 && m.name == parts[2],
+        orElse: () => BuyerScreenMode.business,
+      ),
       initialSide: PlatformSide.business,
       initialView: BuyerDashboardView.values.firstWhere(
         (v) => v.name == view,

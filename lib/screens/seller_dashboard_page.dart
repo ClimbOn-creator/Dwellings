@@ -858,22 +858,25 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
             ),
           ],
         );
-        final search = TextFormField(
-          initialValue: _pipelineQuery,
-          key: const Key('seller_pipeline_search'),
-          onChanged: (value) => setState(() => _pipelineQuery = value),
-          decoration: InputDecoration(
-            hintText: 'Search your transfers...',
-            prefixIcon: const Icon(Icons.search),
-            filled: true,
-            fillColor: Colors.white,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: DashboardUi.line),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: DashboardUi.line),
+        final search = NovaTarget(
+          id: "seller.home.search",
+          child: TextFormField(
+            initialValue: _pipelineQuery,
+            key: const Key('seller_pipeline_search'),
+            onChanged: (value) => setState(() => _pipelineQuery = value),
+            decoration: InputDecoration(
+              hintText: 'Search your transfers...',
+              prefixIcon: const Icon(Icons.search),
+              filled: true,
+              fillColor: Colors.white,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: DashboardUi.line),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: DashboardUi.line),
+              ),
             ),
           ),
         );
@@ -901,46 +904,58 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
               children: [
                 SizedBox(
                   width: metricWidth,
-                  child: DashboardUi.metric(
-                    'Active transfers',
-                    active ? '1' : '0',
-                    'In your pipeline',
-                    Icons.bar_chart_rounded,
-                    DashboardUi.paleBlue,
-                    const Color(0xFF5F91DC),
+                  child: NovaTarget(
+                    id: "seller.home.metric.0",
+                    child: DashboardUi.metric(
+                      'Active transfers',
+                      active ? '1' : '0',
+                      'In your pipeline',
+                      Icons.bar_chart_rounded,
+                      DashboardUi.paleBlue,
+                      const Color(0xFF5F91DC),
+                    ),
                   ),
                 ),
                 SizedBox(
                   width: metricWidth,
-                  child: DashboardUi.metric(
-                    'Plan complete',
-                    '${(_progress * 100).round()}%',
-                    '$_doneCount of ${_tasks.length} steps',
-                    Icons.trending_up_rounded,
-                    DashboardUi.paleGreen,
-                    const Color(0xFF3C9764),
+                  child: NovaTarget(
+                    id: "seller.home.metric.1",
+                    child: DashboardUi.metric(
+                      'Plan complete',
+                      '${(_progress * 100).round()}%',
+                      '$_doneCount of ${_tasks.length} steps',
+                      Icons.trending_up_rounded,
+                      DashboardUi.paleGreen,
+                      const Color(0xFF3C9764),
+                    ),
                   ),
                 ),
                 SizedBox(
                   width: metricWidth,
-                  child: DashboardUi.metric(
-                    'Due soon',
-                    '$dueSoon',
-                    'Next 7 days',
-                    Icons.event_note_outlined,
-                    DashboardUi.paleGold,
-                    const Color(0xFFB88016),
+                  child: NovaTarget(
+                    id: "seller.home.metric.2",
+                    child: DashboardUi.metric(
+                      'Due soon',
+                      '$dueSoon',
+                      'Next 7 days',
+                      Icons.event_note_outlined,
+                      DashboardUi.paleGold,
+                      const Color(0xFFB88016),
+                    ),
                   ),
                 ),
                 SizedBox(
                   width: metricWidth,
-                  child: DashboardUi.metric(
-                    'Needs attention',
-                    '$overdue',
-                    'Past suggested dates',
-                    Icons.notifications_active_outlined,
-                    DashboardUi.paleViolet,
-                    const Color(0xFF8A79D5),
+                  child: NovaTarget(
+                    id: "seller.home.metric.3",
+                    child: DashboardUi.metric(
+                      'Needs attention',
+                      '$overdue',
+                      'Past suggested dates',
+                      Icons.notifications_active_outlined,
+                      DashboardUi.paleViolet,
+                      const Color(0xFF8A79D5),
+                    ),
                   ),
                 ),
               ],
@@ -959,9 +974,12 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
                               'Follow your transfer from preparation to handover.',
                         ),
                       ),
-                      TextButton(
-                        onPressed: () => _showView(SellerDashboardView.plan),
-                        child: Text(active ? 'Edit plan' : 'Set up plan'),
+                      NovaTarget(
+                        id: "seller.home.start",
+                        child: TextButton(
+                          onPressed: () => _showView(SellerDashboardView.plan),
+                          child: Text(active ? 'Edit plan' : 'Set up plan'),
+                        ),
                       ),
                     ],
                   ),
@@ -978,96 +996,104 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
                           'Closing / handover',
                         ];
                         final hasTransfer = visible && column == index;
-                        return Container(
-                          key: Key('seller_pipeline_column_$index'),
-                          width: narrow ? 214 : (box.maxWidth - 78) / 4,
-                          constraints: const BoxConstraints(minWidth: 185),
-                          margin: EdgeInsets.only(right: index == 3 ? 0 : 10),
-                          padding: const EdgeInsets.all(9),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF5F8FF),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.fromLTRB(3, 2, 3, 10),
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        titles[index],
+                        return NovaTarget(
+                          id: 'seller.home.stage.$index',
+                          child: Container(
+                            key: Key('seller_pipeline_column_$index'),
+                            width: narrow ? 214 : (box.maxWidth - 78) / 4,
+                            constraints: const BoxConstraints(minWidth: 185),
+                            margin: EdgeInsets.only(right: index == 3 ? 0 : 10),
+                            padding: const EdgeInsets.all(9),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF5F8FF),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(
+                                    3,
+                                    2,
+                                    3,
+                                    10,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          titles[index],
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w800,
+                                          ),
+                                        ),
+                                      ),
+                                      Text(
+                                        hasTransfer ? '1' : '0',
                                         style: const TextStyle(
                                           fontSize: 12,
                                           fontWeight: FontWeight.w800,
+                                          color: DashboardUi.blue,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                if (!hasTransfer)
+                                  const Padding(
+                                    padding: EdgeInsets.all(10),
+                                    child: Text(
+                                      'No transfers here yet',
+                                      style: TextStyle(
+                                        color: DashboardUi.muted,
+                                        fontSize: 11,
+                                      ),
+                                    ),
+                                  )
+                                else
+                                  Material(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: InkWell(
+                                      onTap: () =>
+                                          _showView(SellerDashboardView.plan),
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(12),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              name,
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.w800,
+                                                fontSize: 13,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 5),
+                                            Text(
+                                              _path.label,
+                                              style: const TextStyle(
+                                                color: DashboardUi.muted,
+                                                fontSize: 11,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 8),
+                                            Text(
+                                              next?.title ?? 'Plan complete',
+                                              style: const TextStyle(
+                                                color: DashboardUi.blue,
+                                                fontSize: 11,
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ),
                                     ),
-                                    Text(
-                                      hasTransfer ? '1' : '0',
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w800,
-                                        color: DashboardUi.blue,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              if (!hasTransfer)
-                                const Padding(
-                                  padding: EdgeInsets.all(10),
-                                  child: Text(
-                                    'No transfers here yet',
-                                    style: TextStyle(
-                                      color: DashboardUi.muted,
-                                      fontSize: 11,
-                                    ),
                                   ),
-                                )
-                              else
-                                Material(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(8),
-                                  child: InkWell(
-                                    onTap: () =>
-                                        _showView(SellerDashboardView.plan),
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(12),
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            name,
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.w800,
-                                              fontSize: 13,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 5),
-                                          Text(
-                                            _path.label,
-                                            style: const TextStyle(
-                                              color: DashboardUi.muted,
-                                              fontSize: 11,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 8),
-                                          Text(
-                                            next?.title ?? 'Plan complete',
-                                            style: const TextStyle(
-                                              color: DashboardUi.blue,
-                                              fontSize: 11,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                            ],
+                              ],
+                            ),
                           ),
                         );
                       }),
@@ -1115,66 +1141,70 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
     );
   }
 
-  Widget _overviewTeam() => DashboardUi.panel(
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: DashboardUi.sectionTitle(
-                'My personal team',
-                subtitle: 'Your advisers, available throughout your transfer.',
+  Widget _overviewTeam() => NovaTarget(
+    id: "seller.home.team",
+    child: DashboardUi.panel(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: DashboardUi.sectionTitle(
+                  'My personal team',
+                  subtitle:
+                      'Your advisers, available throughout your transfer.',
+                ),
               ),
-            ),
-            TextButton(
-              onPressed: () => _showView(SellerDashboardView.team),
-              child: const Text('Manage'),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        FutureBuilder<List<MarketplaceProvider>>(
-          future: _linkedTeam,
-          builder: (context, snapshot) {
-            final team = snapshot.data ?? const <MarketplaceProvider>[];
-            if (snapshot.hasError) {
-              return const Text(
-                'Could not load your team. Use Refresh to try again.',
-                style: TextStyle(color: DashboardUi.muted, fontSize: 11),
-              );
-            }
-            if (_linkedTeam != null && !snapshot.hasData) {
-              return const LinearProgressIndicator();
-            }
-            if (team.isEmpty) {
-              return const Text(
-                'Add professionals to build your transfer team.',
-                style: TextStyle(color: DashboardUi.muted, fontSize: 11),
-              );
-            }
-            return Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: [
-                for (final provider in team)
-                  SizedBox(
-                    width: 160,
-                    child: TeamMemberPortrait(
-                      provider: provider,
-                      selected: true,
-                      busy: _resourceBusyId == provider.id,
-                      onProfile: () => _openProvider(provider),
-                      onToggle: _resourceBusyId == null
-                          ? () => _saveProvider(provider, true)
-                          : null,
+              TextButton(
+                onPressed: () => _showView(SellerDashboardView.team),
+                child: const Text('Manage'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          FutureBuilder<List<MarketplaceProvider>>(
+            future: _linkedTeam,
+            builder: (context, snapshot) {
+              final team = snapshot.data ?? const <MarketplaceProvider>[];
+              if (snapshot.hasError) {
+                return const Text(
+                  'Could not load your team. Use Refresh to try again.',
+                  style: TextStyle(color: DashboardUi.muted, fontSize: 11),
+                );
+              }
+              if (_linkedTeam != null && !snapshot.hasData) {
+                return const LinearProgressIndicator();
+              }
+              if (team.isEmpty) {
+                return const Text(
+                  'Add professionals to build your transfer team.',
+                  style: TextStyle(color: DashboardUi.muted, fontSize: 11),
+                );
+              }
+              return Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: [
+                  for (final provider in team)
+                    SizedBox(
+                      width: 160,
+                      child: TeamMemberPortrait(
+                        provider: provider,
+                        selected: true,
+                        busy: _resourceBusyId == provider.id,
+                        onProfile: () => _openProvider(provider),
+                        onToggle: _resourceBusyId == null
+                            ? () => _saveProvider(provider, true)
+                            : null,
+                      ),
                     ),
-                  ),
-              ],
-            );
-          },
-        ),
-      ],
+                ],
+              );
+            },
+          ),
+        ],
+      ),
     ),
   );
 
@@ -1253,163 +1283,177 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
               'Three connected views: earnings value, asset reference and cash at closing.',
         ),
         const SizedBox(height: 14),
-        _calculatorPanel(
-          '1 · Business value range',
-          'Use verified earnings and comparable market multiples. The range is an estimate, not an appraisal.',
-          [
-            _numberField(
-              'ebitda',
-              'Reported annual EBITDA',
-              '260,000',
-              'Annual earnings before interest, tax, depreciation and amortization.',
-            ),
-            _numberField(
-              'addbacks',
-              'Verified add-backs',
-              '20,000',
-              'Documented costs that will not recur for a new owner. Enter 0 if none.',
-            ),
-            _numberField(
-              'ownerPay',
-              'Owner pay in expenses',
-              '80,000',
-              'Your salary and benefits already deducted in reported EBITDA. Enter 0 if EBITDA excludes it.',
-            ),
-            _numberField(
-              'replacementSalary',
-              'Replacement leader pay',
-              '95,000',
-              'Annual cost for someone else to perform your operating role.',
-            ),
-            _numberField(
-              'lowMultiple',
-              'Low comparable multiple',
-              '3',
-              'Lower EBITDA multiple supported by similar business sales.',
-            ),
-            _numberField(
-              'highMultiple',
-              'High comparable multiple',
-              '5',
-              'Upper EBITDA multiple supported by similar business sales.',
-            ),
-          ],
-          earningsComplete && estimate.earningsReady
-              ? Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _result(
-                      'Maintainable EBITDA',
-                      _money.format(estimate.maintainableEbitda),
-                    ),
-                    const SizedBox(height: 12),
-                    _result(
-                      'Indicative enterprise value',
-                      '${_money.format(estimate.lowEnterpriseValue)} – ${_money.format(estimate.highEnterpriseValue)}',
-                      prominent: true,
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Enterprise value excludes cash, debt and negotiated working-capital adjustments.',
-                      style: TextStyle(fontSize: 12, color: DashboardUi.muted),
-                    ),
-                  ],
-                )
-              : _waiting('Enter all earnings assumptions to see a range.'),
-        ),
-        const SizedBox(height: 15),
-        _calculatorPanel(
-          '2 · Asset reference',
-          'A separate view of included assets and liabilities. It does not add to the earnings value automatically.',
-          [
-            _numberField(
-              'assets',
-              'Equipment and other tangible assets',
-              '500,000',
-              'Supportable market value of included physical assets.',
-            ),
-            _numberField(
-              'inventory',
-              'Saleable inventory',
-              '180,000',
-              'Usable stock included in the proposed transaction.',
-            ),
-            _numberField(
-              'receivables',
-              'Collectible receivables',
-              '120,000',
-              'Customer balances expected to transfer and be collected.',
-            ),
-            _numberField(
-              'liabilities',
-              'Liabilities to be assumed',
-              '150,000',
-              'Debt and obligations the buyer would take over.',
-            ),
-          ],
-          assetsComplete && estimate.assetsReady
-              ? _result(
-                  'Net asset reference',
-                  _money.format(estimate.netAssetReference),
-                  prominent: true,
-                )
-              : _waiting('Enter the included assets and assumed liabilities.'),
-        ),
-        const SizedBox(height: 15),
-        _calculatorPanel(
-          '3 · Cash at closing',
-          'Test how deferred payments, fees and debt repayment change the cash you receive at closing.',
-          [
-            _numberField(
-              'price',
-              'Expected sale price',
-              '1,200,000',
-              'The agreed or proposed gross price before closing adjustments.',
-            ),
-            _numberField(
-              'vendorNote',
-              'Vendor financing / deferred amount',
-              '150,000',
-              'Part of the price paid after closing. Enter 0 if none.',
-            ),
-            _numberField(
-              'fees',
-              'Selling and closing fees',
-              '45,000',
-              'Broker, legal, valuation and other transaction fees. Enter 0 if none.',
-            ),
-            _numberField(
-              'debtPayoff',
-              'Debt paid at closing',
-              '250,000',
-              'Business debt discharged from sale proceeds. Enter 0 if none.',
-            ),
-          ],
-          proceedsComplete && estimate.proceedsReady
-              ? Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _result(
-                      'Cash at closing, before tax',
-                      _money.format(estimate.cashAtCloseBeforeTax),
-                      prominent: true,
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Excludes tax, working-capital true-ups, escrow, holdbacks and earn-outs. Ask your CPA and lawyer to model your actual structure.',
-                      style: TextStyle(
-                        color: DashboardUi.muted,
-                        fontSize: 12,
-                        height: 1.45,
+        NovaTarget(
+          id: "seller.calc.panel.1",
+          child: _calculatorPanel(
+            '1 · Business value range',
+            'Use verified earnings and comparable market multiples. The range is an estimate, not an appraisal.',
+            [
+              _numberField(
+                'ebitda',
+                'Reported annual EBITDA',
+                '260,000',
+                'Annual earnings before interest, tax, depreciation and amortization.',
+              ),
+              _numberField(
+                'addbacks',
+                'Verified add-backs',
+                '20,000',
+                'Documented costs that will not recur for a new owner. Enter 0 if none.',
+              ),
+              _numberField(
+                'ownerPay',
+                'Owner pay in expenses',
+                '80,000',
+                'Your salary and benefits already deducted in reported EBITDA. Enter 0 if EBITDA excludes it.',
+              ),
+              _numberField(
+                'replacementSalary',
+                'Replacement leader pay',
+                '95,000',
+                'Annual cost for someone else to perform your operating role.',
+              ),
+              _numberField(
+                'lowMultiple',
+                'Low comparable multiple',
+                '3',
+                'Lower EBITDA multiple supported by similar business sales.',
+              ),
+              _numberField(
+                'highMultiple',
+                'High comparable multiple',
+                '5',
+                'Upper EBITDA multiple supported by similar business sales.',
+              ),
+            ],
+            earningsComplete && estimate.earningsReady
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _result(
+                        'Maintainable EBITDA',
+                        _money.format(estimate.maintainableEbitda),
                       ),
-                    ),
-                  ],
-                )
-              : _waiting(
-                  proceedsComplete
-                      ? 'The deferred amount cannot exceed the sale price.'
-                      : 'Enter price and payment assumptions, using 0 where none apply.',
-                ),
+                      const SizedBox(height: 12),
+                      _result(
+                        'Indicative enterprise value',
+                        '${_money.format(estimate.lowEnterpriseValue)} – ${_money.format(estimate.highEnterpriseValue)}',
+                        prominent: true,
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Enterprise value excludes cash, debt and negotiated working-capital adjustments.',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: DashboardUi.muted,
+                        ),
+                      ),
+                    ],
+                  )
+                : _waiting('Enter all earnings assumptions to see a range.'),
+          ),
+        ),
+        const SizedBox(height: 15),
+        NovaTarget(
+          id: "seller.calc.panel.2",
+          child: _calculatorPanel(
+            '2 · Asset reference',
+            'A separate view of included assets and liabilities. It does not add to the earnings value automatically.',
+            [
+              _numberField(
+                'assets',
+                'Equipment and other tangible assets',
+                '500,000',
+                'Supportable market value of included physical assets.',
+              ),
+              _numberField(
+                'inventory',
+                'Saleable inventory',
+                '180,000',
+                'Usable stock included in the proposed transaction.',
+              ),
+              _numberField(
+                'receivables',
+                'Collectible receivables',
+                '120,000',
+                'Customer balances expected to transfer and be collected.',
+              ),
+              _numberField(
+                'liabilities',
+                'Liabilities to be assumed',
+                '150,000',
+                'Debt and obligations the buyer would take over.',
+              ),
+            ],
+            assetsComplete && estimate.assetsReady
+                ? _result(
+                    'Net asset reference',
+                    _money.format(estimate.netAssetReference),
+                    prominent: true,
+                  )
+                : _waiting(
+                    'Enter the included assets and assumed liabilities.',
+                  ),
+          ),
+        ),
+        const SizedBox(height: 15),
+        NovaTarget(
+          id: "seller.calc.panel.3",
+          child: _calculatorPanel(
+            '3 · Cash at closing',
+            'Test how deferred payments, fees and debt repayment change the cash you receive at closing.',
+            [
+              _numberField(
+                'price',
+                'Expected sale price',
+                '1,200,000',
+                'The agreed or proposed gross price before closing adjustments.',
+              ),
+              _numberField(
+                'vendorNote',
+                'Vendor financing / deferred amount',
+                '150,000',
+                'Part of the price paid after closing. Enter 0 if none.',
+              ),
+              _numberField(
+                'fees',
+                'Selling and closing fees',
+                '45,000',
+                'Broker, legal, valuation and other transaction fees. Enter 0 if none.',
+              ),
+              _numberField(
+                'debtPayoff',
+                'Debt paid at closing',
+                '250,000',
+                'Business debt discharged from sale proceeds. Enter 0 if none.',
+              ),
+            ],
+            proceedsComplete && estimate.proceedsReady
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _result(
+                        'Cash at closing, before tax',
+                        _money.format(estimate.cashAtCloseBeforeTax),
+                        prominent: true,
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Excludes tax, working-capital true-ups, escrow, holdbacks and earn-outs. Ask your CPA and lawyer to model your actual structure.',
+                        style: TextStyle(
+                          color: DashboardUi.muted,
+                          fontSize: 12,
+                          height: 1.45,
+                        ),
+                      ),
+                    ],
+                  )
+                : _waiting(
+                    proceedsComplete
+                        ? 'The deferred amount cannot exceed the sale price.'
+                        : 'Enter price and payment assumptions, using 0 where none apply.',
+                  ),
+          ),
         ),
       ],
     );
@@ -1441,7 +1485,10 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
                       color: DashboardUi.paleBlue,
                       borderRadius: BorderRadius.circular(13),
                     ),
-                    child: result,
+                    child: NovaTarget(
+                      id: 'seller.calc.result.${title[0]}',
+                      child: result,
+                    ),
                   ),
                 ],
               );
@@ -1462,7 +1509,10 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
                       color: DashboardUi.paleBlue,
                       borderRadius: BorderRadius.circular(13),
                     ),
-                    child: result,
+                    child: NovaTarget(
+                      id: 'seller.calc.result.${title[0]}',
+                      child: result,
+                    ),
                   ),
                 ),
               ],
@@ -1483,47 +1533,50 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
   );
 
   Widget _numberField(String key, String label, String example, String help) =>
-      Padding(
-        padding: const EdgeInsets.only(bottom: 13),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Flexible(
-                  child: Text(
-                    label,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
+      NovaTarget(
+        id: 'seller.calc.$key',
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 13),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Flexible(
+                    child: Text(
+                      label,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 5),
-                Tooltip(
-                  message: help,
-                  child: const Icon(
-                    Icons.info_rounded,
-                    size: 17,
-                    color: Color(0xFF0AA9F4),
+                  const SizedBox(width: 5),
+                  Tooltip(
+                    message: help,
+                    child: const Icon(
+                      Icons.info_rounded,
+                      size: 17,
+                      color: Color(0xFF0AA9F4),
+                    ),
                   ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              TextField(
+                key: Key('seller_$key'),
+                controller: _numberController(key),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
                 ),
-              ],
-            ),
-            const SizedBox(height: 6),
-            TextField(
-              key: Key('seller_$key'),
-              controller: _numberController(key),
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
+                decoration: InputDecoration(
+                  hintText: 'Example → $example',
+                  hintStyle: const TextStyle(color: Color(0xFF8796AB)),
+                ),
+                onChanged: (value) => _change(() => _numbers[key] = value),
               ),
-              decoration: InputDecoration(
-                hintText: 'Example → $example',
-                hintStyle: const TextStyle(color: Color(0xFF8796AB)),
-              ),
-              onChanged: (value) => _change(() => _numbers[key] = value),
-            ),
-          ],
+            ],
+          ),
         ),
       );
 

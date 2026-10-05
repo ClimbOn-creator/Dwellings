@@ -27,6 +27,15 @@ class _NovaTargetState extends State<NovaTarget> {
   }
 
   @override
+  void didUpdateWidget(covariant NovaTarget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.id != widget.id) {
+      NovaTarget._anchors[oldWidget.id]?.remove(_anchor);
+      NovaTarget._anchors.putIfAbsent(widget.id, () => []).add(_anchor);
+    }
+  }
+
+  @override
   void dispose() {
     NovaTarget._anchors[widget.id]?.remove(_anchor);
     super.dispose();

@@ -1,3 +1,9 @@
+import 'package:dwelling_iq/models/platform_side.dart';
+import 'package:dwelling_iq/services/nova_calculator_fields.dart';
+import 'package:dwelling_iq/widgets/nova_target.dart';
+import 'package:dwelling_iq/widgets/buyer_deal_screen.dart';
+import 'package:dwelling_iq/screens/seller_dashboard_page.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'dart:async';
 import 'package:dwelling_iq/services/nova_training_service.dart';
 import 'package:dwelling_iq/services/nova_training_controller.dart';
@@ -10,6 +16,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  GoogleFonts.config.allowRuntimeFetching = false;
   setUp(() => SharedPreferences.setMockInitialValues({}));
   test(
     'completion survives another device and replay preserves completion',
@@ -123,6 +130,189 @@ void main() {
         moods.addAll(steps.map((s) => s.mood));
       }
       expect(moods, NovaMood.values.toSet());
+    },
+  );
+  test(
+    'expanded courses explain every actual input, each result and every pipeline stage',
+    () {
+      for (final role in ['buyer', 'seller']) {
+        final steps = novaWalkthrough(role);
+        final fields = role == 'buyer'
+            ? novaBuyerCalculatorFields
+            : novaSellerCalculatorFields;
+        expect(
+          steps.where((s) => s.id.startsWith('$role-input-')).length,
+          fields.length,
+        );
+        for (final field in fields) {
+          final step = steps.singleWhere(
+            (s) => s.target == '$role.calc.${field.key}',
+          );
+          expect(step.body, contains(field.help));
+          expect(step.body, contains(field.example));
+        }
+        expect(steps.where((s) => s.id.startsWith('$role-result-')).length, 3);
+        for (var i = 0; i < 4; i++) {
+          expect(steps.any((s) => s.target == '$role.home.stage.$i'), isTrue);
+          expect(steps.any((s) => s.target == '$role.home.metric.$i'), isTrue);
+        }
+      }
+    },
+  );
+  test(
+    'floating guide stays in view and avoids a highlighted field on both sizes',
+    () {
+      for (final size in [const Size(390, 844), const Size(1440, 1000)]) {
+        final guide = Size(size.width < 650 ? size.width - 24 : 470, 310);
+        final target = Rect.fromLTWH(20, 180, size.width - 40, 80);
+        final position = novaGuidePosition(
+          size,
+          guide,
+          target,
+          EdgeInsets.zero,
+        );
+        final rect = position & guide;
+        expect(rect.left, greaterThanOrEqualTo(12));
+        expect(rect.right, lessThanOrEqualTo(size.width - 12));
+        expect(rect.top, greaterThanOrEqualTo(12));
+        expect(rect.bottom, lessThanOrEqualTo(size.height - 12));
+        expect(rect.overlaps(target), isFalse);
+      }
+    },
+  );
+  testWidgets(
+    'all buyer tabs expose every field to Nova without filling examples',
+    (tester) async {
+      for (final mode in BuyerScreenMode.values) {
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: BuyerDealScreen(
+                key: ValueKey(mode),
+                initialMode: mode,
+                onBack: () {},
+                onCreateBusinessRoom: (_, _) async {},
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        final fields = novaBuyerCalculatorFields
+            .where((f) => f.mode == mode.name)
+            .toList();
+        final rendered = tester.widgetList<TextField>(find.byType(TextField));
+        expect(
+          rendered.map((f) => (f.key as ValueKey).value).toSet(),
+          fields.map((f) => 'field_${f.key}').toSet(),
+        );
+        for (final field in fields) {
+          expect(NovaTarget.contextFor('buyer.calc.${field.key}'), isNotNull);
+        }
+        expect(rendered.every((f) => f.controller!.text.isEmpty), isTrue);
+        expect(
+          NovaTarget.contextFor('buyer.calc.${mode.name}.results'),
+          isNotNull,
+        );
+      }
+      expect(tester.takeException(), isNull);
+    },
+  );
+  testWidgets(
+    'all seller input and result targets match the actual calculator page',
+    (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: SellerDashboardPage(initialView: SellerDashboardView.value),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final rendered = tester.widgetList<TextField>(find.byType(TextField));
+      expect(
+        rendered.map((f) => (f.key as ValueKey).value).toSet(),
+        novaSellerCalculatorFields.map((f) => 'seller_${f.key}').toSet(),
+      );
+      for (final field in novaSellerCalculatorFields) {
+        expect(NovaTarget.contextFor('seller.calc.${field.key}'), isNotNull);
+      }
+      for (var i = 1; i <= 3; i++) {
+        expect(NovaTarget.contextFor('seller.calc.result.$i'), isNotNull);
+      }
+      expect(rendered.every((f) => f.controller!.text.isEmpty), isTrue);
+      expect(tester.takeException(), isNull);
+    },
+  );
+  for (final role in ['buyer', 'seller']) {
+    testWidgets(
+      '$role home exposes each metric, pipeline column and start control',
+      (tester) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            home: role == 'buyer'
+                ? const DealRoomsPage(initialSide: PlatformSide.business)
+                : const SellerDashboardPage(),
+          ),
+        );
+        await tester.pumpAndSettle();
+        for (final step in novaDashboardSteps(role)) {
+          expect(
+            NovaTarget.contextFor(step.target!),
+            isNotNull,
+            reason: step.id,
+          );
+        }
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+  testWidgets(
+    'Nova scrolls to a deep field and keeps its character outside the bubble',
+    (tester) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final key = GlobalKey<NavigatorState>();
+      final controller = NovaTrainingController(
+        service: NovaTrainingService(accountId: () => null),
+      );
+      await controller.service.load();
+      final index = novaWalkthrough(
+        'buyer',
+      ).indexWhere((s) => s.target == 'buyer.calc.businessYears');
+      await controller.service.save(role: 'buyer', step: index);
+      await tester.pumpWidget(
+        MaterialApp(
+          navigatorKey: key,
+          builder: (_, child) => NovaTrainingHost(
+            navigatorKey: key,
+            controller: controller,
+            autoStart: false,
+            pageBuilder: (_) => Scaffold(
+              body: BuyerDealScreen(
+                onBack: () {},
+                onCreateBusinessRoom: (_, _) async {},
+              ),
+            ),
+            child: child!,
+          ),
+          home: const Scaffold(),
+        ),
+      );
+      await tester.pumpAndSettle();
+      controller.start(role: 'buyer', replay: false);
+      await tester.pumpAndSettle();
+      final rect = tester.getRect(find.byKey(const Key('field_businessYears')));
+      expect(rect.top, greaterThanOrEqualTo(0));
+      expect(rect.bottom, lessThan(844));
+      final character = find.descendant(
+        of: find.byType(NovaTourCard),
+        matching: find.byType(NovaCharacter),
+      );
+      expect(
+        find.ancestor(of: character, matching: find.byType(Material)),
+        findsNothing,
+      );
+      expect(tester.takeException(), isNull);
     },
   );
   for (final width in [390.0, 1440.0]) {

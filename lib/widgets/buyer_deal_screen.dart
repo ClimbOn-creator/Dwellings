@@ -1,3 +1,4 @@
+import 'nova_target.dart';
 import '../services/nova_service.dart';
 import '../widgets/nova_panel.dart';
 import 'package:flutter/material.dart';
@@ -13,10 +14,12 @@ class BuyerDealScreen extends StatefulWidget {
   const BuyerDealScreen({
     super.key,
     required this.onBack,
+    this.initialMode = BuyerScreenMode.business,
     this.onContinue,
     required this.onCreateBusinessRoom,
   });
 
+  final BuyerScreenMode initialMode;
   final VoidCallback onBack;
   final VoidCallback? onContinue;
   final Future<void> Function(BusinessInputs, BusinessResult)
@@ -34,7 +37,14 @@ class _BuyerDealScreenState extends State<BuyerDealScreen> {
   );
   final Map<String, TextEditingController> _fields = {};
   final Map<String, GlobalKey<TooltipState>> _helpKeys = {};
-  BuyerScreenMode _mode = BuyerScreenMode.business;
+  late BuyerScreenMode _mode;
+
+  @override
+  void initState() {
+    super.initState();
+    _mode = widget.initialMode;
+  }
+
   bool _saving = false;
 
   static const _fieldHelp = <String, String>{
@@ -258,7 +268,10 @@ class _BuyerDealScreenState extends State<BuyerDealScreen> {
                 },
               ),
             ),
-            _modePicker(bounds.maxWidth < 600),
+            NovaTarget(
+              id: 'buyer.calc.tabs',
+              child: _modePicker(bounds.maxWidth < 600),
+            ),
             const SizedBox(height: 18),
             if (narrow) ...[
               _inputPanel(),
@@ -447,51 +460,56 @@ class _BuyerDealScreenState extends State<BuyerDealScreen> {
     String hint, {
     String? note,
     bool numeric = true,
-  }) => Padding(
-    padding: const EdgeInsets.only(bottom: 13),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Flexible(
-              child: Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
+  }) => NovaTarget(
+    id: 'buyer.calc.$key',
+    child: Padding(
+      padding: const EdgeInsets.only(bottom: 13),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Flexible(
+                child: Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
+              const SizedBox(width: 5),
+              _helpButton(key, label),
+            ],
+          ),
+          const SizedBox(height: 6),
+          TextField(
+            key: Key('field_$key'),
+            controller: _controller(key),
+            keyboardType: numeric
+                ? const TextInputType.numberWithOptions(decimal: true)
+                : TextInputType.text,
+            onChanged: (_) => setState(() {}),
+            decoration: InputDecoration(
+              hintText: 'Example → $hint',
+              hintStyle: const TextStyle(color: Color(0xFF8796AB)),
+              isDense: true,
+              filled: true,
+              fillColor: const Color(0xFFF8FAFE),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(9),
+              ),
             ),
-            const SizedBox(width: 5),
-            _helpButton(key, label),
+          ),
+          if (note != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              note,
+              style: const TextStyle(fontSize: 12, color: DashboardUi.muted),
+            ),
           ],
-        ),
-        const SizedBox(height: 6),
-        TextField(
-          key: Key('field_$key'),
-          controller: _controller(key),
-          keyboardType: numeric
-              ? const TextInputType.numberWithOptions(decimal: true)
-              : TextInputType.text,
-          onChanged: (_) => setState(() {}),
-          decoration: InputDecoration(
-            hintText: 'Example → $hint',
-            hintStyle: const TextStyle(color: Color(0xFF8796AB)),
-            isDense: true,
-            filled: true,
-            fillColor: const Color(0xFFF8FAFE),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(9)),
-          ),
-        ),
-        if (note != null) ...[
-          const SizedBox(height: 4),
-          Text(
-            note,
-            style: const TextStyle(fontSize: 12, color: DashboardUi.muted),
-          ),
         ],
-      ],
+      ),
     ),
   );
 
@@ -619,11 +637,14 @@ class _BuyerDealScreenState extends State<BuyerDealScreen> {
     _field('creExitCap', 'Exit cap rate %', '6.5'),
   ];
 
-  Widget _resultPanel() => switch (_mode) {
-    BuyerScreenMode.business => _businessResults(),
-    BuyerScreenMode.assets => _assetResults(),
-    BuyerScreenMode.realEstate => _creResults(),
-  };
+  Widget _resultPanel() => NovaTarget(
+    id: 'buyer.calc.${_mode.name}.results',
+    child: switch (_mode) {
+      BuyerScreenMode.business => _businessResults(),
+      BuyerScreenMode.assets => _assetResults(),
+      BuyerScreenMode.realEstate => _creResults(),
+    },
+  );
 
   Widget _empty(String title, String detail) => DashboardUi.panel(
     child: SizedBox(

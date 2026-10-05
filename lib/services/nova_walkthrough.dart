@@ -1,3 +1,5 @@
+import 'nova_calculator_fields.dart';
+
 enum NovaMood { welcome, studying, planning, curious, reassuring, celebrating }
 
 class NovaStep {
@@ -23,7 +25,7 @@ List<NovaStep> novaWalkthrough(String role) => [
     NovaMood.welcome,
   ),
   ...switch (role) {
-    'seller' => const [
+    'seller' => [
       NovaStep(
         'seller-home',
         'Your next chapter starts here',
@@ -32,13 +34,16 @@ List<NovaStep> novaWalkthrough(String role) => [
         NovaMood.planning,
         target: 'seller.workspace',
       ),
+      ...novaDashboardSteps('seller'),
       NovaStep(
         'seller-value',
         'Explore your asking price',
         'Deal screen separates business value, assets and commercial property. Start with your own figures and use the results as a starting point for adviser review.',
         'seller/value',
         NovaMood.studying,
+        target: 'seller.calc.panel.1',
       ),
+      ...novaCalculatorSteps('seller'),
       NovaStep(
         'seller-plan',
         'A plan for your transfer path',
@@ -99,7 +104,7 @@ List<NovaStep> novaWalkthrough(String role) => [
         NovaMood.curious,
       ),
     ],
-    _ => const [
+    _ => [
       NovaStep(
         'buyer-home',
         'Keep an eye on your pipeline',
@@ -108,13 +113,16 @@ List<NovaStep> novaWalkthrough(String role) => [
         NovaMood.planning,
         target: 'buyer.workspace',
       ),
+      ...novaDashboardSteps('buyer'),
       NovaStep(
         'buyer-screen',
         'Screen the opportunity',
         'Deal screen has separate calculators for a business, assets and commercial real estate. Enter your own numbers; the little info buttons explain each input.',
-        'buyer/dealScreen',
+        'buyer/dealScreen/business',
         NovaMood.studying,
+        target: 'buyer.calc.tabs',
       ),
+      ...novaCalculatorSteps('buyer'),
       NovaStep(
         'buyer-plan',
         'Know what comes next',
@@ -214,3 +222,203 @@ List<NovaStep> novaWalkthrough(String role) => [
     NovaMood.celebrating,
   ),
 ];
+
+/// Each input has its own step and target; no financial figures are filled in.
+List<NovaStep> novaCalculatorSteps(String role) {
+  final seller = role == 'seller';
+  final fields = seller
+      ? novaSellerCalculatorFields
+      : novaBuyerCalculatorFields;
+  final groups = seller
+      ? <(String, List<NovaCalculatorField>, String, String)>[
+          (
+            'business',
+            fields.take(6).toList(),
+            'Business value range',
+            'Maintainable EBITDA adds verified add-backs and owner pay to reported EBITDA, then subtracts replacement leader pay. The low and high multiples produce the enterprise-value range. Cash, debt and working-capital adjustments are separate.',
+          ),
+          (
+            'assets',
+            fields.skip(6).take(4).toList(),
+            'Net asset reference',
+            'Included equipment, inventory and collectible receivables minus assumed liabilities gives the net asset reference. This is a separate comparison; adding it to earnings value can double-count assets.',
+          ),
+          (
+            'closing',
+            fields.skip(10).toList(),
+            'Cash at closing',
+            'Subtract vendor financing, selling fees and debt paid at closing from the expected price. The result is before tax; holdbacks, earn-outs and working-capital adjustments need separate review.',
+          ),
+        ]
+      : <(String, List<NovaCalculatorField>, String, String)>[
+          (
+            'business',
+            fields.where((f) => f.mode == 'business').toList(),
+            'Read the business results',
+            'The earnings bridge explains maintainable EBITDA. Multiples give an indicative price range, and the price gap compares it with the ask. Debt service, coverage and cash after debt depend on the financing assumptions and maintenance investment.',
+          ),
+          (
+            'assets',
+            fields.where((f) => f.mode == 'assets').toList(),
+            'Read the asset results',
+            'The asset bridge adds included assets and cash, then subtracts liabilities and deferred maintenance. Compare adjusted net assets with the ask. Buyer cost includes transaction costs; the liquidation floor uses the recovery rate for noncash assets.',
+          ),
+          (
+            'realEstate',
+            fields.where((f) => f.mode == 'realEstate').toList(),
+            'Read the property results',
+            'Potential income minus vacancy, operating costs and replacement reserves gives stabilized NOI. NOI divided by the market cap rate gives income value. Debt coverage and cash after debt use your financing terms; hold and exit assumptions drive the projected sale value and stress view.',
+          ),
+        ];
+  return [
+    for (var group = 0; group < groups.length; group++) ...[
+      for (final field in groups[group].$2)
+        NovaStep(
+          '$role-input-${field.key}',
+          field.label,
+          '${field.help} Example → ${field.example}.',
+          seller ? 'seller/value' : 'buyer/dealScreen/${field.mode}',
+          NovaMood.studying,
+          target: '$role.calc.${field.key}',
+        ),
+      NovaStep(
+        '$role-result-${groups[group].$1}',
+        groups[group].$3,
+        '${groups[group].$4} Results appear when the required fields are complete.',
+        seller ? 'seller/value' : 'buyer/dealScreen/${groups[group].$1}',
+        NovaMood.planning,
+        target: seller
+            ? 'seller.calc.result.${group + 1}'
+            : 'buyer.calc.${groups[group].$1}.results',
+      ),
+    ],
+  ];
+}
+
+List<NovaStep> novaDashboardSteps(String role) {
+  final seller = role == 'seller';
+  final metrics = seller
+      ? const [
+          (
+            'Active transfers',
+            'This counts the transfer you have set up. Start a transaction plan to identify your business and transfer path.',
+          ),
+          (
+            'Plan complete',
+            'Completed checklist tasks drive this percentage. Use your transaction plan to work through the remaining steps and keep progress current.',
+          ),
+          (
+            'Due soon',
+            'These unfinished steps have suggested dates in the next seven days. Review the dates in your plan and make time for the next actions.',
+          ),
+          (
+            'Needs attention',
+            'These unfinished steps are past their suggested dates. Review what is blocking them with the responsible adviser.',
+          ),
+        ]
+      : const [
+          (
+            'Active deals',
+            'This counts deals currently in your pipeline. Completed, archived and cancelled deals are kept out of the active count.',
+          ),
+          (
+            'Under review',
+            'These deals are being screened or financed. Open a deal to check assumptions and the evidence still needed before moving forward.',
+          ),
+          (
+            'Due soon',
+            'These deal deadlines fall in the next seven days. Upcoming meetings and tasks also appear in your follow-up area when you have active deals.',
+          ),
+          (
+            'Needs attention',
+            'This flags blockers and overdue work. Open the relevant deal or transaction plan to see the task, owner and next action.',
+          ),
+        ];
+  final stages = seller
+      ? const [
+          (
+            'Preparation',
+            'Define your transfer path and prepare the business, records and adviser team. Your transfer appears here while preparation is the next stage.',
+          ),
+          (
+            'Successor search',
+            'Find and assess a buyer or successor. Keep confidential information protected while checking fit and capacity.',
+          ),
+          (
+            'Terms / diligence',
+            'Agree the commercial terms and coordinate the buyer’s review of the business. Use the transaction plan to track the evidence and decisions.',
+          ),
+          (
+            'Closing / handover',
+            'Complete the closing work and transfer responsibilities. Your transaction plan includes the ownership transition after the agreement.',
+          ),
+        ]
+      : const [
+          (
+            'Sourcing',
+            'Early opportunities start here. Open a deal card to review its details, then use the deal screen to evaluate whether to proceed.',
+          ),
+          (
+            'Under review',
+            'Screening and finance work sit here. Compare the evidence, price and funding capacity before agreeing the next stage.',
+          ),
+          (
+            'LOI / diligence',
+            'These deals are in the letter-of-intent or diligence stages. Track requests, deadlines, owners and blockers in the transaction plan.',
+          ),
+          (
+            'Closing',
+            'These deals are moving through closing or transition. Confirm remaining legal, financing and handover actions with your team.',
+          ),
+        ];
+  return [
+    for (var i = 0; i < metrics.length; i++)
+      NovaStep(
+        '$role-home-metric-$i',
+        metrics[i].$1,
+        metrics[i].$2,
+        '$role/home',
+        NovaMood.planning,
+        target: '$role.home.metric.$i',
+      ),
+    NovaStep(
+      '$role-home-search',
+      seller ? 'Find your transfer' : 'Find a deal in your pipeline',
+      seller
+          ? 'Search narrows the displayed transfers by business name. This searches your own pipeline.'
+          : 'Search narrows your existing pipeline by name or location. Use Search businesses to look for a new opportunity.',
+      '$role/home',
+      NovaMood.curious,
+      target: '$role.home.search',
+    ),
+    NovaStep(
+      '$role-home-start',
+      seller
+          ? 'Set up your transfer plan'
+          : 'Bring an opportunity into the app',
+      seller
+          ? 'Set up plan opens your seller transaction plan. Identify your business, choose the succession or sale path and set your timing. Edit plan lets you keep that information current.'
+          : 'Search businesses opens available opportunities. Enter a private deal adds an opportunity you found yourself. Compare what fits me helps you compare options before committing.',
+      '$role/home',
+      NovaMood.welcome,
+      target: '$role.home.start',
+    ),
+    for (var i = 0; i < stages.length; i++)
+      NovaStep(
+        '$role-home-stage-$i',
+        stages[i].$1,
+        stages[i].$2,
+        '$role/home',
+        NovaMood.planning,
+        target: '$role.home.stage.$i',
+      ),
+    NovaStep(
+      '$role-home-team',
+      'Your personal team',
+      'Your saved advisers appear here. Manage opens My team. Professionals on your personal team do not automatically get access to every private deal; review each deal’s permissions.',
+      '$role/home',
+      NovaMood.reassuring,
+      target: '$role.home.team',
+    ),
+  ];
+}
