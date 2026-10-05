@@ -1,3 +1,4 @@
+import 'widgets/nova_training_host.dart';
 import 'models/footer_page_content.dart';
 import 'screens/footer_information_page.dart';
 import 'screens/assistant_workspace_page.dart';
@@ -53,8 +54,11 @@ class AffinityApp extends StatelessWidget {
       textTheme: GoogleFonts.spaceGroteskTextTheme(),
     );
     return MaterialApp(
-      builder: (context, child) =>
-          SiteEditorShell(child: child ?? const SizedBox.shrink()),
+      navigatorKey: novaNavigatorKey,
+      builder: (context, child) => NovaTrainingHost(
+        navigatorKey: novaNavigatorKey,
+        child: SiteEditorShell(child: child ?? const SizedBox.shrink()),
+      ),
       debugShowCheckedModeBanner: false,
       title: 'Affinity',
       theme: base.copyWith(

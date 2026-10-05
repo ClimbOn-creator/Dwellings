@@ -1,9 +1,88 @@
 // These IDs are permanent. Rewrite the fallback VALUE while retaining its ID.
 // Never regenerate or renumber this registry during a redesign.
 const siteCopyCatalog = <String, String>{
-  'copy.assistant_workspace_page.3': 'Nova · Affinity',
+  'nova.training.welcome.title': "Hi, I’m Nova.",
+  'nova.training.welcome.body':
+      "I’ll show you where everything lives, one screen at a time. Use Next and Back to explore. This tour will not create listings, change deals or contact anyone.",
+  'nova.training.seller-home.title': "Your next chapter starts here",
+  'nova.training.seller-home.body':
+      "Home brings your succession or sale progress together. The pipeline follows preparation, finding a successor, agreeing terms and handover.",
+  'nova.training.seller-value.title': "Explore your asking price",
+  'nova.training.seller-value.body':
+      "Deal screen separates business value, assets and commercial property. Start with your own figures and use the results as a starting point for adviser review.",
+  'nova.training.seller-plan.title': "A plan for your transfer path",
+  'nova.training.seller-plan.body':
+      "Choose an outside sale, family succession, management buyout or partial sale. Your transaction plan adapts to that path; keep tasks and your target date current.",
+  'nova.training.seller-team.title': "Bring the right people together",
+  'nova.training.seller-team.body':
+      "My team connects you with professionals. Add the expertise you need, then agree responsibilities and access inside the deal room.",
+  'nova.training.seller-resources.title': "Explore support programs",
+  'nova.training.seller-resources.body':
+      "Resources contains government programs and community support. Check location, eligible uses and application timing with the program administrator.",
+  'nova.training.member-home.title': "Your opportunity board",
+  'nova.training.member-home.body':
+      "Home organizes available, recommended and saved opportunities. The cards help you keep track of where your expertise could help.",
+  'nova.training.member-profile.title': "Introduce your experience",
+  'nova.training.member-profile.body':
+      "Your profile explains your role, service area and personal experience. A clear write-up and genuine reviews help buyers and sellers understand your work. Sign in to edit your own profile.",
+  'nova.training.member-opportunities.title': "Explore an opportunity",
+  'nova.training.member-opportunities.body':
+      "Review the approved anonymous brief and support needed before introducing yourself. Private buyer information is not part of this feed.",
+  'nova.training.member-responses.title': "Follow your conversations",
+  'nova.training.member-responses.body':
+      "Deal responses keeps introductions and replies together. Agree next steps with the deal owner and join a team when invited.",
+  'nova.training.member-resources.title': "Find support for clients",
+  'nova.training.member-resources.body':
+      "Use the government programs directory to explore support relevant to a client’s location and planned use of funds.",
+  'nova.training.buyer-home.title': "Keep an eye on your pipeline",
+  'nova.training.buyer-home.body':
+      "Your cards show active deals, deadlines and items needing attention. Use Search businesses to explore, or Enter a private deal to bring your own opportunity into the app.",
+  'nova.training.buyer-screen.title': "Screen the opportunity",
+  'nova.training.buyer-screen.body':
+      "Deal screen has separate calculators for a business, assets and commercial real estate. Enter your own numbers; the little info buttons explain each input.",
+  'nova.training.buyer-plan.title': "Know what comes next",
+  'nova.training.buyer-plan.body':
+      "Select a deal in Transaction plan to see its stages, tasks, owners and deadlines. A blocked task is a signal to resolve the missing information before proceeding.",
+  'nova.training.buyer-team.title': "Build your adviser team",
+  'nova.training.buyer-team.body':
+      "My team connects you with professionals who can help with accounting, financing, legal work and the handover. Add people here and manage access within each deal.",
+  'nova.training.buyer-resources.title': "Find grants and community support",
+  'nova.training.buyer-resources.body':
+      "Resources is the directory of government programs. Explore the relevant program, then verify eligibility and timing with its administrator.",
+  'nova.training.room.title': "One room for each deal",
+  'nova.training.room.body':
+      "This is a fictional training deal, not a saved acquisition. In your own room, the navigation keeps the financial model, tasks, team, documents and privacy settings together.",
+  'nova.training.financials.title': "Keep the source figures together",
+  'nova.training.financials.body':
+      "Financial model records the deal’s purchase price, annual revenue, EBITDA and available capital. Update your real room when evidence changes; check assumptions with your advisers.",
+  'nova.training.room-plan.title': "Move the deal forward",
+  'nova.training.room-plan.body':
+      "The room’s transaction plan turns the deal into concrete tasks. Track completion, due dates, responsibilities and blockers instead of relying on memory.",
+  'nova.training.documents.title': "Keep documents with the deal",
+  'nova.training.documents.body':
+      "The private document vault is where authorized participants can upload and review deal files. This example has no real files; the tour never uploads or downloads anything.",
+  'nova.training.privacy.title': "Decide what gets shared",
+  'nova.training.privacy.body':
+      "Privacy settings control what approved professionals can see. Anonymous opportunities and private deal records have different audiences. Review permissions before sharing information.",
+  'nova.training.blueprint.title': "Start with your goals",
+  'nova.training.blueprint.body':
+      "Blueprint defines the kind of business you want, your role and your limits. Use the existing steps to save your goals to your account when you are ready.",
+  'nova.training.readiness.title': "Get ready to act",
+  'nova.training.readiness.body':
+      "Buyer readiness helps separate buying capital from fees, working capital and reserves. It frames your preparation; it is not a financing approval.",
+  'nova.training.learning.title': "Learn what the documents do",
+  'nova.training.learning.body':
+      "Document guides explains each transaction document, when to use it and who should review it. Open a worked example or download an editable template from the page.",
+  'nova.training.consulting.title': "Get personal support",
+  'nova.training.consulting.body':
+      "Personal consulting explains the support available and keeps the consultation calendar on the page. Use the booking options when you are ready to arrange help.",
+  'nova.training.finish.title': "You’re ready to explore.",
+  'nova.training.finish.body':
+      "You’ve finished the app walkthrough. Nova will stay tucked away after this. You can replay any guide from Nova walkthrough in the menu or from your profile.",
+  'copy.assistant_workspace_page.3': 'Nova app walkthrough',
   'copy.assistant_workspace_page.4':
-      'Learn with Nova using your Blueprint, readiness, deals and transaction guides.',
+      'Explore the app with Nova. Use Next and Back, then replay the tour whenever you need it.',
+  'nova.training.replay': 'Show me around with Nova',
   'nova.panel.name': 'Nova',
   'nova.panel.prompt': 'What would you like to understand?',
   '5e87673b': " years",

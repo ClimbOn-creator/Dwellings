@@ -36,7 +36,7 @@ class GuideWorkspacePage extends StatelessWidget {
       title: const SiteText(
         contentKey: 'copy.assistant_workspace_page.3',
         literal: true,
-        'Nova · Affinity',
+        'Nova app walkthrough',
       ),
       actions: const [
         AppNavigationMenu(side: PlatformSide.business, dark: false),
@@ -53,7 +53,7 @@ class GuideWorkspacePage extends StatelessWidget {
               const SiteText(
                 contentKey: 'copy.assistant_workspace_page.4',
                 literal: true,
-                'Learn with Nova using your Blueprint, readiness, deals and transaction guides.',
+                'Explore the app with Nova. Use Next and Back, then replay the tour whenever you need it.',
               ),
               const SizedBox(height: 18),
               NovaPanel(

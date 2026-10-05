@@ -1,3 +1,4 @@
+import '../widgets/nova_training_status.dart';
 import 'buyer_resources_page.dart';
 import '../widgets/site_copy_text.dart';
 import '../widgets/flowing_color_banner.dart';
@@ -281,6 +282,8 @@ class _ProfilePageState extends State<ProfilePage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      const NovaTrainingStatus(),
+                      const SizedBox(height: 18),
                       LayoutBuilder(
                         builder: (context, constraints) {
                           final width = constraints.maxWidth >= 980

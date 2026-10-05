@@ -1,219 +1,280 @@
-import 'package:dwelling_iq/services/nova_service.dart';
-import 'package:dwelling_iq/services/nova_learning.dart';
-import 'package:dwelling_iq/widgets/nova_panel.dart';
+import 'dart:async';
+import 'package:dwelling_iq/services/nova_training_service.dart';
+import 'package:dwelling_iq/services/nova_training_controller.dart';
+import 'package:dwelling_iq/services/nova_walkthrough.dart';
+import 'package:dwelling_iq/widgets/nova_training_host.dart';
+import 'package:dwelling_iq/widgets/nova_character.dart';
+import 'package:dwelling_iq/screens/deal_rooms_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-Future<void> acceptContext(WidgetTester tester) async {
-  final control = find.byType(CheckboxListTile);
-  await tester.ensureVisible(control);
-  await tester.tap(control);
-  await tester.pumpAndSettle();
-}
-
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
-  for (final width in [390.0, 1440.0]) {
-    testWidgets('Nova tour and lessons fit $width', (tester) async {
-      tester.view.physicalSize = Size(width, 1200);
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
-      String? destination;
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: SingleChildScrollView(
-              child: NovaPanel(
-                context: const NovaContext(
-                  area: 'seller',
-                  label: 'Seller workspace',
-                ),
-                tourRole: 'seller',
-                initiallyOpen: true,
-                onTourNavigate: (value) => destination = value,
-              ),
-            ),
-          ),
-        ),
+  test(
+    'completion survives another device and replay preserves completion',
+    () async {
+      Map<String, dynamic>? cloud;
+      final service = NovaTrainingService(
+        accountId: () => 'account-a',
+        readProfile: (_) async => cloud,
+        writeProfile: (_, value) async => cloud = value,
       );
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Show me around'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Open Home'));
-      expect(destination, 'overview');
-      await tester.tap(find.text('Next'));
-      await tester.pumpAndSettle();
-      expect(find.text('Open Deal screen'), findsOneWidget);
-      await tester.tap(find.text('Learn with Nova'));
-      await tester.pumpAndSettle();
-      expect(find.textContaining('family succession'), findsOneWidget);
-      expect(tester.takeException(), isNull);
-    });
-  }
-  test('curriculum covers every transaction document and all roles', () {
-    expect(novaLessons.map((l) => l.id).toSet().length, novaLessons.length);
-    expect(novaLessons.where((l) => l.id.startsWith('document-')).length, 11);
-    for (final role in ['buyer', 'seller', 'member']) {
-      expect(novaTour(role).length, greaterThanOrEqualTo(4));
-    }
-  });
-  testWidgets(
-    'follow-ups use conversation; switching deals discards old context',
-    (tester) async {
-      final requests = <(String?, String, int)>[];
-      Future<NovaAnswer> load(
-        NovaContext context,
-        String question,
-        List<Map<String, String>> history,
-        String evidence,
-      ) async {
-        requests.add((context.dealId, question, history.length));
-        return NovaAnswer('${context.label}: answer ${requests.length}', [
-          'Saved deal record',
-        ]);
-      }
-
-      Widget page(String id) => MaterialApp(
-        home: Scaffold(
-          body: SingleChildScrollView(
-            child: NovaPanel(
-              context: NovaContext(
-                area: 'financials',
-                label: 'Deal $id',
-                dealId: id,
-              ),
-              initiallyOpen: true,
-              answerLoader: load,
-            ),
-          ),
-        ),
+      await service.load();
+      expect(service.progress.completed, isFalse);
+      await service.save(role: 'seller', step: 15, finish: true);
+      expect(cloud!['completed_at'], isNotNull);
+      expect(service.profileSaved, isTrue);
+      SharedPreferences.setMockInitialValues({});
+      final anotherDevice = NovaTrainingService(
+        accountId: () => 'account-a',
+        readProfile: (_) async => cloud,
+        writeProfile: (_, value) async => cloud = value,
       );
-      await tester.pumpWidget(page('one'));
-      await tester.pumpAndSettle();
-      await acceptContext(tester);
-      await tester.ensureVisible(find.text('Why did EBITDA decrease?'));
-      await tester.tap(find.text('Why did EBITDA decrease?'));
-      await tester.pumpAndSettle();
-      expect(find.text('Deal one: answer 1'), findsOneWidget);
-      await tester.enterText(
-        find.byType(TextField).last,
-        'What would you verify first?',
-      );
-      await tester.ensureVisible(find.byTooltip('Send to Nova'));
-      await tester.tap(find.byTooltip('Send to Nova'));
-      await tester.pumpAndSettle();
-      expect(requests.last, ('one', 'What would you verify first?', 2));
-      await tester.pumpWidget(page('two'));
-      await tester.pumpAndSettle();
-      expect(find.text('Deal one: answer 1'), findsNothing);
-      await acceptContext(tester);
-      await tester.ensureVisible(
-        find.text('How much debt could this business support?'),
-      );
-      await tester.tap(find.text('How much debt could this business support?'));
-      await tester.pumpAndSettle();
-      expect(requests.last.$1, 'two');
-      expect(requests.last.$3, 0);
+      await anotherDevice.load();
+      expect(anotherDevice.progress.completed, isTrue);
+      final controller = NovaTrainingController(service: anotherDevice);
+      controller.start(role: 'seller');
+      expect(controller.index, 0);
+      expect(controller.active, isTrue);
+      await controller.next();
+      expect(anotherDevice.progress.completed, isTrue);
     },
   );
   test(
-    'service blocks missing consent before authentication or network',
+    'failed profile save is cached and retried without claiming cloud success',
     () async {
-      await expectLater(
-        NovaService.ask(
-          const NovaContext(area: 'buyer', label: 'Dashboard'),
-          'Help',
-          [],
-        ),
-        throwsA(
-          isA<NovaUnavailable>().having(
-            (e) => e.message,
-            'message',
-            contains('share context'),
-          ),
-        ),
+      bool offline = true;
+      Map<String, dynamic>? cloud;
+      final service = NovaTrainingService(
+        accountId: () => 'account-a',
+        readProfile: (_) async => cloud,
+        writeProfile: (_, value) async {
+          if (offline) throw StateError('offline');
+          cloud = value;
+        },
       );
-      await expectLater(
-        NovaService.ask(
-          const NovaContext(area: 'buyer', label: 'Dashboard'),
-          'Help',
-          [],
-          consentToShare: true,
-        ),
-        throwsA(
-          isA<NovaUnavailable>().having(
-            (e) => e.message,
-            'message',
-            contains('Sign in'),
-          ),
-        ),
+      await service.load();
+      expect(
+        await service.save(role: 'buyer', step: 15, finish: true),
+        isFalse,
       );
+      expect(service.progress.completed, isTrue);
+      expect(service.progress.pendingSync, isTrue);
+      expect(service.profileSaved, isFalse);
+      offline = false;
+      await service.load();
+      expect(service.profileSaved, isTrue);
+      expect(service.progress.pendingSync, isFalse);
+      expect(cloud!['completed_at'], isNotNull);
     },
   );
-  testWidgets('Nova makes no live request without sharing consent', (
-    tester,
-  ) async {
-    var requests = 0;
+  test(
+    'account changes do not copy completion or late responses to another profile',
+    () async {
+      String account = 'account-a';
+      final write = Completer<void>();
+      final writes = <String>[];
+      final service = NovaTrainingService(
+        accountId: () => account,
+        readProfile: (_) async => null,
+        writeProfile: (id, _) async {
+          writes.add(id);
+          await write.future;
+        },
+      );
+      await service.load();
+      final saving = service.save(role: 'buyer', step: 15, finish: true);
+      await Future<void>.delayed(Duration.zero);
+      account = 'account-b';
+      await service.load();
+      write.complete();
+      await saving;
+      expect(service.scope, 'account-b');
+      expect(service.progress.completed, isFalse);
+      expect(writes, ['account-a']);
+    },
+  );
+  test('pause is not completion and can resume the saved step', () async {
+    final service = NovaTrainingService(accountId: () => null);
+    await service.load();
+    final controller = NovaTrainingController(service: service);
+    controller.start(role: 'member');
+    await controller.next();
+    controller.pause();
+    expect(service.progress.completed, isFalse);
+    final reopened = NovaTrainingService(accountId: () => null);
+    await reopened.load();
+    final resumed = NovaTrainingController(service: reopened);
+    resumed.start(role: reopened.progress.role, replay: false);
+    expect(resumed.role, 'member');
+    expect(resumed.index, 1);
+  });
+  test(
+    'all app paths include room, documents, privacy and the six supplied moods',
+    () {
+      final moods = <NovaMood>{};
+      for (final role in ['buyer', 'seller', 'member']) {
+        final steps = novaWalkthrough(role);
+        expect(steps.map((s) => s.id).toSet().length, steps.length);
+        expect(steps.any((s) => s.destination == 'room/documents'), isTrue);
+        expect(steps.any((s) => s.destination == 'room/privacy'), isTrue);
+        expect(steps.last.id, 'finish');
+        moods.addAll(steps.map((s) => s.mood));
+      }
+      expect(moods, NovaMood.values.toSet());
+    },
+  );
+  for (final width in [390.0, 1440.0]) {
+    testWidgets('click-through tour, completion and replay fit $width', (
+      tester,
+    ) async {
+      tester.view.physicalSize = Size(width, 900);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final key = GlobalKey<NavigatorState>();
+      final controller = NovaTrainingController(
+        service: NovaTrainingService(accountId: () => null),
+      );
+      await tester.pumpWidget(
+        MaterialApp(
+          navigatorKey: key,
+          builder: (_, child) => NovaTrainingHost(
+            navigatorKey: key,
+            controller: controller,
+            autoStart: false,
+            pageBuilder: (step) =>
+                Scaffold(body: Text('Real route: ${step.destination}')),
+            child: child!,
+          ),
+          home: const Scaffold(body: Text('Original page')),
+        ),
+      );
+      await tester.pumpAndSettle();
+      controller.start(role: 'buyer');
+      await tester.pumpAndSettle();
+      expect(find.byType(NovaCharacter), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(NovaTourCard),
+          matching: find.byType(TextField),
+        ),
+        findsNothing,
+      );
+      await tester.tap(find.text('Next'));
+      await tester.pumpAndSettle();
+      expect(find.text('Real route: buyer/home'), findsOneWidget);
+      await tester.tap(find.text('Back'));
+      await tester.pumpAndSettle();
+      expect(controller.index, 0);
+      for (var i = 0; i < controller.steps.length - 1; i++) {
+        await tester.ensureVisible(find.text('Next'));
+        await tester.tap(find.text('Next'));
+        await tester.pumpAndSettle();
+      }
+      await tester.ensureVisible(find.text('Finish training'));
+      await tester.tap(find.text('Finish training'));
+      await tester.pumpAndSettle();
+      expect(controller.service.progress.completed, isTrue);
+      expect(find.byType(NovaTourCard), findsNothing);
+      controller.start(role: 'seller');
+      await tester.pumpAndSettle();
+      expect(find.byType(NovaTourCard), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+  }
+  testWidgets(
+    'a completed profile prevents automatic welcome on a fresh device',
+    (tester) async {
+      final cloud = Completer<Map<String, dynamic>?>();
+      final controller = NovaTrainingController(
+        service: NovaTrainingService(
+          accountId: () => 'account-a',
+          readProfile: (_) => cloud.future,
+          writeProfile: (_, _) async {},
+        ),
+      );
+      final key = GlobalKey<NavigatorState>();
+      await tester.pumpWidget(
+        MaterialApp(
+          navigatorKey: key,
+          builder: (_, child) => NovaTrainingHost(
+            navigatorKey: key,
+            controller: controller,
+            child: child!,
+          ),
+          home: const Scaffold(body: Text('Home')),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byType(NovaTourCard), findsNothing);
+      cloud.complete({
+        'role': 'buyer',
+        'step': 15,
+        'completed_at': '2026-10-05T10:00:00Z',
+      });
+      await tester.pumpAndSettle();
+      expect(controller.active, isFalse);
+      expect(find.byType(NovaTourCard), findsNothing);
+    },
+  );
+  testWidgets('first load automatically introduces Nova', (tester) async {
+    final controller = NovaTrainingController(
+      service: NovaTrainingService(accountId: () => null),
+    );
+    final key = GlobalKey<NavigatorState>();
     await tester.pumpWidget(
       MaterialApp(
-        home: Scaffold(
-          body: SingleChildScrollView(
-            child: NovaPanel(
-              context: const NovaContext(area: 'financials', label: 'Deal'),
-              initiallyOpen: true,
-              answerLoader: (_, __, ___, ____) async {
-                requests++;
-                return const NovaAnswer('Answer', []);
-              },
-            ),
-          ),
+        navigatorKey: key,
+        builder: (_, child) => NovaTrainingHost(
+          navigatorKey: key,
+          controller: controller,
+          child: child!,
         ),
+        home: const Scaffold(body: Text('Landing')),
       ),
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Why did EBITDA decrease?'));
+    expect(controller.active, isTrue);
+    expect(find.text('Hi, I’m Nova.'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('nova_pause')));
     await tester.pumpAndSettle();
-    expect(requests, 0);
-    expect(
-      tester.widget<CheckboxListTile>(find.byType(CheckboxListTile)).value,
-      isFalse,
-    );
+    expect(controller.service.progress.completed, isFalse);
   });
-  testWidgets(
-    'unavailable AI retains question and does not fabricate a response',
-    (tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: SingleChildScrollView(
-              child: NovaPanel(
-                context: const NovaContext(
-                  area: 'financials',
-                  label: 'Example deal',
-                ),
-                initiallyOpen: true,
-                answerLoader: (_, __, ___, ____) async =>
-                    throw const NovaUnavailable('Service not connected'),
-              ),
+  for (final view in [
+    'overview',
+    'financials',
+    'plan',
+    'documents',
+    'privacy',
+  ]) {
+    testWidgets(
+      'fictional room safely renders $view without changing recent deal',
+      (tester) async {
+        SharedPreferences.setMockInitialValues({
+          'affinity.command.last_room.guest': 'actual-deal',
+        });
+        await tester.pumpWidget(
+          MaterialApp(
+            home: DealRoomPage(
+              room: novaExampleBundle.room,
+              trainingPreview: true,
+              initialWorkspace: view,
+              loadBundle: () async => novaExampleBundle,
             ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
-      await acceptContext(tester);
-      await tester.ensureVisible(find.text('Why did EBITDA decrease?'));
-      await tester.tap(find.text('Why did EBITDA decrease?'));
-      await tester.pumpAndSettle();
-      expect(find.text('Service not connected'), findsOneWidget);
-      expect(
-        tester.widget<TextField>(find.byType(TextField).last).controller!.text,
-        'Why did EBITDA decrease?',
-      );
-      expect(find.textContaining('For the MVP'), findsNothing);
-    },
-  );
+        );
+        await tester.pumpAndSettle();
+        expect(
+          (await SharedPreferences.getInstance()).getString(
+            'affinity.command.last_room.guest',
+          ),
+          'actual-deal',
+        );
+        expect(find.textContaining('Evergreen Services'), findsWidgets);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
 }
-
-// Consent is intentionally reset on deal changes; no provider requests occur before it.

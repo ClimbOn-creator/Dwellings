@@ -1,3 +1,4 @@
+import '../services/nova_training_controller.dart';
 import '../screens/buyer_resources_page.dart';
 import '../screens/seller_dashboard_page.dart';
 import '../screens/deal_rooms_page.dart';
@@ -20,6 +21,7 @@ import '../services/member_beta_service.dart';
 import 'profile_photo.dart';
 
 enum AppNavigationDestination {
+  novaWalkthrough,
   overview,
   resources,
   sellerDashboard,
@@ -59,6 +61,7 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
   }
 
   String _label(AppNavigationDestination destination) => switch (destination) {
+    AppNavigationDestination.novaWalkthrough => 'Nova walkthrough',
     AppNavigationDestination.resources => 'Resources',
     AppNavigationDestination.sellerDashboard => 'Seller dashboard',
     AppNavigationDestination.overview => 'Acquisition workspace',
@@ -74,6 +77,7 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
     BuildContext context,
     AppNavigationDestination destination,
   ) => switch (destination) {
+    AppNavigationDestination.novaWalkthrough => const SizedBox.shrink(),
     AppNavigationDestination.resources => const BuyerResourcesPage(),
     AppNavigationDestination.sellerDashboard => const SellerDashboardPage(),
     AppNavigationDestination.overview => const AcquisitionSupportPage(),
@@ -97,6 +101,10 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
   };
 
   void _open(BuildContext context, AppNavigationDestination destination) {
+    if (destination == AppNavigationDestination.novaWalkthrough) {
+      NovaTrainingController.instance.start();
+      return;
+    }
     Navigator.of(context).push(
       MaterialPageRoute<void>(builder: (_) => _page(context, destination)),
     );

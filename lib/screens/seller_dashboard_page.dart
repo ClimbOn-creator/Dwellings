@@ -1,3 +1,4 @@
+import '../widgets/nova_target.dart';
 import '../widgets/nova_panel.dart';
 import '../services/nova_service.dart';
 import '../widgets/team_workspace.dart';
@@ -345,7 +346,7 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
               builder: (context, box) => box.maxWidth >= 800
                   ? Row(
                       children: [
-                        _sidebar(),
+                        NovaTarget(id: 'seller.workspace', child: _sidebar()),
                         const VerticalDivider(
                           width: 1,
                           color: DashboardUi.line,

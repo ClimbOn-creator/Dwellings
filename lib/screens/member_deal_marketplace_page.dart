@@ -1,3 +1,4 @@
+import '../widgets/nova_target.dart';
 import '../widgets/nova_panel.dart';
 import '../services/nova_service.dart';
 import '../widgets/personal_experience_editor.dart';
@@ -507,7 +508,13 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
         return Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            SizedBox(width: 206, child: _dashboardNavigation()),
+            SizedBox(
+              width: 206,
+              child: NovaTarget(
+                id: 'member.workspace',
+                child: _dashboardNavigation(),
+              ),
+            ),
             const SizedBox(width: 14),
             Expanded(
               child: Material(

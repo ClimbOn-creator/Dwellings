@@ -1,3 +1,4 @@
+import '../widgets/nova_target.dart';
 import '../widgets/nova_panel.dart';
 import '../services/nova_service.dart';
 import '../models/buyer_command_state.dart';
@@ -387,7 +388,10 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                 return desktop
                     ? Row(
                         children: [
-                          _buyerSidebar(),
+                          NovaTarget(
+                            id: 'buyer.workspace',
+                            child: _buyerSidebar(),
+                          ),
                           const VerticalDivider(
                             width: 1,
                             color: DashboardUi.line,
@@ -4002,8 +4006,17 @@ class _TaskDialogState extends State<_TaskDialog> {
 }
 
 class DealRoomPage extends StatefulWidget {
-  const DealRoomPage({super.key, required this.room});
+  const DealRoomPage({
+    super.key,
+    required this.room,
+    this.initialWorkspace = 'overview',
+    this.trainingPreview = false,
+    this.loadBundle,
+  });
   final DealRoom room;
+  final String initialWorkspace;
+  final bool trainingPreview;
+  final Future<DealRoomBundle> Function()? loadBundle;
 
   @override
   State<DealRoomPage> createState() => _DealRoomPageState();
@@ -4014,6 +4027,7 @@ enum _DealWorkspaceView {
   profile,
   financials,
   evaluation,
+  documents,
   plan,
   team,
   timeline,
@@ -4047,12 +4061,18 @@ class _DealRoomPageState extends State<DealRoomPage> {
   void initState() {
     super.initState();
     _room = widget.room;
-    SharedPreferences.getInstance().then(
-      (prefs) => prefs.setString(
-        'affinity.command.last_room.${BackendService.user?.id ?? "guest"}',
-        _room.id,
-      ),
+    _workspaceView = _DealWorkspaceView.values.firstWhere(
+      (v) => v.name == widget.initialWorkspace,
+      orElse: () => _DealWorkspaceView.overview,
     );
+    _introductionsOpen = !widget.trainingPreview;
+    if (!widget.trainingPreview)
+      SharedPreferences.getInstance().then(
+        (prefs) => prefs.setString(
+          'affinity.command.last_room.${BackendService.user?.id ?? "guest"}',
+          _room.id,
+        ),
+      );
     for (final e in _extra.entries) {
       e.value.text =
           '${_room.propertySnapshot[e.key] ?? (e.key == "currency" ? "CAD" : "")}';
@@ -4069,8 +4089,10 @@ class _DealRoomPageState extends State<DealRoomPage> {
     _dealEbitda.text = _snapshotNumber('reported_ebitda');
     _dealCapital.text = _snapshotNumber('available_capital');
     _targetDate = _room.targetCloseDate;
-    _bundle = DealRoomService.loadBundle(_room);
-    _introductions = MemberDealMarketplaceService.loadBuyerResponses();
+    _bundle = widget.loadBundle?.call() ?? DealRoomService.loadBundle(_room);
+    _introductions = widget.trainingPreview
+        ? Future.value(<MemberDealPitch>[])
+        : MemberDealMarketplaceService.loadBuyerResponses();
   }
 
   @override
@@ -4097,11 +4119,14 @@ class _DealRoomPageState extends State<DealRoomPage> {
   }
 
   void _refresh() => setState(() {
-    _bundle = DealRoomService.loadBundle(_room);
-    _introductions = MemberDealMarketplaceService.loadBuyerResponses();
+    _bundle = widget.loadBundle?.call() ?? DealRoomService.loadBundle(_room);
+    _introductions = widget.trainingPreview
+        ? Future.value(<MemberDealPitch>[])
+        : MemberDealMarketplaceService.loadBuyerResponses();
   });
 
   Future<void> _saveRoom(String status, {String? currentStage}) async {
+    if (widget.trainingPreview) return;
     setState(() => _saving = true);
     try {
       final nextStage = currentStage ?? _room.currentStage;
@@ -4272,6 +4297,7 @@ class _DealRoomPageState extends State<DealRoomPage> {
   }
 
   Future<void> _uploadDocument() async {
+    if (widget.trainingPreview) return;
     final result = await FilePicker.platform.pickFiles(
       withData: true,
       allowMultiple: false,
@@ -4380,7 +4406,7 @@ class _DealRoomPageState extends State<DealRoomPage> {
               if (!desktop) return _mobileDashboard(bundle);
               return Row(
                 children: [
-                  _dashboardRail(),
+                  NovaTarget(id: 'room.navigation', child: _dashboardRail()),
                   const VerticalDivider(width: 1, thickness: 1, color: _line),
                   Expanded(
                     child: Column(
@@ -4508,6 +4534,11 @@ class _DealRoomPageState extends State<DealRoomPage> {
                 'Evaluation',
               ),
               _railButton(
+                _DealWorkspaceView.documents,
+                Icons.folder_outlined,
+                'Documents',
+              ),
+              _railButton(
                 _DealWorkspaceView.team,
                 Icons.groups_2_outlined,
                 'Team',
@@ -4632,6 +4663,7 @@ class _DealRoomPageState extends State<DealRoomPage> {
     _DealWorkspaceView.profile => 'Editable source record',
     _DealWorkspaceView.financials => 'Acquisition economics',
     _DealWorkspaceView.evaluation => 'Evidence and risk',
+    _DealWorkspaceView.documents => 'Private document vault',
     _DealWorkspaceView.plan => 'Guided execution',
     _DealWorkspaceView.team => 'People and decisions',
     _DealWorkspaceView.timeline => 'Stage and activity',
@@ -4643,6 +4675,7 @@ class _DealRoomPageState extends State<DealRoomPage> {
     _DealWorkspaceView.profile => 'Deal profile',
     _DealWorkspaceView.financials => 'Financial model',
     _DealWorkspaceView.evaluation => 'Affinity evaluation',
+    _DealWorkspaceView.documents => 'Documents',
     _DealWorkspaceView.plan => 'Transaction plan',
     _DealWorkspaceView.team => 'Deal team',
     _DealWorkspaceView.timeline => 'Deal timeline',
@@ -4697,7 +4730,7 @@ class _DealRoomPageState extends State<DealRoomPage> {
         context: _novaDealContext(),
         contextProvider: _novaDealContext,
       ),
-      _workspaceContent(bundle),
+      NovaTarget(id: 'room.workspace', child: _workspaceContent(bundle)),
     ],
   );
 
@@ -4717,6 +4750,10 @@ class _DealRoomPageState extends State<DealRoomPage> {
     _DealWorkspaceView.profile => _overview(),
     _DealWorkspaceView.financials => _financialWorkspace(),
     _DealWorkspaceView.evaluation => _evaluationWorkspace(),
+    _DealWorkspaceView.documents =>
+      _room.ownedByCurrentUser || _room.sharingPreferences['documents'] == true
+          ? _documents(bundle.documents, bundle.documentEvents)
+          : _restrictedVault(),
     _DealWorkspaceView.plan => _checklist(bundle.tasks, bundle.members),
     _DealWorkspaceView.team => Column(
       children: [
@@ -5777,6 +5814,11 @@ class _DealRoomPageState extends State<DealRoomPage> {
               _DealWorkspaceView.plan,
               Icons.account_tree_outlined,
               'Plan',
+            ),
+            _mobileNav(
+              _DealWorkspaceView.documents,
+              Icons.folder_outlined,
+              'Documents',
             ),
             _mobileNav(
               _DealWorkspaceView.team,
@@ -6849,7 +6891,9 @@ class _DealRoomPageState extends State<DealRoomPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         OutlinedButton.icon(
-          onPressed: _uploading ? null : _uploadDocument,
+          onPressed: _uploading || widget.trainingPreview
+              ? null
+              : _uploadDocument,
           icon: _uploading
               ? const SizedBox.square(
                   dimension: 15,
@@ -7002,18 +7046,21 @@ class _DealRoomPageState extends State<DealRoomPage> {
       borderRadius: BorderRadius.circular(20),
       border: Border.all(color: _line),
     ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SiteText(
-          contentKey: 'copy.deal_rooms_page.m144',
-          literal: false,
-          title,
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
-        ),
-        const SizedBox(height: 16),
-        child,
-      ],
+    child: Material(
+      color: Colors.transparent,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SiteText(
+            contentKey: 'copy.deal_rooms_page.m144',
+            literal: false,
+            title,
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 16),
+          child,
+        ],
+      ),
     ),
   );
 }
