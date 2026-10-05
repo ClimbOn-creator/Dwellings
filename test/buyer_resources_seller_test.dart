@@ -98,6 +98,7 @@ void main() {
         find.byKey(const Key('seller_business_name')),
         'Harbour Company',
       );
+      await tester.ensureVisible(find.byKey(const Key('seller_transfer_path')));
       await tester.tap(find.byKey(const Key('seller_transfer_path')));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Management buyout').last);

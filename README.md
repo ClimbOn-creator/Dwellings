@@ -157,3 +157,7 @@ Copy keys embedded in `SiteText`, `SiteCopyText`, `SiteImage` and `SiteBackgroun
 ### Owner edits survive redesigns
 
 Text keys and image slot keys are permanent and do not depend on wording, filenames or image bytes. Saved Supabase values always override bundled defaults. Changes to copy, layout or bundled assets must carry forward those same IDs. The persistence suite tests new text defaults, new asset paths and remounting the app while preserving the owner's saved text and image URL. See `AGENTS.md` for the standing owner instruction governing all future changes.
+
+## Nova contextual assistant
+
+Nova’s dashboard introductions, lessons, deal context and live AI endpoint are implemented. Configure the Cloudflare server secrets and apply the private usage-counter migration before enabling live answers. See [Nova setup](docs/nova-setup.md).

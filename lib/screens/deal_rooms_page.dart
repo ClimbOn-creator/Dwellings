@@ -1,3 +1,5 @@
+import '../widgets/nova_panel.dart';
+import '../services/nova_service.dart';
 import '../models/buyer_command_state.dart';
 import '../widgets/buyer_command_centre.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -679,6 +681,26 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                 ],
               ),
               const SizedBox(height: 20),
+              NovaPanel(
+                context: NovaContext(
+                  area: 'buyer',
+                  label: 'Buyer dashboard',
+                  facts: {
+                    'activeAcquisitions': active.length,
+                    'actionsNeedAttention': commandLoading || commandError
+                        ? null
+                        : command.attentionCount,
+                    'loading': commandLoading,
+                    'actionDetailsUnavailable': commandError,
+                  },
+                ),
+                tourRole: 'buyer',
+                onTourNavigate: (destination) => setState(
+                  () => _dashboardView = BuyerDashboardView.values.firstWhere(
+                    (v) => v.name == destination,
+                  ),
+                ),
+              ),
               DashboardUi.panel(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1319,6 +1341,14 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
       spacing: 10,
       runSpacing: 10,
       children: [
+        NovaPanel(
+          context: NovaContext(
+            area: 'plan',
+            label: bundle.room.title,
+            dealId: bundle.room.id,
+          ),
+        ),
+
         _transactionFact(Icons.route_outlined, 'Current stage', stage),
         _transactionFact(
           Icons.payments_outlined,
@@ -1830,6 +1860,13 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        const NovaPanel(
+          context: NovaContext(
+            area: 'learning',
+            label: 'Buyer government programs',
+            lesson: 'resources',
+          ),
+        ),
         const BuyerResourcesPanel(),
         const SizedBox(height: 20),
         Align(
@@ -4635,7 +4672,36 @@ class _DealRoomPageState extends State<DealRoomPage> {
     ],
   );
 
-  Widget _workspace(DealRoomBundle bundle) => switch (_workspaceView) {
+  NovaContext _novaDealContext() => NovaContext(
+    area: _workspaceView == _DealWorkspaceView.financials
+        ? 'financials'
+        : _workspaceView.name,
+    label: _room.title,
+    dealId: _room.id,
+    facts: _room.ownedByCurrentUser
+        ? {
+            'purchasePrice': _dealPrice.text,
+            'annualRevenue': _dealRevenue.text,
+            'reportedEbitda': _dealEbitda.text,
+            'availableCapital': _dealCapital.text,
+            'draftNotSaved': true,
+          }
+        : const {},
+  );
+
+  Widget _workspace(DealRoomBundle bundle) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      NovaPanel(
+        key: ValueKey('nova.${_room.id}.${_workspaceView.name}'),
+        context: _novaDealContext(),
+        contextProvider: _novaDealContext,
+      ),
+      _workspaceContent(bundle),
+    ],
+  );
+
+  Widget _workspaceContent(DealRoomBundle bundle) => switch (_workspaceView) {
     _DealWorkspaceView.overview => Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

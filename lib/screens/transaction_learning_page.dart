@@ -1,3 +1,5 @@
+import '../widgets/nova_panel.dart';
+import '../services/nova_service.dart';
 import 'dart:math' as math;
 import 'dart:async';
 
@@ -453,6 +455,13 @@ class _TransactionLearningPageState extends State<TransactionLearningPage> {
         ),
       ),
       const SizedBox(height: 24),
+      NovaPanel(
+        context: NovaContext(
+          area: 'learning',
+          label: lesson.title,
+          lesson: 'document-${lesson.id}',
+        ),
+      ),
       _guideBlock(
         'WHAT IT IS',
         'transaction.${lesson.id}.purpose',

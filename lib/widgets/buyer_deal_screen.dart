@@ -1,3 +1,5 @@
+import '../services/nova_service.dart';
+import '../widgets/nova_panel.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -238,6 +240,24 @@ class _BuyerDealScreenState extends State<BuyerDealScreen> {
               ],
             ),
             const SizedBox(height: 13),
+            NovaPanel(
+              key: ValueKey('nova.calculator.${_mode.name}'),
+              context: NovaContext(
+                area: 'valuation',
+                label: '${_mode.name} calculator',
+              ),
+              contextProvider: () => NovaContext(
+                area: 'valuation',
+                label: '${_mode.name} calculator',
+                facts: {
+                  'calculatorType': _mode.name,
+                  'inputs': {
+                    for (final e in _fields.entries) e.key: e.value.text,
+                  },
+                  'notSavedToDeal': true,
+                },
+              ),
+            ),
             _modePicker(bounds.maxWidth < 600),
             const SizedBox(height: 18),
             if (narrow) ...[

@@ -1,3 +1,5 @@
+import '../widgets/nova_panel.dart';
+import '../services/nova_service.dart';
 import '../widgets/personal_experience_editor.dart';
 import '../widgets/marketplace_motion.dart';
 import '../widgets/site_parallax_image.dart';
@@ -693,6 +695,29 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                     ],
                   ),
                   const SizedBox(height: 19),
+                  NovaPanel(
+                    context: NovaContext(
+                      area: 'member',
+                      label: 'Member dashboard',
+                      facts: {
+                        'opportunityCount': opportunities.length,
+                        'recommendedCount': opportunities
+                            .where((d) => d.isRecommended)
+                            .length,
+                        'savedCount': _savedOpportunityIds.length,
+                        'responseCount': responseSnapshot.hasData
+                            ? responses.length
+                            : null,
+                      },
+                    ),
+                    tourRole: 'member',
+                    onTourNavigate: (destination) => setState(
+                      () => _view = MemberDashboardView.values.firstWhere(
+                        (v) => v.name == destination,
+                      ),
+                    ),
+                  ),
+
                   DashboardUi.panel(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1907,7 +1932,22 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
     onSelected: (_) => _selectView(view),
   );
 
-  Widget _currentView() {
+  Widget _currentView() => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      if (_view != MemberDashboardView.home)
+        NovaPanel(
+          context: NovaContext(area: 'member', label: 'Member ${_view.name}'),
+          tourRole: 'member',
+          onTourNavigate: (destination) => _selectView(
+            MemberDashboardView.values.firstWhere((v) => v.name == destination),
+          ),
+        ),
+      _currentViewContent(),
+    ],
+  );
+
+  Widget _currentViewContent() {
     const privateViews = <MemberDashboardView>{
       MemberDashboardView.recommendations,
       MemberDashboardView.saved,

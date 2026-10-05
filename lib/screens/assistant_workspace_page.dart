@@ -1,3 +1,5 @@
+import '../widgets/nova_panel.dart';
+import '../services/nova_service.dart';
 import '../widgets/site_text.dart';
 import '../widgets/site_parallax_image.dart';
 import '../widgets/site_section.dart';
@@ -10,12 +12,10 @@ import '../widgets/home_brand_button.dart';
 import '../widgets/app_navigation_menu.dart';
 import '../widgets/membership_footer.dart';
 import '../widgets/fixed_editorial_background.dart';
-import 'local_network_page.dart';
 import '../services/backend_service.dart';
 import '../services/calendar_sync_service.dart';
 import '../services/consulting_service.dart';
 import '../services/site_content_service.dart';
-import 'business_acquisition_page.dart';
 import 'auth_page.dart';
 import 'member_deal_marketplace_page.dart';
 
@@ -26,340 +26,45 @@ const ink = Color(0xFF171717),
     line = Color(0xFFD6D1C9),
     muted = Color(0xFF68635D);
 
-class GuideWorkspacePage extends StatefulWidget {
+class GuideWorkspacePage extends StatelessWidget {
   const GuideWorkspacePage({super.key, required this.foundationSummary});
   final String foundationSummary;
   @override
-  State<GuideWorkspacePage> createState() => _GuideWorkspacePageState();
-}
-
-class _GuideWorkspacePageState extends State<GuideWorkspacePage> {
-  final input = TextEditingController(), scroll = ScrollController();
-  List<Map<String, String>> messages = [];
-  String? thinking;
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    final p = await SharedPreferences.getInstance(),
-        raw = p.getString('guide_conversation_v2');
-    if (raw != null)
-      messages = (jsonDecode(raw) as List)
-          .map((e) => Map<String, String>.from(e as Map))
-          .toList();
-    if (messages.isEmpty)
-      messages = [
-        {
-          'role': 'assistant',
-          'text':
-              'I’m your Affinity acquisition strategist. I remember this workspace across visits. Before I recommend anything, what does a successful acquisition need to change in your life or business?',
-        },
-      ];
-    if (mounted) setState(() {});
-  }
-
-  Future<void> _save() async => (await SharedPreferences.getInstance())
-      .setString('guide_conversation_v2', jsonEncode(messages));
-
-  Future<void> _applyToBlueprint() async {
-    await _send(
-      'Use everything you remember about me to help complete my business acquisition Blueprint. Only propose fields supported by what I have told you, and ask me for the most important missing fact.',
-    );
-  }
-
-  Future<void> _send([String? value]) async {
-    final text = (value ?? input.text).trim();
-    if (text.isEmpty || thinking != null) return;
-    setState(() {
-      messages.add({'role': 'user', 'text': text});
-      input.clear();
-      thinking = 'Reading your saved goals and readiness profile';
-    });
-    await _save();
-    await Future<void>.delayed(const Duration(milliseconds: 500));
-    if (!mounted) return;
-    setState(() {
-      messages.add({
-        'role': 'assistant',
-        'text':
-            'For the MVP, use the structured Blueprint, Readiness, Deal Screen, calendar, and consulting tools. Your saved foundation is: ${widget.foundationSummary}',
-      });
-      thinking = null;
-    });
-    await _save();
-  }
-
-  void _open(Widget page) =>
-      Navigator.push(context, MaterialPageRoute<void>(builder: (_) => page));
-  @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: ink,
+    backgroundColor: const Color(0xFFF7F9FD),
     appBar: AppBar(
-      backgroundColor: ink,
-      foregroundColor: Colors.white,
-      title: const HomeBrandButton(size: 38, dark: true),
-      actions: [
-        IconButton(
-          tooltip: 'New conversation',
-          onPressed: () async {
-            (await SharedPreferences.getInstance()).remove(
-              'guide_conversation_v2',
-            );
-            messages = [];
-            await _load();
-          },
-          icon: const Icon(Icons.edit_square),
-        ),
-        const AppNavigationMenu(side: PlatformSide.business),
-        const SizedBox(width: 12),
+      title: const SiteText(
+        contentKey: 'copy.assistant_workspace_page.3',
+        literal: true,
+        'Nova · Affinity',
+      ),
+      actions: const [
+        AppNavigationMenu(side: PlatformSide.business, dark: false),
       ],
     ),
-    body: Row(
-      children: [
-        if (MediaQuery.sizeOf(context).width >= 940)
-          Container(
-            width: 260,
-            margin: const EdgeInsets.all(16),
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: surface,
-              border: Border.all(color: line),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SiteText(
-                  contentKey: 'copy.assistant_workspace_page.1',
-                  literal: true,
-                  'CREATE & ACT',
-                  style: TextStyle(
-                    color: lilac,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 1.2,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                _tool(
-                  Icons.fact_check_outlined,
-                  'Fill my Blueprint',
-                  _applyToBlueprint,
-                ),
-                _tool(
-                  Icons.calendar_month_outlined,
-                  'Acquisition calendar',
-                  () => _open(const PersonalizedCalendarPage()),
-                ),
-                _tool(
-                  Icons.workspace_premium_outlined,
-                  'Member Studio',
-                  () => _open(const MemberStudioPage()),
-                ),
-                _tool(
-                  Icons.auto_fix_high_outlined,
-                  'Business acquisition tool',
-                  () => _open(const BusinessAcquisitionPage()),
-                ),
-                _tool(
-                  Icons.groups_outlined,
-                  'Members & experts',
-                  () => _open(
-                    const LocalNetworkPage(side: PlatformSide.business),
-                  ),
-                ),
-                _tool(
-                  Icons.support_agent,
-                  'Personal consulting',
-                  () => _open(const PersonalizedConsultingPage()),
-                ),
-                const Spacer(),
-                const SiteText(
-                  contentKey: 'copy.assistant_workspace_page.2',
-                  literal: true,
-                  'Affinity creates drafts and plans. You approve every external action.',
-                  style: TextStyle(color: muted, fontSize: 10, height: 1.4),
-                ),
-              ],
-            ),
-          ),
-        Expanded(
-          child: Column(
-            children: [
-              Expanded(
-                child: ListView(
-                  controller: scroll,
-                  padding: const EdgeInsets.fromLTRB(24, 42, 24, 20),
-                  children: [
-                    Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 800),
-                        child: Column(
-                          children: [
-                            const Icon(
-                              Icons.auto_awesome,
-                              color: lilac,
-                              size: 30,
-                            ),
-                            const SizedBox(height: 10),
-                            const SiteText(
-                              contentKey: 'copy.assistant_workspace_page.3',
-                              literal: true,
-                              'Acquisition workspace',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 25,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            const SizedBox(height: 5),
-                            const SiteText(
-                              contentKey: 'copy.assistant_workspace_page.4',
-                              literal: true,
-                              'Structured tools for your Blueprint, deals, calendar, and member workspace.',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(color: muted),
-                            ),
-                            const SizedBox(height: 38),
-                            for (final m in messages)
-                              _message(m['role'] == 'assistant', m['text']!),
-                            if (thinking != null)
-                              Row(
-                                children: [
-                                  const SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: lilac,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  SiteText(
-                                    contentKey:
-                                        'copy.assistant_workspace_page.m1',
-                                    literal: false,
-                                    thinking!,
-                                    style: const TextStyle(
-                                      color: muted,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              _composer(),
-            ],
-          ),
-        ),
-      ],
-    ),
-  );
-  Widget _tool(IconData i, String t, VoidCallback f) => ListTile(
-    contentPadding: const EdgeInsets.symmetric(horizontal: 5),
-    leading: Icon(i, color: lilac),
-    title: SiteText(
-      contentKey: 'copy.assistant_workspace_page.m2',
-      literal: false,
-      t,
-      style: const TextStyle(color: Colors.white, fontSize: 12),
-    ),
-    onTap: f,
-  );
-  Widget _message(bool ai, String text) => Padding(
-    padding: const EdgeInsets.only(bottom: 25),
-    child: Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        CircleAvatar(
-          radius: 15,
-          backgroundColor: ai ? purple : const Color(0xFF303044),
-          child: Icon(
-            ai ? Icons.auto_awesome : Icons.person,
-            color: Colors.white,
-            size: 15,
-          ),
-        ),
-        const SizedBox(width: 14),
-        Expanded(
+    body: SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 960),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SiteText(
-                contentKey: 'copy.assistant_workspace_page.m3',
-                literal: false,
-                ai ? 'DWELLINGIQ' : 'YOU',
-                style: TextStyle(
-                  color: ai ? lilac : muted,
-                  fontSize: 9,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 1,
-                ),
+              const SiteText(
+                contentKey: 'copy.assistant_workspace_page.4',
+                literal: true,
+                'Learn with Nova using your Blueprint, readiness, deals and transaction guides.',
               ),
-              const SizedBox(height: 7),
-              SiteText(
-                contentKey: 'copy.assistant_workspace_page.m4',
-                literal: false,
-                text,
-                style: const TextStyle(color: ink, fontSize: 15, height: 1.55),
+              const SizedBox(height: 18),
+              NovaPanel(
+                initiallyOpen: true,
+                context: NovaContext(
+                  area: 'learning',
+                  label: 'Your acquisition learning workspace',
+                  facts: {'foundationSummary': foundationSummary},
+                ),
               ),
             ],
-          ),
-        ),
-      ],
-    ),
-  );
-  Widget _composer() => SafeArea(
-    top: false,
-    child: Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 830),
-        child: Padding(
-          padding: const EdgeInsets.all(18),
-          child: Container(
-            padding: const EdgeInsets.fromLTRB(14, 6, 7, 6),
-            decoration: BoxDecoration(
-              color: surface,
-              border: Border.all(color: line),
-              borderRadius: BorderRadius.circular(22),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: input,
-                    onSubmitted: _send,
-                    maxLines: 4,
-                    minLines: 1,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: const InputDecoration(
-                      hint: SiteText(
-                        'Ask, plan, or create something…',
-                        contentKey: 'copy.assistant_workspace_page.field1',
-                        literal: true,
-                      ),
-                      hintStyle: TextStyle(color: muted),
-                      border: InputBorder.none,
-                      filled: false,
-                    ),
-                  ),
-                ),
-                IconButton.filled(
-                  style: IconButton.styleFrom(backgroundColor: purple),
-                  onPressed: thinking == null ? _send : null,
-                  icon: const Icon(Icons.arrow_upward),
-                ),
-              ],
-            ),
           ),
         ),
       ),

@@ -1,3 +1,5 @@
+import '../widgets/nova_panel.dart';
+import '../services/nova_service.dart';
 import 'page_flow.dart';
 import 'seller_dashboard_page.dart';
 import '../widgets/flowing_color_banner.dart';
@@ -1186,6 +1188,15 @@ class _AcquisitionBlueprintPageState extends State<AcquisitionBlueprintPage> {
           : Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                NovaPanel(
+                  context: NovaContext(
+                    area: 'learning',
+                    label: 'Acquisition Blueprint',
+                    lesson: 'blueprint',
+                    facts: value!.toJson(),
+                  ),
+                ),
+
                 OutlinedButton.icon(
                   onPressed: () => Navigator.of(context).push(
                     MaterialPageRoute<void>(
@@ -1617,6 +1628,15 @@ class _BuyerReadinessPageState extends State<BuyerReadinessPage> {
           : Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                NovaPanel(
+                  context: NovaContext(
+                    area: 'learning',
+                    label: 'Buyer Readiness',
+                    lesson: 'readiness',
+                    facts: current!.toJson(),
+                  ),
+                ),
+
                 Row(
                   children: [
                     SiteText(

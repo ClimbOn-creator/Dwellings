@@ -1,3 +1,5 @@
+import '../widgets/nova_panel.dart';
+import '../services/nova_service.dart';
 import '../widgets/site_text.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -485,6 +487,20 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
                           const SizedBox(height: 18),
                           _dealCommandBar(),
                           const SizedBox(height: 22),
+                          NovaPanel(
+                            context: const NovaContext(
+                              area: 'valuation',
+                              label: 'Initial Deal Screen',
+                            ),
+                            contextProvider: () => NovaContext(
+                              area: 'valuation',
+                              label: 'Initial Deal Screen',
+                              facts: {
+                                for (final e in _fields.entries)
+                                  e.key: e.value.text,
+                              },
+                            ),
+                          ),
                           _identity(),
                           const SizedBox(height: 22),
                           _financialForm(),

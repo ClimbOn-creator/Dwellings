@@ -1,6 +1,11 @@
 // These IDs are permanent. Rewrite the fallback VALUE while retaining its ID.
 // Never regenerate or renumber this registry during a redesign.
 const siteCopyCatalog = <String, String>{
+  'copy.assistant_workspace_page.3': 'Nova · Affinity',
+  'copy.assistant_workspace_page.4':
+      'Learn with Nova using your Blueprint, readiness, deals and transaction guides.',
+  'nova.panel.name': 'Nova',
+  'nova.panel.prompt': 'What would you like to understand?',
   '5e87673b': " years",
   '993d3d4f': " · Example profile",
   '2eb01aeb': "\$ CAD",

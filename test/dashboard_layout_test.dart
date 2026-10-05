@@ -237,6 +237,7 @@ void main() {
     expect(revenue.controller!.text, isEmpty);
     expect(revenue.decoration!.hintText, 'Example → 1,800,000');
     expect(find.byKey(const Key('info_businessRevenue')), findsOneWidget);
+    await tester.ensureVisible(find.byKey(const Key('info_businessRevenue')));
     await tester.tap(find.byKey(const Key('info_businessRevenue')));
     await tester.pumpAndSettle();
     expect(

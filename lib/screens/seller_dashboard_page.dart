@@ -1,3 +1,5 @@
+import '../widgets/nova_panel.dart';
+import '../services/nova_service.dart';
 import '../widgets/team_workspace.dart';
 import '../widgets/team_member_portrait.dart';
 import 'buyer_resources_page.dart';
@@ -460,6 +462,17 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
                           _viewHeader(),
                           const SizedBox(height: 24),
                         ],
+                        NovaPanel(
+                          key: ValueKey('nova.seller.${_view.name}'),
+                          context: _novaContext(),
+                          contextProvider: _novaContext,
+                          tourRole: 'seller',
+                          onTourNavigate: (destination) => _showView(
+                            SellerDashboardView.values.firstWhere(
+                              (v) => v.name == destination,
+                            ),
+                          ),
+                        ),
                         switch (_view) {
                           SellerDashboardView.overview => _overview(),
                           SellerDashboardView.value => _valuation(),
@@ -488,6 +501,26 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
               ),
       ),
     ],
+  );
+
+  NovaContext _novaContext() => NovaContext(
+    area: 'seller',
+    label: _businessController.text.trim().isEmpty
+        ? 'Seller workspace'
+        : _businessController.text.trim(),
+    lesson: _view == SellerDashboardView.resources ? 'resources' : 'seller',
+    facts: {
+      'view': _view.name,
+      'transferPath': _path.name,
+      'targetCloseDate': _targetDate?.toIso8601String(),
+      'handoverMonths': _handoverMonths,
+      'figures': {
+        for (final e in _numberControllers.entries) e.key: e.value.text,
+      },
+      'completedTasks': _completedTasks.toList(),
+      'documentsMarkedReady': _readyDocuments.toList(),
+      'progressStoredOnDevice': true,
+    },
   );
 
   Widget _nextPageAction() {

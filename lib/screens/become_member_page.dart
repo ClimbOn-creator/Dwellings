@@ -1,3 +1,5 @@
+import '../services/nova_service.dart';
+import '../widgets/nova_panel.dart';
 import '../widgets/site_text.dart';
 import 'package:flutter/material.dart';
 
@@ -233,7 +235,15 @@ class _BecomeMemberPageState extends State<BecomeMemberPage> {
               const AppNavigationMenu(),
             ],
           ),
-          const SizedBox(height: 92),
+          const SizedBox(height: 28),
+          const NovaPanel(
+            context: NovaContext(
+              area: 'learning',
+              label: 'Membership setup',
+              lesson: 'member',
+            ),
+          ),
+          const SizedBox(height: 40),
           const SiteText(
             contentKey: 'copy.become_member_page.1',
             literal: true,
