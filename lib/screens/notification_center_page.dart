@@ -7,7 +7,6 @@ import '../services/member_beta_service.dart';
 import '../widgets/app_navigation_menu.dart';
 import '../widgets/home_brand_button.dart';
 import '../widgets/membership_footer.dart';
-import 'affinity_review_desk_page.dart';
 import 'member_deal_marketplace_page.dart';
 import 'profile_page.dart';
 import 'deal_rooms_page.dart';
@@ -41,7 +40,6 @@ class _NotificationCenterPageState extends State<NotificationCenterPage> {
       );
     });
     final page = switch (item.actionModule) {
-      'review-desk' => const AffinityReviewDeskPage(),
       'profile' => const ProfilePage(),
       'bulletin-board' => const DealRoomsPage(
         initialSide: PlatformSide.business,
@@ -65,7 +63,11 @@ class _NotificationCenterPageState extends State<NotificationCenterPage> {
       surfaceTintColor: Colors.transparent,
       title: const HomeBrandButton(size: 58, dark: false),
       actions: const [
-        AppNavigationMenu(side: PlatformSide.business, dark: false),
+        AppNavigationMenu(
+          guidePage: 'notifications',
+          side: PlatformSide.business,
+          dark: false,
+        ),
         SizedBox(width: 12),
       ],
     ),

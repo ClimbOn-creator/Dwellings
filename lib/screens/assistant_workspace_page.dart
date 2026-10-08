@@ -1,3 +1,4 @@
+import '../widgets/nova_target.dart';
 import '../widgets/nova_panel.dart';
 import '../services/nova_service.dart';
 import '../widgets/site_text.dart';
@@ -826,14 +827,17 @@ class _PersonalizedConsultingPageState
             child: SiteSection(
               id: 'consulting.hero',
               label: 'Introduction',
-              child: _hero(context),
+              child: NovaTarget(id: 'consulting.hero', child: _hero(context)),
             ),
           ),
           SliverToBoxAdapter(
             child: SiteSection(
               id: 'consulting.perspective',
               label: 'Our approach',
-              child: _perspectiveSection(context),
+              child: NovaTarget(
+                id: 'consulting.perspective',
+                child: _perspectiveSection(context),
+              ),
             ),
           ),
           SliverToBoxAdapter(
@@ -847,10 +851,15 @@ class _PersonalizedConsultingPageState
             child: SiteSection(
               id: 'consulting.focus',
               label: 'Focus areas',
-              child: _focusSection(),
+              child: NovaTarget(id: 'consulting.focus', child: _focusSection()),
             ),
           ),
-          SliverToBoxAdapter(child: _closing(context)),
+          SliverToBoxAdapter(
+            child: NovaTarget(
+              id: 'consulting.booking',
+              child: _closing(context),
+            ),
+          ),
           const SliverToBoxAdapter(child: MembershipFooter()),
         ],
       ),

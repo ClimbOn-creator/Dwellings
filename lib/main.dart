@@ -18,7 +18,6 @@ import 'screens/deal_comparison_page.dart';
 import 'screens/business_acquisition_page.dart';
 import 'screens/local_network_page.dart';
 import 'screens/member_deal_marketplace_page.dart';
-import 'screens/affinity_review_desk_page.dart';
 import 'screens/content_studio_page.dart';
 import 'screens/notification_center_page.dart';
 import 'screens/professional_onboarding_page.dart';
@@ -154,7 +153,6 @@ class AffinityApp extends StatelessWidget {
       'deal-comparison' => const DealComparisonPage(),
       'bulletin-board' => const BusinessSaleBulletinPage(),
       'member-studio' => const MemberDealMarketplacePage(),
-      'review-desk' => const AffinityReviewDeskPage(),
       'personal-consulting' => const PersonalizedConsultingPage(),
       'content-studio' => const ContentStudioPage(),
       'notifications' => const NotificationCenterPage(),

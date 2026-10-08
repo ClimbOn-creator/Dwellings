@@ -1,3 +1,4 @@
+import 'pebble_main_page_steps.dart';
 import 'nova_walkthrough.dart';
 
 List<NovaStep> novaPageWalkthrough(String page) {
@@ -7,7 +8,10 @@ List<NovaStep> novaPageWalkthrough(String page) {
       ? 'member'
       : 'buyer';
   List<NovaStep> steps;
-  if (page.startsWith('buyer/dealScreen')) {
+  final mainPageSteps = pebbleMainPageSteps(page);
+  if (mainPageSteps != null) {
+    steps = mainPageSteps;
+  } else if (page.startsWith('buyer/dealScreen')) {
     final mode = page.split('/').length > 2 ? page.split('/')[2] : 'business';
     final first = mode == 'assets'
         ? 'assetAsk'

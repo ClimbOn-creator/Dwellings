@@ -72,20 +72,10 @@ void main() {
         await tester.tap(entry);
         await tester.pumpAndSettle();
         expect(find.byType(TeamMemberPortrait), findsOneWidget);
-        expect(find.text('Other accountant'), findsOneWidget);
-        expect(
-          tester
-              .widget<IconButton>(
-                find.byWidgetPredicate(
-                  (w) =>
-                      w is IconButton &&
-                      w.tooltip == 'Profession already filled',
-                ),
-              )
-              .onPressed,
-          isNull,
-        );
-        final lawyer = find.widgetWithText(ChoiceChip, 'Add a lawyer');
+        expect(find.text('Other accountant'), findsNothing);
+        expect(find.text('Accountant added'), findsNothing);
+        expect(find.widgetWithText(ChoiceChip, 'Accountant'), findsNothing);
+        final lawyer = find.widgetWithText(ChoiceChip, 'Lawyer');
         await tester.ensureVisible(lawyer);
         await tester.tap(lawyer);
         await tester.pumpAndSettle();
@@ -101,11 +91,11 @@ void main() {
         await tester.enterText(search, 'not found');
         await tester.pumpAndSettle();
         expect(find.text('Suggested lawyer'), findsNothing);
-        final all = find.widgetWithText(ChoiceChip, 'All professions');
+        final all = find.text('Show all');
         await tester.ensureVisible(all);
         await tester.tap(all);
         await tester.pumpAndSettle();
-        expect(find.text('Other accountant'), findsOneWidget);
+        expect(find.text('Other accountant'), findsNothing);
         expect(tester.takeException(), isNull);
       },
     );

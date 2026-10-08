@@ -31,7 +31,6 @@ import '../widgets/dashboard_ui.dart';
 import 'auth_page.dart';
 import 'bulletin_listing_pages.dart';
 import 'deal_rooms_page.dart';
-import 'affinity_review_desk_page.dart';
 import 'member_profile_page.dart';
 import 'professional_onboarding_page.dart';
 
@@ -72,7 +71,10 @@ class MemberDealMarketplacePage extends StatefulWidget {
 class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
   MemberDashboardView _view = MemberDashboardView.home;
   late Future<List<MemberDealOpportunity>> _opportunities;
-  late Future<List<MemberDealPitch>> _responses;
+  Future<List<MemberDealPitch>>? _responsesFuture;
+  Future<List<MemberDealPitch>> get _responses =>
+      _responsesFuture ??= MemberDealMarketplaceService.loadBuyerResponses();
+  bool _showDealResponses = false;
   late Future<List<MarketplaceProvider>> _professionals;
   late Future<MarketplaceProvider?> _myProfessionalProfile;
   late Future<bool> _creatorAccess;
@@ -177,7 +179,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
 
   void _reload() {
     _opportunities = MemberDealMarketplaceService.browse();
-    _responses = MemberDealMarketplaceService.loadBuyerResponses();
+    _responsesFuture = null;
     _professionals = MarketplaceService.loadAffinityMembers();
     _myProfessionalProfile = MarketplaceService.loadMyProfessionalProfile();
     _creatorAccess = AffinityAdminService.isAdmin();
@@ -421,7 +423,13 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
       foregroundColor: _ink,
       title: Row(
         children: [
-          const HomeBrandButton(size: 52, dark: false),
+          const Flexible(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: HomeBrandButton(size: 52, dark: false),
+            ),
+          ),
           if (MediaQuery.sizeOf(context).width >= 620) ...[
             const SizedBox(width: 14),
             const SiteText(
@@ -442,20 +450,6 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
           onPressed: _submitDeal,
           tooltip: 'Submit a deal to Affinity',
           icon: const Icon(Icons.add_business_outlined),
-        ),
-        FutureBuilder<bool>(
-          future: AffinityAdminService.isAdmin(),
-          builder: (context, snapshot) => snapshot.data == true
-              ? IconButton(
-                  tooltip: 'Affinity review desk',
-                  onPressed: () => Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => const AffinityReviewDeskPage(),
-                    ),
-                  ),
-                  icon: const Icon(Icons.admin_panel_settings_outlined),
-                )
-              : const SizedBox.shrink(),
         ),
         if (MediaQuery.sizeOf(context).width >= 620)
           IconButton(
@@ -536,7 +530,8 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
               ),
             ),
             const SizedBox(width: 14),
-            if (_view != MemberDashboardView.home)
+            if (_view != MemberDashboardView.home &&
+                _view != MemberDashboardView.dealResponses)
               AnimatedContainer(
                 duration: const Duration(milliseconds: 220),
                 curve: Curves.easeOutCubic,
@@ -1086,7 +1081,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
     ),
   );
 
-  Widget _memberInteractionPanel() => Material(
+  Widget _memberInteractionPanel({bool fullPage = false}) => Material(
     color: Colors.white,
     borderRadius: BorderRadius.circular(20),
     clipBehavior: Clip.antiAlias,
@@ -1140,11 +1135,13 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                         : _muted,
                   ),
                 ),
-              IconButton(
-                onPressed: () => setState(() => _interactionPanelOpen = false),
-                tooltip: 'Collapse',
-                icon: const Icon(Icons.chevron_right_rounded),
-              ),
+              if (!fullPage)
+                IconButton(
+                  onPressed: () =>
+                      setState(() => _interactionPanelOpen = false),
+                  tooltip: 'Collapse',
+                  icon: const Icon(Icons.chevron_right_rounded),
+                ),
             ],
           ),
         ),
@@ -1213,7 +1210,8 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                 child: CircularProgressIndicator(color: _green),
               );
             }
-            if (snapshot.hasError) {
+            final examples = MemberNetworkService.creatorExampleConversations;
+            if (snapshot.hasError && examples.isEmpty) {
               return _AccessState(
                 title: 'Messages are unavailable',
                 message: _friendlyError(snapshot.error!),
@@ -1224,7 +1222,10 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                 ),
               );
             }
-            final conversations = snapshot.data ?? const [];
+            final conversations = [
+              ...(snapshot.data ?? const <MemberConversationSummary>[]),
+              ...examples,
+            ];
             if (conversations.isEmpty) {
               return const _AccessState(
                 title: 'Start a conversation',
@@ -1232,21 +1233,46 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                     'Open a verified member profile or choose a professional from a deal team, then select Message.',
               );
             }
-            return RefreshIndicator(
-              color: _green,
-              onRefresh: () async {
-                final future = MemberNetworkService.loadConversations();
-                setState(() => _conversations = future);
-                await future;
-              },
-              child: ListView.separated(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                itemCount: conversations.length,
-                separatorBuilder: (_, _) =>
-                    const Divider(height: 1, color: _line),
-                itemBuilder: (context, index) =>
-                    _conversationTile(conversations[index]),
-              ),
+            return Column(
+              children: [
+                if (examples.isNotEmpty)
+                  const Padding(
+                    padding: EdgeInsets.all(12),
+                    child: SiteCopyText(
+                      'messages.creator.examples',
+                      'Creator preview · Example threads. No messages are sent.',
+                      style: TextStyle(fontSize: 11, color: _muted),
+                    ),
+                  ),
+                if (snapshot.hasError)
+                  const Padding(
+                    padding: EdgeInsets.all(8),
+                    child: SiteCopyText(
+                      'messages.creator.liveError',
+                      'Live messages could not load. These examples are still available.',
+                    ),
+                  ),
+                Expanded(
+                  child: RefreshIndicator(
+                    color: _green,
+                    onRefresh: () async {
+                      final future = MemberNetworkService.loadConversations();
+                      setState(() {
+                        _conversations = future;
+                      });
+                      await future;
+                    },
+                    child: ListView.separated(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      itemCount: conversations.length,
+                      separatorBuilder: (_, _) =>
+                          const Divider(height: 1, color: _line),
+                      itemBuilder: (context, index) =>
+                          _conversationTile(conversations[index]),
+                    ),
+                  ),
+                ),
+              ],
             );
           },
         );
@@ -1396,7 +1422,9 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
     });
     await MemberNetworkService.markRead(conversation.id);
     if (mounted) {
-      setState(() => _conversations = MemberNetworkService.loadConversations());
+      setState(() {
+        _conversations = MemberNetworkService.loadConversations();
+      });
     }
   }
 
@@ -1487,6 +1515,15 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
             },
           ),
         ),
+        if (conversation.isPreview)
+          const Padding(
+            padding: EdgeInsets.all(8),
+            child: SiteCopyText(
+              'messages.creator.readOnly',
+              'Example conversation · Replies are disabled in this preview.',
+              style: TextStyle(fontSize: 11, color: _muted),
+            ),
+          ),
         SafeArea(
           top: false,
           child: Padding(
@@ -1496,6 +1533,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                 Expanded(
                   child: TextField(
                     controller: _chatMessage,
+                    enabled: !conversation.isPreview,
                     minLines: 1,
                     maxLines: 4,
                     maxLength: 2000,
@@ -1519,7 +1557,9 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                 ),
                 const SizedBox(width: 5),
                 IconButton.filled(
-                  onPressed: _sendingChat ? null : _sendChatMessage,
+                  onPressed: _sendingChat || conversation.isPreview
+                      ? null
+                      : _sendChatMessage,
                   style: IconButton.styleFrom(backgroundColor: _green),
                   icon: _sendingChat
                       ? const SizedBox.square(
@@ -1597,7 +1637,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
     final body = _chatMessage.text.trim();
     if (conversation == null || body.isEmpty) return;
     if (conversation.isPreview) {
-      _message('Sign in with a verified member profile to send messages.');
+      _message('This is an example conversation. No message is sent.');
       return;
     }
     setState(() => _sendingChat = true);
@@ -1984,13 +2024,55 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
       MemberDashboardView.opportunityDetail => _expandedOpportunity(),
       MemberDashboardView.saved => _savedOpportunities(),
       MemberDashboardView.professionals => _professionalDirectory(),
-      MemberDashboardView.dealResponses => _pitchList(
-        _responses,
-        buyerView: true,
-      ),
+      MemberDashboardView.dealResponses => _messagesWorkspace(),
       MemberDashboardView.profile => _professionalProfileWorkspace(),
     };
   }
+
+  Widget _messagesWorkspace() => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      Wrap(
+        spacing: 8,
+        children: [
+          TextButton(
+            onPressed: () => setState(() => _showDealResponses = false),
+            child: SiteCopyText(
+              'messages.workspace.inbox',
+              'Messages',
+              style: TextStyle(
+                fontWeight: !_showDealResponses
+                    ? FontWeight.w800
+                    : FontWeight.w400,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () => setState(() => _showDealResponses = true),
+            child: SiteCopyText(
+              'messages.workspace.responses',
+              'Deal responses',
+              style: TextStyle(
+                fontWeight: _showDealResponses
+                    ? FontWeight.w800
+                    : FontWeight.w400,
+              ),
+            ),
+          ),
+        ],
+      ),
+      const SizedBox(height: 8),
+      if (_showDealResponses)
+        _pitchList(_responses, buyerView: true)
+      else
+        SizedBox(
+          height: MediaQuery.sizeOf(context).height < 620
+              ? 440
+              : MediaQuery.sizeOf(context).height - 230,
+          child: _memberInteractionPanel(fullPage: true),
+        ),
+    ],
+  );
 
   Widget _studioHeading(String eyebrow, String title, String description) =>
       Padding(
@@ -2937,7 +3019,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
       final allDeals = snapshot.data ?? [];
       if (allDeals.isEmpty) {
         return const _AccessState(
-          title: 'The review desk is active',
+          title: 'No opportunities yet',
           message:
               'Approved opportunities will appear here after Affinity completes its evaluation and privacy review.',
         );

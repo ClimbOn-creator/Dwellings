@@ -1,6 +1,107 @@
 // These IDs are permanent. Rewrite the fallback VALUE while retaining its ID.
 // Never regenerate or renumber this registry during a redesign.
 const siteCopyCatalog = <String, String>{
+  'messages.workspace.inbox': 'Messages',
+  'messages.workspace.responses': 'Deal responses',
+  'messages.creator.examples':
+      'Creator preview · Example threads. No messages are sent.',
+  'messages.creator.liveError':
+      'Live messages could not load. These examples are still available.',
+  'messages.creator.readOnly':
+      'Example conversation · Replies are disabled in this preview.',
+  "nova.training.pebble-resources-search.title": "Find relevant support",
+  "nova.training.pebble-resources-search.body":
+      "Search for a program, provider or funding purpose. Resources connects you with government and community support; it is separate from your professional team.",
+  "nova.training.pebble-resources-filters.title": "Narrow the programs",
+  "nova.training.pebble-resources-filters.body":
+      "Choose grants, loans, community support or a funding directory, then select your region. Your search, category and region work together; clear a filter if you see no matches.",
+  "nova.training.pebble-resources-providers.title": "Explore a provider",
+  "nova.training.pebble-resources-providers.body":
+      "Open an organization card to see its programs. Compare eligibility, eligible costs, deadlines and application details. Affinity connects you to the provider; the provider decides eligibility.",
+  "nova.training.pebble-resources-save.title": "Keep useful programs close",
+  "nova.training.pebble-resources-save.body":
+      "Use a card\u2019s save control to keep an organization, or save an individual program from its profile. Follow the official link to confirm current requirements before applying.",
+  "nova.training.pebble-comparison-progress.title": "A comparison round",
+  "nova.training.pebble-comparison-progress.body":
+      "This quiz puts two example businesses beside each other. Each choice helps clarify what you value in an acquisition; it does not save a purchase decision or commit you to a deal.",
+  "nova.training.pebble-comparison-documents.title": "Read both businesses",
+  "nova.training.pebble-comparison-documents.body":
+      "Compare earnings, price, industry, location and operating details on both cards. Consider the whole business rather than choosing only the cheapest asking price.",
+  "nova.training.pebble-comparison-choose.title":
+      "Keep your preferred business",
+  "nova.training.pebble-comparison-choose.body":
+      "Choose the business you prefer. Your favourite stays while a new challenger replaces the other one. Keep comparing until the round is complete.",
+  "nova.training.pebble-comparison-result.title": "Review your preferences",
+  "nova.training.pebble-comparison-result.body":
+      "At the end, review the result and the characteristics you repeatedly chose. Use it as a starting point for your real search, then evaluate an actual deal with supporting records.",
+  "nova.training.pebble-consulting-intro.title": "Personal consulting",
+  "nova.training.pebble-consulting-intro.body":
+      "This page explains how a focused conversation can help with buying, preparing a sale or planning succession. Read the introduction to decide whether that support fits your situation.",
+  "nova.training.pebble-consulting-approach.title": "Understand the approach",
+  "nova.training.pebble-consulting-approach.body":
+      "The approach section explains how your goals and circumstances shape the conversation. Bring the questions and decisions you are working through, even if your plans are still early.",
+  "nova.training.pebble-consulting-focus.title": "Choose what to discuss",
+  "nova.training.pebble-consulting-focus.body":
+      "Review the focus areas and identify the topics where you need help. You can use the consultation to clarify readiness, deal evaluation, transaction planning or ownership transition.",
+  "nova.training.pebble-consulting-booking.title": "Book a conversation",
+  "nova.training.pebble-consulting-booking.body":
+      "Use the consultation booking button to open the calendar, choose an available time and provide your booking details. Review the slot before confirming; the calendar remains part of this experience.",
+  "nova.training.pebble-profile-identity.title": "Your account profile",
+  "nova.training.pebble-profile-identity.body":
+      "Your profile brings together your account details and saved progress. The name and photo identify you; professional experience and public member reviews are managed on your professional profile.",
+  "nova.training.pebble-profile-progress.title": "Your acquisition path",
+  "nova.training.pebble-profile-progress.body":
+      "Review your Blueprint and readiness progress to see what you have already completed. Saved drafts belong to your account and can be continued when your plans change.",
+  "nova.training.pebble-profile-deals.title": "Return to your deals",
+  "nova.training.pebble-profile-deals.body":
+      "The deal section helps you find your saved work. Open the relevant deal to manage its own documents, financials and transaction plan; changing your account profile does not change a deal\u2019s access settings.",
+  "nova.training.pebble-profile-edit.title": "Update your details",
+  "nova.training.pebble-profile-edit.body":
+      "Use the profile form to update your account information and save it. Keep your contact details accurate. Pebble training status is also available here if you want to request a guide again.",
+  "nova.training.pebble-auth-signin.title": "Sign in to your account",
+  "nova.training.pebble-auth-signin.body":
+      "Enter your email and password to continue with your saved deals and profile. Signing in restores the work attached to that account.",
+  "nova.training.pebble-auth-create.title": "Create an account",
+  "nova.training.pebble-auth-create.body":
+      "Choose the account-creation option if you are new to Affinity. Use an email you can access and follow the verification instructions shown after registration.",
+  "nova.training.pebble-auth-recover.title": "Recover access",
+  "nova.training.pebble-auth-recover.body":
+      "If you cannot remember your password, use password recovery with the email for your account. Follow the recovery message and then sign in again.",
+  "nova.training.pebble-transaction-rooms-overview.title":
+      "Your transaction rooms",
+  "nova.training.pebble-transaction-rooms-overview.body":
+      "A transaction room is the private workspace for one deal. It keeps the financials, documents, checklist, team and sharing permissions together.",
+  "nova.training.pebble-transaction-rooms-open.title": "Open the right deal",
+  "nova.training.pebble-transaction-rooms-open.body":
+      "Select a saved deal card to enter its actual room. The title and stage help distinguish your opportunities; opening a room does not create a duplicate deal.",
+  "nova.training.pebble-transaction-rooms-start.title":
+      "When you do not have a room yet",
+  "nova.training.pebble-transaction-rooms-start.body":
+      "Sign in to see the rooms available to your account. If your list is empty, start a private deal from the buyer dashboard and return here to work on it.",
+  "nova.training.pebble-notifications-updates.title": "Your private updates",
+  "nova.training.pebble-notifications-updates.body":
+      "This page shows activity intended for your account, such as deal changes, professional introductions and replies. It is separate from the conversation inbox.",
+  "nova.training.pebble-notifications-open.title": "Follow an update",
+  "nova.training.pebble-notifications-open.body":
+      "Open an update to continue in the relevant part of the app. Read and unread styling helps you see which updates you have already checked.",
+  "nova.training.pebble-notifications-messages.title": "Read conversations",
+  "nova.training.pebble-notifications-messages.body":
+      "Open Messaging from your dashboard to read and reply to conversations. Creator-only example threads are marked Example and allow you to preview the inbox without contacting anyone.",
+  "nova.training.pebble-resource-provider-organization.title":
+      "About this provider",
+  "nova.training.pebble-resource-provider-organization.body":
+      "Review the organization and its service area. Saving the provider keeps it with your resources; it does not add a professional to your deal team.",
+  "nova.training.pebble-resource-provider-programs.title":
+      "Compare the programs",
+  "nova.training.pebble-resource-provider-programs.body":
+      "Search the programs offered by this provider. Read eligibility, supported costs, deadlines and application details before choosing which programs to save.",
+  "nova.training.pebble-resource-provider-official.title":
+      "Confirm with the provider",
+  "nova.training.pebble-resource-provider-official.body":
+      "Follow the official program link for current requirements and application instructions. Affinity helps you find the connection; the organization manages the program.",
+  'team.specialists.caption':
+      'Add the specialists you need. One professional per role.',
+  'team.specialists.clear': 'Show all',
   'nova.training.pebble-page-transaction-rooms.title': 'Your transaction rooms',
   'nova.training.pebble-page-transaction-rooms.body':
       'Open a saved deal to work on its financials, documents, team and transaction plan. If you do not have a deal yet, start a private deal from your dashboard. Each room keeps its own deal information together.',
@@ -403,7 +504,7 @@ const siteCopyCatalog = <String, String>{
       "Choose an outside sale, family succession, management buyout or partial sale. Your transaction plan adapts to that path; keep tasks and your target date current.",
   'nova.training.seller-team.title': "Bring the right people together",
   'nova.training.seller-team.body':
-      "My team connects you with professionals. Add the expertise you need, then agree responsibilities and access inside the deal room.",
+      "My team connects you with professionals. You can add one professional per role. Filled roles disappear from the specialist picker; remove the current member before adding a replacement. Agree responsibilities and access inside the deal room.",
   'nova.training.seller-resources.title': "Explore support programs",
   'nova.training.seller-resources.body':
       "Resources contains government programs and community support. Check location, eligible uses and application timing with the program administrator.",
@@ -418,7 +519,7 @@ const siteCopyCatalog = <String, String>{
       "Review the approved anonymous brief and support needed before introducing yourself. Private buyer information is not part of this feed.",
   'nova.training.member-responses.title': "Follow your conversations",
   'nova.training.member-responses.body':
-      "Deal responses keeps introductions and replies together. Agree next steps with the deal owner and join a team when invited.",
+      "Messages opens your conversation inbox. Choose a thread to read and reply, or use the Deal responses tab for professional introductions and buyer decisions. Creator example threads are clearly labeled and do not send messages.",
   'nova.training.member-resources.title': "Find support for clients",
   'nova.training.member-resources.body':
       "Use the government programs directory to explore support relevant to a client’s location and planned use of funds.",
@@ -433,7 +534,7 @@ const siteCopyCatalog = <String, String>{
       "Select a deal in Transaction plan to see its stages, tasks, owners and deadlines. A blocked task is a signal to resolve the missing information before proceeding.",
   'nova.training.buyer-team.title': "Build your adviser team",
   'nova.training.buyer-team.body':
-      "My team connects you with professionals who can help with accounting, financing, legal work and the handover. Add people here and manage access within each deal.",
+      "Add the specialists your deal needs. Your team allows one professional per role, such as one lawyer and one accountant. Filled roles disappear from the picker; remove the current member before choosing a replacement. Manage private access separately within each deal.",
   'nova.training.buyer-resources.title': "Find grants and community support",
   'nova.training.buyer-resources.body':
       "Resources is the directory of government programs. Explore the relevant program, then verify eligibility and timing with its administrator.",
@@ -2238,7 +2339,7 @@ const siteCopyCatalog = <String, String>{
       "The process is practical and candid. A consulting engagement can sharpen an acquisition mandate, identify readiness gaps before a lender does, challenge the assumptions in a live opportunity, or organize the next phase of diligence. The goal is not to make the decision for you. It is to help you see the decision clearly enough to own it.",
   '52b0444f':
       "Could not load reviews right now. Please reopen this profile to retry.",
-  '2639bf6f': "The review desk is active",
+  '2639bf6f': "No opportunities yet",
   '82d8b634': "The right people.\nIn the right city.",
   'dca40b96': "The title is deliberately broad",
   '78f60184': "The workspace is moving without a recorded obstruction.",

@@ -1,3 +1,4 @@
+import '../widgets/nova_target.dart';
 import '../widgets/nova_training_status.dart';
 import 'buyer_resources_page.dart';
 import '../widgets/site_copy_text.dart';
@@ -273,7 +274,12 @@ class _ProfilePageState extends State<ProfilePage> {
       body: CustomScrollView(
         controller: scroll,
         slivers: [
-          SliverToBoxAdapter(child: _header(profile, scroll)),
+          SliverToBoxAdapter(
+            child: NovaTarget(
+              id: 'profile.identity',
+              child: _header(profile, scroll),
+            ),
+          ),
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 26),
@@ -330,10 +336,13 @@ class _ProfilePageState extends State<ProfilePage> {
                       const SizedBox(height: 24),
                       KeyedSubtree(
                         key: _overviewAnchor,
-                        child: _acquisitionPath(),
+                        child: NovaTarget(
+                          id: 'profile.path',
+                          child: _acquisitionPath(),
+                        ),
                       ),
                       const SizedBox(height: 24),
-                      _currentDeals(),
+                      NovaTarget(id: 'profile.deals', child: _currentDeals()),
                       const SizedBox(height: 42),
                       SiteText(
                         key: _teamAnchor,
@@ -375,7 +384,10 @@ class _ProfilePageState extends State<ProfilePage> {
                       const SizedBox(height: 32),
                       KeyedSubtree(
                         key: _detailsAnchor,
-                        child: _profileEditor(profile),
+                        child: NovaTarget(
+                          id: 'profile.editor',
+                          child: _profileEditor(profile),
+                        ),
                       ),
                       const SizedBox(height: 42),
                       const MembershipFooter(),

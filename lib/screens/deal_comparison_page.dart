@@ -1,3 +1,4 @@
+import '../widgets/nova_target.dart';
 import 'member_deal_marketplace_page.dart';
 import '../widgets/site_text.dart';
 import 'package:flutter/material.dart';
@@ -266,34 +267,37 @@ class _DealComparisonPageState extends State<BusinessComparisonQuiz>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            const Expanded(
-              child: SiteText(
-                contentKey: 'copy.deal_comparison_page.m2',
-                literal: true,
-                'QUIZ',
-                style: TextStyle(
-                  color: _green,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 1.8,
+        NovaTarget(
+          id: 'comparison.progress',
+          child: Row(
+            children: [
+              const Expanded(
+                child: SiteText(
+                  contentKey: 'copy.deal_comparison_page.m2',
+                  literal: true,
+                  'QUIZ',
+                  style: TextStyle(
+                    color: _green,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1.8,
+                  ),
                 ),
               ),
-            ),
 
-            const SizedBox(width: 12),
-            SiteText(
-              contentKey: 'copy.deal_comparison_page.m4',
-              literal: false,
-              '${_step + 1} / 8',
-              style: const TextStyle(
-                color: _muted,
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
+              const SizedBox(width: 12),
+              SiteText(
+                contentKey: 'copy.deal_comparison_page.m4',
+                literal: false,
+                '${_step + 1} / 8',
+                style: const TextStyle(
+                  color: _muted,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         const SizedBox(height: 14),
         Row(
@@ -334,125 +338,127 @@ class _DealComparisonPageState extends State<BusinessComparisonQuiz>
           style: TextStyle(color: _muted, fontSize: 16, height: 1.5),
         ),
         const SizedBox(height: 24),
-        ClipRect(
-          child: LayoutBuilder(
-            builder: (context, box) {
-              Widget document(int index) {
-                final business = index == 0 ? _left : _right;
-                return AnimatedBuilder(
-                  animation: _motion,
-                  builder: (context, _) {
-                    final winner = _selected == index;
-                    final loser = _selected != null && !winner;
-                    final t = _motion.value;
-                    final shrink = Curves.easeInCubic.transform(
-                      ((t - .22) / .38).clamp(0.0, 1.0),
-                    );
-                    final arrival = Curves.easeOutCubic.transform(
-                      ((t - .6) / .4).clamp(0.0, 1.0),
-                    );
-                    final pulse = (t / .6).clamp(0.0, 1.0);
-                    return Transform.translate(
-                      key: ValueKey('slide-${business.id}'),
-                      offset: Offset(
-                        _fullMotion && loser && _entering
-                            ? MediaQuery.sizeOf(context).width * (1 - arrival)
-                            : 0,
-                        0,
-                      ),
-                      child: Transform.scale(
-                        key: ValueKey('scale-${business.id}'),
-                        scale: _fullMotion && loser && !_entering
-                            ? 1 - .99 * shrink
-                            : 1,
-                        child: Opacity(
-                          opacity: loser
-                              ? (_entering && !_fullMotion
-                                    ? arrival
-                                    : !_entering
-                                    ? 1 - shrink
-                                    : 1)
+        NovaTarget(
+          id: 'comparison.documents',
+          child: ClipRect(
+            child: LayoutBuilder(
+              builder: (context, box) {
+                Widget document(int index) {
+                  final business = index == 0 ? _left : _right;
+                  return AnimatedBuilder(
+                    animation: _motion,
+                    builder: (context, _) {
+                      final winner = _selected == index;
+                      final loser = _selected != null && !winner;
+                      final t = _motion.value;
+                      final shrink = Curves.easeInCubic.transform(
+                        ((t - .22) / .38).clamp(0.0, 1.0),
+                      );
+                      final arrival = Curves.easeOutCubic.transform(
+                        ((t - .6) / .4).clamp(0.0, 1.0),
+                      );
+                      final pulse = (t / .6).clamp(0.0, 1.0);
+                      return Transform.translate(
+                        key: ValueKey('slide-${business.id}'),
+                        offset: Offset(
+                          _fullMotion && loser && _entering
+                              ? MediaQuery.sizeOf(context).width * (1 - arrival)
+                              : 0,
+                          0,
+                        ),
+                        child: Transform.scale(
+                          key: ValueKey('scale-${business.id}'),
+                          scale: _fullMotion && loser && !_entering
+                              ? 1 - .99 * shrink
                               : 1,
-                          child: Stack(
-                            children: [
-                              _BusinessDocument(
-                                key: ValueKey(business.id),
-                                letter: business.id,
-                                accent: index == 0
-                                    ? const Color(0xFF245DD8)
-                                    : const Color(0xFF7A42CE),
-                                option: business,
-                                selected: winner && !_entering,
-                                enabled: _selected == null,
-                                onChoose: () => _choose(index),
-                              ),
-                              if (winner && !_entering)
-                                Positioned.fill(
-                                  child: IgnorePointer(
-                                    child: Opacity(
-                                      opacity: 1 - pulse,
-                                      child: Transform.scale(
-                                        scale: _fullMotion
-                                            ? 1 + .04 * pulse
-                                            : 1,
-                                        child: DecoratedBox(
-                                          decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
-                                            border: Border.all(
-                                              color: _green,
-                                              width: 4,
-                                            ),
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: _green.withValues(
-                                                  alpha: .25 * (1 - pulse),
-                                                ),
-                                                blurRadius: 24 * pulse,
-                                                spreadRadius: 6 * pulse,
+                          child: Opacity(
+                            opacity: loser
+                                ? (_entering && !_fullMotion
+                                      ? arrival
+                                      : !_entering
+                                      ? 1 - shrink
+                                      : 1)
+                                : 1,
+                            child: Stack(
+                              children: [
+                                _BusinessDocument(
+                                  key: ValueKey(business.id),
+                                  letter: business.id,
+                                  accent: index == 0
+                                      ? const Color(0xFF245DD8)
+                                      : const Color(0xFF7A42CE),
+                                  option: business,
+                                  selected: winner && !_entering,
+                                  enabled: _selected == null,
+                                  onChoose: () => _choose(index),
+                                ),
+                                if (winner && !_entering)
+                                  Positioned.fill(
+                                    child: IgnorePointer(
+                                      child: Opacity(
+                                        opacity: 1 - pulse,
+                                        child: Transform.scale(
+                                          scale: _fullMotion
+                                              ? 1 + .04 * pulse
+                                              : 1,
+                                          child: DecoratedBox(
+                                            decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                              border: Border.all(
+                                                color: _green,
+                                                width: 4,
                                               ),
-                                            ],
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: _green.withValues(
+                                                    alpha: .25 * (1 - pulse),
+                                                  ),
+                                                  blurRadius: 24 * pulse,
+                                                  spreadRadius: 6 * pulse,
+                                                ),
+                                              ],
+                                            ),
                                           ),
                                         ),
                                       ),
                                     ),
                                   ),
-                                ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                    );
-                  },
-                );
-              }
+                      );
+                    },
+                  );
+                }
 
-              const versus = Padding(
-                padding: EdgeInsets.all(12),
-                child: SiteText(
-                  contentKey: 'copy.deal_comparison_page.m6',
-                  literal: true,
-                  'OR',
-                  style: TextStyle(
-                    color: _muted,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w800,
+                const versus = Padding(
+                  padding: EdgeInsets.all(12),
+                  child: SiteText(
+                    contentKey: 'copy.deal_comparison_page.m6',
+                    literal: true,
+                    'OR',
+                    style: TextStyle(
+                      color: _muted,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
-                ),
-              );
-              if (box.maxWidth < 700) {
-                return Column(children: [document(0), versus, document(1)]);
-              }
-              return Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(child: document(0)),
-                  versus,
-                  Expanded(child: document(1)),
-                ],
-              );
-            },
+                );
+                if (box.maxWidth < 700) {
+                  return Column(children: [document(0), versus, document(1)]);
+                }
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: document(0)),
+                    versus,
+                    Expanded(child: document(1)),
+                  ],
+                );
+              },
+            ),
           ),
         ),
         const SizedBox(height: 16),
@@ -483,125 +489,128 @@ class _DealComparisonPageState extends State<BusinessComparisonQuiz>
     );
   }
 
-  Widget _complete() => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      const Icon(Icons.check_circle_outline, color: _green, size: 44),
-      const SizedBox(height: 18),
-      const SiteText(
-        contentKey: 'copy.deal_comparison_page.4',
-        literal: true,
-        'Your preferences, learned from your choices.',
-        style: TextStyle(
-          color: _ink,
-          fontSize: 32,
-          fontWeight: FontWeight.w800,
-        ),
-      ),
-      const SizedBox(height: 12),
-      SiteText(
-        contentKey: 'copy.deal_comparison_page.m8',
-        literal: false,
-        _saving
-            ? 'Saving your choices…'
-            : _savedToAccount
-            ? 'Saved to your account for personalized scores on the bulletin board.'
-            : 'Saved on this device. Sign in to keep these preferences across devices.',
-        style: const TextStyle(color: _muted, fontSize: 16),
-      ),
-      const SizedBox(height: 24),
-      const SiteText(
-        contentKey: 'copy.deal_comparison_page.5',
-        literal: true,
-        'These are inferred preferences from the businesses you chose, not fixed requirements.',
-        style: TextStyle(color: _muted, fontSize: 16),
-      ),
-      const SizedBox(height: 12),
-      for (final trait in quizTraitLabels.entries)
-        ListTile(
-          contentPadding: EdgeInsets.zero,
-          title: SiteText(
-            contentKey: 'copy.deal_comparison_page.m9',
-            literal: false,
-            trait.value,
-            style: const TextStyle(color: _muted, fontSize: 14),
-          ),
-          subtitle: SiteText(
-            contentKey: 'copy.deal_comparison_page.m10',
-            literal: false,
-            '${_answers[trait.key] ?? ''}',
-            style: const TextStyle(color: _ink, fontSize: 18),
+  Widget _complete() => NovaTarget(
+    id: 'comparison.results',
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Icon(Icons.check_circle_outline, color: _green, size: 44),
+        const SizedBox(height: 18),
+        const SiteText(
+          contentKey: 'copy.deal_comparison_page.4',
+          literal: true,
+          'Your preferences, learned from your choices.',
+          style: TextStyle(
+            color: _ink,
+            fontSize: 32,
+            fontWeight: FontWeight.w800,
           ),
         ),
-      if (_error != null)
+        const SizedBox(height: 12),
         SiteText(
-          contentKey: 'copy.deal_comparison_page.m11',
+          contentKey: 'copy.deal_comparison_page.m8',
           literal: false,
-          _error!,
-          style: const TextStyle(color: Colors.red),
+          _saving
+              ? 'Saving your choices…'
+              : _savedToAccount
+              ? 'Saved to your account for personalized scores on the bulletin board.'
+              : 'Saved on this device. Sign in to keep these preferences across devices.',
+          style: const TextStyle(color: _muted, fontSize: 16),
         ),
-      const SizedBox(height: 20),
-      Wrap(
-        spacing: 16,
-        runSpacing: 12,
-        children: [
-          FilledButton(
-            onPressed: _saving
-                ? null
-                : () async {
-                    if (_error != null) {
-                      await _save();
-                      return;
-                    }
-                    if (!_savedToAccount) {
-                      await Navigator.of(context).push(
+        const SizedBox(height: 24),
+        const SiteText(
+          contentKey: 'copy.deal_comparison_page.5',
+          literal: true,
+          'These are inferred preferences from the businesses you chose, not fixed requirements.',
+          style: TextStyle(color: _muted, fontSize: 16),
+        ),
+        const SizedBox(height: 12),
+        for (final trait in quizTraitLabels.entries)
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            title: SiteText(
+              contentKey: 'copy.deal_comparison_page.m9',
+              literal: false,
+              trait.value,
+              style: const TextStyle(color: _muted, fontSize: 14),
+            ),
+            subtitle: SiteText(
+              contentKey: 'copy.deal_comparison_page.m10',
+              literal: false,
+              '${_answers[trait.key] ?? ''}',
+              style: const TextStyle(color: _ink, fontSize: 18),
+            ),
+          ),
+        if (_error != null)
+          SiteText(
+            contentKey: 'copy.deal_comparison_page.m11',
+            literal: false,
+            _error!,
+            style: const TextStyle(color: Colors.red),
+          ),
+        const SizedBox(height: 20),
+        Wrap(
+          spacing: 16,
+          runSpacing: 12,
+          children: [
+            FilledButton(
+              onPressed: _saving
+                  ? null
+                  : () async {
+                      if (_error != null) {
+                        await _save();
+                        return;
+                      }
+                      if (!_savedToAccount) {
+                        await Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => const AuthPage(),
+                          ),
+                        );
+                        if (!mounted || BackendService.user == null) return;
+                        await _save();
+                        if (!mounted || _error != null) return;
+                      }
+                      if (!mounted) return;
+                      Navigator.of(context).push(
                         MaterialPageRoute<void>(
-                          builder: (_) => const AuthPage(),
+                          builder: (_) => const BusinessSaleBulletinPage(),
                         ),
                       );
-                      if (!mounted || BackendService.user == null) return;
-                      await _save();
-                      if (!mounted || _error != null) return;
-                    }
-                    if (!mounted) return;
-                    Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => const BusinessSaleBulletinPage(),
-                      ),
-                    );
-                  },
-            style: FilledButton.styleFrom(backgroundColor: _green),
-            child: SiteText(
-              contentKey: 'copy.deal_comparison_page.m12',
-              literal: false,
-              _error != null
-                  ? 'Retry saving'
-                  : _savedToAccount
-                  ? 'Search businesses'
-                  : 'Sign in & save to my account',
+                    },
+              style: FilledButton.styleFrom(backgroundColor: _green),
+              child: SiteText(
+                contentKey: 'copy.deal_comparison_page.m12',
+                literal: false,
+                _error != null
+                    ? 'Retry saving'
+                    : _savedToAccount
+                    ? 'Search businesses'
+                    : 'Sign in & save to my account',
+              ),
             ),
-          ),
-          TextButton(
-            onPressed: _saving
-                ? null
-                : () => setState(() {
-                    _choices.clear();
-                    _answers.clear();
-                    _left = quizBusinesses[0];
-                    _right = quizBusinesses[1];
-                    _savedToAccount = false;
-                    _selected = null;
-                    _error = null;
-                  }),
-            child: const SiteText(
-              contentKey: 'copy.deal_comparison_page.6',
-              literal: true,
-              'Retake the quiz',
+            TextButton(
+              onPressed: _saving
+                  ? null
+                  : () => setState(() {
+                      _choices.clear();
+                      _answers.clear();
+                      _left = quizBusinesses[0];
+                      _right = quizBusinesses[1];
+                      _savedToAccount = false;
+                      _selected = null;
+                      _error = null;
+                    }),
+              child: const SiteText(
+                contentKey: 'copy.deal_comparison_page.6',
+                literal: true,
+                'Retake the quiz',
+              ),
             ),
-          ),
-        ],
-      ),
-    ],
+          ],
+        ),
+      ],
+    ),
   );
 }
 

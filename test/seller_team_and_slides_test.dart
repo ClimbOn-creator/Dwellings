@@ -50,22 +50,9 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(TeamMemberPortrait), findsOneWidget);
       expect(find.text('Saved accountant'), findsOneWidget);
-      expect(
-        find.text('Profession filled — remove your current member to switch.'),
-        findsOneWidget,
-      );
-      expect(
-        tester
-            .widget<IconButton>(
-              find.byWidgetPredicate(
-                (widget) =>
-                    widget is IconButton &&
-                    widget.tooltip == 'Profession already filled',
-              ),
-            )
-            .onPressed,
-        isNull,
-      );
+      expect(find.text('Other accountant'), findsNothing);
+      expect(find.widgetWithText(ChoiceChip, 'Accountant'), findsNothing);
+      expect(find.byTooltip('Add Other accountant to My Team'), findsNothing);
       expect(tester.takeException(), isNull);
     },
   );

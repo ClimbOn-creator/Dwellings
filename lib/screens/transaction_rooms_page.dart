@@ -1,3 +1,4 @@
+import '../widgets/nova_target.dart';
 import 'package:flutter/material.dart';
 import '../services/backend_service.dart';
 import '../models/platform_side.dart';
@@ -49,10 +50,13 @@ class _TransactionRoomsPageState extends State<TransactionRoomsPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SiteCopyText(
-                  'transaction.rooms.title',
-                  'Transaction rooms',
-                  style: TextStyle(fontSize: 32, fontWeight: FontWeight.w700),
+                const NovaTarget(
+                  id: 'transaction.title',
+                  child: SiteCopyText(
+                    'transaction.rooms.title',
+                    'Transaction rooms',
+                    style: TextStyle(fontSize: 32, fontWeight: FontWeight.w700),
+                  ),
                 ),
                 const SizedBox(height: 12),
                 const SiteCopyText(
@@ -114,28 +118,35 @@ class _TransactionRoomsPageState extends State<TransactionRoomsPage> {
                     ),
                 ] else
                   for (final room in snapshot.data!)
-                    Card(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      child: ListTile(
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 12,
+                    NovaTarget(
+                      id: room.id == snapshot.data!.first.id
+                          ? 'transaction.first'
+                          : 'transaction.room.${room.id}',
+                      child: Card(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 12,
+                          ),
+                          leading: const Icon(
+                            Icons.folder_open_outlined,
+                            color: Color(0xFF164F3D),
+                          ),
+                          title: Text(room.title),
+                          subtitle: Text(
+                            room.currentStage.replaceAll('_', ' '),
+                          ),
+                          trailing: const Icon(Icons.arrow_forward_rounded),
+                          onTap: () async {
+                            await Navigator.of(context).push(
+                              MaterialPageRoute<void>(
+                                builder: (_) => DealRoomPage(room: room),
+                              ),
+                            );
+                            if (mounted) setState(_reload);
+                          },
                         ),
-                        leading: const Icon(
-                          Icons.folder_open_outlined,
-                          color: Color(0xFF164F3D),
-                        ),
-                        title: Text(room.title),
-                        subtitle: Text(room.currentStage.replaceAll('_', ' ')),
-                        trailing: const Icon(Icons.arrow_forward_rounded),
-                        onTap: () async {
-                          await Navigator.of(context).push(
-                            MaterialPageRoute<void>(
-                              builder: (_) => DealRoomPage(room: room),
-                            ),
-                          );
-                          if (mounted) setState(_reload);
-                        },
                       ),
                     ),
               ],

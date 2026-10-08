@@ -54,9 +54,10 @@ List<NovaStep> novaWalkthrough(String role) => [
       NovaStep(
         'seller-team',
         'Bring the right people together',
-        'My team connects you with professionals. Add the expertise you need, then agree responsibilities and access inside the deal room.',
+        'My team connects you with professionals. You can add one professional per role. Filled roles disappear from the specialist picker; remove the current member before adding a replacement. Agree responsibilities and access inside the deal room.',
         'seller/team',
         NovaMood.reassuring,
+        target: 'seller.team.specialists',
       ),
       NovaStep(
         'seller-resources',
@@ -92,7 +93,7 @@ List<NovaStep> novaWalkthrough(String role) => [
       NovaStep(
         'member-responses',
         'Follow your conversations',
-        'Deal responses keeps introductions and replies together. Agree next steps with the deal owner and join a team when invited.',
+        'Messages opens your conversation inbox. Choose a thread to read and reply, or use the Deal responses tab for professional introductions and buyer decisions. Creator example threads are clearly labeled and do not send messages.',
         'member/dealResponses',
         NovaMood.planning,
       ),
@@ -133,9 +134,10 @@ List<NovaStep> novaWalkthrough(String role) => [
       NovaStep(
         'buyer-team',
         'Build your adviser team',
-        'My team connects you with professionals who can help with accounting, financing, legal work and the handover. Add people here and manage access within each deal.',
+        'Add the specialists your deal needs. Your team allows one professional per role, such as one lawyer and one accountant. Filled roles disappear from the picker; remove the current member before choosing a replacement. Manage private access separately within each deal.',
         'buyer/team',
         NovaMood.reassuring,
+        target: 'buyer.team.specialists',
       ),
       NovaStep(
         'buyer-resources',

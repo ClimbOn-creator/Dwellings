@@ -1,3 +1,5 @@
+import 'site_copy_text.dart';
+import 'nova_target.dart';
 import 'package:flutter/material.dart';
 import '../services/backend_service.dart';
 import '../services/account_service.dart';
@@ -151,10 +153,19 @@ class _TeamWorkspaceState extends State<TeamWorkspace> {
         }
         final providers = snapshot.data!.$1;
         final selected = snapshot.data!.$2;
+        final filledProfessions = providers
+            .where((p) => selected.contains(p.id))
+            .map((p) => p.category.teamProfession)
+            .toSet();
+        final activeProfession = filledProfessions.contains(_teamProfession)
+            ? null
+            : _teamProfession;
         final query = _teamQuery.trim().toLowerCase();
         final visible = providers.where((provider) {
-          if (_teamProfession != null &&
-              provider.category.teamProfession != _teamProfession)
+          if (filledProfessions.contains(provider.category.teamProfession))
+            return false;
+          if (activeProfession != null &&
+              provider.category.teamProfession != activeProfession)
             return false;
           final text = [
             provider.name,
@@ -235,51 +246,63 @@ class _TeamWorkspaceState extends State<TeamWorkspace> {
                               : 'Search business acquisition advisers and add them directly to your team.',
                         ),
                         const SizedBox(height: 15),
-                        const Text(
-                          'Choose the roles your deal needs. One member per profession.',
-                          style: TextStyle(color: DashboardUi.muted),
+                        const SiteCopyText(
+                          'team.specialists.caption',
+                          'Add the specialists you need. One professional per role.',
+                          style: TextStyle(
+                            color: DashboardUi.muted,
+                            fontSize: 13,
+                          ),
                         ),
-                        const SizedBox(height: 12),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: [
-                            ChoiceChip(
-                              label: const Text('All professions'),
-                              selected: _teamProfession == null,
-                              onSelected: (_) => setState(() {
-                                _teamProfession = null;
-                                _teamQuery = '';
-                              }),
-                            ),
-                            for (final profession in BuyerTeamProfession.values)
-                              ChoiceChip(
-                                avatar: Icon(
-                                  myTeam.any(
-                                        (p) =>
-                                            p.category.teamProfession ==
-                                            profession,
-                                      )
-                                      ? Icons.check_circle_outline
-                                      : Icons.add_circle_outline,
-                                  size: 18,
+                        const SizedBox(height: 10),
+                        NovaTarget(
+                          id: widget.seller
+                              ? 'seller.team.specialists'
+                              : 'buyer.team.specialists',
+                          child: Wrap(
+                            spacing: 6,
+                            runSpacing: 6,
+                            children: [
+                              for (final profession
+                                  in BuyerTeamProfession.values)
+                                if (!filledProfessions.contains(profession))
+                                  ChoiceChip(
+                                    avatar: const Icon(
+                                      Icons.add,
+                                      size: 15,
+                                      color: DashboardUi.blue,
+                                    ),
+                                    label: Text(
+                                      profession.label,
+                                      style: const TextStyle(fontSize: 12),
+                                    ),
+                                    backgroundColor: Colors.white,
+                                    selectedColor: const Color(0xFFE8F0EC),
+                                    side: const BorderSide(
+                                      color: Color(0xFFE0E6E3),
+                                    ),
+                                    showCheckmark: false,
+                                    selected: activeProfession == profession,
+                                    onSelected: (selected) => setState(() {
+                                      _teamProfession = selected
+                                          ? profession
+                                          : null;
+                                      _teamQuery = '';
+                                    }),
+                                  ),
+                              if (activeProfession != null)
+                                TextButton(
+                                  onPressed: () => setState(() {
+                                    _teamProfession = null;
+                                    _teamQuery = '';
+                                  }),
+                                  child: const SiteCopyText(
+                                    'team.specialists.clear',
+                                    'Show all',
+                                  ),
                                 ),
-                                label: Text(
-                                  myTeam.any(
-                                        (p) =>
-                                            p.category.teamProfession ==
-                                            profession,
-                                      )
-                                      ? '${profession.label} added'
-                                      : profession.prompt,
-                                ),
-                                selected: _teamProfession == profession,
-                                onSelected: (_) => setState(() {
-                                  _teamProfession = profession;
-                                  _teamQuery = '';
-                                }),
-                              ),
-                          ],
+                            ],
+                          ),
                         ),
                         const SizedBox(height: 18),
                         if (compact) ...[

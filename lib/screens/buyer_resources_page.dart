@@ -1,3 +1,4 @@
+import '../widgets/nova_target.dart';
 import '../widgets/home_brand_button.dart';
 import 'dart:async';
 import 'dart:math' as math;
@@ -223,34 +224,40 @@ class _BuyerResourcesPanelState extends State<BuyerResourcesPanel> {
           ),
           const SizedBox(height: 20),
           if (!widget.teamOnly) ...[
-            TextField(
-              onChanged: (v) => setState(() => _query = v),
-              decoration: const InputDecoration(
-                labelText: 'Search resources',
-                prefixIcon: Icon(Icons.search),
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(),
+            NovaTarget(
+              id: 'resources.search',
+              child: TextField(
+                onChanged: (v) => setState(() => _query = v),
+                decoration: const InputDecoration(
+                  labelText: 'Search resources',
+                  prefixIcon: Icon(Icons.search),
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(),
+                ),
               ),
             ),
             const SizedBox(height: 16),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                for (final kind in [
-                  'All',
-                  'Grants & contributions',
-                  'Community support',
-                  'Loans',
-                  'Funding directory',
-                ])
-                  ChoiceChip(
-                    label: Text(kind),
-                    selected: _kind == kind,
-                    onSelected: (_) => setState(() => _kind = kind),
-                  ),
-              ],
+            NovaTarget(
+              id: 'resources.filters',
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final kind in [
+                    'All',
+                    'Grants & contributions',
+                    'Community support',
+                    'Loans',
+                    'Funding directory',
+                  ])
+                    ChoiceChip(
+                      label: Text(kind),
+                      selected: _kind == kind,
+                      onSelected: (_) => setState(() => _kind = kind),
+                    ),
+                ],
+              ),
             ),
             const SizedBox(height: 12),
             DropdownButton<String>(
@@ -308,24 +315,30 @@ class _BuyerResourcesPanelState extends State<BuyerResourcesPanel> {
                   for (final r in visible)
                     SizedBox(
                       width: width,
-                      child: ResourceProviderCard(
-                        key: ValueKey(r.id),
-                        resource: r,
-                        saved: selection.providers.contains(r.id),
-                        busy: selection.busy == r.id,
-                        onOpen: () => _profile(r),
-                        onSave:
-                            selection.busy != null ||
-                                selection.loading ||
-                                selection.error != null
-                            ? null
-                            : () => selection.toggle(context, r.id),
+                      child: NovaTarget(
+                        id: r.id == visible.first.id
+                            ? 'resources.providers'
+                            : 'resources.provider.${r.id}',
+                        child: ResourceProviderCard(
+                          key: ValueKey(r.id),
+                          resource: r,
+                          saved: selection.providers.contains(r.id),
+                          busy: selection.busy == r.id,
+                          onOpen: () => _profile(r),
+                          onSave:
+                              selection.busy != null ||
+                                  selection.loading ||
+                                  selection.error != null
+                              ? null
+                              : () => selection.toggle(context, r.id),
+                        ),
                       ),
                     ),
                 ],
               );
             },
           ),
+
           if (widget.teamOnly) ...[
             const SizedBox(height: 30),
             const Text(
@@ -692,7 +705,9 @@ class _ResourceProviderPageState extends State<ResourceProviderPage> {
         backgroundColor: const Color(0xFFF8FBFD),
         appBar: AppBar(
           title: const Text('Provider profile'),
-          actions: const [AppNavigationMenu(dark: false)],
+          actions: const [
+            AppNavigationMenu(guidePage: 'resource-provider', dark: false),
+          ],
         ),
         body: SingleChildScrollView(
           padding: const EdgeInsets.all(24),

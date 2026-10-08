@@ -1,3 +1,4 @@
+import '../widgets/nova_target.dart';
 import '../widgets/site_text.dart';
 import 'package:flutter/material.dart';
 
@@ -425,18 +426,21 @@ class _AuthPageState extends State<AuthPage> {
                               ],
                               const SizedBox(height: 12),
                             ],
-                            TextFormField(
-                              controller: _email,
-                              keyboardType: TextInputType.emailAddress,
-                              validator: (value) =>
-                                  value != null && value.contains('@')
-                                  ? null
-                                  : 'Enter a valid email',
-                              decoration: const InputDecoration(
-                                label: SiteText(
-                                  'Email address',
-                                  contentKey: 'copy.auth_page.field7',
-                                  literal: true,
+                            NovaTarget(
+                              id: 'auth.form',
+                              child: TextFormField(
+                                controller: _email,
+                                keyboardType: TextInputType.emailAddress,
+                                validator: (value) =>
+                                    value != null && value.contains('@')
+                                    ? null
+                                    : 'Enter a valid email',
+                                decoration: const InputDecoration(
+                                  label: SiteText(
+                                    'Email address',
+                                    contentKey: 'copy.auth_page.field7',
+                                    literal: true,
+                                  ),
                                 ),
                               ),
                             ),

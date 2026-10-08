@@ -105,9 +105,18 @@ class MemberNetworkService {
         .toList();
   }
 
+  static List<MemberConversationSummary> get creatorExampleConversations =>
+      CreatorMessageExamples.conversationsFor(BackendService.user?.email);
+
   static Future<List<MemberChatMessage>> loadMessages(
     String conversationId,
   ) async {
+    if (CreatorMessageExamples.ownsId(conversationId)) {
+      return CreatorMessageExamples.messagesFor(
+        BackendService.user?.email,
+        conversationId,
+      );
+    }
     if (!BackendService.configured || BackendService.user == null) {
       return const [];
     }
@@ -152,6 +161,11 @@ class MemberNetworkService {
   }
 
   static Future<void> sendMessage(String conversationId, String body) async {
+    if (CreatorMessageExamples.ownsId(conversationId)) {
+      throw StateError(
+        'Example conversations are a preview. No message is sent.',
+      );
+    }
     _requireMember();
     await _client.rpc(
       'send_member_message',
@@ -163,6 +177,7 @@ class MemberNetworkService {
   }
 
   static Future<void> markRead(String conversationId) async {
+    if (CreatorMessageExamples.ownsId(conversationId)) return;
     if (!BackendService.configured || BackendService.user == null) return;
     await _client.rpc(
       'mark_member_conversation_read',
@@ -190,5 +205,112 @@ class MemberNetworkService {
     if (!BackendService.configured || BackendService.user == null) {
       throw StateError('Sign in with a verified member profile to continue.');
     }
+  }
+}
+
+/// Local preview content for the two creator accounts. It is never inserted into
+/// live conversations or sent through messaging RPCs.
+class CreatorMessageExamples {
+  static bool allowed(String? email) => const {
+    'rw0882308@gmail.com',
+    'dfisch5@gmail.com',
+  }.contains(email?.trim().toLowerCase());
+  static bool ownsId(String id) => id.startsWith('creator-example-');
+  static const threads = [
+    (
+      'broker',
+      'Amelia Foster',
+      'Business broker',
+      'Island HVAC · Example',
+      'The seller can share the financial package once the confidentiality agreement is signed.',
+      0,
+    ),
+    (
+      'accountant',
+      'Marcus Chen',
+      'Accountant',
+      'ABC Plumbing · Example',
+      'I have noted two owner add-backs to reconcile before we confirm the earnings estimate.',
+      1,
+    ),
+    (
+      'lender',
+      'Priya Patel',
+      'Lender',
+      'West Coast Dental · Example',
+      'The financing checklist is ready. Let’s confirm your equity contribution and target closing date.',
+      2,
+    ),
+  ];
+  static List<MemberConversationSummary> conversationsFor(String? email) {
+    if (!allowed(email)) return const [];
+    final now = DateTime.now();
+    return [
+      for (final (id, name, role, deal, body, photo) in threads)
+        MemberConversationSummary(
+          id: 'creator-example-$id',
+          otherProviderId: 'example-$id',
+          name: '$name · Example',
+          company: 'Fictional professional',
+          jobTitle: role,
+          providerType: 'professional',
+          lastMessage: body,
+          lastMessageAt: now.subtract(Duration(minutes: (photo + 1) * 25)),
+          unreadCount: photo == 0 ? 1 : 0,
+          photoIndex: photo,
+          opportunityHeadline: deal,
+          isPreview: true,
+        ),
+    ];
+  }
+
+  static List<MemberChatMessage> messagesFor(String? email, String id) {
+    if (!allowed(email)) return const [];
+    final thread = threads
+        .where((t) => 'creator-example-${t.$1}' == id)
+        .firstOrNull;
+    if (thread == null) return const [];
+    final now = DateTime.now();
+    final replies = switch (thread.$1) {
+      'broker' => [
+        'Thanks, Amelia. What should I review first?',
+        'Start with revenue trends, customer concentration and the owner’s responsibilities. We can organize the follow-up questions in the room.',
+      ],
+      'accountant' => [
+        'Could you flag the items that need supporting records?',
+        'Yes. Please request the payroll detail and invoices for those adjustments. I’ll keep the unresolved items together for our next review.',
+      ],
+      _ => [
+        'What would you need from me before our financing meeting?',
+        'An outline of your available capital, the proposed purchase terms and the latest financial statements would be a useful start.',
+      ],
+    };
+    return [
+      MemberChatMessage(
+        id: '$id-1',
+        senderProviderId: 'example-${thread.$1}',
+        senderName: thread.$2,
+        body: thread.$5,
+        createdAt: now.subtract(const Duration(minutes: 40)),
+        isMine: false,
+      ),
+      MemberChatMessage(
+        id: '$id-2',
+        senderProviderId: 'creator',
+        senderName: 'You',
+        body: replies[0],
+        createdAt: now.subtract(const Duration(minutes: 30)),
+        isMine: true,
+        readAt: now.subtract(const Duration(minutes: 29)),
+      ),
+      MemberChatMessage(
+        id: '$id-3',
+        senderProviderId: 'example-${thread.$1}',
+        senderName: thread.$2,
+        body: replies[1],
+        createdAt: now.subtract(const Duration(minutes: 25)),
+        isMine: false,
+      ),
+    ];
   }
 }
