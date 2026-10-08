@@ -161,3 +161,27 @@ Text keys and image slot keys are permanent and do not depend on wording, filena
 ## Pebble app walkthrough
 
 Pebble is a character-led, click-through guide to the dashboards, transaction room and other app tools. Completed training is saved to a signed-in account’s profile and stays hidden until replay is requested. No AI key or additional database migration is required. See [Pebble guide behaviour](docs/nova-setup.md).
+
+
+### Buyer, seller and member paths
+
+The landing page selects a navigation context; this is not an authorization role.
+Shared deal and message permissions continue to be enforced by the backend.
+The Affinity logo clears the selected path and returns to the landing page.
+
+- Buyer: dashboard, resources, profile, transaction room, businesses for sale.
+- Seller: dashboard, transaction room, my posts and analytics, profile.
+- Member: pricing, dashboard, profile, marketing.
+
+Canonical previews include `?module=seller-posts`, `?module=seller-transaction-room`,
+`?module=member-pricing`, and `?module=member-marketing`. Old network, property
+calculator and game URLs return to the main landing; the old business calculator
+URL opens the current buyer deal screen. Saved records and owner copy are retained.
+
+Seller post analytics require the additive migration
+`supabase/migrations/202610080001_seller_post_analytics.sql` on the hosted Supabase
+project. Its authenticated RPC returns only the caller's own posts, including
+archived posts and real current bookmark counts. It never exposes saver identities.
+Until installed, the page displays a retryable load error rather than fabricated
+analytics. Published paid membership prices are not configured; the Pricing page
+compares existing plan descriptions and does not take payment.

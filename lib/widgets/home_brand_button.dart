@@ -1,7 +1,10 @@
+import '../services/nova_training_controller.dart';
+import 'calculator_help_sidebar.dart';
 import 'package:flutter/material.dart';
 
 import '../screens/acquisition_support_page.dart';
 import 'brand_logo.dart';
+import '../services/app_tunnel.dart';
 
 class HomeBrandButton extends StatelessWidget {
   const HomeBrandButton({
@@ -15,11 +18,15 @@ class HomeBrandButton extends StatelessWidget {
   final bool showWordmark;
   final bool dark;
 
-  static void open(BuildContext context) =>
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute<void>(builder: (_) => const AcquisitionSupportPage()),
-        (_) => false,
-      );
+  static void open(BuildContext context) {
+    NovaTrainingController.instance.pause();
+    CalculatorHelpController.instance.close();
+    AppTunnelController.select(AppTunnel.landing);
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute<void>(builder: (_) => const AcquisitionSupportPage()),
+      (_) => false,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

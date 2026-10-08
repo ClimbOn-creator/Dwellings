@@ -1,3 +1,4 @@
+import 'package:dwelling_iq/services/app_tunnel.dart';
 import 'package:dwelling_iq/screens/deal_rooms_page.dart';
 import 'package:dwelling_iq/screens/seller_dashboard_page.dart';
 import 'package:dwelling_iq/widgets/app_navigation_menu.dart';
@@ -34,6 +35,9 @@ void main() {
     tester,
   ) async {
     for (final label in ['Resources', 'Seller dashboard']) {
+      AppTunnelController.select(
+        label == 'Resources' ? AppTunnel.buyer : AppTunnel.seller,
+      );
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(

@@ -1,3 +1,5 @@
+import '../services/app_tunnel.dart';
+import 'tunnel_pages.dart';
 import '../widgets/site_text.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -9,7 +11,6 @@ import '../widgets/home_brand_button.dart';
 import '../widgets/membership_footer.dart';
 import 'member_deal_marketplace_page.dart';
 import 'profile_page.dart';
-import 'deal_rooms_page.dart';
 
 const _green = Color(0xFF053827);
 const _muted = Color(0xFF68635D);
@@ -41,10 +42,16 @@ class _NotificationCenterPageState extends State<NotificationCenterPage> {
     });
     final page = switch (item.actionModule) {
       'profile' => const ProfilePage(),
-      'bulletin-board' => const DealRoomsPage(
-        initialSide: PlatformSide.business,
-      ),
-      _ => const MemberDealMarketplacePage(),
+      'bulletin-board' =>
+        AppTunnelController.current.value == AppTunnel.seller
+            ? const SellerPostsPage()
+            : const BusinessSaleBulletinPage(),
+      _ =>
+        AppTunnelController.current.value == AppTunnel.member
+            ? const MemberDealMarketplacePage()
+            : const MemberDealMarketplacePage(
+                initialView: MemberDashboardView.dealResponses,
+              ),
     };
     await Navigator.of(
       context,

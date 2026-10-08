@@ -1,6 +1,81 @@
 // These IDs are permanent. Rewrite the fallback VALUE while retaining its ID.
 // Never regenerate or renumber this registry during a redesign.
 const siteCopyCatalog = <String, String>{
+  "nova.training.pebble-member-marketing-practice.body":
+      "Match your introductions to the deal and agree on scope. Each team has one professional per role. Honest client reviews and a useful profile build trust over time.",
+  "nova.training.pebble-member-marketing-practice.title":
+      "Build relevant relationships",
+  "nova.training.pebble-member-marketing-profile.body":
+      "Edit your professional profile with a portrait, service region and a short account of your experience. This is what helps people understand who you can help.",
+  "nova.training.pebble-member-marketing-profile.title":
+      "Introduce your expertise",
+  "nova.training.pebble-member-pricing-apply.body":
+      "Choose Apply for membership to sign in and record your preferred workspace. You can return home through the Affinity logo to choose another side of the app.",
+  "nova.training.pebble-member-pricing-apply.title": "Apply when ready",
+  "nova.training.pebble-member-pricing-plans.body":
+      "Compare Free, Professional and Featured. Paid prices are not published yet; applying does not start a paid subscription.",
+  "nova.training.pebble-member-pricing-plans.title": "Compare memberships",
+  "nova.training.pebble-seller-posts-list.body":
+      "Review listing status and current buyer saves, then edit a post or preview its public listing. Saves are bookmarks; they are not view counts or inquiries.",
+  "nova.training.pebble-seller-posts-list.title": "Follow your posts",
+  "nova.training.pebble-seller-posts-create.body":
+      "Start a business post with a clear summary, asking price and supported facts. Only posts created by your account appear on this page.",
+  "nova.training.pebble-seller-posts-create.title": "Create your listing",
+  "tunnel.pricing.featured.body":
+      "Everything in Professional plus clearly disclosed promotion.",
+  "tunnel.pricing.featured.title": "Featured",
+  "tunnel.pricing.professional.body":
+      "Deal Rooms, qualified introductions, pipeline and analytics.",
+  "tunnel.pricing.professional.title": "Professional",
+  "tunnel.pricing.free.body":
+      "Public profile, reviews and limited introductions.",
+  "tunnel.pricing.free.title": "Free member",
+  "tunnel.posts.empty.body":
+      "Create a post when you are ready to share your business. Your published listings, status and buyer saves will appear here. Sign in to load your existing posts.",
+  "tunnel.posts.empty.title": "Your sale starts here",
+  "tunnel.posts.error.body":
+      "Please try again. If this persists, the seller analytics update may still need to be installed on the server.",
+  "tunnel.posts.error.title": "Posts could not load",
+  "tunnel.marketing.promotion.body":
+      "The Featured plan includes clearly disclosed promotion. Sponsored placement does not establish credentials or guarantee leads. Compare the options on Pricing, and keep your profile useful even without paid promotion.",
+  "tunnel.marketing.promotion.title": "4. Consider promotion thoughtfully",
+  "tunnel.marketing.reviews.body":
+      "After working together, invite clients to leave an honest member review. Do not promise incentives or invent testimonials. A detailed experience helps future clients understand your approach.",
+  "tunnel.marketing.reviews.title": "3. Let your work speak for itself",
+  "tunnel.marketing.practice.body":
+      "Describe how your experience fits a particular deal. Keep responses specific, set expectations for the first conversation and agree on scope before starting work. Each deal team has one member per profession.",
+  "tunnel.marketing.practice.title":
+      "2. Earn trust through useful introductions",
+  "tunnel.marketing.profile.body":
+      "Use a clear portrait, your profession and service region. Write up to 200 words about your personal experience, who you help and the work you do. Keep qualifications and contact details current.",
+  "tunnel.marketing.profile.title": "1. Start with your profile",
+  "tunnel.pricing.availability.body":
+      "Paid plan prices have not been published yet. Applying records your preferred plan; it does not charge you or start a paid subscription. Final availability and pricing must be confirmed before purchase.",
+  "tunnel.pricing.availability.title": "Clear terms before you commit",
+  'tunnel.seller.room.start': 'Prepare your seller transaction plan',
+  'tunnel.seller.room.intro':
+      'Manage shared sale documents, your advisers and closing milestones. Prepare your transaction plan in the seller dashboard; shared rooms appear here when you are a participant.',
+  'tunnel.pricing.apply': 'Apply for membership',
+  'tunnel.marketing.edit': 'Edit my professional profile',
+  'tunnel.posts.create': 'Create a business post',
+  'tunnel.posts.retry': 'Try again',
+  'tunnel.posts.edit': 'Edit post',
+  'tunnel.posts.view': 'View listing',
+  'tunnel.posts.note':
+      'Buyer saves are current bookmarks, not unique views or inquiries. No view counts are estimated.',
+  'tunnel.posts.total': 'Posts',
+  'tunnel.posts.active': 'Active',
+  'tunnel.posts.saves': 'Buyer saves',
+  'tunnel.member-pricing.title': 'Choose your membership',
+  'tunnel.member-pricing.intro':
+      'Build your presence on Affinity. Compare the membership options before you apply.',
+  'tunnel.member-marketing.title': 'Make your expertise easy to find',
+  'tunnel.member-marketing.intro':
+      'A practical plan for building a credible presence and attracting relevant introductions on Affinity.',
+  'tunnel.seller-posts.title': 'My posts & analytics',
+  'tunnel.seller-posts.intro':
+      'Manage your business listings and follow real buyer saves. Only posts created by your account appear here.',
+
   'messages.workspace.inbox': 'Messages',
   'messages.workspace.responses': 'Deal responses',
   'messages.creator.examples':
@@ -1941,7 +2016,7 @@ const siteCopyCatalog = <String, String>{
   '99cb5110': "Property type",
   '69279d86': "PropertyIQ",
   '23cc602':
-      "PropertyIQ and DealIQ professionals you select in the Network stay attached to your account.",
+      "The professionals you select for your team stay attached to your account.",
   '8939182a':
       "Providers may pay for placement, but sponsorship does not change verification status, professional credentials, rate accuracy or user reviews. Mortgage pricing is qualification-dependent and must display its effective date when live rate data is available.",
   '78ec45cc': "Province or territory",
@@ -2582,7 +2657,7 @@ const siteCopyCatalog = <String, String>{
   '603b98ff': "Your saved preferences could not be loaded. Please retry.",
   '3af95f4c': "Your selected team",
   '7bc52796':
-      "Your team is empty. Open Local Network and add professionals you want to remember.",
+      "Your team is empty. Add professionals from My team in your dashboard.",
   'b5077c9c': "Your watchlist is ready",
   '109e63a5': "ZERO BLIND SPOTS.",
   'c86510e': "[,;/]|\\band\\b",

@@ -50,7 +50,7 @@ enum BuyerDashboardView { home, dealScreen, transactionPlan, team, resources }
 class DealRoomsPage extends StatefulWidget {
   const DealRoomsPage({
     super.key,
-    this.initialSide = PlatformSide.property,
+    this.initialSide = PlatformSide.business,
     this.startIntake = false,
     this.initialIntake,
     this.initialView = BuyerDashboardView.home,
@@ -211,7 +211,10 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
     final page = switch (step) {
       0 => const AcquisitionBlueprintPage(),
       1 => const BuyerReadinessPage(),
-      _ => const BusinessAcquisitionPage(),
+      _ => const DealRoomsPage(
+        initialSide: PlatformSide.business,
+        initialView: BuyerDashboardView.dealScreen,
+      ),
     };
     Navigator.of(
       context,
@@ -5026,7 +5029,10 @@ class _DealRoomPageState extends State<DealRoomPage> {
         OutlinedButton.icon(
           onPressed: () => Navigator.of(context).push(
             MaterialPageRoute<void>(
-              builder: (_) => const BusinessAcquisitionPage(),
+              builder: (_) => const DealRoomsPage(
+                initialSide: PlatformSide.business,
+                initialView: BuyerDashboardView.dealScreen,
+              ),
             ),
           ),
           icon: const Icon(Icons.open_in_new_rounded, size: 17),

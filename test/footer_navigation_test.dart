@@ -1,3 +1,4 @@
+import 'package:dwelling_iq/services/app_tunnel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -6,12 +7,14 @@ import 'package:dwelling_iq/screens/footer_information_page.dart';
 import 'package:dwelling_iq/screens/acquisition_support_page.dart';
 import 'package:dwelling_iq/screens/deal_rooms_page.dart';
 import 'package:dwelling_iq/screens/member_deal_marketplace_page.dart';
-import 'package:dwelling_iq/screens/local_network_page.dart';
 import 'package:dwelling_iq/widgets/membership_footer.dart';
 import 'package:dwelling_iq/widgets/app_navigation_menu.dart';
 
 void main() {
-  setUp(() => SharedPreferences.setMockInitialValues({}));
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+    AppTunnelController.select(AppTunnel.landing);
+  });
   testWidgets('only the four Affinity links open dedicated pages', (
     tester,
   ) async {
@@ -141,6 +144,7 @@ void main() {
       FooterTopic.consulting,
     ];
     for (final topic in topics) {
+      AppTunnelController.select(AppTunnel.landing);
       await tester.pumpWidget(
         MaterialApp(
           key: ValueKey(topic),
@@ -183,7 +187,7 @@ void main() {
       );
       expect(
         footerToolDestination(FooterTopic.directory),
-        isA<LocalNetworkPage>(),
+        isA<MemberDealMarketplacePage>(),
       );
       expect(
         (footerToolDestination(FooterTopic.buyerLeads)

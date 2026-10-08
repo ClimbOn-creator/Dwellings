@@ -82,7 +82,34 @@ class BusinessSaleBulletin {
   );
 }
 
+class SellerPostStats {
+  const SellerPostStats({
+    required this.listing,
+    required this.status,
+    required this.saves,
+  });
+  final BusinessSaleBulletin listing;
+  final String status;
+  final int saves;
+  factory SellerPostStats.fromJson(Map<String, dynamic> row) => SellerPostStats(
+    listing: BusinessSaleBulletin.fromJson(row),
+    status: '${row['status'] ?? 'active'}',
+    saves: (row['save_count'] as num?)?.toInt() ?? 0,
+  );
+}
+
 class BusinessSaleBulletinService {
+  static Future<List<SellerPostStats>> loadOwnedPosts() async {
+    if (BackendService.user == null) return [];
+    final rows = await _client.rpc('seller_business_posts');
+    return (rows as List)
+        .map(
+          (row) =>
+              SellerPostStats.fromJson(Map<String, dynamic>.from(row as Map)),
+        )
+        .toList();
+  }
+
   static SupabaseClient get _client => Supabase.instance.client;
 
   static const exampleIds = [

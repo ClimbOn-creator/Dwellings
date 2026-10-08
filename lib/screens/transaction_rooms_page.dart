@@ -8,10 +8,12 @@ import '../widgets/home_brand_button.dart';
 import '../widgets/site_copy_text.dart';
 import 'auth_page.dart';
 import 'deal_rooms_page.dart';
+import 'seller_dashboard_page.dart';
 
 /// The main navigation's room entrypoint, separate from the buyer dashboard.
 class TransactionRoomsPage extends StatefulWidget {
-  const TransactionRoomsPage({super.key, this.loadRooms});
+  const TransactionRoomsPage({super.key, this.loadRooms, this.seller = false});
+  final bool seller;
   final Future<List<DealRoom>> Function()? loadRooms;
   @override
   State<TransactionRoomsPage> createState() => _TransactionRoomsPageState();
@@ -59,9 +61,13 @@ class _TransactionRoomsPageState extends State<TransactionRoomsPage> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                const SiteCopyText(
-                  'transaction.rooms.intro',
-                  'Choose a deal to work on its documents, financials, team and transaction plan.',
+                SiteCopyText(
+                  widget.seller
+                      ? 'tunnel.seller.room.intro'
+                      : 'transaction.rooms.intro',
+                  widget.seller
+                      ? 'Manage shared sale documents, your advisers and closing milestones. Prepare your transaction plan in the seller dashboard; shared rooms appear here when you are a participant.'
+                      : 'Choose a deal to work on its documents, financials, team and transaction plan.',
                 ),
                 const SizedBox(height: 28),
                 if (snapshot.connectionState != ConnectionState.done)
@@ -106,14 +112,22 @@ class _TransactionRoomsPageState extends State<TransactionRoomsPage> {
                     FilledButton(
                       onPressed: () => Navigator.of(context).push(
                         MaterialPageRoute<void>(
-                          builder: (_) => const DealRoomsPage(
-                            initialSide: PlatformSide.business,
-                          ),
+                          builder: (_) => widget.seller
+                              ? const SellerDashboardPage(
+                                  initialView: SellerDashboardView.plan,
+                                )
+                              : const DealRoomsPage(
+                                  initialSide: PlatformSide.business,
+                                ),
                         ),
                       ),
-                      child: const SiteCopyText(
-                        'transaction.rooms.start',
-                        'Open buyer dashboard',
+                      child: SiteCopyText(
+                        widget.seller
+                            ? 'tunnel.seller.room.start'
+                            : 'transaction.rooms.start',
+                        widget.seller
+                            ? 'Prepare your seller transaction plan'
+                            : 'Open buyer dashboard',
                       ),
                     ),
                 ] else

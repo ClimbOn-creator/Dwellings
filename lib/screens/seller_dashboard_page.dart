@@ -7,7 +7,7 @@ import '../widgets/team_member_portrait.dart';
 import 'buyer_resources_page.dart';
 import 'page_flow.dart';
 import 'bulletin_listing_pages.dart';
-import 'deal_rooms_page.dart';
+import 'transaction_rooms_page.dart';
 import 'dart:async';
 import 'dart:convert';
 
@@ -425,8 +425,7 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
           false,
           () => Navigator.of(context).push(
             MaterialPageRoute<void>(
-              builder: (_) =>
-                  const DealRoomsPage(initialSide: PlatformSide.business),
+              builder: (_) => const TransactionRoomsPage(seller: true),
             ),
           ),
         ),

@@ -1,3 +1,4 @@
+import '../services/app_tunnel.dart';
 import '../widgets/site_image.dart';
 import '../widgets/site_copy_text.dart';
 import '../services/site_content_service.dart';
@@ -574,7 +575,10 @@ class _BusinessListingDetailPageState extends State<BusinessListingDetailPage> {
                   constraints: const BoxConstraints(maxWidth: 1160),
                   child: Column(
                     children: [
-                      if (!b.isExample)
+                      if (!b.isExample &&
+                          AppTunnelController.current.value !=
+                              AppTunnel.seller &&
+                          AppTunnelController.current.value != AppTunnel.member)
                         Padding(
                           padding: const EdgeInsets.only(bottom: 16),
                           child: FilledButton.icon(

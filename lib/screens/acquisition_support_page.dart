@@ -1,6 +1,8 @@
+import 'member_deal_marketplace_page.dart';
 import '../widgets/nova_panel.dart';
 import '../services/nova_service.dart';
 import 'page_flow.dart';
+import '../services/app_tunnel.dart';
 import 'seller_dashboard_page.dart';
 import '../widgets/flowing_color_banner.dart';
 import '../widgets/acquisition_step_bar.dart';
@@ -25,7 +27,6 @@ import '../widgets/membership_footer.dart';
 import '../widgets/fixed_editorial_background.dart';
 import '../widgets/site_copy_text.dart';
 import 'auth_page.dart';
-import 'business_acquisition_page.dart';
 import 'deal_rooms_page.dart';
 
 const _ink = Color(0xFF050510);
@@ -54,8 +55,16 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
     super.dispose();
   }
 
-  void _open(Widget page) =>
-      Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => page));
+  void _open(Widget page) {
+    AppTunnelController.select(
+      page is SellerDashboardPage
+          ? AppTunnel.seller
+          : page is MemberDealMarketplacePage
+          ? AppTunnel.member
+          : AppTunnel.buyer,
+    );
+    Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => page));
+  }
 
   Widget _copy(
     String id,
@@ -208,7 +217,7 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
               onBuyer: () => _open(
                 const DealRoomsPage(initialSide: PlatformSide.business),
               ),
-              onMember: () => startMemberSetup(context),
+              onMember: () => _open(const MemberDealMarketplacePage()),
               onLearn: () => startBuyerLearning(context),
               onSeller: () => _open(const SellerDashboardPage()),
             ),
@@ -479,7 +488,12 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
             _button(
               'home.benefits.buyer.cta',
               'Explore the deal screen',
-              () => _open(const BusinessAcquisitionPage()),
+              () => _open(
+                const DealRoomsPage(
+                  initialSide: PlatformSide.business,
+                  initialView: BuyerDashboardView.dealScreen,
+                ),
+              ),
             ),
           ],
         );
@@ -877,7 +891,12 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
                   _open(const BuyerReadinessPage());
                 }),
                 _HomePathStep('03', 'Deal screen', 'Test the opportunity.', () {
-                  _open(const BusinessAcquisitionPage());
+                  _open(
+                    const DealRoomsPage(
+                      initialSide: PlatformSide.business,
+                      initialView: BuyerDashboardView.dealScreen,
+                    ),
+                  );
                 }),
                 _HomePathStep('04', 'Pipeline', 'Manage what advances.', () {
                   _open(
@@ -1574,7 +1593,10 @@ class _BuyerReadinessPageState extends State<BuyerReadinessPage> {
     if (!mounted || step == 1) return;
     final page = switch (step) {
       0 => const AcquisitionBlueprintPage(),
-      2 => const BusinessAcquisitionPage(),
+      2 => const DealRoomsPage(
+        initialSide: PlatformSide.business,
+        initialView: BuyerDashboardView.dealScreen,
+      ),
       _ => const DealRoomsPage(initialSide: PlatformSide.business),
     };
     Navigator.of(

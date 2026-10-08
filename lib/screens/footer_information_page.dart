@@ -10,9 +10,9 @@ import '../widgets/site_copy_text.dart';
 import 'acquisition_support_page.dart';
 import 'assistant_workspace_page.dart';
 import 'deal_rooms_page.dart';
-import 'local_network_page.dart';
 import 'member_deal_marketplace_page.dart';
 import 'page_flow.dart';
+import '../services/app_tunnel.dart';
 
 const _forest = Color(0xFF053827);
 const _cream = Color(0xFFF4F1EB);
@@ -28,9 +28,15 @@ class FooterInformationPage extends StatefulWidget {
   State<FooterInformationPage> createState() => _FooterInformationPageState();
 }
 
-Widget footerDestination(FooterTopic topic) => topic.isInformationPage
-    ? FooterInformationPage(topic: topic)
-    : footerToolDestination(topic);
+Widget footerDestination(FooterTopic topic) {
+  if (topic.isInformationPage) return FooterInformationPage(topic: topic);
+  if (AppTunnelController.current.value == AppTunnel.landing) {
+    AppTunnelController.select(
+      topic == FooterTopic.memberStudio ? AppTunnel.member : AppTunnel.buyer,
+    );
+  }
+  return footerToolDestination(topic);
+}
 
 Widget footerToolDestination(FooterTopic topic) => switch (topic) {
   FooterTopic.blueprint => const AcquisitionBlueprintPage(),
@@ -43,7 +49,9 @@ Widget footerToolDestination(FooterTopic topic) => switch (topic) {
     initialSide: PlatformSide.business,
   ),
   FooterTopic.memberStudio => const MemberDealMarketplacePage(),
-  FooterTopic.directory => const LocalNetworkPage(side: PlatformSide.business),
+  FooterTopic.directory => const MemberDealMarketplacePage(
+    initialView: MemberDashboardView.professionals,
+  ),
   FooterTopic.buyerLeads => const MemberDealMarketplacePage(
     initialView: MemberDashboardView.opportunities,
   ),
@@ -446,8 +454,9 @@ class _FooterInformationPageState extends State<FooterInformationPage> {
               icon: const Icon(Icons.people_outline, size: 18),
               onPressed: () => Navigator.of(context).push(
                 MaterialPageRoute<void>(
-                  builder: (_) =>
-                      const LocalNetworkPage(side: PlatformSide.business),
+                  builder: (_) => const MemberDealMarketplacePage(
+                    initialView: MemberDashboardView.professionals,
+                  ),
                 ),
               ),
               label: _copy(

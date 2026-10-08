@@ -1,3 +1,6 @@
+import '../services/app_tunnel.dart';
+import 'seller_dashboard_page.dart';
+import 'member_deal_marketplace_page.dart';
 import '../widgets/nova_target.dart';
 import '../widgets/nova_training_status.dart';
 import 'buyer_resources_page.dart';
@@ -29,7 +32,6 @@ import 'deal_rooms_page.dart';
 import 'member_deal_marketplace_page.dart';
 import 'member_profile_page.dart';
 import 'acquisition_support_page.dart';
-import 'business_acquisition_page.dart';
 
 const _ink = Color(0xFF171717);
 const _paper = Color(0xFFF4F1EB);
@@ -338,7 +340,13 @@ class _ProfilePageState extends State<ProfilePage> {
                         key: _overviewAnchor,
                         child: NovaTarget(
                           id: 'profile.path',
-                          child: _acquisitionPath(),
+                          child:
+                              AppTunnelController.current.value ==
+                                      AppTunnel.buyer ||
+                                  AppTunnelController.current.value ==
+                                      AppTunnel.landing
+                              ? _acquisitionPath()
+                              : const SizedBox.shrink(),
                         ),
                       ),
                       const SizedBox(height: 24),
@@ -359,7 +367,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       const SiteText(
                         contentKey: 'copy.profile_page.2',
                         literal: true,
-                        'PropertyIQ and DealIQ professionals you select in the Network stay attached to your account.',
+                        'The professionals you select for your team stay attached to your account.',
                         style: TextStyle(color: Color(0xFF666674)),
                       ),
                       const SizedBox(height: 20),
@@ -374,7 +382,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           child: const SiteText(
                             contentKey: 'copy.profile_page.3',
                             literal: true,
-                            'Your team is empty. Open Local Network and add professionals you want to remember.',
+                            'Your team is empty. Add professionals from My team in your dashboard.',
                           ),
                         )
                       else
@@ -426,7 +434,14 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
         const BuyerReadinessPage(),
       ),
-      ('3. Deal screen', deal.isNotEmpty, const BusinessAcquisitionPage()),
+      (
+        '3. Deal screen',
+        deal.isNotEmpty,
+        const DealRoomsPage(
+          initialSide: PlatformSide.business,
+          initialView: BuyerDashboardView.dealScreen,
+        ),
+      ),
       (
         '4. Pipeline',
         _deals.any((room) => room.isBusiness),
@@ -674,7 +689,15 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
             TextButton(
               onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute<void>(builder: (_) => const DealRoomsPage()),
+                MaterialPageRoute<void>(
+                  builder: (_) => switch (AppTunnelController.current.value) {
+                    AppTunnel.seller => const SellerDashboardPage(),
+                    AppTunnel.member => const MemberDealMarketplacePage(),
+                    _ => const DealRoomsPage(
+                      initialSide: PlatformSide.business,
+                    ),
+                  },
+                ),
               ),
               child: const SiteText(
                 contentKey: 'copy.profile_page.6',

@@ -3,6 +3,48 @@ import 'nova_walkthrough.dart';
 /// Explicit page identities are passed by headers; release builds never infer them
 /// from minified widget class names.
 const pebbleMainPageCopy = <String, List<(String, String, String, String?)>>{
+  'seller-posts': [
+    (
+      'create',
+      'Create your listing',
+      'Start a business post with a clear summary, asking price and supported facts. Only posts created by your account appear on this page.',
+      'seller-posts.create',
+    ),
+    (
+      'list',
+      'Follow your posts',
+      'Review listing status and current buyer saves, then edit a post or preview its public listing. Saves are bookmarks; they are not view counts or inquiries.',
+      'seller-posts.list',
+    ),
+  ],
+  'member-pricing': [
+    (
+      'plans',
+      'Compare memberships',
+      'Compare Free, Professional and Featured. Paid prices are not published yet; applying does not start a paid subscription.',
+      'member-pricing.plans',
+    ),
+    (
+      'apply',
+      'Apply when ready',
+      'Choose Apply for membership to sign in and record your preferred workspace. You can return home through the Affinity logo to choose another side of the app.',
+      'member-pricing.plans',
+    ),
+  ],
+  'member-marketing': [
+    (
+      'profile',
+      'Introduce your expertise',
+      'Edit your professional profile with a portrait, service region and a short account of your experience. This is what helps people understand who you can help.',
+      'member-marketing.profile',
+    ),
+    (
+      'practice',
+      'Build relevant relationships',
+      'Match your introductions to the deal and agree on scope. Each team has one professional per role. Honest client reviews and a useful profile build trust over time.',
+      'member-marketing.practice',
+    ),
+  ],
   'resources': [
     (
       'search',

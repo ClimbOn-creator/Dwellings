@@ -1,4 +1,7 @@
 import '../screens/transaction_rooms_page.dart';
+import '../services/app_tunnel.dart';
+import '../screens/tunnel_pages.dart';
+import '../screens/member_deal_marketplace_page.dart';
 import 'nova_page_resolver.dart';
 import 'nova_character.dart';
 import 'calculator_help_sidebar.dart';
@@ -14,27 +17,53 @@ import '../models/platform_side.dart';
 import '../services/account_service.dart';
 import '../services/backend_service.dart';
 import '../services/site_content_service.dart';
-import '../screens/acquisition_support_page.dart';
-import '../screens/assistant_workspace_page.dart';
 import '../screens/auth_page.dart';
 import '../screens/profile_page.dart';
 import '../screens/content_studio_page.dart';
-import '../screens/deal_comparison_page.dart';
 import '../screens/notification_center_page.dart';
 import '../services/member_beta_service.dart';
 import 'profile_photo.dart';
 
 enum AppNavigationDestination {
-  overview,
   resources,
   sellerDashboard,
-  dealComparison,
   buyerDashboard,
   transactionRoom,
   memberStudio,
-  consulting,
   profile,
+  businessesForSale,
+  sellerPosts,
+  memberPricing,
+  memberMarketing,
 }
+
+List<AppNavigationDestination> destinationsForTunnel(AppTunnel tunnel) =>
+    switch (tunnel) {
+      AppTunnel.landing => [
+        AppNavigationDestination.buyerDashboard,
+        AppNavigationDestination.sellerDashboard,
+        AppNavigationDestination.memberStudio,
+      ],
+      AppTunnel.buyer => [
+        AppNavigationDestination.buyerDashboard,
+        AppNavigationDestination.resources,
+        AppNavigationDestination.profile,
+        AppNavigationDestination.transactionRoom,
+        AppNavigationDestination.businessesForSale,
+      ],
+      AppTunnel.seller => [
+        AppNavigationDestination.sellerDashboard,
+        AppNavigationDestination.transactionRoom,
+        AppNavigationDestination.sellerPosts,
+        AppNavigationDestination.profile,
+      ],
+      AppTunnel.member => [
+        AppNavigationDestination.memberPricing,
+        AppNavigationDestination.memberStudio,
+        AppNavigationDestination.profile,
+        AppNavigationDestination.memberMarketing,
+      ],
+    };
 
 class AppNavigationMenu extends StatefulWidget {
   const AppNavigationMenu({
@@ -68,40 +97,60 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
   String _label(AppNavigationDestination destination) => switch (destination) {
     AppNavigationDestination.resources => 'Resources',
     AppNavigationDestination.sellerDashboard => 'Seller dashboard',
-    AppNavigationDestination.overview => 'Acquisition workspace',
     AppNavigationDestination.buyerDashboard => 'Buyer dashboard',
     AppNavigationDestination.transactionRoom => 'Transaction Room',
-    AppNavigationDestination.dealComparison => 'Deal comparison quiz',
-    AppNavigationDestination.memberStudio => 'Professional Member Studio',
-    AppNavigationDestination.consulting => 'Personal consulting',
+    AppNavigationDestination.memberStudio => 'Member dashboard',
+    AppNavigationDestination.businessesForSale => 'Businesses for sale',
+    AppNavigationDestination.sellerPosts => 'My posts & analytics',
+    AppNavigationDestination.memberPricing => 'Pricing',
+    AppNavigationDestination.memberMarketing => 'Marketing',
     AppNavigationDestination.profile => 'My profile',
   };
 
-  Widget _page(
-    BuildContext context,
-    AppNavigationDestination destination,
-  ) => switch (destination) {
-    AppNavigationDestination.resources => const BuyerResourcesPage(),
-    AppNavigationDestination.sellerDashboard => const SellerDashboardPage(),
-    AppNavigationDestination.overview => const AcquisitionSupportPage(),
-    AppNavigationDestination.buyerDashboard => const DealRoomsPage(
-      initialSide: PlatformSide.business,
-    ),
-    AppNavigationDestination.transactionRoom => const TransactionRoomsPage(),
-    AppNavigationDestination.dealComparison => const DealComparisonPage(),
-    AppNavigationDestination.memberStudio => const MemberStudioPage(),
-    AppNavigationDestination.consulting => const PersonalizedConsultingPage(),
-    AppNavigationDestination.profile =>
-      BackendService.user == null
-          ? AuthPage(
-              onAuthenticated: () => Navigator.of(context).pushReplacement(
-                MaterialPageRoute<void>(builder: (_) => const ProfilePage()),
-              ),
-            )
-          : const ProfilePage(),
-  };
+  Widget _page(BuildContext context, AppNavigationDestination destination) =>
+      switch (destination) {
+        AppNavigationDestination.resources => const BuyerResourcesPage(),
+        AppNavigationDestination.sellerDashboard => const SellerDashboardPage(),
+        AppNavigationDestination.buyerDashboard => const DealRoomsPage(
+          initialSide: PlatformSide.business,
+        ),
+        AppNavigationDestination.transactionRoom => TransactionRoomsPage(
+          seller: AppTunnelController.current.value == AppTunnel.seller,
+        ),
+        AppNavigationDestination.businessesForSale =>
+          const BusinessSaleBulletinPage(),
+        AppNavigationDestination.sellerPosts => const SellerPostsPage(),
+        AppNavigationDestination.memberPricing => const MemberPricingPage(),
+        AppNavigationDestination.memberMarketing => const MemberMarketingPage(),
+        AppNavigationDestination.memberStudio =>
+          const MemberDealMarketplacePage(),
+        AppNavigationDestination.profile =>
+          BackendService.user == null
+              ? AuthPage(
+                  onAuthenticated: () => Navigator.of(context).pushReplacement(
+                    MaterialPageRoute<void>(builder: (_) => _profilePage()),
+                  ),
+                )
+              : _profilePage(),
+      };
+
+  Widget _profilePage() => AppTunnelController.current.value == AppTunnel.member
+      ? const MemberDealMarketplacePage(
+          initialView: MemberDashboardView.profile,
+        )
+      : const ProfilePage();
 
   void _open(BuildContext context, AppNavigationDestination destination) {
+    if (widget.guidePage == 'landing' ||
+        AppTunnelController.current.value == AppTunnel.landing) {
+      final tunnel = switch (destination) {
+        AppNavigationDestination.buyerDashboard => AppTunnel.buyer,
+        AppNavigationDestination.sellerDashboard => AppTunnel.seller,
+        AppNavigationDestination.memberStudio => AppTunnel.member,
+        _ => AppTunnel.landing,
+      };
+      AppTunnelController.select(tunnel);
+    }
     Navigator.of(context).push(
       MaterialPageRoute<void>(builder: (_) => _page(context, destination)),
     );
@@ -219,9 +268,11 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
           offset: const Offset(0, 44),
           onSelected: (destination) => _open(context, destination),
           itemBuilder: (_) => [
-            for (final destination in AppNavigationDestination.values) ...[
-              if (destination == AppNavigationDestination.memberStudio)
-                const PopupMenuDivider(),
+            for (final destination in destinationsForTunnel(
+              widget.guidePage == 'landing'
+                  ? AppTunnel.landing
+                  : AppTunnelController.current.value,
+            )) ...[
               PopupMenuItem(
                 value: destination,
                 height: 43,

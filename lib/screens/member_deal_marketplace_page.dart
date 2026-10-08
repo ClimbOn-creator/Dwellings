@@ -1,3 +1,4 @@
+import '../services/app_tunnel.dart';
 import '../widgets/nova_target.dart';
 import '../widgets/nova_panel.dart';
 import '../services/nova_service.dart';
@@ -279,7 +280,11 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
           await Navigator.of(context).push(
             MaterialPageRoute<void>(
               builder: (_) =>
-                  const DealRoomsPage(initialSide: PlatformSide.business),
+                  AppTunnelController.current.value == AppTunnel.buyer
+                  ? const DealRoomsPage(initialSide: PlatformSide.business)
+                  : const MemberDealMarketplacePage(
+                      initialView: MemberDashboardView.profile,
+                    ),
             ),
           );
         }

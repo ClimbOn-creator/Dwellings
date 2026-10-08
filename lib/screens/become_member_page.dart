@@ -23,12 +23,14 @@ class BecomeMemberPage extends StatefulWidget {
   const BecomeMemberPage({
     super.key,
     this.initialType = MemberType.homebuyer,
+    this.initialTier = 'free',
     required this.onHome,
     required this.onAbout,
     required this.onTeam,
   });
 
   final MemberType initialType;
+  final String initialTier;
   final VoidCallback onHome;
   final VoidCallback onAbout;
   final VoidCallback onTeam;
@@ -58,7 +60,7 @@ class _BecomeMemberPageState extends State<BecomeMemberPage> {
   bool _professionalAttestation = false;
   bool _submitting = false;
   bool _complete = false;
-  String _requestedTier = 'free';
+  late String _requestedTier = widget.initialTier;
 
   static const _professionalSpecialties = [
     'Residential',

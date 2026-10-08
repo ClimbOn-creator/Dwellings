@@ -22,9 +22,6 @@ import '../widgets/fixed_editorial_background.dart';
 import 'acquisition_support_page.dart';
 import 'auth_page.dart';
 import 'deal_rooms_page.dart';
-import 'platform_hub_page.dart';
-import 'landing_screen.dart';
-import 'local_network_page.dart';
 
 const _ink = Color(0xFF171717);
 const _paper = Color(0xFFF4F1EB);
@@ -245,24 +242,22 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
     if (await Navigator.of(context).maybePop()) return;
     if (!mounted) return;
     await Navigator.of(context).pushReplacement(
-      MaterialPageRoute<void>(builder: (_) => const LandingScreen()),
+      MaterialPageRoute<void>(builder: (_) => const AcquisitionSupportPage()),
     );
   }
 
   void _openSide(PlatformSide side) {
     if (side == PlatformSide.business) return;
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute<void>(
-        builder: (_) => const PlatformHubPage(side: PlatformSide.property),
-      ),
+      MaterialPageRoute<void>(builder: (_) => const AcquisitionSupportPage()),
     );
   }
 
   void _openNetwork() => Navigator.of(context).push(
     MaterialPageRoute<void>(
-      builder: (_) => LocalNetworkPage(
-        side: PlatformSide.business,
-        initialCity: _selectedCity,
+      builder: (_) => const DealRoomsPage(
+        initialSide: PlatformSide.business,
+        initialView: BuyerDashboardView.team,
       ),
     ),
   );

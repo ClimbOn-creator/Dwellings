@@ -1,3 +1,4 @@
+import 'package:dwelling_iq/services/app_tunnel.dart';
 import 'package:dwelling_iq/screens/acquisition_support_page.dart';
 import 'package:dwelling_iq/screens/buyer_resources_page.dart';
 import 'package:dwelling_iq/screens/transaction_rooms_page.dart';
@@ -11,7 +12,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
-  setUp(() => SharedPreferences.setMockInitialValues({}));
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+    AppTunnelController.select(AppTunnel.buyer);
+  });
   testWidgets('landing has no Pebble button or automatic introduction', (
     tester,
   ) async {

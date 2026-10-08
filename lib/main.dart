@@ -1,4 +1,7 @@
 import 'screens/transaction_rooms_page.dart';
+import 'screens/tunnel_pages.dart';
+import 'screens/buyer_resources_page.dart';
+import 'services/app_tunnel.dart';
 import 'widgets/calculator_help_sidebar.dart';
 import 'widgets/nova_training_host.dart';
 import 'models/footer_page_content.dart';
@@ -15,8 +18,6 @@ import 'models/platform_side.dart';
 import 'screens/deal_rooms_page.dart';
 import 'screens/seller_dashboard_page.dart';
 import 'screens/deal_comparison_page.dart';
-import 'screens/business_acquisition_page.dart';
-import 'screens/local_network_page.dart';
 import 'screens/member_deal_marketplace_page.dart';
 import 'screens/content_studio_page.dart';
 import 'screens/notification_center_page.dart';
@@ -122,17 +123,24 @@ class AffinityApp extends StatelessWidget {
 
   Widget _initialPage() {
     final module = Uri.base.queryParameters['module'];
+    AppTunnelController.select(AppTunnelController.forModule(module));
     final footerTopic = FooterTopic.fromModule(module);
     if (footerTopic != null) return footerDestination(footerTopic);
-    final side = Uri.base.queryParameters['side'] == 'business'
-        ? PlatformSide.business
-        : PlatformSide.property;
+
     return switch (module) {
       'business' => const AcquisitionSupportPage(),
       'property' => const AcquisitionSupportPage(),
-      'business-calculator' => const BusinessAcquisitionPage(),
+      'business-calculator' => const DealRoomsPage(
+        initialSide: PlatformSide.business,
+        initialView: BuyerDashboardView.dealScreen,
+      ),
       'property-calculator' => const AcquisitionSupportPage(),
-      'network' => LocalNetworkPage(side: side),
+      'network' => const AcquisitionSupportPage(),
+      'resources' => const BuyerResourcesPage(),
+      'seller-posts' => const SellerPostsPage(),
+      'member-pricing' => const MemberPricingPage(),
+      'member-marketing' => const MemberMarketingPage(),
+      'seller-transaction-room' => const TransactionRoomsPage(seller: true),
       'document-guides' => const TransactionLearningPage(),
       'transaction-room' => const TransactionRoomsPage(),
       'buyer-learning' => const AcquisitionBlueprintPage(),
@@ -147,12 +155,13 @@ class AffinityApp extends StatelessWidget {
         initialSide: PlatformSide.business,
       ),
       'seller-dashboard' ||
-      'succession-transfer' ||
-      'spot-mistake' => const SellerDashboardPage(),
+      'succession-transfer' => const SellerDashboardPage(),
       'deal-rooms' => const DealRoomsPage(initialSide: PlatformSide.business),
       'deal-comparison' => const DealComparisonPage(),
-      'bulletin-board' => const BusinessSaleBulletinPage(),
-      'member-studio' => const MemberDealMarketplacePage(),
+      'bulletin-board' ||
+      'businesses-for-sale' => const BusinessSaleBulletinPage(),
+      'member-studio' ||
+      'member-dashboard' => const MemberDealMarketplacePage(),
       'personal-consulting' => const PersonalizedConsultingPage(),
       'content-studio' => const ContentStudioPage(),
       'notifications' => const NotificationCenterPage(),

@@ -5,6 +5,8 @@ import '../models/footer_page_content.dart';
 import '../screens/footer_information_page.dart';
 import 'auth_button.dart';
 import 'brand_logo.dart';
+import 'home_brand_button.dart';
+import '../services/app_tunnel.dart';
 
 /// Full-width site footer. The historical class name is retained so every
 /// existing screen receives the new footer without route-by-route migration.
@@ -15,20 +17,23 @@ class MembershipFooter extends StatelessWidget {
   Widget build(BuildContext context) {
     final viewport = MediaQuery.sizeOf(context).width;
     final compact = viewport < 1000;
-    final columns = const [
-      _FooterColumn(
-        title: 'ACQUISITION PATH',
-        items: [
-          FooterTopic.blueprint,
-          FooterTopic.readiness,
-          FooterTopic.dealScreen,
-          FooterTopic.pipeline,
-        ],
-      ),
-      _FooterColumn(
-        title: 'PROFESSIONALS',
-        items: [FooterTopic.memberStudio, FooterTopic.consulting],
-      ),
+    final tunnel = AppTunnelController.current.value;
+    final columns = [
+      if (tunnel == AppTunnel.landing || tunnel == AppTunnel.buyer)
+        _FooterColumn(
+          title: 'ACQUISITION PATH',
+          items: [
+            FooterTopic.blueprint,
+            FooterTopic.readiness,
+            FooterTopic.dealScreen,
+            FooterTopic.pipeline,
+          ],
+        ),
+      if (tunnel == AppTunnel.landing || tunnel == AppTunnel.member)
+        _FooterColumn(
+          title: 'PROFESSIONALS',
+          items: [FooterTopic.memberStudio, FooterTopic.consulting],
+        ),
       _FooterColumn(
         title: 'AFFINITY',
         items: [
@@ -110,10 +115,13 @@ class _FooterIdentity extends StatelessWidget {
   const _FooterIdentity();
 
   @override
-  Widget build(BuildContext context) => const Column(
+  Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      AffinityFooterLogo(width: 300),
+      InkWell(
+        onTap: () => HomeBrandButton.open(context),
+        child: const AffinityFooterLogo(width: 300),
+      ),
       SizedBox(height: 24),
       SizedBox(
         width: 300,
