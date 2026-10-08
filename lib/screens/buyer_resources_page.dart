@@ -1,3 +1,4 @@
+import '../widgets/home_brand_button.dart';
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
@@ -135,8 +136,15 @@ class BuyerResourcesPage extends StatelessWidget {
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: const Color(0xFFF8FBFD),
     appBar: AppBar(
-      title: const Text('Resources'),
-      actions: const [AppNavigationMenu(dark: false)],
+      automaticallyImplyLeading: false,
+      toolbarHeight: 82,
+      backgroundColor: const Color(0xFFF7F8F4),
+      surfaceTintColor: Colors.transparent,
+      title: const HomeBrandButton(size: 66, dark: false),
+      actions: const [
+        AppNavigationMenu(guidePage: 'resources', dark: false),
+        SizedBox(width: 12),
+      ],
     ),
     body: const SingleChildScrollView(
       padding: EdgeInsets.all(24),

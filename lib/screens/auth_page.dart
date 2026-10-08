@@ -128,12 +128,15 @@ class _AuthPageState extends State<AuthPage> {
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: _paper,
     appBar: AppBar(
-      toolbarHeight: 78,
+      toolbarHeight: 82,
       automaticallyImplyLeading: false,
-      backgroundColor: const Color(0xFFF7F5F0),
+      backgroundColor: const Color(0xFFF7F8F4),
       surfaceTintColor: Colors.transparent,
-      title: const HomeBrandButton(size: 58, dark: false),
-      actions: const [AppNavigationMenu(dark: false), SizedBox(width: 12)],
+      title: const HomeBrandButton(size: 66, dark: false),
+      actions: const [
+        AppNavigationMenu(guidePage: 'auth', dark: false),
+        SizedBox(width: 12),
+      ],
     ),
     body: Stack(
       fit: StackFit.expand,

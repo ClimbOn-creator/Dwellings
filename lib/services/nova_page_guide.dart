@@ -81,6 +81,10 @@ List<NovaStep> novaPageWalkthrough(String page) {
   }
   if (steps.isEmpty) {
     final copy = const {
+      'transaction-rooms': (
+        'Your transaction rooms',
+        'Open a saved deal to work on its financials, documents, team and transaction plan. If you do not have a deal yet, start a private deal from your dashboard. Each room keeps its own deal information together.',
+      ),
       'resources': (
         'Government programs',
         'Search or filter the government and community programs on this page. Review location, eligible uses and application timing, then open the program’s official information.',

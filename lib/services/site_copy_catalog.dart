@@ -1,6 +1,18 @@
 // These IDs are permanent. Rewrite the fallback VALUE while retaining its ID.
 // Never regenerate or renumber this registry during a redesign.
 const siteCopyCatalog = <String, String>{
+  'nova.training.pebble-page-transaction-rooms.title': 'Your transaction rooms',
+  'nova.training.pebble-page-transaction-rooms.body':
+      'Open a saved deal to work on its financials, documents, team and transaction plan. If you do not have a deal yet, start a private deal from your dashboard. Each room keeps its own deal information together.',
+  'transaction.rooms.title': 'Transaction rooms',
+  'transaction.rooms.intro':
+      'Choose a deal to work on its documents, financials, team and transaction plan.',
+  'transaction.rooms.empty': 'Your deal rooms will appear here',
+  'transaction.rooms.start': 'Open buyer dashboard',
+  'transaction.rooms.signin': 'Sign in to see your transaction rooms',
+  'transaction.rooms.error':
+      'Could not load your transaction rooms. Please try again.',
+  'transaction.rooms.retry': 'Try again',
   'nova.training.pebble-page-finish.title': "That’s this page.",
   'nova.training.pebble-page-finish.body':
       "You can continue here, or request Pebble from the header whenever you need this page’s guide again.",

@@ -159,7 +159,11 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
                 () => startBuyerLearning(context),
               ),
             const SizedBox(width: 8),
-            const AppNavigationMenu(side: PlatformSide.business, dark: false),
+            const AppNavigationMenu(
+              guidePage: 'landing',
+              side: PlatformSide.business,
+              dark: false,
+            ),
             const SizedBox(width: 12),
           ],
         ),

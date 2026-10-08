@@ -15,3 +15,5 @@ Pebble is a click-through product guide using the supplied transparent character
 ## Verification
 
 Run the full Flutter suite and the owner-content persistence suite documented in README. The Pebble tests cover page-only completion, staying on the same route, account state, sidebar explanations, field switching and preservation of entered figures. The existing motion tests verify that animations stay enabled with no toggle while editing remains stable.
+
+The landing page has no Pebble entrypoint or automatic introduction. Pebble is requested through page headers, not the navigation dropdown. The Transaction Room navigation entry opens the dedicated saved-room list; opening a deal enters its actual private room. Main Resources, comparison, profile and consulting pages retain the Affinity header.

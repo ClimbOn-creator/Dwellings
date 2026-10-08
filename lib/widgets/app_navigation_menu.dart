@@ -1,3 +1,4 @@
+import '../screens/transaction_rooms_page.dart';
 import 'nova_page_resolver.dart';
 import 'nova_character.dart';
 import 'calculator_help_sidebar.dart';
@@ -24,7 +25,6 @@ import '../services/member_beta_service.dart';
 import 'profile_photo.dart';
 
 enum AppNavigationDestination {
-  novaWalkthrough,
   overview,
   resources,
   sellerDashboard,
@@ -66,7 +66,6 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
   }
 
   String _label(AppNavigationDestination destination) => switch (destination) {
-    AppNavigationDestination.novaWalkthrough => 'Pebble walkthrough',
     AppNavigationDestination.resources => 'Resources',
     AppNavigationDestination.sellerDashboard => 'Seller dashboard',
     AppNavigationDestination.overview => 'Acquisition workspace',
@@ -82,16 +81,13 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
     BuildContext context,
     AppNavigationDestination destination,
   ) => switch (destination) {
-    AppNavigationDestination.novaWalkthrough => const SizedBox.shrink(),
     AppNavigationDestination.resources => const BuyerResourcesPage(),
     AppNavigationDestination.sellerDashboard => const SellerDashboardPage(),
     AppNavigationDestination.overview => const AcquisitionSupportPage(),
     AppNavigationDestination.buyerDashboard => const DealRoomsPage(
       initialSide: PlatformSide.business,
     ),
-    AppNavigationDestination.transactionRoom => const DealRoomsPage(
-      initialSide: PlatformSide.business,
-    ),
+    AppNavigationDestination.transactionRoom => const TransactionRoomsPage(),
     AppNavigationDestination.dealComparison => const DealComparisonPage(),
     AppNavigationDestination.memberStudio => const MemberStudioPage(),
     AppNavigationDestination.consulting => const PersonalizedConsultingPage(),
@@ -106,10 +102,6 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
   };
 
   void _open(BuildContext context, AppNavigationDestination destination) {
-    if (destination == AppNavigationDestination.novaWalkthrough) {
-      _showPebble();
-      return;
-    }
     Navigator.of(context).push(
       MaterialPageRoute<void>(builder: (_) => _page(context, destination)),
     );
@@ -136,12 +128,13 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        IconButton(
-          key: const Key('pebble_page_help'),
-          tooltip: 'Pebble · guide to this page',
-          onPressed: _showPebble,
-          icon: const NovaCharacter(size: 32),
-        ),
+        if (_guidePage() != 'landing')
+          IconButton(
+            key: const Key('pebble_page_help'),
+            tooltip: 'Pebble · guide to this page',
+            onPressed: _showPebble,
+            icon: const NovaCharacter(size: 32),
+          ),
         FutureBuilder<bool>(
           future: SiteContentService.canEdit(),
           builder: (context, snapshot) => snapshot.data == true

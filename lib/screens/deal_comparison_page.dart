@@ -195,11 +195,15 @@ class _DealComparisonPageState extends State<BusinessComparisonQuiz>
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: const Color(0xFFE7F0FF),
     appBar: AppBar(
-      toolbarHeight: 76,
-      backgroundColor: Colors.white,
+      automaticallyImplyLeading: false,
+      toolbarHeight: 82,
+      backgroundColor: const Color(0xFFF7F8F4),
       surfaceTintColor: Colors.transparent,
-      title: const HomeBrandButton(size: 50, dark: false),
-      actions: const [AppNavigationMenu(dark: false), SizedBox(width: 12)],
+      title: const HomeBrandButton(size: 66, dark: false),
+      actions: const [
+        AppNavigationMenu(guidePage: 'comparison', dark: false),
+        SizedBox(width: 12),
+      ],
     ),
     body: _loading
         ? const Center(child: CircularProgressIndicator(color: _green))

@@ -1,3 +1,4 @@
+import 'screens/transaction_rooms_page.dart';
 import 'widgets/calculator_help_sidebar.dart';
 import 'widgets/nova_training_host.dart';
 import 'models/footer_page_content.dart';
@@ -134,9 +135,7 @@ class AffinityApp extends StatelessWidget {
       'property-calculator' => const AcquisitionSupportPage(),
       'network' => LocalNetworkPage(side: side),
       'document-guides' => const TransactionLearningPage(),
-      'transaction-room' => const DealRoomsPage(
-        initialSide: PlatformSide.business,
-      ),
+      'transaction-room' => const TransactionRoomsPage(),
       'buyer-learning' => const AcquisitionBlueprintPage(),
       'seller-learning' => const SellerDashboardPage(
         initialView: SellerDashboardView.plan,

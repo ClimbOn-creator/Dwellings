@@ -20,6 +20,7 @@ String novaGuidePageFor(BuildContext context) {
         'DealComparisonPage': 'comparison',
         'BusinessSaleBulletinPage': 'listings',
         'ProfilePage': 'profile',
+        'TransactionRoomsPage': 'transaction-rooms',
         'MemberProfilePage': 'member-profile',
         'AuthPage': 'auth',
         'BecomeMemberPage': 'membership',

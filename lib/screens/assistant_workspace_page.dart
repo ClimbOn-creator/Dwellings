@@ -807,14 +807,18 @@ class _PersonalizedConsultingPageState
           SliverAppBar(
             pinned: true,
             automaticallyImplyLeading: false,
-            toolbarHeight: 78,
+            toolbarHeight: 82,
             elevation: 0,
             scrolledUnderElevation: 0,
             backgroundColor: _cream,
             surfaceTintColor: Colors.transparent,
-            title: const HomeBrandButton(size: 48, dark: false),
+            title: const HomeBrandButton(size: 66, dark: false),
             actions: [
-              const AppNavigationMenu(side: PlatformSide.business, dark: false),
+              const AppNavigationMenu(
+                guidePage: 'consulting',
+                side: PlatformSide.business,
+                dark: false,
+              ),
               const SizedBox(width: 12),
             ],
           ),

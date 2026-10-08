@@ -258,14 +258,15 @@ class _ProfilePageState extends State<ProfilePage> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        toolbarHeight: 78,
-        backgroundColor: Colors.white,
+        automaticallyImplyLeading: false,
+        toolbarHeight: 82,
+        backgroundColor: const Color(0xFFF7F8F4),
         surfaceTintColor: Colors.transparent,
         foregroundColor: _ink,
-        title: const HomeBrandButton(size: 58, dark: false),
+        title: const HomeBrandButton(size: 66, dark: false),
         actions: [
           toggle,
-          const AppNavigationMenu(dark: false),
+          const AppNavigationMenu(guidePage: 'profile', dark: false),
           const SizedBox(width: 12),
         ],
       ),
