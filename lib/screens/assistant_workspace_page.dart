@@ -382,43 +382,10 @@ class _PersonalizedConsultingPageState
   static const _sage = Color(0xFFEAF0EC);
 
   final _scrollController = ScrollController();
-  late bool _motionEnabled;
-  bool _explicitMotion = false;
-
-  bool _motionActive(BuildContext context) =>
-      _motionEnabled &&
-      (_explicitMotion || !MediaQuery.disableAnimationsOf(context));
-
-  @override
-  void initState() {
-    super.initState();
-    _motionEnabled = true;
-    SharedPreferences.getInstance().then((preferences) {
-      final saved = preferences.getBool('affinity.consulting.motion');
-      if (mounted && saved != null) {
-        setState(() {
-          _motionEnabled = saved;
-          _explicitMotion = true;
-        });
-      }
-    });
-  }
-
   @override
   void dispose() {
     _scrollController.dispose();
     super.dispose();
-  }
-
-  Future<void> _setMotion(bool value) async {
-    setState(() {
-      _motionEnabled = value;
-      _explicitMotion = true;
-    });
-    await (await SharedPreferences.getInstance()).setBool(
-      'affinity.consulting.motion',
-      value,
-    );
   }
 
   Future<void> _book(BuildContext context) async {
@@ -831,9 +798,7 @@ class _PersonalizedConsultingPageState
 
   @override
   Widget build(BuildContext context) => MediaQuery(
-    data: MediaQuery.of(
-      context,
-    ).copyWith(disableAnimations: !_motionActive(context)),
+    data: MediaQuery.of(context).copyWith(disableAnimations: false),
     child: Scaffold(
       backgroundColor: _cream,
       body: CustomScrollView(
@@ -849,18 +814,6 @@ class _PersonalizedConsultingPageState
             surfaceTintColor: Colors.transparent,
             title: const HomeBrandButton(size: 48, dark: false),
             actions: [
-              IconButton(
-                tooltip: _motionActive(context)
-                    ? 'Pause parallax'
-                    : 'Enable parallax',
-                onPressed: () => _setMotion(!_motionActive(context)),
-                icon: Icon(
-                  _motionActive(context)
-                      ? Icons.pause_circle_outline
-                      : Icons.play_circle_outline,
-                  color: _forest,
-                ),
-              ),
               const AppNavigationMenu(side: PlatformSide.business, dark: false),
               const SizedBox(width: 12),
             ],

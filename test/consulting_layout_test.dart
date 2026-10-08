@@ -32,9 +32,8 @@ void main() {
       await tester.pumpAndSettle();
       expect(calendar, findsOneWidget);
       expect(tester.takeException(), isNull);
-      await tester.tap(find.byTooltip('Pause parallax'));
-      await tester.pumpAndSettle();
-      expect(find.byTooltip('Enable parallax'), findsOneWidget);
+      expect(find.byTooltip('Pause parallax'), findsNothing);
+      expect(find.byTooltip('Enable parallax'), findsNothing);
     });
   }
   testWidgets('consulting booking retains date picker and time selection', (
@@ -54,7 +53,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
   testWidgets(
-    'consulting enable overrides reduced motion and visibly moves photos',
+    'consulting motion stays enabled and editing still stabilizes photos',
     (tester) async {
       SharedPreferences.setMockInitialValues({});
       tester.view.physicalSize = const Size(1440, 900);
@@ -70,7 +69,7 @@ void main() {
       );
       await tester.pumpWidget(page());
       await tester.pumpAndSettle();
-      expect(find.byTooltip('Enable parallax'), findsOneWidget);
+      expect(find.byTooltip('Enable parallax'), findsNothing);
       final photo = find.byWidgetPredicate(
         (w) =>
             w is SiteParallaxImage &&
@@ -86,9 +85,6 @@ void main() {
         return image.getTransformTo(flow).storage[13];
       }
 
-      expect(translation(), -160);
-      await tester.tap(find.byTooltip('Enable parallax'));
-      await tester.pumpAndSettle();
       final start = translation();
       final scroll = tester
           .widget<CustomScrollView>(find.byType(CustomScrollView))
@@ -101,15 +97,11 @@ void main() {
       expect(translation(), -160);
       SiteContentService.editing.value = false;
       await tester.pump();
-      await tester.tap(find.byTooltip('Pause parallax'));
-      await tester.pumpAndSettle();
-      scroll.jumpTo(80);
-      await tester.pump();
-      expect(translation(), -160);
+      expect(find.byTooltip('Pause parallax'), findsNothing);
       await tester.pumpWidget(const SizedBox());
       await tester.pumpWidget(page());
       await tester.pumpAndSettle();
-      expect(find.byTooltip('Enable parallax'), findsOneWidget);
+      expect(find.byTooltip('Enable parallax'), findsNothing);
       expect(tester.takeException(), isNull);
     },
   );

@@ -1,20 +1,17 @@
-# Pebble app walkthrough
+# Pebble page guides
 
-Pebble is now a deterministic, click-through product guide using the supplied transparent character atlas. There is no chat composer, question input, AI provider, private financial analysis or API-key requirement. The former `/api/nova` chat endpoint returns 410 and never reads request context or calls an external provider. Its old usage-counter migration remains in history but is not needed for this guide.
+Pebble is a click-through product guide using the supplied transparent character atlas. There is no chat composer or AI provider. The retired `/api/nova` endpoint returns 410.
 
 ## Behaviour
 
-- On first app load Pebble introduces the guide. Visitors can choose Buying, Selling / succession, or Professional member using buttons.
-- Pebble floats beside the highlighted element with transparent character artwork outside a speech bubble. He hops and moves between targets; reduced motion removes these transitions. Next and Back navigate real app screens, preserving the page while moving between its targets. Offscreen inputs and horizontal pipeline columns are scrolled into view automatically. The guide includes each dashboard metric, search, starting a deal or transfer, all four pipeline stages and personal team. The buyer guide explains every one of the 37 inputs across business value, asset value and commercial property; the seller guide explains all 14 inputs across business value, assets and cash at closing. Each calculator has a results explanation. Input examples are only in Pebble’s copy and do not prefill or change the user’s figures. The rest of the guide covers the plan, government programs, transaction room, documents, privacy, Blueprint, readiness, document guides and consulting/calendar.
-- The transaction room used for training is explicitly fictional. Its bundle is supplied locally; no example is inserted into Supabase. It does not change the real recent-deal preference. While the tour is open, the underlying app is read-only, preventing accidental edits, bookings, document actions or messages.
-- Only Finish training marks completion. Closing or Later pauses the guide and keeps the saved step. Replay does not erase earlier completion.
-- For signed-in accounts, the private account profile metadata `nova_training` stores version, role, step and completion timestamp through the existing Supabase Auth user endpoint, using that account’s captured token. This needs no new database columns or migration. All other profile data is left intact.
-- Guest progress stays on this device. Account-scoped local caches are separate. Failed profile synchronization preserves completion locally and retries on a later load; the profile training card distinguishes a confirmed profile save from pending sync.
-- A completed account does not get an automatic introduction on another device. Pebble can be requested again via Pebble walkthrough in the menu, Show me around with Pebble on the pages, or Replay app training on My profile.
-- All six moods render directly from the original transparent atlas: welcome, studying, planning, curious, reassuring and celebrating. The supplied PNG is copied unchanged. Pose transitions respect reduced motion; no looping animation is required to use the tour.
+- The Pebble character button is in the shared page header. It explains the current page and selected dashboard view only, without pushing or replacing routes. Next, Back and Done stay on that page. Inline replay controls are retired.
+- The first visit introduces the current page. Completing that automatic introduction saves completion to the existing private profile metadata `nova_training`; previously completed accounts stay completed. Completing a first page guide records completion. Replaying a page on an already completed account preserves its saved training progress.
+- Calculator guides are short overviews. Clicking any blue info button opens the right-side Calculator guide with a definition, calculation method, example and source records. All 37 buyer fields and 14 seller fields are covered. The guide uses static examples and never changes entered figures. It closes when changing routes or starting Pebble.
+- Pebble still moves beside highlighted content. The page is dimmed more strongly, with a gentle tint over the target and a softer speech bubble. Offscreen targets are brought into view.
+- Motion switches have been removed from landing, consulting, personal pages, listings and the comparison quiz. Old off preferences no longer disable those pages. Editing still stabilizes moving content for reliable owner edits.
+- Training storage keys, artwork paths and existing permanent content IDs retain their original names for compatibility. Published owner edits continue to override bundled fallbacks. No migration or AI key is needed.
+- Guest completion stays on the device. Signed-in completion uses account-scoped caches and the private Supabase Auth user metadata; failed saves retain the local completion for retry.
 
 ## Verification
 
-`flutter test --no-pub test/nova_panel_test.dart` covers first-load welcome, completion across devices, account switching during a save, offline retry, pause/resume, replay, mobile/desktop navigation, all moods and safe fictional room views. `node --test tool/nova_api_test.mjs` verifies the old chat endpoint cannot read private context or call a provider. Run the full Flutter and content-persistence suites before deployment.
-
-Metadata API reference: https://supabase.com/docs/reference/dart/auth-updateuser
+Run the full Flutter suite and the owner-content persistence suite documented in README. The Pebble tests cover page-only completion, staying on the same route, account state, sidebar explanations, field switching and preservation of entered figures. The existing motion tests verify that animations stay enabled with no toggle while editing remains stable.

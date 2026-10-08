@@ -1,3 +1,4 @@
+import '../widgets/calculator_help_sidebar.dart';
 import '../widgets/nova_target.dart';
 import '../widgets/nova_panel.dart';
 import '../services/nova_service.dart';
@@ -335,8 +336,13 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
                   ),
                 ],
               ),
-        actions: const [
-          AppNavigationMenu(side: PlatformSide.business, dark: false),
+        actions: [
+          AppNavigationMenu(
+            side: PlatformSide.business,
+            dark: false,
+            guidePage:
+                'seller/${_view == SellerDashboardView.overview ? 'home' : _view.name}',
+          ),
           SizedBox(width: 12),
         ],
       ),
@@ -1532,53 +1538,61 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
     ],
   );
 
-  Widget _numberField(String key, String label, String example, String help) =>
-      NovaTarget(
-        id: 'seller.calc.$key',
-        child: Padding(
-          padding: const EdgeInsets.only(bottom: 13),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _numberField(
+    String key,
+    String label,
+    String example,
+    String help,
+  ) => NovaTarget(
+    id: 'seller.calc.$key',
+    child: Padding(
+      padding: const EdgeInsets.only(bottom: 13),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
-              Row(
-                children: [
-                  Flexible(
-                    child: Text(
-                      label,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
+              Flexible(
+                child: Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
                   ),
-                  const SizedBox(width: 5),
-                  Tooltip(
-                    message: help,
-                    child: const Icon(
-                      Icons.info_rounded,
-                      size: 17,
-                      color: Color(0xFF0AA9F4),
-                    ),
-                  ),
-                ],
+                ),
               ),
-              const SizedBox(height: 6),
-              TextField(
-                key: Key('seller_$key'),
-                controller: _numberController(key),
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
+              const SizedBox(width: 5),
+              IconButton(
+                key: Key('info_seller_$key'),
+                tooltip: 'About $label',
+                constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                padding: EdgeInsets.zero,
+                onPressed: () => CalculatorHelpController.instance.open(
+                  calculatorHelpFor(key, seller: true),
                 ),
-                decoration: InputDecoration(
-                  hintText: 'Example → $example',
-                  hintStyle: const TextStyle(color: Color(0xFF8796AB)),
+                icon: const Icon(
+                  Icons.info_rounded,
+                  size: 17,
+                  color: Color(0xFF0AA9F4),
                 ),
-                onChanged: (value) => _change(() => _numbers[key] = value),
               ),
             ],
           ),
-        ),
-      );
+          const SizedBox(height: 6),
+          TextField(
+            key: Key('seller_$key'),
+            controller: _numberController(key),
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            decoration: InputDecoration(
+              hintText: 'Example → $example',
+              hintStyle: const TextStyle(color: Color(0xFF8796AB)),
+            ),
+            onChanged: (value) => _change(() => _numbers[key] = value),
+          ),
+        ],
+      ),
+    ),
+  );
 
   Widget _waiting(String message) => Text(
     message,

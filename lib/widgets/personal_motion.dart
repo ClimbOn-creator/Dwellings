@@ -1,6 +1,5 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../services/site_content_service.dart';
 
 /// A shared preference, but distinct visual palettes for questions and identity.
@@ -25,16 +24,6 @@ class _PersonalMotionState extends State<PersonalMotion>
     vsync: this,
     duration: const Duration(milliseconds: 1600),
   )..forward();
-  bool? choice;
-  @override
-  void initState() {
-    super.initState();
-    SharedPreferences.getInstance().then((prefs) {
-      if (mounted && choice == null)
-        setState(() => choice = prefs.getBool('affinity.landing.motion'));
-    });
-  }
-
   @override
   void dispose() {
     scroll.dispose();
@@ -46,20 +35,8 @@ class _PersonalMotionState extends State<PersonalMotion>
   Widget build(BuildContext context) => ValueListenableBuilder<bool>(
     valueListenable: SiteContentService.editing,
     builder: (context, editing, _) {
-      final enabled =
-          (choice ?? !MediaQuery.disableAnimationsOf(context)) && !editing;
-      final toggle = IconButton(
-        tooltip: enabled ? 'Pause motion' : 'Enable motion',
-        icon: Icon(
-          enabled ? Icons.pause_circle_outline : Icons.play_circle_outline,
-        ),
-        onPressed: () async {
-          setState(() => choice = !enabled);
-          if (!enabled) entrance.forward(from: 0);
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setBool('affinity.landing.motion', !enabled);
-        },
-      );
+      final enabled = !editing;
+      const toggle = SizedBox.shrink();
       return MediaQuery(
         data: MediaQuery.of(context).copyWith(disableAnimations: !enabled),
         child: Builder(

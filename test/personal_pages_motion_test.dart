@@ -70,36 +70,27 @@ void main() {
     expect(find.text('Victoria'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
-  testWidgets(
-    'explicit motion choice overrides system reduction and persists',
-    (tester) async {
-      SharedPreferences.setMockInitialValues({});
-      await tester.pumpWidget(
-        MaterialApp(
-          home: MediaQuery(
-            data: const MediaQueryData(disableAnimations: true),
-            child: PersonalMotion(
-              builder: (context, scroll, toggle) => Scaffold(
-                appBar: AppBar(actions: [toggle]),
-                body: Text(
-                  MediaQuery.disableAnimationsOf(context) ? 'still' : 'moving',
-                ),
+  testWidgets('personal pages keep motion enabled without a toggle', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    await tester.pumpWidget(
+      MaterialApp(
+        home: MediaQuery(
+          data: const MediaQueryData(disableAnimations: true),
+          child: PersonalMotion(
+            builder: (context, scroll, toggle) => Scaffold(
+              appBar: AppBar(actions: [toggle]),
+              body: Text(
+                MediaQuery.disableAnimationsOf(context) ? 'still' : 'moving',
               ),
             ),
           ),
         ),
-      );
-      await tester.pumpAndSettle();
-      expect(find.text('still'), findsOneWidget);
-      await tester.tap(find.byTooltip('Enable motion'));
-      await tester.pumpAndSettle();
-      expect(find.text('moving'), findsOneWidget);
-      expect(
-        (await SharedPreferences.getInstance()).getBool(
-          'affinity.landing.motion',
-        ),
-        isTrue,
-      );
-    },
-  );
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('moving'), findsOneWidget);
+    expect(find.byTooltip('Enable motion'), findsNothing);
+  });
 }

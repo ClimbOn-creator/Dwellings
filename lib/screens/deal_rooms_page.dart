@@ -350,7 +350,11 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                 icon: const Icon(Icons.arrow_back_rounded),
               ),
             const SizedBox(width: 8),
-            const AppNavigationMenu(side: PlatformSide.business, dark: false),
+            AppNavigationMenu(
+              side: PlatformSide.business,
+              dark: false,
+              guidePage: 'buyer/${_dashboardView.name}',
+            ),
             const SizedBox(width: 12),
           ],
         ),
@@ -4414,6 +4418,7 @@ class _DealRoomPageState extends State<DealRoomPage> {
           ),
           const SizedBox(width: 8),
           AppNavigationMenu(
+            guidePage: 'room/${_workspaceView.name}',
             side: _room.isBusiness
                 ? PlatformSide.business
                 : PlatformSide.property,
@@ -5925,6 +5930,7 @@ class _DealRoomPageState extends State<DealRoomPage> {
                     const HomeBrandButton(size: 44),
                     const Spacer(),
                     AppNavigationMenu(
+                      guidePage: 'room/${_workspaceView.name}',
                       side: _room.isBusiness
                           ? PlatformSide.business
                           : PlatformSide.property,

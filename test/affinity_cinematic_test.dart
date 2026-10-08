@@ -6,26 +6,29 @@ import 'package:dwelling_iq/widgets/affinity_cinematic.dart';
 import 'package:dwelling_iq/services/site_content_service.dart';
 
 void main() {
-  testWidgets('explicit motion choice overrides reduced motion and survives reopening', (tester) async {
+  testWidgets('motion stays enabled without a toggle after reopening', (
+    tester,
+  ) async {
     SharedPreferences.setMockInitialValues({});
     tester.view.physicalSize = const Size(1280, 900);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
-    Widget page() => const MaterialApp(home: MediaQuery(
-      data: MediaQueryData(size: Size(1280, 900), disableAnimations: true),
-      child: AcquisitionSupportPage()));
+    Widget page() => const MaterialApp(
+      home: MediaQuery(
+        data: MediaQueryData(size: Size(1280, 900), disableAnimations: true),
+        child: AcquisitionSupportPage(),
+      ),
+    );
     await tester.pumpWidget(page());
     await tester.pumpAndSettle();
-    expect(find.byType(AffinityCinemaHero), findsNothing);
-    await tester.tap(find.text('Enable motion'));
-    await tester.pumpAndSettle();
+    expect(find.text('Enable motion'), findsNothing);
     expect(find.byType(AffinityCinemaHero), findsOneWidget);
-    expect((await SharedPreferences.getInstance()).getBool('affinity.landing.motion'), true);
+
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pumpWidget(page());
     await tester.pumpAndSettle();
-    expect(find.text('Motion on'), findsOneWidget);
+    expect(find.text('Motion on'), findsNothing);
     expect(find.byType(AffinityCinemaHero), findsOneWidget);
     expect(tester.takeException(), isNull);
   });

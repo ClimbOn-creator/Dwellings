@@ -1,3 +1,4 @@
+import 'widgets/calculator_help_sidebar.dart';
 import 'widgets/nova_training_host.dart';
 import 'models/footer_page_content.dart';
 import 'screens/footer_information_page.dart';
@@ -55,9 +56,12 @@ class AffinityApp extends StatelessWidget {
     );
     return MaterialApp(
       navigatorKey: novaNavigatorKey,
+      navigatorObservers: [CalculatorHelpRouteObserver()],
       builder: (context, child) => NovaTrainingHost(
         navigatorKey: novaNavigatorKey,
-        child: SiteEditorShell(child: child ?? const SizedBox.shrink()),
+        child: CalculatorHelpHost(
+          child: SiteEditorShell(child: child ?? const SizedBox.shrink()),
+        ),
       ),
       debugShowCheckedModeBanner: false,
       title: 'Affinity',

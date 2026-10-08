@@ -1,3 +1,5 @@
+import 'package:dwelling_iq/services/nova_page_guide.dart';
+import 'package:dwelling_iq/widgets/calculator_help_sidebar.dart';
 import 'package:dwelling_iq/models/platform_side.dart';
 import 'package:dwelling_iq/services/nova_calculator_fields.dart';
 import 'package:dwelling_iq/widgets/nova_target.dart';
@@ -312,6 +314,144 @@ void main() {
         find.ancestor(of: character, matching: find.byType(Material)),
         findsNothing,
       );
+      expect(tester.takeException(), isNull);
+    },
+  );
+  test(
+    'calculator methods cover every buyer and seller input with field-specific guidance',
+    () {
+      for (final field in novaBuyerCalculatorFields) {
+        final info = calculatorHelpFor(field.key);
+        expect(info.how, isNotEmpty);
+        expect(info.field, same(field));
+      }
+      for (final field in novaSellerCalculatorFields) {
+        expect(calculatorHelpFor(field.key, seller: true).how, isNotEmpty);
+      }
+      expect(calculatorHelpFor('creCap').how, contains('NOI'));
+      expect(calculatorHelpFor('businessDown').how, contains('× 100'));
+      expect(
+        calculatorHelpFor('businessEbitda').how,
+        isNot(calculatorHelpFor('assetInventory').how),
+      );
+    },
+  );
+  test('page guides contain only their page and keep calculators short', () {
+    for (final page in [
+      'buyer/home',
+      'seller/home',
+      'buyer/dealScreen/assets',
+      'seller/value',
+      'consulting',
+      'resources',
+      'room/documents',
+    ]) {
+      final steps = novaPageWalkthrough(page);
+      expect(steps.every((s) => s.destination == page), isTrue, reason: page);
+      expect(steps.any((s) => s.id.contains('-input-')), isFalse);
+    }
+    expect(novaPageWalkthrough('buyer/dealScreen/business').length, 4);
+    expect(novaPageWalkthrough('seller/value').length, 4);
+  });
+  test(
+    'page replay preserves existing completion and profile progress',
+    () async {
+      final service = NovaTrainingService(accountId: () => null);
+      await service.load();
+      await service.save(role: 'seller', step: 18, finish: true);
+      final original = service.progress.toJson();
+      final controller = NovaTrainingController(service: service);
+      controller.startPage('consulting');
+      while (controller.active) {
+        await controller.next();
+      }
+      expect(service.progress.toJson(), original);
+      expect(controller.pageOnly, isTrue);
+    },
+  );
+  testWidgets(
+    'page guide stays on its original route and records first completion',
+    (tester) async {
+      final controller = NovaTrainingController(
+        service: NovaTrainingService(accountId: () => null),
+      );
+      await controller.service.load();
+      final key = GlobalKey<NavigatorState>();
+      int pageChanges = 0;
+      await tester.pumpWidget(
+        MaterialApp(
+          navigatorKey: key,
+          builder: (_, child) => NovaTrainingHost(
+            navigatorKey: key,
+            controller: controller,
+            autoStart: false,
+            pageBuilder: (_) {
+              pageChanges++;
+              return const Scaffold(body: Text('Wrong page'));
+            },
+            child: child!,
+          ),
+          home: const Scaffold(body: Text('Stay on consulting')),
+        ),
+      );
+      await tester.pumpAndSettle();
+      controller.startPage('consulting');
+      await tester.pumpAndSettle();
+      expect(find.text('Stay on consulting'), findsOneWidget);
+      while (controller.index < controller.steps.length - 1) {
+        await tester.tap(find.text('Next'));
+        await tester.pumpAndSettle();
+      }
+      await tester.tap(find.text('Done'));
+      await tester.pumpAndSettle();
+      expect(pageChanges, 0);
+      expect(find.text('Stay on consulting'), findsOneWidget);
+      expect(controller.service.progress.completed, isTrue);
+      expect(tester.takeException(), isNull);
+    },
+  );
+  testWidgets(
+    'info clicks open and switch sidebar content without changing typed figures',
+    (tester) async {
+      addTearDown(CalculatorHelpController.instance.close);
+      await tester.pumpWidget(
+        MaterialApp(
+          builder: (_, child) => CalculatorHelpHost(child: child!),
+          home: Scaffold(
+            body: BuyerDealScreen(
+              onBack: () {},
+              onCreateBusinessRoom: (_, _) async {},
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const Key('field_businessAsk')),
+        '1,234,567',
+      );
+      await tester.tap(find.byKey(const Key('info_businessAsk')));
+      await tester.pumpAndSettle();
+      expect(find.text('What is it?'), findsOneWidget);
+      expect(find.text('How to calculate it'), findsOneWidget);
+      expect(CalculatorHelpController.instance.info!.field.key, 'businessAsk');
+      await tester.tap(find.byKey(const Key('calculator_help_close')));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.byKey(const Key('info_businessRevenue')));
+      await tester.tap(find.byKey(const Key('info_businessRevenue')));
+      await tester.pumpAndSettle();
+      expect(
+        CalculatorHelpController.instance.info!.field.key,
+        'businessRevenue',
+      );
+      expect(
+        tester
+            .widget<TextField>(find.byKey(const Key('field_businessAsk')))
+            .controller!
+            .text,
+        '1,234,567',
+      );
+      expect(find.byType(NovaTourCard), findsNothing);
       expect(tester.takeException(), isNull);
     },
   );

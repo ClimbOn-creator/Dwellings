@@ -38,8 +38,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Gentle motion'));
-      await tester.pumpAndSettle();
+      expect(find.text('Gentle motion'), findsNothing);
       final choice = find.text('I would choose business A');
       await tester.ensureVisible(choice);
       await tester.tap(choice);

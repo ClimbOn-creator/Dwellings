@@ -48,28 +48,6 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
   static const _forest = Color(0xFF151A19);
   static const _acid = Color(0xFFE5E1D7);
   final _pageScroll = ScrollController();
-  bool? _motionEnabled;
-
-  @override
-  void initState() {
-    super.initState();
-    SharedPreferences.getInstance().then((preferences) {
-      if (mounted && _motionEnabled == null) {
-        setState(
-          () => _motionEnabled = preferences.getBool('affinity.landing.motion'),
-        );
-      }
-    });
-  }
-
-  Future<void> _setMotion(bool value) async {
-    setState(() => _motionEnabled = value);
-    // Scene lengths differ in reading mode: start at the opening after switching.
-    if (_pageScroll.hasClients) _pageScroll.jumpTo(0);
-    final preferences = await SharedPreferences.getInstance();
-    await preferences.setBool('affinity.landing.motion', value);
-  }
-
   @override
   void dispose() {
     _pageScroll.dispose();
@@ -152,7 +130,7 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
 
   @override
   Widget build(BuildContext context) {
-    final enabled = _motionEnabled ?? !MediaQuery.disableAnimationsOf(context);
+    const enabled = true;
     return MediaQuery(
       data: MediaQuery.of(context).copyWith(disableAnimations: !enabled),
       child: Builder(builder: (context) => _buildPage(context, enabled)),
@@ -174,17 +152,6 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
           surfaceTintColor: Colors.transparent,
           title: const HomeBrandButton(size: 66, dark: false),
           actions: [
-            TextButton.icon(
-              onPressed: () => _setMotion(!motionEnabled),
-              icon: Icon(
-                motionEnabled
-                    ? Icons.pause_circle_outline
-                    : Icons.play_circle_outline,
-                size: 20,
-              ),
-              label: Text(motionEnabled ? 'Motion on' : 'Enable motion'),
-              style: TextButton.styleFrom(foregroundColor: _forest),
-            ),
             if (MediaQuery.sizeOf(context).width >= 700)
               _button(
                 'copy.acquisition_support_page.1',

@@ -457,12 +457,17 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                 )
               : const SizedBox.shrink(),
         ),
-        IconButton(
-          onPressed: _reloadAndRebuild,
-          tooltip: 'Refresh studio',
-          icon: const Icon(Icons.refresh_rounded),
+        if (MediaQuery.sizeOf(context).width >= 620)
+          IconButton(
+            onPressed: _reloadAndRebuild,
+            tooltip: 'Refresh studio',
+            icon: const Icon(Icons.refresh_rounded),
+          ),
+        AppNavigationMenu(
+          side: PlatformSide.business,
+          dark: false,
+          guidePage: 'member/${_view.name}',
         ),
-        const AppNavigationMenu(side: PlatformSide.business, dark: false),
         const SizedBox(width: 10),
       ],
     ),
@@ -4821,7 +4826,6 @@ class _BusinessSaleBulletinPageState extends State<BusinessSaleBulletinPage> {
   late Future<bool> _isAdmin;
   late Future<Map<String, dynamic>> _buyerFoundation;
   final _browseScroll = ScrollController();
-  bool? _motion;
   final _bulletinSearch = TextEditingController();
   String _searchQuery = '';
   String _priceFilter = 'all';
@@ -4833,10 +4837,6 @@ class _BusinessSaleBulletinPageState extends State<BusinessSaleBulletinPage> {
   void initState() {
     super.initState();
     _reload();
-    SharedPreferences.getInstance().then((prefs) {
-      if (mounted && _motion == null)
-        setState(() => _motion = prefs.getBool('affinity.landing.motion'));
-    });
   }
 
   void _reload() {
@@ -4934,7 +4934,7 @@ class _BusinessSaleBulletinPageState extends State<BusinessSaleBulletinPage> {
 
   @override
   Widget build(BuildContext context) {
-    final motion = _motion ?? !MediaQuery.disableAnimationsOf(context);
+    const motion = true;
     return MediaQuery(
       data: MediaQuery.of(context).copyWith(disableAnimations: !motion),
       child: Builder(builder: (context) => _page(context, motion)),
@@ -4949,17 +4949,6 @@ class _BusinessSaleBulletinPageState extends State<BusinessSaleBulletinPage> {
       surfaceTintColor: Colors.transparent,
       title: const HomeBrandButton(size: 52, dark: false),
       actions: [
-        IconButton(
-          tooltip: motion ? 'Pause motion' : 'Enable motion',
-          icon: Icon(
-            motion ? Icons.pause_circle_outline : Icons.play_circle_outline,
-          ),
-          onPressed: () async {
-            setState(() => _motion = !motion);
-            final prefs = await SharedPreferences.getInstance();
-            await prefs.setBool('affinity.landing.motion', !motion);
-          },
-        ),
         IconButton(
           onPressed: () => setState(_reload),
           tooltip: 'Refresh bulletin board',

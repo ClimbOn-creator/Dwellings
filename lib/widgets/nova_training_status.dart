@@ -79,9 +79,9 @@ class _NovaTrainingStatusState extends State<NovaTrainingStatus> {
                 spacing: 10,
                 children: [
                   TextButton.icon(
-                    onPressed: () => _controller.start(role: progress.role),
+                    onPressed: () => _controller.startPage('profile'),
                     icon: const Icon(Icons.replay_rounded, size: 17),
-                    label: const Text('Replay app training'),
+                    label: const Text('Show me around this page'),
                   ),
                   if (progress.pendingSync)
                     TextButton(

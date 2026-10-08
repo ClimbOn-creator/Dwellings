@@ -1,3 +1,4 @@
+import 'calculator_help_sidebar.dart';
 import 'dart:math' as math;
 import 'buyer_deal_screen.dart';
 import 'dart:async';
@@ -68,15 +69,6 @@ class _NovaTrainingHostState extends State<NovaTrainingHost>
     });
   }
 
-  String get _initialRole => switch (Uri.base.queryParameters['module']) {
-    'seller-dashboard' ||
-    'seller-learning' ||
-    'succession-transfer' => 'seller',
-    'member-studio' ||
-    'member-onboarding' ||
-    'professional-onboarding' => 'member',
-    _ => 'buyer',
-  };
   Future<void> _load() async {
     final generation = ++_generation;
     await _controller.service.load();
@@ -86,20 +78,20 @@ class _NovaTrainingHostState extends State<NovaTrainingHost>
         _controller.active)
       return;
     if (!_controller.service.progress.completed) {
-      _controller.start(
-        role: _controller.service.progress.step > 0
-            ? _controller.service.progress.role
-            : _initialRole,
-        replay: false,
-      );
+      _controller.startPage(_controller.currentPage, automatic: true);
     }
   }
 
   void _changed() {
+    if (_controller.active) CalculatorHelpController.instance.close();
     if (mounted) setState(() {});
   }
 
   void _navigate(NovaStep step) {
+    if (_controller.pageOnly) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _locate(step));
+      return;
+    }
     if (step.id == 'welcome') {
       setState(() => _highlight = null);
       return;
@@ -343,7 +335,7 @@ class NovaTourCard extends StatelessWidget {
         const SizedBox(width: 8),
         Expanded(
           child: Material(
-            color: const Color(0xFFFCFBF5),
+            color: const Color(0xFFDCE4DA),
             elevation: 10,
             shadowColor: const Color(0x443C5044),
             borderRadius: BorderRadius.circular(20),
@@ -417,7 +409,7 @@ class NovaTourCard extends StatelessWidget {
                               height: 1.45,
                             ),
                           ),
-                          if (step.id == 'welcome') ...[
+                          if (step.id == 'welcome' && !controller.pageOnly) ...[
                             const SizedBox(height: 12),
                             Wrap(
                               spacing: 6,
@@ -492,7 +484,9 @@ class NovaTourCard extends StatelessWidget {
                                   ? 'Saving…'
                                   : controller.index ==
                                         controller.steps.length - 1
-                                  ? 'Finish training'
+                                  ? controller.pageOnly
+                                        ? 'Done'
+                                        : 'Finish training'
                                   : 'Next',
                               style: const TextStyle(fontSize: 12),
                             ),
@@ -532,7 +526,12 @@ class _Spotlight extends CustomPainter {
           ..strokeWidth = 3,
       );
     }
-    canvas.drawPath(path, Paint()..color = const Color(0x440B2016));
+    // Dim the whole page slightly, including the target, then darken its surroundings.
+    canvas.drawRect(
+      Offset.zero & size,
+      Paint()..color = const Color(0x180B2016),
+    );
+    canvas.drawPath(path, Paint()..color = const Color(0x880B2016));
   }
 
   @override

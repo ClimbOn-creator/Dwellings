@@ -52,9 +52,7 @@ class _DealComparisonPageState extends State<BusinessComparisonQuiz>
   QuizBusiness _right = quizBusinesses[1];
   late final AnimationController _motion;
   bool _entering = false;
-  bool? _motionOverride;
-  bool get _fullMotion =>
-      _motionOverride ?? !MediaQuery.of(context).disableAnimations;
+  bool get _fullMotion => true;
   int get _step => _choices.length;
   int? _selected;
   bool _loading = true;
@@ -279,20 +277,7 @@ class _DealComparisonPageState extends State<BusinessComparisonQuiz>
                 ),
               ),
             ),
-            ActionChip(
-              avatar: Icon(
-                _fullMotion ? Icons.animation : Icons.blur_on,
-                size: 18,
-              ),
-              label: SiteText(
-                contentKey: 'copy.deal_comparison_page.m3',
-                literal: false,
-                _fullMotion ? 'Full motion' : 'Gentle motion',
-              ),
-              onPressed: _selected == null
-                  ? () => setState(() => _motionOverride = !_fullMotion)
-                  : null,
-            ),
+
             const SizedBox(width: 12),
             SiteText(
               contentKey: 'copy.deal_comparison_page.m4',

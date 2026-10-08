@@ -20,7 +20,7 @@ List<NovaStep> novaWalkthrough(String role) => [
   NovaStep(
     'welcome',
     'Hi, I’m Pebble.',
-    'I’ll show you where everything lives, one screen at a time. Use Next and Back to explore. This tour will not create listings, change deals or contact anyone.',
+    'I’ll show you around this page. Use Next and Back, or close the guide and request me again from the header.',
     '$role/home',
     NovaMood.welcome,
   ),
