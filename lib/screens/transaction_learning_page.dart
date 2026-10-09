@@ -107,7 +107,7 @@ class _TransactionLearningPageState extends State<TransactionLearningPage> {
             ],
           ],
         ),
-        actions: const [AppNavigationMenu(dark: false)],
+        actions: const [AppNavigationMenu(guidePage: 'document-guides', dark: false)],
       ),
       body: CustomScrollView(
         controller: _scroll,

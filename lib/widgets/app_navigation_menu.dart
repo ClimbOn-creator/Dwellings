@@ -1,4 +1,5 @@
-import '../screens/transaction_rooms_page.dart';
+import '../screens/transaction_learning_page.dart';
+import '../screens/deal_comparison_page.dart';
 import '../services/app_tunnel.dart';
 import '../screens/tunnel_pages.dart';
 import '../screens/member_deal_marketplace_page.dart';
@@ -29,6 +30,7 @@ enum AppNavigationDestination {
   sellerDashboard,
   buyerDashboard,
   transactionRoom,
+  dealComparison,
   memberStudio,
   profile,
   businessesForSale,
@@ -50,6 +52,7 @@ List<AppNavigationDestination> destinationsForTunnel(AppTunnel tunnel) =>
         AppNavigationDestination.profile,
         AppNavigationDestination.transactionRoom,
         AppNavigationDestination.businessesForSale,
+        AppNavigationDestination.dealComparison,
       ],
       AppTunnel.seller => [
         AppNavigationDestination.sellerDashboard,
@@ -99,6 +102,7 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
     AppNavigationDestination.sellerDashboard => 'Seller dashboard',
     AppNavigationDestination.buyerDashboard => 'Buyer dashboard',
     AppNavigationDestination.transactionRoom => 'Transaction Room',
+    AppNavigationDestination.dealComparison => 'Deal comparison quiz',
     AppNavigationDestination.memberStudio => 'Member dashboard',
     AppNavigationDestination.businessesForSale => 'Businesses for sale',
     AppNavigationDestination.sellerPosts => 'My posts & analytics',
@@ -107,32 +111,32 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
     AppNavigationDestination.profile => 'My profile',
   };
 
-  Widget _page(BuildContext context, AppNavigationDestination destination) =>
-      switch (destination) {
-        AppNavigationDestination.resources => const BuyerResourcesPage(),
-        AppNavigationDestination.sellerDashboard => const SellerDashboardPage(),
-        AppNavigationDestination.buyerDashboard => const DealRoomsPage(
-          initialSide: PlatformSide.business,
-        ),
-        AppNavigationDestination.transactionRoom => TransactionRoomsPage(
-          seller: AppTunnelController.current.value == AppTunnel.seller,
-        ),
-        AppNavigationDestination.businessesForSale =>
-          const BusinessSaleBulletinPage(),
-        AppNavigationDestination.sellerPosts => const SellerPostsPage(),
-        AppNavigationDestination.memberPricing => const MemberPricingPage(),
-        AppNavigationDestination.memberMarketing => const MemberMarketingPage(),
-        AppNavigationDestination.memberStudio =>
-          const MemberDealMarketplacePage(),
-        AppNavigationDestination.profile =>
-          BackendService.user == null
-              ? AuthPage(
-                  onAuthenticated: () => Navigator.of(context).pushReplacement(
-                    MaterialPageRoute<void>(builder: (_) => _profilePage()),
-                  ),
-                )
-              : _profilePage(),
-      };
+  Widget _page(
+    BuildContext context,
+    AppNavigationDestination destination,
+  ) => switch (destination) {
+    AppNavigationDestination.resources => const BuyerResourcesPage(),
+    AppNavigationDestination.sellerDashboard => const SellerDashboardPage(),
+    AppNavigationDestination.buyerDashboard => const DealRoomsPage(
+      initialSide: PlatformSide.business,
+    ),
+    AppNavigationDestination.transactionRoom => const TransactionLearningPage(),
+    AppNavigationDestination.dealComparison => const DealComparisonPage(),
+    AppNavigationDestination.businessesForSale =>
+      const BusinessSaleBulletinPage(),
+    AppNavigationDestination.sellerPosts => const SellerPostsPage(),
+    AppNavigationDestination.memberPricing => const MemberPricingPage(),
+    AppNavigationDestination.memberMarketing => const MemberMarketingPage(),
+    AppNavigationDestination.memberStudio => const MemberDealMarketplacePage(),
+    AppNavigationDestination.profile =>
+      BackendService.user == null
+          ? AuthPage(
+              onAuthenticated: () => Navigator.of(context).pushReplacement(
+                MaterialPageRoute<void>(builder: (_) => _profilePage()),
+              ),
+            )
+          : _profilePage(),
+  };
 
   Widget _profilePage() => AppTunnelController.current.value == AppTunnel.member
       ? const MemberDealMarketplacePage(

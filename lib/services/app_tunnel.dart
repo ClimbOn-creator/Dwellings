@@ -16,7 +16,8 @@ class AppTunnelController {
     'bulletin-board' ||
     'businesses-for-sale' ||
     'resources' ||
-    'transaction-room' => AppTunnel.buyer,
+    'transaction-room' ||
+    'document-guides' => AppTunnel.buyer,
     'seller-dashboard' ||
     'seller-learning' ||
     'succession-transfer' ||

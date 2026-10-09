@@ -45,6 +45,26 @@ const pebbleMainPageCopy = <String, List<(String, String, String, String?)>>{
       'member-marketing.practice',
     ),
   ],
+  'document-guides': [
+    (
+      'purpose',
+      'Understand the transaction documents',
+      'This Transaction Room explains the documents used when buying a business. Browse the guides to understand when each document is used, what it contains and who helps prepare it.',
+      null,
+    ),
+    (
+      'examples',
+      'Read a worked example',
+      'Open a guide and choose its completed example to see how a fictional business transaction uses the document. Compare the explanation and example before preparing your own records.',
+      null,
+    ),
+    (
+      'templates',
+      'Take the next step',
+      'Download the editable template or completed example from the guide. Use your deal advisers to prepare transaction documents; the fictional examples are learning materials.',
+      null,
+    ),
+  ],
   'resources': [
     (
       'search',

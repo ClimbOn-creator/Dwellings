@@ -169,7 +169,7 @@ The landing page selects a navigation context; this is not an authorization role
 Shared deal and message permissions continue to be enforced by the backend.
 The Affinity logo clears the selected path and returns to the landing page.
 
-- Buyer: dashboard, resources, profile, transaction room, businesses for sale.
+- Buyer: dashboard, resources, profile, transaction room, businesses for sale, deal comparison quiz.
 - Seller: dashboard, transaction room, my posts and analytics, profile.
 - Member: pricing, dashboard, profile, marketing.
 
@@ -185,3 +185,5 @@ archived posts and real current bookmark counts. It never exposes saver identiti
 Until installed, the page displays a retryable load error rather than fabricated
 analytics. Published paid membership prices are not configured; the Pricing page
 compares existing plan descriptions and does not take payment.
+
+Transaction Room in the main navigation opens the restored document learning library, including worked examples and editable templates. Private deal workspaces remain available from the dashboards.

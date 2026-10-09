@@ -1,4 +1,3 @@
-import 'screens/transaction_rooms_page.dart';
 import 'screens/tunnel_pages.dart';
 import 'screens/buyer_resources_page.dart';
 import 'services/app_tunnel.dart';
@@ -140,9 +139,9 @@ class AffinityApp extends StatelessWidget {
       'seller-posts' => const SellerPostsPage(),
       'member-pricing' => const MemberPricingPage(),
       'member-marketing' => const MemberMarketingPage(),
-      'seller-transaction-room' => const TransactionRoomsPage(seller: true),
+      'seller-transaction-room' => const TransactionLearningPage(),
       'document-guides' => const TransactionLearningPage(),
-      'transaction-room' => const TransactionRoomsPage(),
+      'transaction-room' => const TransactionLearningPage(),
       'buyer-learning' => const AcquisitionBlueprintPage(),
       'seller-learning' => const SellerDashboardPage(
         initialView: SellerDashboardView.plan,

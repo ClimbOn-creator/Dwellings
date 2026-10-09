@@ -1,7 +1,7 @@
 import 'package:dwelling_iq/services/app_tunnel.dart';
 import 'package:dwelling_iq/screens/acquisition_support_page.dart';
 import 'package:dwelling_iq/screens/buyer_resources_page.dart';
-import 'package:dwelling_iq/screens/transaction_rooms_page.dart';
+import 'package:dwelling_iq/screens/transaction_learning_page.dart';
 import 'package:dwelling_iq/services/nova_training_controller.dart';
 import 'package:dwelling_iq/services/nova_training_service.dart';
 import 'package:dwelling_iq/widgets/app_navigation_menu.dart';
@@ -76,8 +76,8 @@ void main() {
         expect(find.text('Pebble walkthrough'), findsNothing);
         await tester.tap(find.text('Transaction Room'));
         await tester.pumpAndSettle();
-        expect(find.byType(TransactionRoomsPage), findsOneWidget);
-        expect(find.text('Transaction rooms'), findsOneWidget);
+        expect(find.byType(TransactionLearningPage), findsOneWidget);
+        expect(find.text('The deal,\nmade clear.'), findsOneWidget);
         expect(find.text('Your pipeline'), findsNothing);
         expect(tester.takeException(), isNull);
       },

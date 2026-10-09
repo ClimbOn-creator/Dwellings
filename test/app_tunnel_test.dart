@@ -37,6 +37,7 @@ void main() {
         'profile',
         'transactionRoom',
         'businessesForSale',
+        'dealComparison',
       ],
     ),
     (

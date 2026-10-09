@@ -481,6 +481,16 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                 setState(() => _dashboardView = BuyerDashboardView.dealScreen),
           ),
           DashboardUi.nav(
+            'Deal comparison quiz',
+            Icons.compare_arrows_rounded,
+            false,
+            () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const DealComparisonPage(),
+              ),
+            ),
+          ),
+          DashboardUi.nav(
             'Resources',
             Icons.library_books_outlined,
             _dashboardView == BuyerDashboardView.resources,

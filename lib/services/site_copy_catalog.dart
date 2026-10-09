@@ -1,6 +1,17 @@
 // These IDs are permanent. Rewrite the fallback VALUE while retaining its ID.
 // Never regenerate or renumber this registry during a redesign.
 const siteCopyCatalog = <String, String>{
+  "nova.training.pebble-document-guides-templates.body":
+      "Download the editable template or completed example from the guide. Use your deal advisers to prepare transaction documents; the fictional examples are learning materials.",
+  "nova.training.pebble-document-guides-templates.title": "Take the next step",
+  "nova.training.pebble-document-guides-examples.body":
+      "Open a guide and choose its completed example to see how a fictional business transaction uses the document. Compare the explanation and example before preparing your own records.",
+  "nova.training.pebble-document-guides-examples.title":
+      "Read a worked example",
+  "nova.training.pebble-document-guides-purpose.body":
+      "This Transaction Room explains the documents used when buying a business. Browse the guides to understand when each document is used, what it contains and who helps prepare it.",
+  "nova.training.pebble-document-guides-purpose.title":
+      "Understand the transaction documents",
   "nova.training.pebble-member-marketing-practice.body":
       "Match your introductions to the deal and agree on scope. Each team has one professional per role. Honest client reviews and a useful profile build trust over time.",
   "nova.training.pebble-member-marketing-practice.title":
