@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/backend_service.dart';
 import '../services/membership_service.dart';
 import 'auth_page.dart';
+import 'learning_dashboard_page.dart';
 import 'acquisition_support_page.dart';
 import 'become_member_page.dart';
 import '../services/app_tunnel.dart';
@@ -53,5 +54,12 @@ Future<void> startMemberSetup(BuildContext context, {String tier = 'free'}) {
         MaterialPageRoute<void>(builder: (_) => const MemberMarketingPage()),
       ),
     ),
+  );
+}
+
+Future<void> startLearning(BuildContext context) async {
+  AppTunnelController.select(AppTunnel.learning);
+  await Navigator.of(context).push(
+    MaterialPageRoute<void>(builder: (_) => const LearningDashboardPage()),
   );
 }

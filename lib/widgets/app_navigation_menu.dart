@@ -1,4 +1,5 @@
 import '../screens/transaction_learning_page.dart';
+import '../screens/learning_dashboard_page.dart';
 import '../screens/deal_comparison_page.dart';
 import '../services/app_tunnel.dart';
 import '../screens/tunnel_pages.dart';
@@ -37,6 +38,9 @@ enum AppNavigationDestination {
   sellerPosts,
   memberPricing,
   memberMarketing,
+  learningDashboard,
+  learningSeminars,
+  learningMap,
 }
 
 List<AppNavigationDestination> destinationsForTunnel(AppTunnel tunnel) =>
@@ -45,6 +49,7 @@ List<AppNavigationDestination> destinationsForTunnel(AppTunnel tunnel) =>
         AppNavigationDestination.buyerDashboard,
         AppNavigationDestination.sellerDashboard,
         AppNavigationDestination.memberStudio,
+        AppNavigationDestination.learningDashboard,
       ],
       AppTunnel.buyer => [
         AppNavigationDestination.buyerDashboard,
@@ -58,6 +63,12 @@ List<AppNavigationDestination> destinationsForTunnel(AppTunnel tunnel) =>
         AppNavigationDestination.sellerDashboard,
         AppNavigationDestination.transactionRoom,
         AppNavigationDestination.sellerPosts,
+        AppNavigationDestination.profile,
+      ],
+      AppTunnel.learning => [
+        AppNavigationDestination.learningDashboard,
+        AppNavigationDestination.learningSeminars,
+        AppNavigationDestination.learningMap,
         AppNavigationDestination.profile,
       ],
       AppTunnel.member => [
@@ -108,6 +119,9 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
     AppNavigationDestination.sellerPosts => 'My posts & analytics',
     AppNavigationDestination.memberPricing => 'Pricing',
     AppNavigationDestination.memberMarketing => 'Marketing',
+    AppNavigationDestination.learningDashboard => 'Learning dashboard',
+    AppNavigationDestination.learningSeminars => 'Live seminars',
+    AppNavigationDestination.learningMap => 'Buying & selling map',
     AppNavigationDestination.profile => 'My profile',
   };
 
@@ -115,6 +129,13 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
     BuildContext context,
     AppNavigationDestination destination,
   ) => switch (destination) {
+    AppNavigationDestination.learningDashboard => const LearningDashboardPage(),
+    AppNavigationDestination.learningSeminars => const LearningDashboardPage(
+      initialView: LearningView.seminars,
+    ),
+    AppNavigationDestination.learningMap => const LearningDashboardPage(
+      initialView: LearningView.map,
+    ),
     AppNavigationDestination.resources => const BuyerResourcesPage(),
     AppNavigationDestination.sellerDashboard => const SellerDashboardPage(),
     AppNavigationDestination.buyerDashboard => const DealRoomsPage(
@@ -151,6 +172,7 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
         AppNavigationDestination.buyerDashboard => AppTunnel.buyer,
         AppNavigationDestination.sellerDashboard => AppTunnel.seller,
         AppNavigationDestination.memberStudio => AppTunnel.member,
+        AppNavigationDestination.learningDashboard => AppTunnel.learning,
         _ => AppTunnel.landing,
       };
       AppTunnelController.select(tunnel);

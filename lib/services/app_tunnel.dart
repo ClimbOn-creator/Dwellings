@@ -2,12 +2,15 @@ import 'package:flutter/foundation.dart';
 
 /// Navigation context, independent of membership permissions and deal access.
 /// Returning home clears it; signing in keeps the path the visitor chose.
-enum AppTunnel { landing, buyer, seller, member }
+enum AppTunnel { landing, buyer, seller, member, learning }
 
 class AppTunnelController {
   static final current = ValueNotifier<AppTunnel>(AppTunnel.landing);
   static void select(AppTunnel tunnel) => current.value = tunnel;
   static AppTunnel forModule(String? module) => switch (module) {
+    'learning-dashboard' ||
+    'learning-seminars' ||
+    'learning-map' => AppTunnel.learning,
     'buyer-dashboard' ||
     'buyer-learning' ||
     'deal-rooms' ||

@@ -1,6 +1,231 @@
 // These IDs are permanent. Rewrite the fallback VALUE while retaining its ID.
 // Never regenerate or renumber this registry during a redesign.
 const siteCopyCatalog = <String, String>{
+  "learning.saved.title": "Your saved lessons",
+  "learning.saved.intro":
+      "Return to the lessons you bookmarked with your account.",
+  "learning.saved.empty": "Your saved lessons will appear here",
+  "learning.feed.empty": "No lessons match this view yet",
+  "learning.map.buyer-goals.title": "Your direction",
+  "learning.map.buyer-goals.explanation":
+      "Decide what kind of business fits your skills, time and available money. Acquisition criteria describe the business you want and the role you can take.",
+  "learning.map.buyer-goals.why":
+      "Clear criteria help you reject poor matches early.",
+  "learning.map.buyer-goals.action":
+      "Write your target industry, region, owner role, budget and limits.",
+  "learning.map.buyer-goals.question": "What belongs in acquisition criteria?",
+  "learning.map.buyer-goals.feedback":
+      "Criteria connect the business to your circumstances. A price alone does not establish fit.",
+  "learning.map.buyer-search.title": "Finding a business",
+  "learning.map.buyer-search.explanation":
+      "Find opportunities through listings, brokers, professional contacts or a direct conversation. A public listing is only an introduction to the opportunity.",
+  "learning.map.buyer-search.why":
+      "Several sources can help you find a business that fits your criteria.",
+  "learning.map.buyer-search.action":
+      "Record the source and the questions you need answered before moving forward.",
+  "learning.map.buyer-search.question": "A promising listing means…",
+  "learning.map.buyer-search.feedback":
+      "A listing starts your research. Supporting records still need review.",
+  "learning.map.buyer-screen.title": "Initial screening",
+  "learning.map.buyer-screen.explanation":
+      "Compare the asking price with supported earnings and the cost of running the business. Learn the difference between revenue, profit and owner cash flow.",
+  "learning.map.buyer-screen.why":
+      "Early screening helps you see whether further diligence is worthwhile.",
+  "learning.map.buyer-screen.action":
+      "Use the deal screen and list missing evidence. Agree on confidentiality before receiving sensitive information.",
+  "learning.map.buyer-screen.question": "Revenue tells you…",
+  "learning.map.buyer-screen.feedback":
+      "Revenue is sales. Costs, debt payments and working capital affect available cash.",
+  "learning.map.buyer-offer.title": "Letter of intent",
+  "learning.map.buyer-offer.explanation":
+      "A letter of intent outlines the proposed price, structure and conditions. Some clauses, such as confidentiality or exclusivity, may have binding effect.",
+  "learning.map.buyer-offer.why":
+      "A written outline helps both parties understand the proposed transaction.",
+  "learning.map.buyer-offer.action":
+      "Review the terms with your adviser, including diligence, financing and deadlines.",
+  "learning.map.buyer-offer.question": "Signing a letter of intent means…",
+  "learning.map.buyer-offer.feedback":
+      "The wording and applicable law matter. An LOI can contain binding obligations even before the final agreement.",
+  "learning.map.buyer-diligence.title": "Due diligence",
+  "learning.map.buyer-diligence.explanation":
+      "Diligence checks the evidence behind the business. Review financial records, contracts, customers, people, assets and liabilities with relevant specialists.",
+  "learning.map.buyer-diligence.why":
+      "A supported purchase decision depends on what you can verify.",
+  "learning.map.buyer-diligence.action":
+      "Keep a request list and a risk log. Resolve evidence gaps before deciding to close.",
+  "learning.map.buyer-diligence.question":
+      "An unanswered diligence question should…",
+  "learning.map.buyer-diligence.feedback":
+      "Record the issue, responsibility and follow-up. A missing answer remains an evidence gap.",
+  "learning.map.buyer-finance.title": "Financing",
+  "learning.map.buyer-finance.explanation":
+      "Understand the cash needed at closing and how the business will support debt payments. A lender decides whether the financing meets its requirements.",
+  "learning.map.buyer-finance.why":
+      "A workable purchase structure needs cash for operations as well as the price.",
+  "learning.map.buyer-finance.action":
+      "Prepare lender documents and test your financing assumptions with a qualified adviser.",
+  "learning.map.buyer-finance.question": "Working capital helps cover…",
+  "learning.map.buyer-finance.feedback":
+      "Inventory, customer payments and supplier payments can create cash needs after closing.",
+  "learning.map.buyer-close.title": "Closing",
+  "learning.map.buyer-close.explanation":
+      "Closing coordinates the final agreement, conditions, funds and ownership documents. Your legal and financial advisers confirm the steps for your deal.",
+  "learning.map.buyer-close.why":
+      "Completing conditions and exchanging the correct records protects the handover.",
+  "learning.map.buyer-close.action":
+      "Use the closing checklist to track outstanding approvals and deliverables.",
+  "learning.map.buyer-close.question": "Before closing, you should…",
+  "learning.map.buyer-close.feedback":
+      "Confirm the conditions, funds and required documents. The actual agreement governs your deal.",
+  "learning.map.buyer-handover.title": "Ownership transition",
+  "learning.map.buyer-handover.explanation":
+      "A transition plan sets out training, relationships, systems and responsibilities after the sale. Owning the business starts a new operating phase.",
+  "learning.map.buyer-handover.why":
+      "A clear handover helps continuity for employees, customers and the new owner.",
+  "learning.map.buyer-handover.action":
+      "Set the training schedule, access changes and first operating priorities.",
+  "learning.map.buyer-handover.question": "A useful transition plan includes…",
+  "learning.map.buyer-handover.feedback":
+      "Continuity needs specific responsibilities and access changes, not just a closing date.",
+  "learning.map.seller-direction.title": "Your goals",
+  "learning.map.seller-direction.explanation":
+      "Choose whether you are planning an outside sale, family succession, management transfer or another ownership change. Consider your timing and future role.",
+  "learning.map.seller-direction.why":
+      "Your path changes the preparation and conversations you need.",
+  "learning.map.seller-direction.action":
+      "Write your timing, preferred successor and desired involvement.",
+  "learning.map.seller-direction.question": "Succession planning starts with…",
+  "learning.map.seller-direction.feedback":
+      "Start with the intended outcome and people involved. Structure and price come later.",
+  "learning.map.seller-ready.title": "Getting ready",
+  "learning.map.seller-ready.explanation":
+      "Organise financial records, contracts, staff responsibilities and operating processes. Separate personal assumptions from business evidence.",
+  "learning.map.seller-ready.why":
+      "A buyer or successor needs reliable information to understand the business.",
+  "learning.map.seller-ready.action":
+      "Build a document list and identify records that need attention.",
+  "learning.map.seller-ready.question": "Preparing business records helps…",
+  "learning.map.seller-ready.feedback":
+      "Organised records make review easier. They do not remove uncertainty or guarantee a transaction.",
+  "learning.map.seller-value.title": "Value and structure",
+  "learning.map.seller-value.explanation":
+      "A business value range depends on supported earnings, assets, risks and proposed terms. Price and cash received at closing can be different.",
+  "learning.map.seller-value.why":
+      "Comparing structures helps you understand the effect of deferred payments and costs.",
+  "learning.map.seller-value.action":
+      "Use the seller calculators and discuss assumptions with an adviser.",
+  "learning.map.seller-value.question":
+      "An agreed price always equals cash at closing?",
+  "learning.map.seller-value.feedback":
+      "Payment terms, debt repayment and transaction costs can change the cash received at closing.",
+  "learning.map.seller-successor.title": "Finding the next owner",
+  "learning.map.seller-successor.explanation":
+      "Look for a buyer or successor whose capacity and goals fit the business. Brokers and other advisers can support the search and discussions.",
+  "learning.map.seller-successor.why":
+      "A suitable successor needs the ability to finance and operate the business.",
+  "learning.map.seller-successor.action":
+      "Set your buyer criteria and decide how you want to approach potential successors.",
+  "learning.map.seller-successor.question": "A suitable successor needs…",
+  "learning.map.seller-successor.feedback":
+      "Fit includes practical operating and financing capacity, not just interest.",
+  "learning.map.seller-confidential.title": "Confidential discussions",
+  "learning.map.seller-confidential.explanation":
+      "Agree on confidentiality and staged information sharing before disclosing sensitive business details. Learn what the agreement permits.",
+  "learning.map.seller-confidential.why":
+      "Careful sharing helps you protect relationships and business information during discussions.",
+  "learning.map.seller-confidential.action":
+      "Review the confidentiality wording and qualify interested parties.",
+  "learning.map.seller-confidential.question":
+      "Sensitive information should be shared…",
+  "learning.map.seller-confidential.feedback":
+      "Agree on what is shared, why it is needed and how the recipient can use it.",
+  "learning.map.seller-terms.title": "Terms and diligence",
+  "learning.map.seller-terms.explanation":
+      "Negotiate the proposed structure and respond to diligence requests. Keep clear records of the assumptions, conditions and unresolved issues.",
+  "learning.map.seller-terms.why":
+      "Price, liabilities, timing and transition commitments all shape the transaction.",
+  "learning.map.seller-terms.action":
+      "Work with your advisers on the LOI, risk log and agreement.",
+  "learning.map.seller-terms.question": "A diligence request is…",
+  "learning.map.seller-terms.feedback":
+      "Diligence requests help establish facts and identify unresolved matters before closing.",
+  "learning.map.seller-close.title": "Closing the transfer",
+  "learning.map.seller-close.explanation":
+      "Coordinate the agreement, approvals, funds and records required to transfer ownership. Requirements depend on the agreed structure.",
+  "learning.map.seller-close.why":
+      "A complete closing process confirms what each party must deliver.",
+  "learning.map.seller-close.action":
+      "Track the conditions and final deliverables with your advisers.",
+  "learning.map.seller-close.question": "The closing checklist should follow…",
+  "learning.map.seller-close.feedback":
+      "Use your actual agreement and adviser guidance. Examples help you learn the concepts.",
+  "learning.map.seller-handover.title": "The handover",
+  "learning.map.seller-handover.explanation":
+      "Provide the agreed training and operating information. Confirm who handles employees, customers, systems and access after the transfer.",
+  "learning.map.seller-handover.why":
+      "A planned handover helps preserve knowledge and business continuity.",
+  "learning.map.seller-handover.action":
+      "Confirm responsibilities and the transition schedule before the closing date.",
+  "learning.map.seller-handover.question": "A handover is strongest when…",
+  "learning.map.seller-handover.feedback":
+      "The transition plan turns expectations into practical responsibilities and a schedule.",
+  "home.learn.action": "I want to learn",
+  "learning.nav.workspace": "LEARNING",
+  "learning.feed.publish": "Create a learning post",
+  "learning.feed.empty.detail":
+      "Only creator-approved contributors can publish. Explore the learning map or document guides while new lessons arrive.",
+  "learning.feed.map": "Explore the learning map",
+  "learning.feed.documents": "Document examples",
+  "learning.start.title": "Start with the concepts",
+  "learning.start.body":
+      "Use the interactive map to understand each stage, then explore the documents and examples. Pebble can show you around this page.",
+  "learning.start.buy": "Buying a business",
+  "learning.start.sell": "Succession or transfer",
+  "learning.seminars.empty": "No sessions scheduled yet",
+  "learning.seminars.empty.body":
+      "Approved hosts will announce upcoming sessions here. You can explore the learning map and document examples now.",
+  "learning.map.why": "Why it matters",
+  "learning.map.action": "What happens next",
+  "learning.map.check": "Check your understanding",
+  "learning.map.notice":
+      "These guides explain the process. Your actual agreement, circumstances and advisers determine the requirements for a transaction.",
+  "learning.map.real": "Ready for a real deal? Open the buyer dashboard",
+  "learning.feed.title": "A place to learn, at your pace",
+  "learning.feed.intro":
+      "Understand buying, selling and transferring a business. Learn from contributors approved by the creator.",
+  "learning.seminars.title": "Live seminars",
+  "learning.seminars.intro":
+      "Learn with approved hosts. Reserve your place, join the scheduled session and return for the replay when the host adds one.",
+  "learning.map.title": "Buying & selling, connected",
+  "learning.map.intro":
+      "Explore a stage, learn the concepts and check your understanding. Pan or zoom the map, then choose a stage to see what happens next.",
+  "learning.approvals.title": "Contributor approvals",
+  "learning.approvals.intro":
+      "Only you can approve publishing access. People must register and verify their email before you approve them.",
+  "nova.training.pebble-learning-feed-topics.title": "Find your next lesson",
+  "nova.training.pebble-learning-feed-topics.body":
+      "Filter by buying, selling, finance or legal topics. Everyone can learn here; publishing is reserved for contributors personally approved by the creator.",
+  "nova.training.pebble-learning-feed-posts.title": "Learn and save",
+  "nova.training.pebble-learning-feed-posts.body":
+      "Read posts, swipe through pictures and play videos or audio. Sign in to like a lesson or save it for later.",
+  "nova.training.pebble-learning-seminars-schedule.title":
+      "Meet and learn live",
+  "nova.training.pebble-learning-seminars-schedule.body":
+      "Browse upcoming sessions and reserve a place. Joining opens the host’s meeting link when the session starts. Ended sessions can include a replay.",
+  "nova.training.pebble-learning-map-journey.title": "Explore the process",
+  "nova.training.pebble-learning-map-journey.body":
+      "Choose buying or selling, then click a stage in the map. Pan or zoom to follow the journey; learning does not create or publish a real deal.",
+  "nova.training.pebble-learning-map-concept.title": "Make each concept clear",
+  "nova.training.pebble-learning-map-concept.body":
+      "Read what the stage means, why it matters and what happens next. Check your understanding and mark it understood to save your progress.",
+  "nova.training.pebble-learning-saved-saved.title": "Return to useful lessons",
+  "nova.training.pebble-learning-saved-saved.body":
+      "Lessons you bookmark in the feed appear here. Your saved list belongs to your own account.",
+  "nova.training.pebble-learning-contributors-approval.title":
+      "Approve trusted educators",
+  "nova.training.pebble-learning-contributors-approval.body":
+      "Only the creator can grant or revoke publishing access. Approve a registered account by email. Other learners can read without becoming publishers.",
+
   "nova.training.pebble-document-guides-templates.body":
       "Download the editable template or completed example from the guide. Use your deal advisers to prepare transaction documents; the fictional examples are learning materials.",
   "nova.training.pebble-document-guides-templates.title": "Take the next step",

@@ -1,0 +1,1680 @@
+import 'dart:async';
+import 'dart:typed_data';
+import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../services/backend_service.dart';
+import '../services/app_tunnel.dart';
+import '../services/learning_service.dart';
+import '../models/learning_journey.dart';
+import '../models/platform_side.dart';
+import '../widgets/dashboard_ui.dart';
+import '../widgets/app_navigation_menu.dart';
+import '../widgets/home_brand_button.dart';
+import '../widgets/learning_media_player.dart';
+import '../widgets/site_copy_text.dart';
+import '../widgets/nova_target.dart';
+import 'auth_page.dart';
+import 'deal_rooms_page.dart';
+import 'transaction_learning_page.dart';
+
+enum LearningView { feed, seminars, map, saved, contributors }
+
+class LearningDashboardPage extends StatefulWidget {
+  const LearningDashboardPage({
+    super.key,
+    this.initialView = LearningView.feed,
+    this.loadPosts,
+    this.loadSeminars,
+    this.loadPermissions,
+  });
+  final LearningView initialView;
+  final Future<List<LearningPost>> Function()? loadPosts;
+  final Future<List<LearningSeminar>> Function()? loadSeminars;
+  final Future<LearningPermissions> Function()? loadPermissions;
+  @override
+  State<LearningDashboardPage> createState() => _LearningDashboardPageState();
+}
+
+class _LearningDashboardPageState extends State<LearningDashboardPage> {
+  late LearningView view;
+  Future<List<LearningPost>>? _feedFuture;
+  Future<List<LearningSeminar>>? _seminarsFuture;
+  Future<List<LearningPost>> get feed =>
+      _feedFuture ??= (widget.loadPosts ?? LearningService.posts)();
+  Future<List<LearningSeminar>> get seminars =>
+      _seminarsFuture ??= (widget.loadSeminars ?? LearningService.seminars)();
+  LearningPermissions permissions = const LearningPermissions();
+  StreamSubscription? auth;
+  Timer? clock;
+  final search = TextEditingController();
+  String topic = 'all';
+  bool seller = false, busy = false;
+  int selected = 0;
+  int? answer;
+  Set<String> completed = {};
+  String? progressNotice;
+  List<LearningPhase> get journey =>
+      seller ? sellerLearningJourney : buyerLearningJourney;
+  LearningPhase get phase => journey[selected];
+  @override
+  void initState() {
+    super.initState();
+    view = widget.initialView;
+    refresh();
+    auth = BackendService.authChanges?.listen((_) {
+      if (mounted) {
+        setState(() => permissions = const LearningPermissions());
+        refresh();
+      }
+    });
+    clock = Timer.periodic(const Duration(minutes: 1), (_) {
+      if (mounted && view == LearningView.seminars) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    auth?.cancel();
+    clock?.cancel();
+    search.dispose();
+    super.dispose();
+  }
+
+  void refresh() {
+    _feedFuture = null;
+    _seminarsFuture = null;
+    _loadPermissions();
+    _progress();
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _loadPermissions() async {
+    final uid = BackendService.user?.id;
+    try {
+      final p = await (widget.loadPermissions ?? LearningService.permissions)();
+      if (mounted && BackendService.user?.id == uid)
+        setState(() => permissions = p);
+    } catch (_) {
+      if (mounted) setState(() => permissions = const LearningPermissions());
+    }
+  }
+
+  Future<void> _progress() async {
+    final uid = BackendService.user?.id;
+    final prefs = await SharedPreferences.getInstance();
+    var values =
+        (prefs.getStringList('learning.progress.${uid ?? 'guest'}') ?? [])
+            .toSet();
+    try {
+      if (uid != null) values = await LearningService.progress();
+    } catch (_) {}
+    if (mounted && BackendService.user?.id == uid)
+      setState(() => completed = values);
+  }
+
+  Future<void> _mark() async {
+    final id = phase.id;
+    final values = {...completed};
+    if (!values.add(id)) values.remove(id);
+    final uid = BackendService.user?.id;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(
+      'learning.progress.${uid ?? 'guest'}',
+      values.toList(),
+    );
+    if (!mounted || BackendService.user?.id != uid) return;
+    setState(() {
+      completed = values;
+      progressNotice = uid == null
+          ? 'Progress saved on this device. Sign in to keep it with your account.'
+          : null;
+    });
+    try {
+      await LearningService.markConcept(id, values.contains(id));
+    } catch (_) {
+      if (mounted)
+        setState(
+          () => progressNotice =
+              'Saved on this device. Account sync failed; try again when connected.',
+        );
+    }
+  }
+
+  Future<bool> _signedIn() async {
+    if (BackendService.user != null) return true;
+    await Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (_) => const AuthPage()));
+    if (mounted) refresh();
+    return mounted && BackendService.user != null;
+  }
+
+  Future<void> _action(Future<void> Function() call) async {
+    if (busy) return;
+    setState(() => busy = true);
+    try {
+      await call();
+      if (mounted) refresh();
+    } catch (e) {
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not complete this action: $e')),
+        );
+    } finally {
+      if (mounted) setState(() => busy = false);
+    }
+  }
+
+  Widget copy(
+    String id,
+    String value, {
+    double size = 14,
+    Color? color,
+    FontWeight weight = FontWeight.normal,
+  }) => SiteCopyText(
+    id,
+    value,
+    style: TextStyle(
+      fontSize: size,
+      color: color ?? DashboardUi.ink,
+      fontWeight: weight,
+      height: 1.45,
+    ),
+  );
+  String get guide => 'learning-${view.name}';
+  void show(LearningView next) {
+    setState(() => view = next);
+  }
+
+  @override
+  Widget build(BuildContext context) => Theme(
+    data: DashboardUi.theme(Theme.of(context)),
+    child: Scaffold(
+      backgroundColor: DashboardUi.canvas,
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        toolbarHeight: 72,
+        backgroundColor: const Color(0xFFF7F5F0),
+        surfaceTintColor: Colors.transparent,
+        title: const HomeBrandButton(size: 48, dark: false),
+        actions: [
+          AppNavigationMenu(guidePage: guide, dark: false),
+          const SizedBox(width: 12),
+        ],
+      ),
+      body: LayoutBuilder(
+        builder: (context, box) => box.maxWidth >= 900
+            ? Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _sidebar(),
+                  const VerticalDivider(width: 1, color: DashboardUi.line),
+                  Expanded(child: _workspace(false)),
+                ],
+              )
+            : _workspace(true),
+      ),
+    ),
+  );
+  Widget _sidebar() => Container(
+    width: 212,
+    color: Colors.white,
+    child: SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(13, 24, 13, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(13, 0, 0, 18),
+            child: copy(
+              'learning.nav.workspace',
+              'LEARNING',
+              size: 10,
+              color: DashboardUi.muted,
+              weight: FontWeight.w800,
+            ),
+          ),
+          for (final item in const [
+            (LearningView.feed, 'Learning feed', Icons.home_outlined),
+            (LearningView.seminars, 'Live seminars', Icons.videocam_outlined),
+            (
+              LearningView.map,
+              'Buying & selling map',
+              Icons.account_tree_outlined,
+            ),
+            (LearningView.saved, 'Saved lessons', Icons.bookmark_outline),
+          ])
+            DashboardUi.nav(
+              item.$2,
+              item.$3,
+              view == item.$1,
+              () => show(item.$1),
+            ),
+          if (permissions.isOwner)
+            DashboardUi.nav(
+              'Contributor approvals',
+              Icons.verified_user_outlined,
+              view == LearningView.contributors,
+              () => show(LearningView.contributors),
+            ),
+          const SizedBox(height: 32),
+          DashboardUi.nav('Refresh', Icons.refresh, false, refresh),
+        ],
+      ),
+    ),
+  );
+  Widget _workspace(bool compact) => SingleChildScrollView(
+    padding: EdgeInsets.all(compact ? 18 : 28),
+    child: Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 1220),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (compact) ...[
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    for (final v in LearningView.values.where(
+                      (v) =>
+                          v != LearningView.contributors || permissions.isOwner,
+                    ))
+                      Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: ChoiceChip(
+                          label: Text(_label(v)),
+                          selected: view == v,
+                          onSelected: (_) => show(v),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 22),
+            ],
+            switch (view) {
+              LearningView.feed || LearningView.saved => _feed(),
+              LearningView.seminars => _seminars(),
+              LearningView.map => _map(),
+              LearningView.contributors => _contributors(),
+            },
+          ],
+        ),
+      ),
+    ),
+  );
+  String _label(LearningView v) => switch (v) {
+    LearningView.feed => 'Learning feed',
+    LearningView.seminars => 'Live seminars',
+    LearningView.map => 'Buying & selling map',
+    LearningView.saved => 'Saved lessons',
+    LearningView.contributors => 'Contributor approvals',
+  };
+  Widget heading(String id, String title, String intro) => NovaTarget(
+    id: '$guide.title',
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        copy('learning.$id.title', title, size: 28, weight: FontWeight.w800),
+        const SizedBox(height: 8),
+        copy('learning.$id.intro', intro, size: 14, color: DashboardUi.muted),
+        const SizedBox(height: 24),
+      ],
+    ),
+  );
+  Widget _feed() => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      heading(
+        view == LearningView.saved ? 'saved' : 'feed',
+        view == LearningView.saved
+            ? 'Your saved lessons'
+            : 'A place to learn, at your pace',
+        view == LearningView.saved
+            ? 'Return to the lessons you bookmarked with your account.'
+            : 'Understand buying, selling and transferring a business. Learn from contributors approved by the creator.',
+      ),
+      if (permissions.canPublish)
+        Padding(
+          padding: const EdgeInsets.only(bottom: 18),
+          child: FilledButton.icon(
+            onPressed: busy ? null : _compose,
+            icon: const Icon(Icons.add),
+            label: copy(
+              'learning.feed.publish',
+              'Create a learning post',
+              color: Colors.white,
+            ),
+          ),
+        ),
+      NovaTarget(
+        id: 'learning-feed.filters',
+        child: Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final t in const [
+              'all',
+              'buyer',
+              'seller',
+              'finance',
+              'legal',
+            ])
+              ChoiceChip(
+                label: Text(
+                  t == 'all'
+                      ? 'All topics'
+                      : t[0].toUpperCase() + t.substring(1),
+                ),
+                selected: topic == t,
+                onSelected: (_) => setState(() => topic = t),
+              ),
+          ],
+        ),
+      ),
+      const SizedBox(height: 16),
+      TextField(
+        controller: search,
+        onChanged: (_) => setState(() {}),
+        decoration: const InputDecoration(
+          hintText: 'Search lessons or contributors',
+          prefixIcon: Icon(Icons.search),
+          filled: true,
+          fillColor: Colors.white,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.all(Radius.circular(12)),
+            borderSide: BorderSide(color: DashboardUi.line),
+          ),
+        ),
+      ),
+      const SizedBox(height: 22),
+      FutureBuilder<List<LearningPost>>(
+        future: feed,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState != ConnectionState.done)
+            return const Center(child: CircularProgressIndicator());
+          if (snapshot.hasError)
+            return _error(
+              'The learning feed could not load. Please try again.',
+            );
+          final all = snapshot.data ?? [];
+          final shown = all
+              .where(
+                (p) =>
+                    (view != LearningView.saved || p.saved) &&
+                    (topic == 'all' || p.topic == topic || p.topic == 'both') &&
+                    ('${p.title} ${p.body} ${p.author}').toLowerCase().contains(
+                      search.text.toLowerCase(),
+                    ),
+              )
+              .toList();
+          return NovaTarget(
+            id: 'learning-feed.posts',
+            child: Column(
+              children: [
+                if (shown.isEmpty)
+                  DashboardUi.panel(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        copy(
+                          view == LearningView.saved
+                              ? 'learning.saved.empty'
+                              : 'learning.feed.empty',
+                          view == LearningView.saved
+                              ? 'Your saved lessons will appear here'
+                              : 'No lessons match this view yet',
+                          size: 20,
+                          weight: FontWeight.w700,
+                        ),
+                        const SizedBox(height: 8),
+                        copy(
+                          'learning.feed.empty.detail',
+                          'Only creator-approved contributors can publish. Explore the learning map or document guides while new lessons arrive.',
+                          color: DashboardUi.muted,
+                        ),
+                        const SizedBox(height: 18),
+                        Wrap(
+                          spacing: 12,
+                          runSpacing: 8,
+                          children: [
+                            OutlinedButton.icon(
+                              onPressed: () => show(LearningView.map),
+                              icon: const Icon(Icons.account_tree_outlined),
+                              label: copy(
+                                'learning.feed.map',
+                                'Explore the learning map',
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: _documents,
+                              child: copy(
+                                'learning.feed.documents',
+                                'Document examples',
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                for (final p in shown) ...[
+                  _post(p),
+                  const SizedBox(height: 20),
+                ],
+                const SizedBox(height: 24),
+                _startHere(),
+              ],
+            ),
+          );
+        },
+      ),
+    ],
+  );
+  Widget _startHere() => DashboardUi.panel(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        copy(
+          'learning.start.title',
+          'Start with the concepts',
+          size: 20,
+          weight: FontWeight.w700,
+        ),
+        const SizedBox(height: 12),
+        copy(
+          'learning.start.body',
+          'Use the interactive map to understand each stage, then explore the documents and examples. Pebble can show you around this page.',
+          color: DashboardUi.muted,
+        ),
+        const SizedBox(height: 16),
+        Wrap(
+          spacing: 12,
+          children: [
+            TextButton.icon(
+              onPressed: () {
+                setState(() {
+                  seller = false;
+                  selected = 0;
+                  answer = null;
+                  view = LearningView.map;
+                });
+              },
+              icon: const Icon(Icons.business_center_outlined),
+              label: copy('learning.start.buy', 'Buying a business'),
+            ),
+            TextButton.icon(
+              onPressed: () {
+                setState(() {
+                  seller = true;
+                  selected = 0;
+                  answer = null;
+                  view = LearningView.map;
+                });
+              },
+              icon: const Icon(Icons.handshake_outlined),
+              label: copy('learning.start.sell', 'Succession or transfer'),
+            ),
+          ],
+        ),
+      ],
+    ),
+  );
+  Widget _post(LearningPost p) => DashboardUi.panel(
+    padding: const EdgeInsets.all(22),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            CircleAvatar(
+              backgroundColor: DashboardUi.paleBlue,
+              child: Text(p.author.isEmpty ? '?' : p.author[0]),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    p.author,
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  Text(
+                    DateFormat('MMM d, yyyy').format(p.createdAt),
+                    style: const TextStyle(
+                      color: DashboardUi.muted,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Tooltip(
+              message: 'Creator-approved contributor',
+              child: Icon(Icons.verified, color: DashboardUi.blue, size: 21),
+            ),
+            if (permissions.isOwner || p.authorId == BackendService.user?.id)
+              IconButton(
+                tooltip: 'Hide this post',
+                onPressed: busy ? null : () => _confirmHide(p),
+                icon: const Icon(Icons.more_horiz),
+              ),
+          ],
+        ),
+        const SizedBox(height: 18),
+        Text(
+          p.title,
+          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+        ),
+        if (p.body.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          SelectableText(
+            p.body,
+            style: const TextStyle(fontSize: 15, height: 1.65),
+          ),
+        ],
+        if (p.media.isNotEmpty) ...[
+          const SizedBox(height: 18),
+          LearningGallery(media: p.media),
+        ],
+        const SizedBox(height: 18),
+        const Divider(color: DashboardUi.line),
+        Wrap(
+          spacing: 18,
+          children: [
+            TextButton.icon(
+              onPressed: busy
+                  ? null
+                  : () async {
+                      if (await _signedIn())
+                        _action(
+                          () => LearningService.reaction(p, 'like', !p.liked),
+                        );
+                    },
+              icon: Icon(p.liked ? Icons.favorite : Icons.favorite_border),
+              label: Text('${p.likes} ${p.likes == 1 ? 'like' : 'likes'}'),
+            ),
+            TextButton.icon(
+              onPressed: busy
+                  ? null
+                  : () async {
+                      if (await _signedIn())
+                        _action(
+                          () => LearningService.reaction(p, 'save', !p.saved),
+                        );
+                    },
+              icon: Icon(p.saved ? Icons.bookmark : Icons.bookmark_outline),
+              label: Text(p.saved ? 'Saved' : 'Save lesson'),
+            ),
+          ],
+        ),
+      ],
+    ),
+  );
+  Future<void> _confirmHide(LearningPost p) async {
+    final yes = await showDialog<bool>(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: const Text('Hide this learning post?'),
+        content: const Text(
+          'It will leave the public feed. Its records are retained.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(c, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(c, true),
+            child: const Text('Hide post'),
+          ),
+        ],
+      ),
+    );
+    if (yes == true && mounted) _action(() => LearningService.hidePost(p.id));
+  }
+
+  Widget _error(String message) => DashboardUi.panel(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(message),
+        const SizedBox(height: 12),
+        TextButton.icon(
+          onPressed: refresh,
+          icon: const Icon(Icons.refresh),
+          label: const Text('Try again'),
+        ),
+      ],
+    ),
+  );
+  void _documents() => Navigator.of(context).push(
+    MaterialPageRoute<void>(builder: (_) => const TransactionLearningPage()),
+  );
+  Future<void> _compose() async {
+    await showDialog<void>(
+      context: context,
+      builder: (_) => const LearningPostComposer(),
+    );
+    if (mounted) refresh();
+  }
+
+  Widget _seminars() => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      heading(
+        'seminars',
+        'Live seminars',
+        'Learn with approved hosts. Reserve your place, join the scheduled session and return for the replay when the host adds one.',
+      ),
+      if (permissions.canPublish)
+        Padding(
+          padding: const EdgeInsets.only(bottom: 20),
+          child: FilledButton.icon(
+            onPressed: _schedule,
+            icon: const Icon(Icons.add),
+            label: const Text('Schedule a seminar'),
+          ),
+        ),
+      NovaTarget(
+        id: 'learning-seminars.sessions',
+        child: FutureBuilder<List<LearningSeminar>>(
+          future: seminars,
+          builder: (c, s) {
+            if (s.connectionState != ConnectionState.done)
+              return const Center(child: CircularProgressIndicator());
+            if (s.hasError)
+              return _error('Seminars could not load. Please try again.');
+            final items = s.data ?? [];
+            if (items.isEmpty)
+              return DashboardUi.panel(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    copy(
+                      'learning.seminars.empty',
+                      'No sessions scheduled yet',
+                      size: 22,
+                      weight: FontWeight.w700,
+                    ),
+                    const SizedBox(height: 10),
+                    copy(
+                      'learning.seminars.empty.body',
+                      'Approved hosts will announce upcoming sessions here. You can explore the learning map and document examples now.',
+                      color: DashboardUi.muted,
+                    ),
+                    const SizedBox(height: 16),
+                    TextButton(
+                      onPressed: () => show(LearningView.map),
+                      child: const Text('Explore the map'),
+                    ),
+                  ],
+                ),
+              );
+            return Column(
+              children: [
+                for (final item in items) ...[
+                  _seminar(item),
+                  const SizedBox(height: 18),
+                ],
+              ],
+            );
+          },
+        ),
+      ),
+    ],
+  );
+  Widget _seminar(LearningSeminar s) {
+    final ended = s.status == 'ended' || DateTime.now().isAfter(s.endsAt);
+    final canJoin = s.canJoin(DateTime.now());
+    return DashboardUi.panel(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  s.title,
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              Text(
+                s.status == 'cancelled'
+                    ? 'Cancelled'
+                    : canJoin
+                    ? 'Live now'
+                    : ended
+                    ? 'Finished'
+                    : 'Upcoming',
+                style: const TextStyle(
+                  color: DashboardUi.blue,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            '${DateFormat('EEE, MMM d • h:mm a').format(s.startsAt)} (${s.startsAt.timeZoneName}) • ${s.duration} min',
+            style: const TextStyle(color: DashboardUi.muted),
+          ),
+          const SizedBox(height: 12),
+          Text(s.description, style: const TextStyle(height: 1.6)),
+          const SizedBox(height: 18),
+          Wrap(
+            spacing: 12,
+            runSpacing: 8,
+            children: [
+              if (s.status != 'cancelled' && !ended)
+                OutlinedButton.icon(
+                  onPressed: busy
+                      ? null
+                      : () async {
+                          if (await _signedIn())
+                            _action(
+                              () => LearningService.rsvp(s, !s.registered),
+                            );
+                        },
+                  icon: Icon(
+                    s.registered ? Icons.check : Icons.event_available,
+                  ),
+                  label: Text(
+                    s.registered ? 'Reserved • cancel' : 'Reserve my place',
+                  ),
+                ),
+              if (canJoin)
+                FilledButton.icon(
+                  onPressed: () => _openUrl(s.joinUrl),
+                  icon: const Icon(Icons.videocam),
+                  label: const Text('Join seminar'),
+                ),
+              if (s.status != 'cancelled')
+                TextButton.icon(
+                  onPressed: () => _calendar(s),
+                  icon: const Icon(Icons.calendar_month),
+                  label: const Text('Add to calendar'),
+                ),
+              if (s.replayUrl.isNotEmpty)
+                TextButton.icon(
+                  onPressed: () => _openUrl(s.replayUrl),
+                  icon: const Icon(Icons.play_circle_outline),
+                  label: const Text('Watch replay'),
+                ),
+              if (permissions.isOwner || s.hostId == BackendService.user?.id)
+                PopupMenuButton<String>(
+                  tooltip: 'Manage seminar',
+                  onSelected: (status) => _action(
+                    () => LearningService.seminarStatus(s.id, status),
+                  ),
+                  itemBuilder: (_) => [
+                    for (final status in const ['live', 'ended', 'cancelled'])
+                      PopupMenuItem(
+                        value: status,
+                        child: Text(
+                          status == 'live'
+                              ? 'Mark live'
+                              : status == 'ended'
+                              ? 'Mark finished'
+                              : 'Cancel session',
+                        ),
+                      ),
+                  ],
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _openUrl(String value) async {
+    if (!LearningSeminar.validUrl(value)) return;
+    if (!await launchUrl(
+          Uri.parse(value),
+          mode: LaunchMode.externalApplication,
+        ) &&
+        mounted)
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('The link could not open. Please try again.'),
+        ),
+      );
+  }
+
+  Future<void> _calendar(LearningSeminar s) async {
+    String date(DateTime d) =>
+        DateFormat("yyyyMMdd'T'HHmmss'Z'").format(d.toUtc());
+    String escape(String value) => value
+        .replaceAll('\\', '\\\\')
+        .replaceAll('\n', r'\n')
+        .replaceAll(',', r'\,')
+        .replaceAll(';', r'\;')
+        .replaceAll('\r', '');
+    final ics =
+        'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Affinity//Learning//EN\r\nBEGIN:VEVENT\r\nUID:${s.id}@affinity-learning\r\nDTSTAMP:${date(DateTime.now())}\r\nDTSTART:${date(s.startsAt)}\r\nDTEND:${date(s.endsAt)}\r\nSUMMARY:${escape(s.title)}\r\nURL:${s.joinUrl}\r\nDESCRIPTION:${escape(s.description)}\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n';
+    try {
+      await FilePicker.platform.saveFile(
+        fileName: 'learning-seminar.ics',
+        bytes: utf8.encode(ics),
+      );
+    } catch (_) {
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Calendar download failed. Please try again.'),
+          ),
+        );
+    }
+  }
+
+  Future<void> _schedule() async {
+    await showDialog<void>(
+      context: context,
+      builder: (_) => const LearningSeminarComposer(),
+    );
+    if (mounted) refresh();
+  }
+
+  Widget _map() => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      heading(
+        'map',
+        'Buying & selling, connected',
+        'Explore a stage, learn the concepts and check your understanding. Pan or zoom the map, then choose a stage to see what happens next.',
+      ),
+      Wrap(
+        spacing: 12,
+        runSpacing: 8,
+        children: [
+          ChoiceChip(
+            label: const Text('Buying a business'),
+            selected: !seller,
+            onSelected: (_) => setState(() {
+              seller = false;
+              selected = 0;
+              answer = null;
+            }),
+          ),
+          ChoiceChip(
+            label: const Text('Succession or transfer'),
+            selected: seller,
+            onSelected: (_) => setState(() {
+              seller = true;
+              selected = 0;
+              answer = null;
+            }),
+          ),
+          Text(
+            '${journey.where((p) => completed.contains(p.id)).length} of ${journey.length} stages explored',
+            style: const TextStyle(color: DashboardUi.muted),
+          ),
+        ],
+      ),
+      const SizedBox(height: 22),
+      NovaTarget(
+        id: 'learning-map.canvas',
+        child: DashboardUi.panel(
+          padding: EdgeInsets.zero,
+          child: SizedBox(
+            height: 380,
+            child: InteractiveViewer(
+              minScale: .6,
+              maxScale: 2.4,
+              constrained: false,
+              boundaryMargin: const EdgeInsets.all(100),
+              child: SizedBox(
+                width: 1060,
+                height: 350,
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: CustomPaint(painter: LearningMapLines()),
+                    ),
+                    for (var i = 0; i < journey.length; i++)
+                      Positioned(
+                        left: _node(i).dx,
+                        top: _node(i).dy,
+                        width: 205,
+                        height: 80,
+                        child: Semantics(
+                          button: true,
+                          selected: selected == i,
+                          label: journey[i].title,
+                          child: Material(
+                            color: selected == i
+                                ? DashboardUi.blue
+                                : completed.contains(journey[i].id)
+                                ? DashboardUi.paleGreen
+                                : DashboardUi.paleBlue,
+                            borderRadius: BorderRadius.circular(16),
+                            child: InkWell(
+                              key: Key('learning-map-${journey[i].id}'),
+                              onTap: () => setState(() {
+                                selected = i;
+                                answer = null;
+                              }),
+                              borderRadius: BorderRadius.circular(16),
+                              child: Padding(
+                                padding: const EdgeInsets.all(16),
+                                child: Row(
+                                  children: [
+                                    Text(
+                                      '${i + 1}',
+                                      style: TextStyle(
+                                        color: selected == i
+                                            ? Colors.white
+                                            : DashboardUi.blue,
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        journey[i].title,
+                                        style: TextStyle(
+                                          color: selected == i
+                                              ? Colors.white
+                                              : DashboardUi.ink,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                    ),
+                                    if (completed.contains(journey[i].id))
+                                      Icon(
+                                        Icons.check_circle,
+                                        size: 18,
+                                        color: selected == i
+                                            ? Colors.white
+                                            : Colors.green,
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+      const SizedBox(height: 20),
+      NovaTarget(
+        id: 'learning-map.concept',
+        child: DashboardUi.panel(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              copy(
+                'learning.map.${phase.id}.title',
+                phase.title,
+                size: 24,
+                weight: FontWeight.w800,
+              ),
+              const SizedBox(height: 14),
+              copy(
+                'learning.map.${phase.id}.explanation',
+                phase.explanation,
+                size: 16,
+              ),
+              const SizedBox(height: 18),
+              copy(
+                'learning.map.why',
+                'Why it matters',
+                weight: FontWeight.w700,
+              ),
+              copy('learning.map.${phase.id}.why', phase.why),
+              const SizedBox(height: 18),
+              copy(
+                'learning.map.action',
+                'What happens next',
+                weight: FontWeight.w700,
+              ),
+              copy('learning.map.${phase.id}.action', phase.action),
+              const SizedBox(height: 18),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final doc in phase.documents)
+                    ActionChip(label: Text(doc), onPressed: _documents),
+                ],
+              ),
+              const Divider(height: 40),
+              copy(
+                'learning.map.check',
+                'Check your understanding',
+                size: 19,
+                weight: FontWeight.w700,
+              ),
+              const SizedBox(height: 8),
+              copy('learning.map.${phase.id}.question', phase.question),
+              const SizedBox(height: 12),
+              for (var i = 0; i < phase.choices.length; i++)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: OutlinedButton(
+                    onPressed: () => setState(() => answer = i),
+                    style: OutlinedButton.styleFrom(
+                      alignment: Alignment.centerLeft,
+                      backgroundColor: answer == i
+                          ? DashboardUi.paleBlue
+                          : null,
+                      minimumSize: const Size(double.infinity, 48),
+                    ),
+                    child: Text(phase.choices[i]),
+                  ),
+                ),
+              if (answer != null) ...[
+                const SizedBox(height: 10),
+                Text(
+                  answer == phase.correct
+                      ? 'That’s right.'
+                      : 'Try another answer.',
+                  style: TextStyle(
+                    color: answer == phase.correct
+                        ? Colors.green
+                        : Colors.orange,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                if (answer == phase.correct)
+                  copy('learning.map.${phase.id}.feedback', phase.feedback),
+              ],
+              const SizedBox(height: 18),
+              Wrap(
+                spacing: 12,
+                runSpacing: 8,
+                children: [
+                  FilledButton.icon(
+                    onPressed:
+                        answer == phase.correct || completed.contains(phase.id)
+                        ? _mark
+                        : null,
+                    icon: Icon(
+                      completed.contains(phase.id)
+                          ? Icons.check_circle
+                          : Icons.check,
+                    ),
+                    label: Text(
+                      completed.contains(phase.id)
+                          ? 'Understood • unmark'
+                          : 'Mark this stage understood',
+                    ),
+                  ),
+                  if (selected < journey.length - 1)
+                    TextButton(
+                      onPressed: () => setState(() {
+                        selected++;
+                        answer = null;
+                      }),
+                      child: const Text('Next stage'),
+                    ),
+                ],
+              ),
+              if (progressNotice != null) ...[
+                const SizedBox(height: 12),
+                Text(
+                  progressNotice!,
+                  style: const TextStyle(color: DashboardUi.muted),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+      const SizedBox(height: 22),
+      copy(
+        'learning.map.notice',
+        'These guides explain the process. Your actual agreement, circumstances and advisers determine the requirements for a transaction.',
+        color: DashboardUi.muted,
+      ),
+      const SizedBox(height: 18),
+      TextButton.icon(
+        onPressed: () {
+          AppTunnelController.select(AppTunnel.buyer);
+          Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) =>
+                  const DealRoomsPage(initialSide: PlatformSide.business),
+            ),
+          );
+        },
+        icon: const Icon(Icons.arrow_forward),
+        label: copy(
+          'learning.map.real',
+          'Ready for a real deal? Open the buyer dashboard',
+        ),
+      ),
+    ],
+  );
+  Widget _contributors() => permissions.isOwner
+      ? Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            heading(
+              'approvals',
+              'Contributor approvals',
+              'Only you can approve publishing access. People must register and verify their email before you approve them.',
+            ),
+            FilledButton.icon(
+              onPressed: () => _approveDialog(),
+              icon: const Icon(Icons.person_add_alt),
+              label: const Text('Approve a contributor'),
+            ),
+            const SizedBox(height: 20),
+            FutureBuilder<List<Map<String, dynamic>>>(
+              future: LearningService.publishers(),
+              builder: (c, s) {
+                if (s.hasError)
+                  return _error('Contributor approvals could not load.');
+                if (!s.hasData) return const CircularProgressIndicator();
+                return Column(
+                  children: [
+                    for (final p in s.data!)
+                      DashboardUi.panel(
+                        child: ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          title: Text(p['display_name']),
+                          subtitle: Text(p['email']),
+                          trailing: TextButton(
+                            onPressed: busy
+                                ? null
+                                : () => _action(
+                                    () => LearningService.approve(
+                                      p['email'],
+                                      p['display_name'],
+                                      p['active'] != true,
+                                    ),
+                                  ),
+                            child: Text(
+                              p['active'] == true
+                                  ? 'Revoke publishing'
+                                  : 'Approve publishing',
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                );
+              },
+            ),
+          ],
+        )
+      : _error('Creator access is required for contributor approvals.');
+  Future<void> _approveDialog() async {
+    final email = TextEditingController(), name = TextEditingController();
+    final yes = await showDialog<bool>(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: const Text('Approve a learning contributor'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: email,
+              keyboardType: TextInputType.emailAddress,
+              decoration: const InputDecoration(labelText: 'Registered email'),
+            ),
+            TextField(
+              controller: name,
+              decoration: const InputDecoration(
+                labelText: 'Public contributor name',
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(c, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(c, true),
+            child: const Text('Approve publishing'),
+          ),
+        ],
+      ),
+    );
+    if (yes == true && mounted)
+      await _action(() => LearningService.approve(email.text, name.text, true));
+    email.dispose();
+    name.dispose();
+  }
+}
+
+Offset _node(int i) =>
+    Offset((28 + (i < 4 ? i : 7 - i) * 255).toDouble(), i < 4 ? 35 : 225);
+
+class LearningMapLines extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xFFACBCD3)
+      ..strokeWidth = 2
+      ..style = PaintingStyle.stroke;
+    for (var i = 0; i < 7; i++) {
+      final a = _node(i) + const Offset(102, 40),
+          b = _node(i + 1) + const Offset(102, 40);
+      canvas.drawLine(a, b, paint);
+    } // Screening and financing can run in parallel with diligence.
+    final a = _node(3) + const Offset(102, 40),
+        b = _node(5) + const Offset(102, 40);
+    final path = Path()
+      ..moveTo(a.dx, a.dy)
+      ..quadraticBezierTo(1060, 180, b.dx, b.dy);
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class LearningGallery extends StatefulWidget {
+  const LearningGallery({super.key, required this.media});
+  final List<LearningAttachment> media;
+  @override
+  State<LearningGallery> createState() => _LearningGalleryState();
+}
+
+class _LearningGalleryState extends State<LearningGallery> {
+  int current = 0;
+  @override
+  Widget build(BuildContext context) {
+    final file = widget.media[current.clamp(0, widget.media.length - 1)];
+    return Column(
+      children: [
+        if (file.image)
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Image.network(
+              file.url,
+              height: 380,
+              width: double.infinity,
+              fit: BoxFit.contain,
+              errorBuilder: (_, __, ___) => const Padding(
+                padding: EdgeInsets.all(32),
+                child: Text(
+                  'This image could not load. Refresh or open the attachment.',
+                ),
+              ),
+            ),
+          )
+        else if (file.video || file.audio)
+          LearningMediaPlayer(
+            key: ValueKey(file.path),
+            url: file.url,
+            audio: file.audio,
+          )
+        else
+          const Padding(
+            padding: EdgeInsets.all(30),
+            child: Icon(
+              Icons.description_outlined,
+              size: 60,
+              color: DashboardUi.blue,
+            ),
+          ),
+        Row(
+          children: [
+            if (widget.media.length > 1)
+              IconButton(
+                tooltip: 'Previous attachment',
+                onPressed: current > 0 ? () => setState(() => current--) : null,
+                icon: const Icon(Icons.chevron_left),
+              ),
+            Expanded(child: Text(file.name, overflow: TextOverflow.ellipsis)),
+            Text('${current + 1}/${widget.media.length}'),
+            if (widget.media.length > 1)
+              IconButton(
+                tooltip: 'Next attachment',
+                onPressed: current < widget.media.length - 1
+                    ? () => setState(() => current++)
+                    : null,
+                icon: const Icon(Icons.chevron_right),
+              ),
+            TextButton(
+              onPressed: () => launchUrl(
+                Uri.parse(file.url),
+                mode: LaunchMode.externalApplication,
+              ),
+              child: const Text('Open file'),
+            ),
+          ],
+        ),
+        if (file.video)
+          const Text(
+            'Playback depends on your browser and the video codec. Use Open file if it cannot play.',
+            style: TextStyle(fontSize: 12, color: DashboardUi.muted),
+          ),
+      ],
+    );
+  }
+}
+
+class LearningPostComposer extends StatefulWidget {
+  const LearningPostComposer({super.key});
+  @override
+  State<LearningPostComposer> createState() => _LearningPostComposerState();
+}
+
+class _LearningPostComposerState extends State<LearningPostComposer> {
+  final title = TextEditingController(), body = TextEditingController();
+  String topic = 'both';
+  final files = <LearningUpload>[];
+  bool busy = false;
+  String? error;
+  @override
+  void dispose() {
+    title.dispose();
+    body.dispose();
+    super.dispose();
+  }
+
+  Future<void> pick() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        allowMultiple: true,
+        withData: true,
+        type: FileType.custom,
+        allowedExtensions: LearningUpload.types.keys.toList(),
+      );
+      if (result == null || !mounted) return;
+      final chosen = result.files
+          .map((f) => LearningUpload(f.name, f.bytes ?? Uint8List(0)))
+          .toList();
+      for (final f in chosen) f.validate();
+      if (files.length + chosen.length > 10)
+        throw StateError('Add up to 10 attachments.');
+      setState(() => files.addAll(chosen));
+    } catch (e) {
+      if (mounted) setState(() => error = '$e');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    title: const Text('Create a learning post'),
+    content: SizedBox(
+      width: 620,
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: title,
+              maxLength: 160,
+              decoration: const InputDecoration(
+                labelText: 'Post title',
+                hintText: 'Example: Understanding working capital',
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: body,
+              maxLength: 12000,
+              minLines: 5,
+              maxLines: 10,
+              decoration: const InputDecoration(
+                labelText: 'Lesson or caption',
+                hintText: 'Explain the concept in your own words…',
+              ),
+            ),
+            DropdownButtonFormField<String>(
+              initialValue: topic,
+              decoration: const InputDecoration(labelText: 'Topic'),
+              items: [
+                for (final t in const [
+                  'both',
+                  'buyer',
+                  'seller',
+                  'finance',
+                  'legal',
+                ])
+                  DropdownMenuItem(
+                    value: t,
+                    child: Text(t == 'both' ? 'Buying & selling' : t),
+                  ),
+              ],
+              onChanged: (t) => topic = t!,
+            ),
+            const SizedBox(height: 14),
+            OutlinedButton.icon(
+              onPressed: busy ? null : pick,
+              icon: const Icon(Icons.attach_file),
+              label: const Text('Add photos, video, audio or PDF'),
+            ),
+            const SizedBox(height: 10),
+            const Text(
+              'JPG, PNG, WebP, GIF, MP4, WebM, MOV, MP3, WAV, M4A and PDF. Up to 10 files, 90 MB each.',
+              style: TextStyle(fontSize: 12, color: DashboardUi.muted),
+            ),
+            for (var i = 0; i < files.length; i++)
+              ListTile(
+                title: Text(files[i].name),
+                trailing: IconButton(
+                  onPressed: busy
+                      ? null
+                      : () => setState(() => files.removeAt(i)),
+                  icon: const Icon(Icons.close),
+                ),
+              ),
+            if (error != null)
+              Text(error!, style: const TextStyle(color: Colors.red)),
+          ],
+        ),
+      ),
+    ),
+    actions: [
+      TextButton(
+        onPressed: busy ? null : () => Navigator.pop(context),
+        child: const Text('Cancel'),
+      ),
+      FilledButton(
+        onPressed: busy
+            ? null
+            : () async {
+                setState(() {
+                  busy = true;
+                  error = null;
+                });
+                try {
+                  await LearningService.publish(
+                    title.text,
+                    body.text,
+                    topic,
+                    files,
+                  );
+                  if (mounted) Navigator.pop(context);
+                } catch (e) {
+                  if (mounted) setState(() => error = '$e');
+                } finally {
+                  if (mounted) setState(() => busy = false);
+                }
+              },
+        child: Text(busy ? 'Publishing…' : 'Publish lesson'),
+      ),
+    ],
+  );
+}
+
+class LearningSeminarComposer extends StatefulWidget {
+  const LearningSeminarComposer({super.key});
+  @override
+  State<LearningSeminarComposer> createState() =>
+      _LearningSeminarComposerState();
+}
+
+class _LearningSeminarComposerState extends State<LearningSeminarComposer> {
+  final title = TextEditingController(),
+      description = TextEditingController(),
+      url = TextEditingController(),
+      replay = TextEditingController();
+  DateTime start = DateTime.now().add(const Duration(days: 1));
+  int duration = 60;
+  bool busy = false;
+  String? error;
+  @override
+  void dispose() {
+    title.dispose();
+    description.dispose();
+    url.dispose();
+    replay.dispose();
+    super.dispose();
+  }
+
+  Future<void> pickDate() async {
+    final date = await showDatePicker(
+      context: context,
+      initialDate: start,
+      firstDate: DateTime.now().subtract(const Duration(days: 1)),
+      lastDate: DateTime.now().add(const Duration(days: 730)),
+    );
+    if (date == null || !mounted) return;
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(start),
+    );
+    if (time != null && mounted)
+      setState(
+        () => start = DateTime(
+          date.year,
+          date.month,
+          date.day,
+          time.hour,
+          time.minute,
+        ),
+      );
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    title: const Text('Schedule a live seminar'),
+    content: SizedBox(
+      width: 600,
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: title,
+              maxLength: 160,
+              decoration: const InputDecoration(labelText: 'Session title'),
+            ),
+            TextField(
+              controller: description,
+              minLines: 3,
+              maxLines: 6,
+              maxLength: 6000,
+              decoration: const InputDecoration(
+                labelText: 'What learners will cover',
+              ),
+            ),
+            TextField(
+              controller: url,
+              keyboardType: TextInputType.url,
+              decoration: const InputDecoration(
+                labelText: 'Live meeting URL',
+                hintText: 'https://…',
+              ),
+            ),
+            TextField(
+              controller: replay,
+              keyboardType: TextInputType.url,
+              decoration: const InputDecoration(
+                labelText: 'Replay URL (optional)',
+                hintText: 'Add a recording link if available',
+              ),
+            ),
+            const SizedBox(height: 14),
+            OutlinedButton.icon(
+              onPressed: busy ? null : pickDate,
+              icon: const Icon(Icons.calendar_today),
+              label: Text(
+                '${DateFormat('MMM d, h:mm a').format(start)} ${start.timeZoneName}',
+              ),
+            ),
+            DropdownButtonFormField<int>(
+              initialValue: duration,
+              decoration: const InputDecoration(labelText: 'Duration'),
+              items: [
+                for (final m in const [30, 45, 60, 90, 120])
+                  DropdownMenuItem(value: m, child: Text('$m minutes')),
+              ],
+              onChanged: (m) => duration = m!,
+            ),
+            const SizedBox(height: 14),
+            const Text(
+              'Use your own webinar or meeting service. Learners will join through this link.',
+              style: TextStyle(color: DashboardUi.muted, fontSize: 12),
+            ),
+            if (error != null)
+              Text(error!, style: const TextStyle(color: Colors.red)),
+          ],
+        ),
+      ),
+    ),
+    actions: [
+      TextButton(
+        onPressed: busy ? null : () => Navigator.pop(context),
+        child: const Text('Cancel'),
+      ),
+      FilledButton(
+        onPressed: busy
+            ? null
+            : () async {
+                if (title.text.trim().length < 3 ||
+                    !LearningSeminar.validUrl(url.text.trim()) ||
+                    (replay.text.isNotEmpty &&
+                        !LearningSeminar.validUrl(replay.text.trim()))) {
+                  setState(
+                    () => error =
+                        'Enter a title and valid HTTPS meeting/replay links.',
+                  );
+                  return;
+                }
+                if (!start.isAfter(DateTime.now())) {
+                  setState(() => error = 'Choose a future start time.');
+                  return;
+                }
+                setState(() {
+                  busy = true;
+                  error = null;
+                });
+                try {
+                  await LearningService.schedule({
+                    'title': title.text.trim(),
+                    'description': description.text.trim(),
+                    'starts_at': start.toUtc().toIso8601String(),
+                    'duration_minutes': duration,
+                    'meeting_url': url.text.trim(),
+                    'replay_url': replay.text.trim().isEmpty
+                        ? null
+                        : replay.text.trim(),
+                  });
+                  if (mounted) Navigator.pop(context);
+                } catch (e) {
+                  if (mounted) setState(() => error = '$e');
+                } finally {
+                  if (mounted) setState(() => busy = false);
+                }
+              },
+        child: Text(busy ? 'Scheduling…' : 'Schedule session'),
+      ),
+    ],
+  );
+}

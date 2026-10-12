@@ -48,6 +48,10 @@ void main() {
       AppTunnel.member,
       ['memberPricing', 'memberStudio', 'profile', 'memberMarketing'],
     ),
+    (
+      AppTunnel.learning,
+      ['learningDashboard', 'learningSeminars', 'learningMap', 'profile'],
+    ),
   ]) {
     testWidgets('$tunnel menu contains only its permitted destinations', (
       tester,

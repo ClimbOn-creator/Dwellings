@@ -218,7 +218,7 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
                 const DealRoomsPage(initialSide: PlatformSide.business),
               ),
               onMember: () => _open(const MemberDealMarketplacePage()),
-              onLearn: () => startBuyerLearning(context),
+              onLearn: () => startLearning(context),
               onSeller: () => _open(const SellerDashboardPage()),
             ),
           ),
@@ -293,8 +293,17 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
               color: const Color(0xFFD2DFD9),
             ),
             const SizedBox(height: 34),
-            TextButton(
-              onPressed: () => startBuyerLearning(context),
+            OutlinedButton(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.white,
+                side: const BorderSide(color: Colors.white54),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 20,
+                ),
+                shape: const RoundedRectangleBorder(),
+              ),
+              onPressed: () => startLearning(context),
               child: const Text(
                 'I want to learn',
                 style: TextStyle(color: Colors.white),

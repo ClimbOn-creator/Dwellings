@@ -187,3 +187,26 @@ analytics. Published paid membership prices are not configured; the Pricing page
 compares existing plan descriptions and does not take payment.
 
 Transaction Room in the main navigation opens the restored document learning library, including worked examples and editable templates. Private deal workspaces remain available from the dashboards.
+
+## Learning Dashboard and private R2 media
+
+The boxed **I want to learn** action opens a fourth, separate Learning workspace (`learning-dashboard`, `learning-seminars`, `learning-map`). Its menu contains only Learning Dashboard, Live seminars, Buying & selling map and Profile. Anyone can read published lessons and explore the map; signed-in learners can save lessons, like posts, register for sessions and save concept progress. Eight buying stages and eight selling/transfer stages include explanations, related document guides and short understanding checks.
+
+Only the confirmed creator account `rw0882308@gmail.com`, already an Affinity owner, can approve or revoke registered contributors under **Contributor approvals**. The approval is checked in database policies and again during R2 uploads. No example feed posts, public seminars or new accounts are seeded. Existing site copy, pictures and account data are preserved.
+
+New pictures, videos, audio and PDF attachments use a dedicated **private** Cloudflare R2 bucket. For a new Cloudflare account, setup is:
+
+```sh
+npx wrangler login
+npx wrangler r2 bucket create affinity-learning-media
+```
+
+`affinity-learning-media` has been created in the connected Cloudflare account. `wrangler.jsonc` binds it as `LEARNING_MEDIA`. Keep its public development URL and custom public domains disabled: downloads go through `/api/learning-media`, which reads Supabase metadata with the visitor's permissions before streaming R2 objects. Set the existing Pages variables `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` for both preview and production. No R2 access keys or service role key are exposed to the Flutter client. `/api/health` reports `learningMediaConfigured`.
+
+Allow up to ten files per post, 90 MB per file: JPG/JPEG, PNG, WebP, GIF, MP4, WebM, MOV, MP3, WAV, M4A and PDF. Video/audio playback depends on the browser's codec support; MP4/WebM are preferable for browser video. PDF opens as a download. Larger video delivery and transcoding are not included. Storage remains private; approved published attachments are readable through the app endpoint. Failed uploads clean up only the new draft attachments. Existing Supabase learning attachments retain their storage backend and remain readable.
+
+The additive migrations `20261012182447_learning_dashboard.sql` and `20261012185317_learning_media_r2.sql` introduce learning tables, approval policies and storage metadata. They have been applied to the configured project. `test/sql/learning_access.sql` tests privacy and approval rules with temporary fixtures inside a transaction ending in ROLLBACK. Run `node --test test/learning_media_api_test.mjs` for upload validation, draft privacy and video range requests.
+
+Live seminars use the approved host's external HTTPS meeting link (for example Zoom) and optional replay. The app schedules sessions, RSVPs and calendar downloads; it does not broadcast video itself.
+
+Map concepts are informed by BDC's [buying steps](https://www.bdc.ca/en/articles-tools/start-buy-business/buy-business/what-are-steps-buying-business), [due diligence](https://www.bdc.ca/en/articles-tools/start-buy-business/buy-business/buying-business-conducting-due-diligence), and [negotiating a sale](https://www.bdc.ca/en/articles-tools/change-ownership/sell-business/how-to-negotiate-the-sale-of-your-business).

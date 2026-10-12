@@ -7,6 +7,7 @@ import 'models/footer_page_content.dart';
 import 'screens/footer_information_page.dart';
 import 'screens/assistant_workspace_page.dart';
 import 'screens/transaction_learning_page.dart';
+import 'screens/learning_dashboard_page.dart';
 import 'widgets/site_inline_editor.dart';
 
 import 'package:flutter/material.dart';
@@ -127,6 +128,13 @@ class AffinityApp extends StatelessWidget {
     if (footerTopic != null) return footerDestination(footerTopic);
 
     return switch (module) {
+      'learning-dashboard' => const LearningDashboardPage(),
+      'learning-seminars' => const LearningDashboardPage(
+        initialView: LearningView.seminars,
+      ),
+      'learning-map' => const LearningDashboardPage(
+        initialView: LearningView.map,
+      ),
       'business' => const AcquisitionSupportPage(),
       'property' => const AcquisitionSupportPage(),
       'business-calculator' => const DealRoomsPage(

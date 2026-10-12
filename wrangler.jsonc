@@ -8,6 +8,11 @@
       "binding": "PROPERTY_FILES",
       "bucket_name": "dwellings",
       "preview_bucket_name": "dwellings"
+    },
+    {
+      "binding": "LEARNING_MEDIA",
+      "bucket_name": "affinity-learning-media",
+      "preview_bucket_name": "affinity-learning-media"
     }
   ]
 }

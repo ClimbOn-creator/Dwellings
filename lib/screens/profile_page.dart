@@ -1,4 +1,5 @@
 import '../services/app_tunnel.dart';
+import 'learning_dashboard_page.dart';
 import 'seller_dashboard_page.dart';
 import 'member_deal_marketplace_page.dart';
 import '../widgets/nova_target.dart';
@@ -692,6 +693,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 MaterialPageRoute<void>(
                   builder: (_) => switch (AppTunnelController.current.value) {
                     AppTunnel.seller => const SellerDashboardPage(),
+                    AppTunnel.learning => const LearningDashboardPage(),
                     AppTunnel.member => const MemberDealMarketplacePage(),
                     _ => const DealRoomsPage(
                       initialSide: PlatformSide.business,

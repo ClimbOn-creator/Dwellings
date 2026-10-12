@@ -3,6 +3,58 @@ import 'nova_walkthrough.dart';
 /// Explicit page identities are passed by headers; release builds never infer them
 /// from minified widget class names.
 const pebbleMainPageCopy = <String, List<(String, String, String, String?)>>{
+  'learning-feed': [
+    (
+      "topics",
+      "Find your next lesson",
+      "Filter by buying, selling, finance or legal topics. Everyone can learn here; publishing is reserved for contributors personally approved by the creator.",
+      "learning-feed.filters",
+    ),
+    (
+      "posts",
+      "Learn and save",
+      "Read posts, swipe through pictures and play videos or audio. Sign in to like a lesson or save it for later.",
+      "learning-feed.posts",
+    ),
+  ],
+  'learning-seminars': [
+    (
+      "schedule",
+      "Meet and learn live",
+      "Browse upcoming sessions and reserve a place. Joining opens the host’s meeting link when the session starts. Ended sessions can include a replay.",
+      "learning-seminars.sessions",
+    ),
+  ],
+  'learning-map': [
+    (
+      "journey",
+      "Explore the process",
+      "Choose buying or selling, then click a stage in the map. Pan or zoom to follow the journey; learning does not create or publish a real deal.",
+      "learning-map.canvas",
+    ),
+    (
+      "concept",
+      "Make each concept clear",
+      "Read what the stage means, why it matters and what happens next. Check your understanding and mark it understood to save your progress.",
+      "learning-map.concept",
+    ),
+  ],
+  'learning-saved': [
+    (
+      "saved",
+      "Return to useful lessons",
+      "Lessons you bookmark in the feed appear here. Your saved list belongs to your own account.",
+      "learning-saved.title",
+    ),
+  ],
+  'learning-contributors': [
+    (
+      "approval",
+      "Approve trusted educators",
+      "Only the creator can grant or revoke publishing access. Approve a registered account by email. Other learners can read without becoming publishers.",
+      "learning-contributors.title",
+    ),
+  ],
   'seller-posts': [
     (
       'create',

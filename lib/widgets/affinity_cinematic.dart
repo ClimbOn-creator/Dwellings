@@ -251,12 +251,11 @@ class _AffinityCinemaHeroState extends State<AffinityCinemaHero>
                                         outline: true,
                                       ),
                                     if (widget.onLearn != null)
-                                      TextButton(
-                                        onPressed: widget.onLearn,
-                                        child: const Text(
-                                          'I want to learn',
-                                          style: TextStyle(color: Colors.white),
-                                        ),
+                                      _CinemaButton(
+                                        'home.learn.action',
+                                        'I want to learn',
+                                        widget.onLearn!,
+                                        outline: true,
                                       ),
                                   ],
                                 ),
