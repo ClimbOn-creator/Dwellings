@@ -141,6 +141,48 @@ void main() {
       });
     }
   }
+  testWidgets('open Canada map refreshes published and cancelled events', (
+    tester,
+  ) async {
+    var cancelled = false;
+    var requests = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: LearningDashboardPage(
+          initialView: LearningView.seminars,
+          loadPermissions: () async => const LearningPermissions(),
+          loadSeminars: () async {
+            requests++;
+            return [
+              LearningSeminar(
+                id: 'refresh',
+                hostId: 'host',
+                title: 'Succession workshop',
+                description: '',
+                startsAt: DateTime.now().add(const Duration(days: 1)),
+                duration: 60,
+                joinUrl: '',
+                websiteUrl: 'https://example.com/workshop',
+                latitude: 49.3,
+                longitude: -123.1,
+                status: cancelled ? 'cancelled' : 'scheduled',
+              ),
+            ];
+          },
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(requests, 1);
+    expect(find.byKey(const ValueKey('event-pin-refresh')), findsOneWidget);
+    cancelled = true;
+    await tester.pump(const Duration(seconds: 30));
+    await tester.pumpAndSettle();
+    expect(requests, 2);
+    expect(find.byKey(const ValueKey('event-pin-refresh')), findsNothing);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
   testWidgets('approved publishers can access composer and creator approvals', (
     tester,
   ) async {

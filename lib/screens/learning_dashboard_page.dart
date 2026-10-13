@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:math' as math;
+import '../widgets/canada_event_map.dart';
 import 'dart:typed_data';
 import 'dart:convert';
 import 'package:flutter/material.dart';
@@ -6,6 +8,8 @@ import 'package:file_picker/file_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:supabase_flutter/supabase_flutter.dart'
+    show RealtimeChannel, PostgresChangeEvent;
 import '../services/backend_service.dart';
 import '../services/app_tunnel.dart';
 import '../services/learning_service.dart';
@@ -110,7 +114,14 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
   LearningPermissions permissions = const LearningPermissions();
   StreamSubscription? auth;
   Timer? clock;
+  RealtimeChannel? eventChanges;
+  int eventRevision = 0;
+  bool updatingEvents = false;
   final search = TextEditingController();
+  final eventSearch = TextEditingController();
+  String eventKind = 'all';
+  bool nearbyEvents = false;
+  final eventKeys = <String, GlobalKey>{};
   String topic = 'all';
   bool seller = false, busy = false;
   int selected = 0;
@@ -136,8 +147,31 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
         refresh();
       }
     });
-    clock = Timer.periodic(const Duration(minutes: 1), (_) {
-      if (mounted && view == LearningView.seminars) setState(() {});
+    if (BackendService.configured && widget.loadSeminars == null) {
+      eventChanges = LearningService.client
+          .channel('learning-events-${identityHashCode(this)}')
+          .onPostgresChanges(
+            event: PostgresChangeEvent.all,
+            schema: 'public',
+            table: 'learning_seminars',
+            callback: (_) => _refreshEvents(),
+          )
+          .onPostgresChanges(
+            event: PostgresChangeEvent.all,
+            schema: 'public',
+            table: 'learning_event_images',
+            callback: (_) => _refreshEvents(),
+          )
+          .subscribe();
+    }
+    // Polling also handles revoked hosts and rows that become invisible to RLS,
+    // and keeps the map current after a dropped realtime connection.
+    clock = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (mounted && view == LearningView.seminars) {
+        _refreshEvents();
+        _loadPermissions();
+        setState(() {});
+      }
     });
   }
 
@@ -145,11 +179,39 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
   void dispose() {
     auth?.cancel();
     clock?.cancel();
+    if (eventChanges != null)
+      LearningService.client.removeChannel(eventChanges!);
     search.dispose();
+    eventSearch.dispose();
     super.dispose();
   }
 
+  Future<void> _refreshEvents() async {
+    if (!mounted) return;
+    if (view != LearningView.seminars) {
+      _seminarsFuture = null;
+      return;
+    }
+    if (updatingEvents) return;
+    updatingEvents = true;
+    final revision = eventRevision;
+    final uid = BackendService.user?.id;
+    try {
+      final values = await (widget.loadSeminars ?? LearningService.seminars)();
+      if (mounted &&
+          revision == eventRevision &&
+          uid == BackendService.user?.id) {
+        setState(() => _seminarsFuture = Future.value(values));
+      }
+    } catch (_) {
+      // Keep the last confirmed events during temporary network failures.
+    } finally {
+      updatingEvents = false;
+    }
+  }
+
   void refresh() {
+    eventRevision++;
     _feedFuture = null;
     _seminarsFuture = null;
     _loadPermissions();
@@ -774,8 +836,8 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
     children: [
       heading(
         'seminars',
-        'Live seminars',
-        'Learn with approved hosts. Reserve your place, join the scheduled session and return for the replay when the host adds one.',
+        'Live seminars & local events',
+        'Discover sessions, meetings and information events across Canada. Hover over a point, or tap it on your phone, to see what is happening.',
       ),
       if (permissions.canPublish)
         Padding(
@@ -783,7 +845,7 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
           child: FilledButton.icon(
             onPressed: _schedule,
             icon: const Icon(Icons.add),
-            label: const Text('Schedule a seminar'),
+            label: const Text('Place an event on the map'),
           ),
         ),
       NovaTarget(
@@ -791,40 +853,159 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
         child: FutureBuilder<List<LearningSeminar>>(
           future: seminars,
           builder: (c, s) {
-            if (s.connectionState != ConnectionState.done)
+            if (!s.hasData && s.connectionState != ConnectionState.done)
               return const Center(child: CircularProgressIndicator());
             if (s.hasError)
               return _error('Seminars could not load. Please try again.');
-            final items = s.data ?? [];
-            if (items.isEmpty)
-              return DashboardUi.panel(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+            final all = s.data ?? [];
+            final items = all
+                .where(
+                  (e) =>
+                      (eventKind == 'all' || e.kind == eventKind) &&
+                      '${e.title} ${e.organization} ${e.areaName}'
+                          .toLowerCase()
+                          .contains(eventSearch.text.toLowerCase()) &&
+                      (!nearbyEvents ||
+                          (area != null && _eventDistance(e, area!) <= 200)),
+                )
+                .toList();
+            final mapped = items
+                .where((e) => e.visibleOnMap(DateTime.now()))
+                .toList();
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextField(
+                  controller: eventSearch,
+                  onChanged: (_) => setState(() {}),
+                  decoration: const InputDecoration(
+                    prefixIcon: Icon(Icons.search),
+                    hintText: 'Search a town, event or organization',
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
                   children: [
-                    copy(
-                      'learning.seminars.empty',
-                      'No sessions scheduled yet',
-                      size: 22,
-                      weight: FontWeight.w700,
-                    ),
-                    const SizedBox(height: 10),
-                    copy(
-                      'learning.seminars.empty.body',
-                      'Approved hosts will announce upcoming sessions here. You can explore the learning map and document examples now.',
-                      color: DashboardUi.muted,
-                    ),
-                    const SizedBox(height: 16),
-                    TextButton(
-                      onPressed: () => show(LearningView.map),
-                      child: const Text('Explore the map'),
+                    for (final kind in const [
+                      'all',
+                      'seminar',
+                      'meeting',
+                      'information',
+                      'workshop',
+                    ])
+                      ChoiceChip(
+                        label: Text(switch (kind) {
+                          'all' => 'All events',
+                          'seminar' => 'Seminars',
+                          'meeting' => 'Meetings',
+                          'information' => 'Information sessions',
+                          _ => 'Workshops',
+                        }),
+                        selected: eventKind == kind,
+                        onSelected: (_) => setState(() => eventKind = kind),
+                      ),
+                    FilterChip(
+                      label: Text(
+                        area == null
+                            ? 'Near my community'
+                            : 'Near ${area!.name}',
+                      ),
+                      selected: nearbyEvents,
+                      onSelected: (on) async {
+                        if (on && area == null) await _chooseArea();
+                        if (mounted && (!on || area != null))
+                          setState(() => nearbyEvents = on);
+                      },
                     ),
                   ],
                 ),
-              );
-            return Column(
-              children: [
+                const SizedBox(height: 18),
+                NovaTarget(
+                  id: 'learning-seminars.map',
+                  child: CanadaEventMap(
+                    events: mapped,
+                    area: area,
+                    nearby: nearbyEvents,
+                    onOpen: (e) {
+                      if (e.informationUrl.isNotEmpty) {
+                        _openUrl(e.informationUrl);
+                        return;
+                      }
+                      final key = eventKeys[e.id];
+                      if (key?.currentContext != null)
+                        Scrollable.ensureVisible(
+                          key!.currentContext!,
+                          alignment: .15,
+                          duration: const Duration(milliseconds: 350),
+                        );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 16,
+                  runSpacing: 8,
+                  children: [
+                    for (final kind in const [
+                      'seminar',
+                      'meeting',
+                      'information',
+                      'workshop',
+                    ])
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            eventIcon(kind),
+                            size: 16,
+                            color: eventColor(kind),
+                          ),
+                          const SizedBox(width: 5),
+                          Text(switch (kind) {
+                            'seminar' => 'Seminar',
+                            'meeting' => 'Meeting',
+                            'information' => 'Information',
+                            _ => 'Workshop',
+                          }, style: const TextStyle(fontSize: 12)),
+                        ],
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                copy(
+                  'learning.events.mapHelp',
+                  'Zoom into your town. Hover or tap a pin for its picture and time, then visit the event website. Nearby pins group together. Times are shown in your local time zone.',
+                  color: DashboardUi.muted,
+                  size: 12,
+                ),
+                const SizedBox(height: 24),
+                if (items.isEmpty)
+                  DashboardUi.panel(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        copy(
+                          'learning.seminars.empty',
+                          'No sessions scheduled yet',
+                          size: 22,
+                          weight: FontWeight.w700,
+                        ),
+                        const SizedBox(height: 8),
+                        copy(
+                          'learning.seminars.empty.body',
+                          'Approved hosts will announce upcoming sessions here. You can explore the learning map and document examples now.',
+                          color: DashboardUi.muted,
+                        ),
+                      ],
+                    ),
+                  ),
                 for (final item in items) ...[
-                  _seminar(item),
+                  KeyedSubtree(
+                    key: eventKeys.putIfAbsent(item.id, () => GlobalKey()),
+                    child: _seminar(item),
+                  ),
                   const SizedBox(height: 18),
                 ],
               ],
@@ -834,9 +1015,24 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
       ),
     ],
   );
+  double _eventDistance(LearningSeminar e, LearningArea a) {
+    if (!e.mapped) return double.infinity;
+    final lat1 = a.latitude * math.pi / 180, lat2 = e.latitude! * math.pi / 180;
+    final h =
+        math.pow(math.sin((lat2 - lat1) / 2), 2) +
+        math.cos(lat1) *
+            math.cos(lat2) *
+            math.pow(math.sin((e.longitude! - a.longitude) * math.pi / 360), 2);
+    return 6371.0088 * 2 * math.asin(math.sqrt(h.clamp(0, 1)));
+  }
+
   Widget _seminar(LearningSeminar s) {
     final ended = s.status == 'ended' || DateTime.now().isAfter(s.endsAt);
     final canJoin = s.canJoin(DateTime.now());
+    final ongoing =
+        s.status == 'live' ||
+        (!DateTime.now().isBefore(s.startsAt) &&
+            DateTime.now().isBefore(s.endsAt));
     return DashboardUi.panel(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -855,8 +1051,8 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
               Text(
                 s.status == 'cancelled'
                     ? 'Cancelled'
-                    : canJoin
-                    ? 'Live now'
+                    : ongoing
+                    ? (s.mode == 'in_person' ? 'Happening now' : 'Live now')
                     : ended
                     ? 'Finished'
                     : 'Upcoming',
@@ -867,6 +1063,27 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
               ),
             ],
           ),
+          if (s.organization.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              s.organization,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                color: DashboardUi.muted,
+              ),
+            ),
+          ],
+          if (s.areaName.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              '${s.kindLabel} · ${s.areaName} · ${s.mode == 'in_person'
+                  ? 'In person'
+                  : s.mode == 'hybrid'
+                  ? 'Hybrid'
+                  : 'Online'}',
+            ),
+          ],
+          if (s.venue.isNotEmpty) ...[const SizedBox(height: 8), Text(s.venue)],
           const SizedBox(height: 10),
           Text(
             '${DateFormat('EEE, MMM d • h:mm a').format(s.startsAt)} (${s.startsAt.timeZoneName}) • ${s.duration} min',
@@ -895,6 +1112,12 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
                   label: Text(
                     s.registered ? 'Reserved • cancel' : 'Reserve my place',
                   ),
+                ),
+              if (s.informationUrl.isNotEmpty)
+                TextButton.icon(
+                  onPressed: () => _openUrl(s.informationUrl),
+                  icon: const Icon(Icons.open_in_new),
+                  label: const Text('Visit event website'),
                 ),
               if (canJoin)
                 FilledButton.icon(
@@ -965,7 +1188,7 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
         .replaceAll(';', r'\;')
         .replaceAll('\r', '');
     final ics =
-        'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Affinity//Learning//EN\r\nBEGIN:VEVENT\r\nUID:${s.id}@affinity-learning\r\nDTSTAMP:${date(DateTime.now())}\r\nDTSTART:${date(s.startsAt)}\r\nDTEND:${date(s.endsAt)}\r\nSUMMARY:${escape(s.title)}\r\nURL:${s.joinUrl}\r\nDESCRIPTION:${escape(s.description)}\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n';
+        'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Affinity//Learning//EN\r\nBEGIN:VEVENT\r\nUID:${s.id}@affinity-learning\r\nDTSTAMP:${date(DateTime.now())}\r\nDTSTART:${date(s.startsAt)}\r\nDTEND:${date(s.endsAt)}\r\nSUMMARY:${escape(s.title)}\r\nURL:${s.informationUrl}\r\nDESCRIPTION:${escape(s.description)}\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n';
     try {
       await FilePicker.platform.saveFile(
         fileName: 'learning-seminar.ics',
@@ -1648,7 +1871,14 @@ class _LearningSeminarComposerState extends State<LearningSeminarComposer> {
   final title = TextEditingController(),
       description = TextEditingController(),
       url = TextEditingController(),
-      replay = TextEditingController();
+      website = TextEditingController(),
+      replay = TextEditingController(),
+      organization = TextEditingController(),
+      venue = TextEditingController();
+  LearningArea? eventArea;
+  LearningUpload? eventImage;
+  String eventKind = 'seminar', eventMode = 'online';
+  String? draftId;
   DateTime start = DateTime.now().add(const Duration(days: 1));
   int duration = 60;
   bool busy = false;
@@ -1659,7 +1889,30 @@ class _LearningSeminarComposerState extends State<LearningSeminarComposer> {
     description.dispose();
     url.dispose();
     replay.dispose();
+    website.dispose();
+    organization.dispose();
+    venue.dispose();
     super.dispose();
+  }
+
+  Future<void> pickImage() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        withData: true,
+        type: FileType.custom,
+        allowedExtensions: const ['jpg', 'jpeg', 'png', 'webp'],
+      );
+      if (result == null || !mounted) return;
+      final file = result.files.single;
+      final image = LearningUpload(file.name, file.bytes ?? Uint8List(0));
+      image.validate();
+      if (image.bytes.length > 5 * 1024 * 1024)
+        throw StateError('Choose a picture up to 5 MB.');
+      setState(() => eventImage = image);
+    } catch (_) {
+      if (mounted)
+        setState(() => error = 'Use a JPG, PNG or WebP picture up to 5 MB.');
+    }
   }
 
   Future<void> pickDate() async {
@@ -1688,13 +1941,99 @@ class _LearningSeminarComposerState extends State<LearningSeminarComposer> {
 
   @override
   Widget build(BuildContext context) => AlertDialog(
-    title: const Text('Schedule a live seminar'),
+    title: const Text('Create a community event'),
     content: SizedBox(
       width: 600,
       child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            OutlinedButton.icon(
+              onPressed: busy
+                  ? null
+                  : () async {
+                      final value = await chooseLearningArea(context);
+                      if (value != null && mounted)
+                        setState(() => eventArea = value);
+                    },
+              icon: const Icon(Icons.location_on_outlined),
+              label: Text(eventArea?.name ?? 'Choose the event town'),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: organization,
+              maxLength: 160,
+              decoration: const InputDecoration(
+                labelText: 'Hosting organization',
+              ),
+            ),
+            DropdownButtonFormField<String>(
+              initialValue: eventKind,
+              decoration: const InputDecoration(labelText: 'Event type'),
+              items: [
+                for (final kind in const [
+                  'seminar',
+                  'meeting',
+                  'information',
+                  'workshop',
+                ])
+                  DropdownMenuItem(
+                    value: kind,
+                    child: Text(switch (kind) {
+                      'seminar' => 'Seminar',
+                      'meeting' => 'Meeting',
+                      'information' => 'Information session',
+                      _ => 'Workshop',
+                    }),
+                  ),
+              ],
+              onChanged: busy
+                  ? null
+                  : (value) => setState(() => eventKind = value!),
+            ),
+            DropdownButtonFormField<String>(
+              initialValue: eventMode,
+              decoration: const InputDecoration(labelText: 'How people attend'),
+              items: const [
+                DropdownMenuItem(value: 'online', child: Text('Online')),
+                DropdownMenuItem(value: 'in_person', child: Text('In person')),
+                DropdownMenuItem(value: 'hybrid', child: Text('Hybrid')),
+              ],
+              onChanged: busy
+                  ? null
+                  : (value) => setState(() => eventMode = value!),
+            ),
+            if (eventMode != 'online')
+              TextField(
+                controller: venue,
+                maxLength: 300,
+                decoration: const InputDecoration(
+                  labelText: 'Public venue / meeting address',
+                  hintText: 'Example: Community centre, main hall',
+                ),
+              ),
+            const SizedBox(height: 14),
+            OutlinedButton.icon(
+              onPressed: busy ? null : pickImage,
+              icon: const Icon(Icons.add_photo_alternate_outlined),
+              label: Text(
+                eventImage?.name ??
+                    'Add event picture (JPG, PNG, WebP • up to 5 MB)',
+              ),
+            ),
+            if (eventImage != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 10),
+                child: Image.memory(
+                  eventImage!.bytes,
+                  height: 110,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => const Text(
+                    'This picture could not be displayed. Choose another.',
+                  ),
+                ),
+              ),
+
             TextField(
               controller: title,
               maxLength: 160,
@@ -1710,10 +2049,21 @@ class _LearningSeminarComposerState extends State<LearningSeminarComposer> {
               ),
             ),
             TextField(
-              controller: url,
+              controller: website,
               keyboardType: TextInputType.url,
               decoration: const InputDecoration(
-                labelText: 'Live meeting URL',
+                labelText: 'Event or company website',
+                hintText: 'https://…',
+                helperText: 'Visitors open this website from your map point.',
+              ),
+            ),
+            TextField(
+              controller: url,
+              keyboardType: TextInputType.url,
+              decoration: InputDecoration(
+                labelText: eventMode == 'in_person'
+                    ? 'Meeting link (optional)'
+                    : 'Live meeting URL',
                 hintText: 'https://…',
               ),
             ),
@@ -1762,13 +2112,33 @@ class _LearningSeminarComposerState extends State<LearningSeminarComposer> {
         onPressed: busy
             ? null
             : () async {
+                if (eventArea == null ||
+                    eventImage == null ||
+                    organization.text.trim().isEmpty) {
+                  setState(
+                    () => error =
+                        'Choose the town, add the hosting organization and an event picture.',
+                  );
+                  return;
+                }
+                if (eventMode != 'online' && venue.text.trim().isEmpty) {
+                  setState(
+                    () => error = 'Add the public venue or meeting address.',
+                  );
+                  return;
+                }
                 if (title.text.trim().length < 3 ||
-                    !LearningSeminar.validUrl(url.text.trim()) ||
+                    !LearningSeminar.validUrl(website.text.trim()) ||
+                    (eventMode != 'in_person' &&
+                        !LearningSeminar.validUrl(url.text.trim())) ||
+                    (eventMode == 'in_person' &&
+                        url.text.trim().isNotEmpty &&
+                        !LearningSeminar.validUrl(url.text.trim())) ||
                     (replay.text.isNotEmpty &&
                         !LearningSeminar.validUrl(replay.text.trim()))) {
                   setState(
                     () => error =
-                        'Enter a title and valid HTTPS meeting/replay links.',
+                        'Enter a title, an HTTPS event website and valid meeting/replay links.',
                   );
                   return;
                 }
@@ -1781,16 +2151,25 @@ class _LearningSeminarComposerState extends State<LearningSeminarComposer> {
                   error = null;
                 });
                 try {
-                  await LearningService.schedule({
+                  draftId = await LearningService.schedule({
+                    'website_url': website.text.trim(),
+                    'organization': organization.text.trim(),
+                    'event_kind': eventKind,
+                    'event_mode': eventMode,
+                    'venue': venue.text.trim(),
+                    ...eventArea!.toJson(),
                     'title': title.text.trim(),
                     'description': description.text.trim(),
                     'starts_at': start.toUtc().toIso8601String(),
                     'duration_minutes': duration,
-                    'meeting_url': url.text.trim(),
+                    'meeting_url': url.text.trim().isEmpty
+                        ? null
+                        : url.text.trim(),
                     'replay_url': replay.text.trim().isEmpty
                         ? null
                         : replay.text.trim(),
-                  });
+                  }, draftId: draftId);
+                  await LearningService.publishEvent(draftId!, eventImage!);
                   if (mounted) Navigator.pop(context);
                 } catch (e) {
                   if (mounted) setState(() => error = '$e');
@@ -1798,7 +2177,7 @@ class _LearningSeminarComposerState extends State<LearningSeminarComposer> {
                   if (mounted) setState(() => busy = false);
                 }
               },
-        child: Text(busy ? 'Scheduling…' : 'Schedule session'),
+        child: Text(busy ? 'Publishing…' : 'Publish event'),
       ),
     ],
   );

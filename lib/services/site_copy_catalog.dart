@@ -1,6 +1,9 @@
 // These IDs are permanent. Rewrite the fallback VALUE while retaining its ID.
 // Never regenerate or renumber this registry during a redesign.
 const siteCopyCatalog = <String, String>{
+  "learning.events.localTime": "Times shown in your local time zone",
+  "learning.events.mapHelp":
+      "Zoom into your town. Hover or tap a pin for its picture and time, then visit the event website. Nearby pins group together. Times are shown in your local time zone.",
   "learning.feed.ranking":
       "Nearby posts, ranked by likes, conversation and freshness. No following list.",
   "learning.feed.chooseArea": "Choose your community to see nearby posts",
@@ -197,9 +200,9 @@ const siteCopyCatalog = <String, String>{
   "learning.feed.title": "A place to learn, at your pace",
   "learning.feed.intro":
       "Understand buying, selling and transferring a business. Learn from contributors approved by the creator.",
-  "learning.seminars.title": "Live seminars",
+  "learning.seminars.title": "Live seminars & local events",
   "learning.seminars.intro":
-      "Learn with approved hosts. Reserve your place, join the scheduled session and return for the replay when the host adds one.",
+      "Discover sessions, meetings and information events across Canada. Hover over a point, or tap it on your phone, to see what is happening.",
   "learning.map.title": "Buying & selling, connected",
   "learning.map.intro":
       "Explore a stage, learn the concepts and check your understanding. Pan or zoom the map, then choose a stage to see what happens next.",
@@ -215,7 +218,7 @@ const siteCopyCatalog = <String, String>{
   "nova.training.pebble-learning-seminars-schedule.title":
       "Meet and learn live",
   "nova.training.pebble-learning-seminars-schedule.body":
-      "Browse upcoming sessions and reserve a place. Joining opens the host’s meeting link when the session starts. Ended sessions can include a replay.",
+      "Hover over a point, or tap it on your phone, to see the picture, title, hosting organization and local start time. Nearby events group together; zoom in or open the group. Visit website opens the host’s event or company website. Use the details below to reserve a place or add the event to your calendar.",
   "nova.training.pebble-learning-map-journey.title": "Explore the process",
   "nova.training.pebble-learning-map-journey.body":
       "Choose buying or selling, then click a stage in the map. Pan or zoom to follow the journey; learning does not create or publish a real deal.",

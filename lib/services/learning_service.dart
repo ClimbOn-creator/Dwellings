@@ -93,16 +93,53 @@ class LearningSeminar {
     required this.startsAt,
     required this.duration,
     required this.joinUrl,
+    this.websiteUrl = '',
     this.replayUrl = '',
     this.status = 'scheduled',
     this.registered = false,
+    this.organization = '',
+    this.kind = 'seminar',
+    this.mode = 'online',
+    this.areaName = '',
+    this.venue = '',
+    this.imageUrl = '',
+    this.latitude,
+    this.longitude,
   });
-  final String id, hostId, title, description, joinUrl, replayUrl, status;
+  final String id,
+      hostId,
+      title,
+      description,
+      joinUrl,
+      websiteUrl,
+      replayUrl,
+      status;
+  String get informationUrl => validUrl(websiteUrl)
+      ? websiteUrl
+      : validUrl(joinUrl)
+      ? joinUrl
+      : "";
   final DateTime startsAt;
   final int duration;
   final bool registered;
+  final String organization, kind, mode, areaName, venue, imageUrl;
+  final double? latitude, longitude;
+  bool get mapped => latitude != null && longitude != null;
+  String get kindLabel => switch (kind) {
+    'meeting' => 'Meeting',
+    'information' => 'Information session',
+    'workshop' => 'Workshop',
+    _ => 'Seminar',
+  };
+  bool visibleOnMap(DateTime now) =>
+      mapped &&
+      status != 'cancelled' &&
+      status != 'ended' &&
+      (status == 'live' || now.isBefore(endsAt));
   DateTime get endsAt => startsAt.add(Duration(minutes: duration));
   bool canJoin(DateTime now) =>
+      mode != 'in_person' &&
+      joinUrl.isNotEmpty &&
       status != 'cancelled' &&
       status != 'ended' &&
       (status == 'live' || (!now.isBefore(startsAt) && now.isBefore(endsAt)));
@@ -112,6 +149,18 @@ class LearningSeminar {
         u.scheme == 'https' &&
         u.host.isNotEmpty &&
         !url.contains(RegExp(r'\s'));
+  }
+
+  static String _eventImageUrl(dynamic data) {
+    final row = data is Map
+        ? data
+        : data is List
+        ? data.firstOrNull
+        : null;
+    final id = row is Map ? row['id'] : null;
+    return id == null
+        ? ''
+        : Uri.base.resolve('/api/learning-event-image?id=$id').toString();
   }
 
   factory LearningSeminar.fromJson(
@@ -124,7 +173,16 @@ class LearningSeminar {
     description: j['description'] ?? '',
     startsAt: DateTime.parse(j['starts_at']).toLocal(),
     duration: j['duration_minutes'] as int,
-    joinUrl: j['meeting_url'],
+    joinUrl: j['meeting_url'] ?? '',
+    websiteUrl: j['website_url'] ?? '',
+    organization: j['organization'] ?? '',
+    kind: j['event_kind'] ?? 'seminar',
+    mode: j['event_mode'] ?? 'online',
+    areaName: j['area_name'] ?? '',
+    venue: j['venue'] ?? '',
+    latitude: (j['latitude'] as num?)?.toDouble(),
+    longitude: (j['longitude'] as num?)?.toDouble(),
+    imageUrl: _eventImageUrl(j['learning_event_images']),
     replayUrl: j['replay_url'] ?? '',
     status: j['status'],
     registered: registered,
@@ -349,9 +407,22 @@ class LearningService {
     if (!BackendService.configured) return [];
     final rows = await client
         .from('learning_seminars')
-        .select()
+        .select('*,learning_event_images(*)')
+        .eq('is_published', true)
+        .or(
+          'starts_at.gte.${DateTime.now().subtract(const Duration(days: 1)).toUtc().toIso8601String()},status.eq.live',
+        )
         .order('starts_at')
-        .limit(100);
+        .limit(200);
+    final replays = await client
+        .from('learning_seminars')
+        .select('*,learning_event_images(*)')
+        .eq('is_published', true)
+        .eq('status', 'ended')
+        .order('starts_at', ascending: false)
+        .limit(20);
+    final seen = rows.map((r) => r['id']).toSet();
+    rows.addAll(replays.where((r) => !seen.contains(r['id'])));
     final rsvps = BackendService.user == null
         ? <Map<String, dynamic>>[]
         : await client
@@ -368,14 +439,69 @@ class LearningService {
         .toList();
   }
 
-  static Future<void> schedule(Map<String, dynamic> fields) async {
+  static Future<String> schedule(
+    Map<String, dynamic> fields, {
+    String? draftId,
+  }) async {
     await _requirePublisher();
-    if (!LearningSeminar.validUrl(fields['meeting_url']))
-      throw StateError('Use an HTTPS seminar link.');
-    await client.from('learning_seminars').insert({
-      ...fields,
-      'host_id': BackendService.user!.id,
-    });
+    if (fields['event_mode'] != 'in_person' &&
+        !LearningSeminar.validUrl(fields['meeting_url'] ?? ''))
+      throw StateError('Use an HTTPS event link.');
+    if (!LearningSeminar.validUrl(fields['website_url'] ?? ''))
+      throw StateError('Add an HTTPS event or company website.');
+    final row = draftId == null
+        ? await client
+              .from('learning_seminars')
+              .insert({
+                ...fields,
+                'host_id': BackendService.user!.id,
+                'is_published': false,
+              })
+              .select('id')
+              .single()
+        : await client
+              .from('learning_seminars')
+              .update(fields)
+              .eq('id', draftId)
+              .eq('is_published', false)
+              .eq('host_id', BackendService.user!.id)
+              .select('id')
+              .single();
+    return row['id'];
+  }
+
+  static Future<void> publishEvent(String id, LearningUpload image) async {
+    await _requirePublisher();
+    if (!['image/jpeg', 'image/png', 'image/webp'].contains(image.mime) ||
+        image.bytes.isEmpty ||
+        image.bytes.length > 5 * 1024 * 1024)
+      throw StateError('Use a JPG, PNG or WebP image up to 5 MB.');
+    final token = client.auth.currentSession?.accessToken;
+    if (token == null) throw StateError('Sign in to publish.');
+    final request = http.MultipartRequest(
+      'POST',
+      Uri.base.resolve('/api/learning-event-image'),
+    );
+    request.headers['Authorization'] = 'Bearer $token';
+    request.fields['eventId'] = id;
+    request.files.add(
+      http.MultipartFile.fromBytes('file', image.bytes, filename: image.name),
+    );
+    final response = await http.Response.fromStream(await request.send());
+    if (response.statusCode != 201)
+      throw StateError(
+        'Event picture upload failed. Your event is kept as a private draft; try again.',
+      );
+    final rows = await client
+        .from('learning_seminars')
+        .update({'is_published': true})
+        .eq('id', id)
+        .eq('host_id', BackendService.user!.id)
+        .select('id');
+    if (rows.isEmpty)
+      throw StateError(
+        'Publishing access changed. Your event remains private.',
+      );
   }
 
   static Future<void> seminarStatus(String id, String status) async {
