@@ -8,6 +8,7 @@ import '../services/learning_service.dart';
 import '../services/learning_area_service.dart';
 import 'dashboard_ui.dart';
 import 'site_copy_text.dart';
+import 'learning_example_cover.dart';
 
 class CanadaMapGeometry {
   CanadaMapGeometry(this.json);
@@ -462,7 +463,12 @@ class EventMapPreview extends StatelessWidget {
               child: SizedBox(
                 width: 76,
                 height: 82,
-                child: event.imageUrl.isEmpty
+                child: event.exampleIndex != null
+                    ? LearningExampleCover(
+                        index: event.exampleIndex!,
+                        compact: true,
+                      )
+                    : event.imageUrl.isEmpty
                     ? placeholder()
                     : Image.network(
                         event.imageUrl,
@@ -477,7 +483,7 @@ class EventMapPreview extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    event.title,
+                    '${event.exampleIndex == null ? '' : 'Example · '}${event.title}',
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(

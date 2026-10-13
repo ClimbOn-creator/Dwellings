@@ -44,6 +44,7 @@ class LearningPost {
     this.liked = false,
     this.saved = false,
     this.media = const [],
+    this.exampleIndex,
   });
   final String id, authorId, author, title, body, topic;
   final DateTime createdAt;
@@ -52,6 +53,7 @@ class LearningPost {
   final double? distanceKm;
   final bool liked, saved;
   final List<LearningAttachment> media;
+  final int? exampleIndex;
 }
 
 class LearningUpload {
@@ -93,6 +95,7 @@ class LearningSeminar {
     required this.startsAt,
     required this.duration,
     required this.joinUrl,
+    this.exampleIndex,
     this.websiteUrl = '',
     this.replayUrl = '',
     this.status = 'scheduled',
@@ -124,6 +127,7 @@ class LearningSeminar {
   final bool registered;
   final String organization, kind, mode, areaName, venue, imageUrl;
   final double? latitude, longitude;
+  final int? exampleIndex;
   bool get mapped => latitude != null && longitude != null;
   String get kindLabel => switch (kind) {
     'meeting' => 'Meeting',

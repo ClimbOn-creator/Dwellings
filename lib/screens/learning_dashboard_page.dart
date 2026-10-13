@@ -1,6 +1,7 @@
 import 'dart:async';
-import 'dart:math' as math;
 import '../widgets/canada_event_map.dart';
+import '../widgets/learning_example_cover.dart';
+import '../services/learning_examples.dart';
 import 'dart:typed_data';
 import 'dart:convert';
 import 'package:flutter/material.dart';
@@ -119,8 +120,7 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
   bool updatingEvents = false;
   final search = TextEditingController();
   final eventSearch = TextEditingController();
-  String eventKind = 'all';
-  bool nearbyEvents = false;
+
   final eventKeys = <String, GlobalKey>{};
   String topic = 'all';
   bool seller = false, busy = false;
@@ -458,11 +458,6 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
   Widget _feed() => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      heading(
-        'feed',
-        'A place to learn, at your pace',
-        'Understand buying, selling and transferring a business. Learn from contributors approved by the creator.',
-      ),
       Wrap(
         spacing: 12,
         runSpacing: 8,
@@ -492,13 +487,6 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
             }),
           ),
         ],
-      ),
-      const SizedBox(height: 8),
-      copy(
-        'learning.feed.ranking',
-        'Nearby posts, ranked by likes, conversation and freshness. No following list.',
-        color: DashboardUi.muted,
-        size: 12,
       ),
       const SizedBox(height: 18),
       if (permissions.canPublish)
@@ -564,7 +552,8 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
             return _error(
               'The learning feed could not load. Please try again.',
             );
-          final all = snapshot.data ?? [];
+          final published = snapshot.data ?? [];
+          final all = published.isEmpty ? LearningExamples.posts : published;
           final shown = all
               .where(
                 (p) =>
@@ -721,16 +710,20 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
                     ],
                   ),
                 ),
-                const Tooltip(
-                  message: 'Creator-approved contributor',
-                  child: Icon(
-                    Icons.verified,
-                    color: DashboardUi.blue,
-                    size: 21,
+                if (p.exampleIndex != null)
+                  const Chip(label: Text('Example'))
+                else
+                  const Tooltip(
+                    message: 'Creator-approved contributor',
+                    child: Icon(
+                      Icons.verified,
+                      color: DashboardUi.blue,
+                      size: 21,
+                    ),
                   ),
-                ),
-                if (permissions.isOwner ||
-                    p.authorId == BackendService.user?.id)
+                if (p.exampleIndex == null &&
+                    (permissions.isOwner ||
+                        p.authorId == BackendService.user?.id))
                   IconButton(
                     tooltip: 'Hide this post',
                     onPressed: busy ? null : () => _confirmHide(p),
@@ -738,6 +731,14 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
                   ),
               ],
             ),
+            if (p.exampleIndex != null) ...[
+              const SizedBox(height: 18),
+              SizedBox(
+                height: 180,
+                width: double.infinity,
+                child: LearningExampleCover(index: p.exampleIndex!),
+              ),
+            ],
             if (p.media.isNotEmpty) ...[
               const SizedBox(height: 18),
               LearningGallery(media: p.media),
@@ -757,7 +758,7 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
               spacing: 18,
               children: [
                 TextButton.icon(
-                  onPressed: busy
+                  onPressed: busy || p.exampleIndex != null
                       ? null
                       : () async {
                           if (await _signedIn())
@@ -770,7 +771,7 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
                   label: Text('${p.likes} ${p.likes == 1 ? 'like' : 'likes'}'),
                 ),
                 TextButton.icon(
-                  onPressed: () => _comments(p),
+                  onPressed: p.exampleIndex != null ? null : () => _comments(p),
                   icon: const Icon(Icons.chat_bubble_outline),
                   label: Text(
                     '${p.comments} ${p.comments == 1 ? 'comment' : 'comments'}',
@@ -834,11 +835,6 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
   Widget _seminars() => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      heading(
-        'seminars',
-        'Live seminars & local events',
-        'Discover sessions, meetings and information events across Canada. Hover over a point, or tap it on your phone, to see what is happening.',
-      ),
       if (permissions.canPublish)
         Padding(
           padding: const EdgeInsets.only(bottom: 20),
@@ -857,16 +853,13 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
               return const Center(child: CircularProgressIndicator());
             if (s.hasError)
               return _error('Seminars could not load. Please try again.');
-            final all = s.data ?? [];
+            final published = s.data ?? [];
+            final all = published.isEmpty ? LearningExamples.events : published;
             final items = all
                 .where(
-                  (e) =>
-                      (eventKind == 'all' || e.kind == eventKind) &&
-                      '${e.title} ${e.organization} ${e.areaName}'
-                          .toLowerCase()
-                          .contains(eventSearch.text.toLowerCase()) &&
-                      (!nearbyEvents ||
-                          (area != null && _eventDistance(e, area!) <= 200)),
+                  (e) => '${e.title} ${e.organization} ${e.areaName}'
+                      .toLowerCase()
+                      .contains(eventSearch.text.toLowerCase()),
                 )
                 .toList();
             final mapped = items
@@ -883,51 +876,12 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
                     hintText: 'Search a town, event or organization',
                   ),
                 ),
-                const SizedBox(height: 14),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    for (final kind in const [
-                      'all',
-                      'seminar',
-                      'meeting',
-                      'information',
-                      'workshop',
-                    ])
-                      ChoiceChip(
-                        label: Text(switch (kind) {
-                          'all' => 'All events',
-                          'seminar' => 'Seminars',
-                          'meeting' => 'Meetings',
-                          'information' => 'Information sessions',
-                          _ => 'Workshops',
-                        }),
-                        selected: eventKind == kind,
-                        onSelected: (_) => setState(() => eventKind = kind),
-                      ),
-                    FilterChip(
-                      label: Text(
-                        area == null
-                            ? 'Near my community'
-                            : 'Near ${area!.name}',
-                      ),
-                      selected: nearbyEvents,
-                      onSelected: (on) async {
-                        if (on && area == null) await _chooseArea();
-                        if (mounted && (!on || area != null))
-                          setState(() => nearbyEvents = on);
-                      },
-                    ),
-                  ],
-                ),
                 const SizedBox(height: 18),
                 NovaTarget(
                   id: 'learning-seminars.map',
                   child: CanadaEventMap(
                     events: mapped,
                     area: area,
-                    nearby: nearbyEvents,
                     onOpen: (e) {
                       if (e.informationUrl.isNotEmpty) {
                         _openUrl(e.informationUrl);
@@ -1015,17 +969,6 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
       ),
     ],
   );
-  double _eventDistance(LearningSeminar e, LearningArea a) {
-    if (!e.mapped) return double.infinity;
-    final lat1 = a.latitude * math.pi / 180, lat2 = e.latitude! * math.pi / 180;
-    final h =
-        math.pow(math.sin((lat2 - lat1) / 2), 2) +
-        math.cos(lat1) *
-            math.cos(lat2) *
-            math.pow(math.sin((e.longitude! - a.longitude) * math.pi / 360), 2);
-    return 6371.0088 * 2 * math.asin(math.sqrt(h.clamp(0, 1)));
-  }
-
   Widget _seminar(LearningSeminar s) {
     final ended = s.status == 'ended' || DateTime.now().isAfter(s.endsAt);
     final canJoin = s.canJoin(DateTime.now());
@@ -1037,6 +980,16 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (s.exampleIndex != null) ...[
+            const Chip(label: Text('Example event')),
+            const SizedBox(height: 10),
+            SizedBox(
+              height: 150,
+              width: double.infinity,
+              child: LearningExampleCover(index: s.exampleIndex!),
+            ),
+            const SizedBox(height: 16),
+          ],
           Row(
             children: [
               Expanded(
@@ -1096,7 +1049,7 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
             spacing: 12,
             runSpacing: 8,
             children: [
-              if (s.status != 'cancelled' && !ended)
+              if (s.exampleIndex == null && s.status != 'cancelled' && !ended)
                 OutlinedButton.icon(
                   onPressed: busy
                       ? null
@@ -1125,7 +1078,7 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
                   icon: const Icon(Icons.videocam),
                   label: const Text('Join seminar'),
                 ),
-              if (s.status != 'cancelled')
+              if (s.exampleIndex == null && s.status != 'cancelled')
                 TextButton.icon(
                   onPressed: () => _calendar(s),
                   icon: const Icon(Icons.calendar_month),
@@ -1137,7 +1090,8 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
                   icon: const Icon(Icons.play_circle_outline),
                   label: const Text('Watch replay'),
                 ),
-              if (permissions.isOwner || s.hostId == BackendService.user?.id)
+              if (s.exampleIndex == null &&
+                  (permissions.isOwner || s.hostId == BackendService.user?.id))
                 PopupMenuButton<String>(
                   tooltip: 'Manage seminar',
                   onSelected: (status) => _action(

@@ -116,10 +116,7 @@ void main() {
           expect(find.text('Understanding earnings'), findsOneWidget);
         if (width == 1440 && view == LearningView.feed) {
           expect(tester.getTopLeft(find.text('LEARNING')).dy, lessThan(160));
-          expect(
-            tester.getTopLeft(find.text('A place to learn, at your pace')).dy,
-            lessThan(160),
-          );
+          expect(find.text('A place to learn, at your pace'), findsNothing);
         }
         if (view == LearningView.map) {
           expect(find.byType(InteractiveViewer), findsOneWidget);
