@@ -211,10 +211,10 @@ const siteCopyCatalog = <String, String>{
       "Only you can approve publishing access. People must register and verify their email before you approve them.",
   "nova.training.pebble-learning-feed-topics.title": "Find your next lesson",
   "nova.training.pebble-learning-feed-topics.body":
-      "Filter by buying, selling, finance or legal topics. Everyone can learn here; publishing is reserved for contributors personally approved by the creator.",
+      "Browse the latest lessons in one simple feed. Everyone can learn here; publishing is reserved for contributors personally approved by the creator.",
   "nova.training.pebble-learning-feed-posts.title": "Join the conversation",
   "nova.training.pebble-learning-feed-posts.body":
-      "Choose your community to see posts within about 200 km. Likes and conversation help useful posts rise. Open comments to ask a question or reply inside a thread.",
+      "Likes and comments sit just below each picture. Open comments to ask a question or reply inside a thread. Labelled examples let you try the controls.",
   "nova.training.pebble-learning-seminars-schedule.title":
       "Meet and learn live",
   "nova.training.pebble-learning-seminars-schedule.body":

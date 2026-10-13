@@ -43,7 +43,7 @@ void main() {
       }
       expect(
         novaPageWalkthrough('learning-feed').first.target,
-        'learning-feed.filters',
+        'learning-feed.posts',
       );
       expect(
         novaPageWalkthrough('learning-map').first.target,

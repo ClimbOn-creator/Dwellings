@@ -54,40 +54,18 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
   Future<List<LearningPost>>? _feedFuture;
   Future<List<LearningSeminar>>? _seminarsFuture;
   LearningArea? area;
-  String feedOrder = 'recommended';
-  Future<void>? _areaReady;
+  final exampleLikes = <String>{};
+  final exampleThreads = <String, List<LearningComment>>{};
   Future<List<LearningPost>> get feed => _feedFuture ??= _loadFeed();
   Future<List<LearningPost>> _loadFeed() async {
     if (widget.loadPosts != null) return widget.loadPosts!();
-    await _areaReady;
-    return LearningService.posts(area: area, order: feedOrder);
+    return LearningService.posts(order: 'newest');
   }
 
   Future<void> _loadArea() async {
     final uid = BackendService.user?.id;
     final value = await LearningAreaService.load();
     if (mounted && uid == BackendService.user?.id) setState(() => area = value);
-  }
-
-  Future<void> _chooseArea() async {
-    final value = await chooseLearningArea(context);
-    if (value == null || !mounted) return;
-    setState(() {
-      area = value;
-      _feedFuture = null;
-    });
-    try {
-      await LearningAreaService.save(value);
-    } catch (_) {
-      if (mounted)
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Area saved on this device. Account sync will need another try.',
-            ),
-          ),
-        );
-    }
   }
 
   Future<void> _comments(LearningPost post) async {
@@ -101,7 +79,19 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
         useSafeArea: true,
         builder: (c) => SizedBox(
           height: MediaQuery.sizeOf(c).height * .9,
-          child: LearningComments(post: post, isOwner: permissions.isOwner),
+          child: LearningComments(
+            post: post,
+            isOwner: permissions.isOwner,
+            exampleComments: post.exampleIndex == null
+                ? null
+                : exampleThreads.putIfAbsent(
+                    post.id,
+                    () => LearningExamples.commentsFor(post),
+                  ),
+            onExampleChanged: (values) {
+              if (mounted) setState(() => exampleThreads[post.id] = values);
+            },
+          ),
         ),
       );
     } finally {
@@ -118,11 +108,9 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
   RealtimeChannel? eventChanges;
   int eventRevision = 0;
   bool updatingEvents = false;
-  final search = TextEditingController();
   final eventSearch = TextEditingController();
 
   final eventKeys = <String, GlobalKey>{};
-  String topic = 'all';
   bool seller = false, busy = false;
   int selected = 0;
   int? answer;
@@ -135,14 +123,14 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
   void initState() {
     super.initState();
     view = widget.initialView;
-    _areaReady = _loadArea();
+    _loadArea();
     refresh();
     auth = BackendService.authChanges?.listen((_) {
       if (mounted) {
         setState(() {
           permissions = const LearningPermissions();
           area = null;
-          _areaReady = _loadArea();
+          _loadArea();
         });
         refresh();
       }
@@ -181,7 +169,6 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
     clock?.cancel();
     if (eventChanges != null)
       LearningService.client.removeChannel(eventChanges!);
-    search.dispose();
     eventSearch.dispose();
     super.dispose();
   }
@@ -458,37 +445,6 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
   Widget _feed() => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Wrap(
-        spacing: 12,
-        runSpacing: 8,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        children: [
-          OutlinedButton.icon(
-            onPressed: _chooseArea,
-            icon: const Icon(Icons.location_on_outlined),
-            label: Text(
-              area == null ? 'Choose your area' : '${area!.name} · 200 km',
-            ),
-          ),
-          ChoiceChip(
-            label: const Text('For you'),
-            selected: feedOrder == 'recommended',
-            onSelected: (_) => setState(() {
-              feedOrder = 'recommended';
-              _feedFuture = null;
-            }),
-          ),
-          ChoiceChip(
-            label: const Text('Newest'),
-            selected: feedOrder == 'newest',
-            onSelected: (_) => setState(() {
-              feedOrder = 'newest';
-              _feedFuture = null;
-            }),
-          ),
-        ],
-      ),
-      const SizedBox(height: 18),
       if (permissions.canPublish)
         Padding(
           padding: const EdgeInsets.only(bottom: 18),
@@ -502,47 +458,6 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
             ),
           ),
         ),
-      NovaTarget(
-        id: 'learning-feed.filters',
-        child: Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            for (final t in const [
-              'all',
-              'buyer',
-              'seller',
-              'finance',
-              'legal',
-            ])
-              ChoiceChip(
-                label: Text(
-                  t == 'all'
-                      ? 'All topics'
-                      : t[0].toUpperCase() + t.substring(1),
-                ),
-                selected: topic == t,
-                onSelected: (_) => setState(() => topic = t),
-              ),
-          ],
-        ),
-      ),
-      const SizedBox(height: 16),
-      TextField(
-        controller: search,
-        onChanged: (_) => setState(() {}),
-        decoration: const InputDecoration(
-          hintText: 'Search lessons or contributors',
-          prefixIcon: Icon(Icons.search),
-          filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.all(Radius.circular(12)),
-            borderSide: BorderSide(color: DashboardUi.line),
-          ),
-        ),
-      ),
-      const SizedBox(height: 22),
       FutureBuilder<List<LearningPost>>(
         future: feed,
         builder: (context, snapshot) {
@@ -554,15 +469,7 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
             );
           final published = snapshot.data ?? [];
           final all = published.isEmpty ? LearningExamples.posts : published;
-          final shown = all
-              .where(
-                (p) =>
-                    (topic == 'all' || p.topic == topic || p.topic == 'both') &&
-                    ('${p.title} ${p.body} ${p.author}').toLowerCase().contains(
-                      search.text.toLowerCase(),
-                    ),
-              )
-              .toList();
+          final shown = all;
           return NovaTarget(
             id: 'learning-feed.posts',
             child: Column(
@@ -573,12 +480,8 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         copy(
-                          area == null
-                              ? 'learning.feed.chooseArea'
-                              : 'learning.feed.localEmpty',
-                          area == null
-                              ? 'Choose your community to see nearby posts'
-                              : 'No nearby posts match this view yet',
+                          'learning.feed.empty',
+                          'No learning posts yet',
                           size: 20,
                           weight: FontWeight.w700,
                         ),
@@ -679,7 +582,7 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
     key: ValueKey('learning-post-${p.id}'),
     alignment: Alignment.topCenter,
     child: ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 720),
+      constraints: const BoxConstraints(maxWidth: 860),
       child: DashboardUi.panel(
         padding: const EdgeInsets.all(22),
         child: Column(
@@ -734,7 +637,7 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
             if (p.exampleIndex != null) ...[
               const SizedBox(height: 18),
               SizedBox(
-                height: 180,
+                height: MediaQuery.sizeOf(context).width < 600 ? 260 : 420,
                 width: double.infinity,
                 child: LearningExampleCover(index: p.exampleIndex!),
               ),
@@ -744,6 +647,47 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
               LearningGallery(media: p.media),
             ],
             const SizedBox(height: 18),
+            Wrap(
+              spacing: 18,
+              children: [
+                TextButton.icon(
+                  onPressed: busy
+                      ? null
+                      : () async {
+                          if (p.exampleIndex != null) {
+                            setState(() {
+                              if (!exampleLikes.add(p.id))
+                                exampleLikes.remove(p.id);
+                            });
+                            return;
+                          }
+                          if (await _signedIn())
+                            _action(
+                              () =>
+                                  LearningService.reaction(p, 'like', !p.liked),
+                            );
+                        },
+                  icon: Icon(
+                    (p.exampleIndex != null
+                            ? exampleLikes.contains(p.id)
+                            : p.liked)
+                        ? Icons.favorite
+                        : Icons.favorite_border,
+                  ),
+                  label: Text(
+                    '${p.likes + (exampleLikes.contains(p.id) ? 1 : 0)} ${p.likes + (exampleLikes.contains(p.id) ? 1 : 0) == 1 ? 'like' : 'likes'}',
+                  ),
+                ),
+                TextButton.icon(
+                  onPressed: () => _comments(p),
+                  icon: const Icon(Icons.chat_bubble_outline),
+                  label: Text(
+                    '${exampleThreads[p.id]?.where((c) => !c.removed).length ?? p.comments} ${(exampleThreads[p.id]?.where((c) => !c.removed).length ?? p.comments) == 1 ? 'comment' : 'comments'}',
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
             Text(
               p.title,
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
@@ -754,31 +698,6 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
             ],
             const SizedBox(height: 18),
             const Divider(color: DashboardUi.line),
-            Wrap(
-              spacing: 18,
-              children: [
-                TextButton.icon(
-                  onPressed: busy || p.exampleIndex != null
-                      ? null
-                      : () async {
-                          if (await _signedIn())
-                            _action(
-                              () =>
-                                  LearningService.reaction(p, 'like', !p.liked),
-                            );
-                        },
-                  icon: Icon(p.liked ? Icons.favorite : Icons.favorite_border),
-                  label: Text('${p.likes} ${p.likes == 1 ? 'like' : 'likes'}'),
-                ),
-                TextButton.icon(
-                  onPressed: p.exampleIndex != null ? null : () => _comments(p),
-                  icon: const Icon(Icons.chat_bubble_outline),
-                  label: Text(
-                    '${p.comments} ${p.comments == 1 ? 'comment' : 'comments'}',
-                  ),
-                ),
-              ],
-            ),
           ],
         ),
       ),
@@ -854,7 +773,7 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
             if (s.hasError)
               return _error('Seminars could not load. Please try again.');
             final published = s.data ?? [];
-            final all = published.isEmpty ? LearningExamples.events : published;
+            final all = [...published, ...LearningExamples.events];
             final items = all
                 .where(
                   (e) => '${e.title} ${e.organization} ${e.areaName}'
@@ -1584,7 +1503,7 @@ class _LearningGalleryState extends State<LearningGallery> {
             borderRadius: BorderRadius.circular(12),
             child: Image.network(
               file.url,
-              height: 380,
+              height: MediaQuery.sizeOf(context).width < 600 ? 260 : 460,
               width: double.infinity,
               fit: BoxFit.contain,
               errorBuilder: (_, __, ___) => const Padding(

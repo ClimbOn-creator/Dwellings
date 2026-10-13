@@ -41,8 +41,58 @@ class LearningExamples {
         areaName: areas[i],
         createdAt: DateTime.now().subtract(Duration(days: i)),
         exampleIndex: i,
+        likes: const [12, 8, 15, 6][i],
+        comments: 4,
       ),
   ];
+  static List<LearningComment> commentsFor(LearningPost post) {
+    final index = post.exampleIndex ?? 0;
+    final now = DateTime.now();
+    const questions = [
+      'How do you shortlist a business?',
+      'Does the example include working capital?',
+      'Can two successors take part?',
+      'Will we see a handover checklist?',
+    ];
+    return [
+      LearningComment(
+        id: '${post.id}-question',
+        postId: post.id,
+        authorId: 'example-alex',
+        author: 'Alex (example)',
+        body: questions[index],
+        createdAt: now.subtract(const Duration(hours: 3)),
+      ),
+      LearningComment(
+        id: '${post.id}-reply',
+        postId: post.id,
+        authorId: 'example-host',
+        author: 'Affinity (example)',
+        body:
+            'Yes—this session walks through a practical example and leaves time for questions.',
+        createdAt: now.subtract(const Duration(hours: 2)),
+        parentId: '${post.id}-question',
+        depth: 1,
+      ),
+      LearningComment(
+        id: '${post.id}-experience',
+        postId: post.id,
+        authorId: 'example-jordan',
+        author: 'Jordan (example)',
+        body: 'Seeing the steps in order makes this much easier to understand.',
+        createdAt: now.subtract(const Duration(hours: 1)),
+      ),
+      LearningComment(
+        id: '${post.id}-you',
+        postId: post.id,
+        authorId: 'example-you',
+        author: 'You (example)',
+        body: 'I would like to see a worked example.',
+        createdAt: now.subtract(const Duration(minutes: 20)),
+      ),
+    ];
+  }
+
   static List<LearningSeminar> get events {
     final today = DateTime.now().toUtc();
     return [

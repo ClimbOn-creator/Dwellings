@@ -214,30 +214,40 @@ class LearningService {
     String order = 'recommended',
   }) async {
     if (!BackendService.configured) return [];
-    if (area == null) return [];
-    final ranked = await client.rpc(
-      'learning_local_feed',
-      params: {
-        'latitude': LearningArea.coarse(area.latitude),
-        'longitude': LearningArea.coarse(area.longitude),
-        'feed_order': order,
-      },
-    );
-    final matches = List<Map<String, dynamic>>.from(ranked);
-    if (matches.isEmpty) return [];
-    final ranks = {
-      for (var i = 0; i < matches.length; i++) matches[i]['post_id']: i,
-    };
-    final distances = {
-      for (final m in matches)
-        m['post_id']: (m['distance_km'] as num).toDouble(),
-    };
-    final rows = await client
-        .from('learning_posts')
-        .select('*,learning_media(*)')
-        .eq('status', 'published')
-        .inFilter('id', matches.map((m) => m['post_id']).toList());
-    rows.sort((a, b) => ranks[a['id']]!.compareTo(ranks[b['id']]!));
+    Map<String, double> distances = {};
+    final List<Map<String, dynamic>> rows;
+    if (area == null) {
+      rows = await client
+          .from('learning_posts')
+          .select('*,learning_media(*)')
+          .eq('status', 'published')
+          .order('created_at', ascending: false)
+          .limit(100);
+    } else {
+      final ranked = await client.rpc(
+        'learning_local_feed',
+        params: {
+          'latitude': LearningArea.coarse(area.latitude),
+          'longitude': LearningArea.coarse(area.longitude),
+          'feed_order': order,
+        },
+      );
+      final matches = List<Map<String, dynamic>>.from(ranked);
+      if (matches.isEmpty) return [];
+      final ranks = {
+        for (var i = 0; i < matches.length; i++) matches[i]['post_id']: i,
+      };
+      distances = {
+        for (final m in matches)
+          m['post_id']: (m['distance_km'] as num).toDouble(),
+      };
+      rows = await client
+          .from('learning_posts')
+          .select('*,learning_media(*)')
+          .eq('status', 'published')
+          .inFilter('id', matches.map((m) => m['post_id']).toList());
+      rows.sort((a, b) => ranks[a['id']]!.compareTo(ranks[b['id']]!));
+    }
     if (rows.isEmpty) return [];
     final names = await client
         .from('learning_publishers')

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../services/backend_service.dart';
 import '../services/learning_service.dart';
+import '../services/learning_examples.dart';
 import '../screens/auth_page.dart';
 import 'dashboard_ui.dart';
 
@@ -12,9 +13,13 @@ class LearningComments extends StatefulWidget {
     required this.post,
     this.isOwner = false,
     this.loadComments,
+    this.exampleComments,
+    this.onExampleChanged,
   });
   final LearningPost post;
   final bool isOwner;
+  final List<LearningComment>? exampleComments;
+  final ValueChanged<List<LearningComment>>? onExampleChanged;
   final Future<List<LearningComment>> Function()? loadComments;
   @override
   State<LearningComments> createState() => _LearningCommentsState();
@@ -28,13 +33,27 @@ class _LearningCommentsState extends State<LearningComments> {
   bool busy = false;
   String? error;
   int limit = 100;
+  late List<LearningComment> exampleComments;
+  int exampleSerial = 0;
+  bool get isExample => widget.post.exampleIndex != null;
   @override
   void initState() {
     super.initState();
+    exampleComments = List.of(
+      widget.exampleComments ??
+          (isExample
+              ? LearningExamples.commentsFor(widget.post)
+              : <LearningComment>[]),
+    );
+    exampleSerial = exampleComments.length;
     reload();
   }
 
   void reload() {
+    if (isExample) {
+      comments = Future.value(List.of(exampleComments));
+      return;
+    }
     comments =
         (widget.loadComments ??
         () => LearningService.comments(widget.post.id, limit: limit))();
@@ -47,6 +66,32 @@ class _LearningCommentsState extends State<LearningComments> {
   }
 
   Future<void> send() async {
+    if (isExample) {
+      if (body.text.trim().isEmpty) {
+        setState(() => error = 'Write a comment before posting.');
+        return;
+      }
+      final comment = LearningComment(
+        id: '${widget.post.id}-new-${exampleSerial++}',
+        postId: widget.post.id,
+        authorId: 'example-you',
+        author: 'You (example)',
+        body: body.text.trim(),
+        createdAt: DateTime.now(),
+        parentId: reply?.id,
+        depth: reply == null ? 0 : reply!.depth + 1,
+      );
+      setState(() {
+        exampleComments = [...exampleComments, comment];
+        if (reply != null) expanded.add(reply!.id);
+        body.clear();
+        reply = null;
+        error = null;
+        reload();
+      });
+      widget.onExampleChanged?.call(List.of(exampleComments));
+      return;
+    }
     if (BackendService.user == null) {
       await Navigator.of(
         context,
@@ -107,6 +152,30 @@ class _LearningCommentsState extends State<LearningComments> {
       ),
     );
     if (yes != true || !mounted) return;
+    if (isExample) {
+      setState(() {
+        exampleComments = exampleComments
+            .map(
+              (v) => v.id != c.id
+                  ? v
+                  : LearningComment(
+                      id: v.id,
+                      postId: v.postId,
+                      authorId: v.authorId,
+                      author: v.author,
+                      body: '',
+                      createdAt: v.createdAt,
+                      parentId: v.parentId,
+                      depth: v.depth,
+                      removed: true,
+                    ),
+            )
+            .toList();
+        reload();
+      });
+      widget.onExampleChanged?.call(List.of(exampleComments));
+      return;
+    }
     try {
       await LearningService.removeComment(c.id);
       if (mounted) setState(reload);
@@ -151,6 +220,14 @@ class _LearningCommentsState extends State<LearningComments> {
               style: const TextStyle(color: DashboardUi.muted),
             ),
           ),
+          if (isExample)
+            const Padding(
+              padding: EdgeInsets.only(top: 8),
+              child: Text(
+                'Example thread · Changes stay in this preview',
+                style: TextStyle(fontSize: 12, color: DashboardUi.muted),
+              ),
+            ),
           const Divider(),
           Expanded(
             child: FutureBuilder<List<LearningComment>>(
@@ -265,8 +342,11 @@ class _LearningCommentsState extends State<LearningComments> {
                                     ),
                                   ),
                                 if (!c.removed &&
-                                    (c.authorId == BackendService.user?.id ||
-                                        widget.isOwner))
+                                    (isExample
+                                        ? c.authorId == 'example-you'
+                                        : (c.authorId ==
+                                                  BackendService.user?.id ||
+                                              widget.isOwner)))
                                   TextButton(
                                     onPressed: () => remove(c),
                                     child: const Text('Remove'),

@@ -4,6 +4,7 @@ import 'package:dwelling_iq/screens/learning_dashboard_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:dwelling_iq/widgets/learning_example_cover.dart';
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
@@ -40,14 +41,84 @@ void main() {
         expect(find.text('A place to learn, at your pace'), findsNothing);
         expect(find.textContaining('No following list.'), findsNothing);
         final like = tester.widget<TextButton>(
-          find.widgetWithText(TextButton, '0 likes').first,
+          find.widgetWithText(TextButton, '12 likes').first,
         );
-        expect(like.onPressed, isNull);
+        expect(like.onPressed, isNotNull);
+        for (final label in [
+          'Choose your area',
+          'For you',
+          'Newest',
+          'All topics',
+          'Buyer',
+          'Seller',
+          'Finance',
+          'Legal',
+        ]) {
+          expect(find.text(label), findsNothing);
+        }
+        expect(find.byType(TextField), findsNothing);
+        expect(
+          tester.getSize(find.byType(LearningExampleCover).first).height,
+          greaterThanOrEqualTo(260),
+        );
+        expect(
+          tester.getTopLeft(find.text('12 likes')).dy,
+          lessThan(
+            tester
+                .getTopLeft(find.byKey(const ValueKey('learning-example-0')))
+                .dy,
+          ),
+        );
+
         expect(tester.takeException(), isNull);
         await tester.pumpWidget(const SizedBox.shrink());
       },
     );
   }
+  testWidgets(
+    'example likes and replies work without an account or database writes',
+    (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: LearningDashboardPage(
+            loadPosts: () async => [],
+            loadPermissions: () async => const LearningPermissions(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final like = find.text('12 likes');
+      await tester.ensureVisible(like);
+      await tester.tap(like);
+      await tester.pump();
+      expect(find.text('13 likes'), findsOneWidget);
+      final comments = find.text('4 comments').first;
+      await tester.ensureVisible(comments);
+      await tester.tap(comments);
+      await tester.pumpAndSettle();
+      expect(find.text('Alex (example)'), findsOneWidget);
+      await tester.tap(find.text('1 reply'));
+      await tester.pumpAndSettle();
+      expect(find.text('Affinity (example)'), findsOneWidget);
+      await tester.tap(find.widgetWithText(TextButton, 'Reply').first);
+      await tester.pump();
+      await tester.enterText(find.byType(TextField), 'My preview reply');
+      await tester.tap(find.byTooltip('Post comment'));
+      await tester.pumpAndSettle();
+      expect(find.text('My preview reply'), findsOneWidget);
+      await tester.tap(find.byTooltip('Close comments'));
+      await tester.pumpAndSettle();
+      expect(find.text('5 comments'), findsOneWidget);
+      await tester.ensureVisible(find.text('5 comments'));
+      await tester.tap(find.text('5 comments'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('2 replies'));
+      await tester.pumpAndSettle();
+      expect(find.text('My preview reply'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
   testWidgets('real posts replace example cards', (tester) async {
     await tester.pumpWidget(
       MaterialApp(

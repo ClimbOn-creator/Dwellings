@@ -7,13 +7,13 @@ const pebbleMainPageCopy = <String, List<(String, String, String, String?)>>{
     (
       "topics",
       "Find your next lesson",
-      "Filter by buying, selling, finance or legal topics. Everyone can learn here; publishing is reserved for contributors personally approved by the creator.",
-      "learning-feed.filters",
+      "Browse the latest lessons in one simple feed. Everyone can learn here; publishing is reserved for contributors personally approved by the creator.",
+      "learning-feed.posts",
     ),
     (
       "posts",
       "Join the conversation",
-      "Choose your community to see posts within about 200 km. Likes and conversation help useful posts rise. Open comments to ask a question or reply inside a thread.",
+      "Likes and comments sit just below each picture. Open comments to ask a question or reply inside a thread. Labelled examples let you try the controls.",
       "learning-feed.posts",
     ),
   ],
