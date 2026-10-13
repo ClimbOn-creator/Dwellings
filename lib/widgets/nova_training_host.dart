@@ -43,6 +43,7 @@ class _NovaTrainingHostState extends State<NovaTrainingHost>
     with WidgetsBindingObserver {
   late NovaTrainingController _controller;
   StreamSubscription<dynamic>? _auth;
+  Timer? _locateRetry;
   Route<void>? _tourRoute;
   String? _destination;
   String? _account;
@@ -84,6 +85,10 @@ class _NovaTrainingHostState extends State<NovaTrainingHost>
   }
 
   void _changed() {
+    if (!_controller.active) {
+      _locateRetry?.cancel();
+      _locateRetry = null;
+    }
     if (_controller.active) CalculatorHelpController.instance.close();
     if (mounted) setState(() {});
   }
@@ -150,7 +155,8 @@ class _NovaTrainingHostState extends State<NovaTrainingHost>
       }
       setState(() => _highlight = rect.intersect(Offset.zero & canvas.size));
     } else if (step.target != null && attempt < 30) {
-      Future<void>.delayed(
+      _locateRetry?.cancel();
+      _locateRetry = Timer(
         const Duration(milliseconds: 150),
         () => _locate(step, attempt + 1),
       );
@@ -201,6 +207,7 @@ class _NovaTrainingHostState extends State<NovaTrainingHost>
     WidgetsBinding.instance.removeObserver(this);
     _generation++;
     _auth?.cancel();
+    _locateRetry?.cancel();
     _controller.removeListener(_changed);
     _controller.hosted = false;
     _controller.navigate = null;
@@ -219,6 +226,40 @@ class _NovaTrainingHostState extends State<NovaTrainingHost>
           child: widget.child,
         ),
       ),
+      if (!_controller.active &&
+          _controller.docked &&
+          _controller.currentPage != 'landing')
+        Positioned(
+          left: 12 + MediaQuery.paddingOf(context).left,
+          bottom: 12 + MediaQuery.paddingOf(context).bottom,
+          child: Material(
+            color: const Color(0xFFF7F5F0),
+            elevation: 3,
+            borderRadius: BorderRadius.circular(28),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  key: const Key('pebble_floating_help'),
+                  onPressed: () =>
+                      _controller.startPage(_controller.currentPage),
+                  icon: Semantics(
+                    label: 'Pebble · guide to this page',
+                    child: const NovaCharacter(size: 42),
+                  ),
+                ),
+                IconButton(
+                  key: const Key('pebble_dismiss_dock'),
+                  onPressed: _controller.dismissDock,
+                  icon: Semantics(
+                    label: 'Move Pebble to the header',
+                    child: const Icon(Icons.close, size: 16),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       if (_controller.active) ...[
         Positioned.fill(
           child: ExcludeSemantics(

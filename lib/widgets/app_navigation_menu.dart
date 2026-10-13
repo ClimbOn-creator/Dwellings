@@ -69,6 +69,8 @@ List<AppNavigationDestination> destinationsForTunnel(AppTunnel tunnel) =>
         AppNavigationDestination.learningDashboard,
         AppNavigationDestination.learningSeminars,
         AppNavigationDestination.learningMap,
+        AppNavigationDestination.dealComparison,
+        AppNavigationDestination.transactionRoom,
         AppNavigationDestination.profile,
       ],
       AppTunnel.member => [
@@ -204,11 +206,21 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
       mainAxisSize: MainAxisSize.min,
       children: [
         if (_guidePage() != 'landing')
-          IconButton(
-            key: const Key('pebble_page_help'),
-            tooltip: 'Pebble · guide to this page',
-            onPressed: _showPebble,
-            icon: const NovaCharacter(size: 32),
+          ListenableBuilder(
+            listenable: NovaTrainingController.instance,
+            builder: (context, _) =>
+                (!NovaTrainingController.instance.hosted ||
+                    !NovaTrainingController.instance.docked)
+                ? IconButton(
+                    key: const Key('pebble_page_help'),
+                    tooltip: 'Pebble · guide to this page',
+                    onPressed: () {
+                      NovaTrainingController.instance.restoreDock();
+                      _showPebble();
+                    },
+                    icon: const NovaCharacter(size: 32),
+                  )
+                : const SizedBox.shrink(),
           ),
         FutureBuilder<bool>(
           future: SiteContentService.canEdit(),

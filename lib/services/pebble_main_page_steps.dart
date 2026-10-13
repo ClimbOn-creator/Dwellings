@@ -12,8 +12,8 @@ const pebbleMainPageCopy = <String, List<(String, String, String, String?)>>{
     ),
     (
       "posts",
-      "Learn and save",
-      "Read posts, swipe through pictures and play videos or audio. Sign in to like a lesson or save it for later.",
+      "Join the conversation",
+      "Choose your community to see posts within about 200 km. Likes and conversation help useful posts rise. Open comments to ask a question or reply inside a thread.",
       "learning-feed.posts",
     ),
   ],
@@ -304,7 +304,10 @@ const pebbleMainPageCopy = <String, List<(String, String, String, String?)>>{
 };
 
 List<NovaStep>? pebbleMainPageSteps(String page) {
-  final lookup = page == 'buyer/resources' || page == 'seller/resources'
+  final lookup =
+      page == 'buyer/resources' ||
+          page == 'seller/resources' ||
+          page == 'learning-resources'
       ? 'resources'
       : page;
   final copy = pebbleMainPageCopy[lookup];

@@ -1,6 +1,10 @@
 // These IDs are permanent. Rewrite the fallback VALUE while retaining its ID.
 // Never regenerate or renumber this registry during a redesign.
 const siteCopyCatalog = <String, String>{
+  "learning.feed.ranking":
+      "Nearby posts, ranked by likes, conversation and freshness. No following list.",
+  "learning.feed.chooseArea": "Choose your community to see nearby posts",
+  "learning.feed.localEmpty": "No nearby posts match this view yet",
   "learning.saved.title": "Your saved lessons",
   "learning.saved.intro":
       "Return to the lessons you bookmarked with your account.",
@@ -205,9 +209,9 @@ const siteCopyCatalog = <String, String>{
   "nova.training.pebble-learning-feed-topics.title": "Find your next lesson",
   "nova.training.pebble-learning-feed-topics.body":
       "Filter by buying, selling, finance or legal topics. Everyone can learn here; publishing is reserved for contributors personally approved by the creator.",
-  "nova.training.pebble-learning-feed-posts.title": "Learn and save",
+  "nova.training.pebble-learning-feed-posts.title": "Join the conversation",
   "nova.training.pebble-learning-feed-posts.body":
-      "Read posts, swipe through pictures and play videos or audio. Sign in to like a lesson or save it for later.",
+      "Choose your community to see posts within about 200 km. Likes and conversation help useful posts rise. Open comments to ask a question or reply inside a thread.",
   "nova.training.pebble-learning-seminars-schedule.title":
       "Meet and learn live",
   "nova.training.pebble-learning-seminars-schedule.body":

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'nova_page_guide.dart';
 import 'package:flutter/foundation.dart';
 import 'nova_training_service.dart';
@@ -16,7 +17,34 @@ class NovaTrainingController extends ChangeNotifier {
   List<NovaStep>? _pageSteps;
   bool _automaticPageGuide = false;
   bool get pageOnly => _pageSteps != null;
-  String currentPage = 'buyer/home';
+  bool _disposed = false;
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
+
+  String _currentPage = 'buyer/home';
+  String get currentPage => _currentPage;
+  set currentPage(String page) {
+    if (_currentPage == page) return;
+    _currentPage = page;
+    scheduleMicrotask(() {
+      if (!_disposed) notifyListeners();
+    });
+  }
+
+  bool docked = true;
+  void dismissDock() {
+    docked = false;
+    notifyListeners();
+  }
+
+  void restoreDock() {
+    docked = true;
+    notifyListeners();
+  }
+
   String calculatorMode = 'business';
   List<NovaStep> get steps => _pageSteps ?? novaWalkthrough(role);
   void startPage(String page, {bool automatic = false}) {

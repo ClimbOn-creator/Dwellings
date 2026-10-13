@@ -50,7 +50,14 @@ void main() {
     ),
     (
       AppTunnel.learning,
-      ['learningDashboard', 'learningSeminars', 'learningMap', 'profile'],
+      [
+        'learningDashboard',
+        'learningSeminars',
+        'learningMap',
+        'dealComparison',
+        'transactionRoom',
+        'profile',
+      ],
     ),
   ]) {
     testWidgets('$tunnel menu contains only its permitted destinations', (

@@ -20,8 +20,13 @@ import '../widgets/nova_target.dart';
 import 'auth_page.dart';
 import 'deal_rooms_page.dart';
 import 'transaction_learning_page.dart';
+import 'buyer_resources_page.dart';
+import '../services/learning_area_service.dart';
+import '../services/nova_training_controller.dart';
+import '../widgets/learning_area_picker.dart';
+import '../widgets/learning_comments.dart';
 
-enum LearningView { feed, seminars, map, saved, contributors }
+enum LearningView { feed, seminars, map, resources, contributors }
 
 class LearningDashboardPage extends StatefulWidget {
   const LearningDashboardPage({
@@ -43,8 +48,63 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
   late LearningView view;
   Future<List<LearningPost>>? _feedFuture;
   Future<List<LearningSeminar>>? _seminarsFuture;
-  Future<List<LearningPost>> get feed =>
-      _feedFuture ??= (widget.loadPosts ?? LearningService.posts)();
+  LearningArea? area;
+  String feedOrder = 'recommended';
+  Future<void>? _areaReady;
+  Future<List<LearningPost>> get feed => _feedFuture ??= _loadFeed();
+  Future<List<LearningPost>> _loadFeed() async {
+    if (widget.loadPosts != null) return widget.loadPosts!();
+    await _areaReady;
+    return LearningService.posts(area: area, order: feedOrder);
+  }
+
+  Future<void> _loadArea() async {
+    final uid = BackendService.user?.id;
+    final value = await LearningAreaService.load();
+    if (mounted && uid == BackendService.user?.id) setState(() => area = value);
+  }
+
+  Future<void> _chooseArea() async {
+    final value = await chooseLearningArea(context);
+    if (value == null || !mounted) return;
+    setState(() {
+      area = value;
+      _feedFuture = null;
+    });
+    try {
+      await LearningAreaService.save(value);
+    } catch (_) {
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Area saved on this device. Account sync will need another try.',
+            ),
+          ),
+        );
+    }
+  }
+
+  Future<void> _comments(LearningPost post) async {
+    final controller = NovaTrainingController.instance;
+    final wasDocked = controller.docked;
+    if (wasDocked) controller.dismissDock();
+    try {
+      await showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        useSafeArea: true,
+        builder: (c) => SizedBox(
+          height: MediaQuery.sizeOf(c).height * .9,
+          child: LearningComments(post: post, isOwner: permissions.isOwner),
+        ),
+      );
+    } finally {
+      if (wasDocked) controller.restoreDock();
+    }
+    if (mounted) refresh();
+  }
+
   Future<List<LearningSeminar>> get seminars =>
       _seminarsFuture ??= (widget.loadSeminars ?? LearningService.seminars)();
   LearningPermissions permissions = const LearningPermissions();
@@ -64,10 +124,15 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
   void initState() {
     super.initState();
     view = widget.initialView;
+    _areaReady = _loadArea();
     refresh();
     auth = BackendService.authChanges?.listen((_) {
       if (mounted) {
-        setState(() => permissions = const LearningPermissions());
+        setState(() {
+          permissions = const LearningPermissions();
+          area = null;
+          _areaReady = _loadArea();
+        });
         refresh();
       }
     });
@@ -246,7 +311,7 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
               'Buying & selling map',
               Icons.account_tree_outlined,
             ),
-            (LearningView.saved, 'Saved lessons', Icons.bookmark_outline),
+            (LearningView.resources, 'Resources', Icons.public),
           ])
             DashboardUi.nav(
               item.$2,
@@ -298,9 +363,10 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
               const SizedBox(height: 22),
             ],
             switch (view) {
-              LearningView.feed || LearningView.saved => _feed(),
+              LearningView.feed => _feed(),
               LearningView.seminars => _seminars(),
               LearningView.map => _map(),
+              LearningView.resources => const BuyerResourcesPanel(),
               LearningView.contributors => _contributors(),
             },
           ],
@@ -312,7 +378,7 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
     LearningView.feed => 'Learning feed',
     LearningView.seminars => 'Live seminars',
     LearningView.map => 'Buying & selling map',
-    LearningView.saved => 'Saved lessons',
+    LearningView.resources => 'Resources',
     LearningView.contributors => 'Contributor approvals',
   };
   Widget heading(String id, String title, String intro) => NovaTarget(
@@ -331,14 +397,48 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       heading(
-        view == LearningView.saved ? 'saved' : 'feed',
-        view == LearningView.saved
-            ? 'Your saved lessons'
-            : 'A place to learn, at your pace',
-        view == LearningView.saved
-            ? 'Return to the lessons you bookmarked with your account.'
-            : 'Understand buying, selling and transferring a business. Learn from contributors approved by the creator.',
+        'feed',
+        'A place to learn, at your pace',
+        'Understand buying, selling and transferring a business. Learn from contributors approved by the creator.',
       ),
+      Wrap(
+        spacing: 12,
+        runSpacing: 8,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          OutlinedButton.icon(
+            onPressed: _chooseArea,
+            icon: const Icon(Icons.location_on_outlined),
+            label: Text(
+              area == null ? 'Choose your area' : '${area!.name} · 200 km',
+            ),
+          ),
+          ChoiceChip(
+            label: const Text('For you'),
+            selected: feedOrder == 'recommended',
+            onSelected: (_) => setState(() {
+              feedOrder = 'recommended';
+              _feedFuture = null;
+            }),
+          ),
+          ChoiceChip(
+            label: const Text('Newest'),
+            selected: feedOrder == 'newest',
+            onSelected: (_) => setState(() {
+              feedOrder = 'newest';
+              _feedFuture = null;
+            }),
+          ),
+        ],
+      ),
+      const SizedBox(height: 8),
+      copy(
+        'learning.feed.ranking',
+        'Nearby posts, ranked by likes, conversation and freshness. No following list.',
+        color: DashboardUi.muted,
+        size: 12,
+      ),
+      const SizedBox(height: 18),
       if (permissions.canPublish)
         Padding(
           padding: const EdgeInsets.only(bottom: 18),
@@ -406,7 +506,6 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
           final shown = all
               .where(
                 (p) =>
-                    (view != LearningView.saved || p.saved) &&
                     (topic == 'all' || p.topic == topic || p.topic == 'both') &&
                     ('${p.title} ${p.body} ${p.author}').toLowerCase().contains(
                       search.text.toLowerCase(),
@@ -423,12 +522,12 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         copy(
-                          view == LearningView.saved
-                              ? 'learning.saved.empty'
-                              : 'learning.feed.empty',
-                          view == LearningView.saved
-                              ? 'Your saved lessons will appear here'
-                              : 'No lessons match this view yet',
+                          area == null
+                              ? 'learning.feed.chooseArea'
+                              : 'learning.feed.localEmpty',
+                          area == null
+                              ? 'Choose your community to see nearby posts'
+                              : 'No nearby posts match this view yet',
                           size: 20,
                           weight: FontWeight.w700,
                         ),
@@ -525,96 +624,101 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
       ],
     ),
   );
-  Widget _post(LearningPost p) => DashboardUi.panel(
-    padding: const EdgeInsets.all(22),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
+  Widget _post(LearningPost p) => Align(
+    key: ValueKey('learning-post-${p.id}'),
+    alignment: Alignment.topCenter,
+    child: ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 720),
+      child: DashboardUi.panel(
+        padding: const EdgeInsets.all(22),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            CircleAvatar(
-              backgroundColor: DashboardUi.paleBlue,
-              child: Text(p.author.isEmpty ? '?' : p.author[0]),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    p.author,
-                    style: const TextStyle(fontWeight: FontWeight.w700),
+            Row(
+              children: [
+                CircleAvatar(
+                  backgroundColor: DashboardUi.paleBlue,
+                  child: Text(p.author.isEmpty ? '?' : p.author[0]),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        p.author,
+                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                      Text(
+                        '${p.areaName ?? "Community post"}${p.distanceKm == null ? "" : " · ~${p.distanceKm!.round()} km"} · ${DateFormat('MMM d').format(p.createdAt)}',
+                        style: const TextStyle(
+                          color: DashboardUi.muted,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
                   ),
-                  Text(
-                    DateFormat('MMM d, yyyy').format(p.createdAt),
-                    style: const TextStyle(
-                      color: DashboardUi.muted,
-                      fontSize: 12,
-                    ),
+                ),
+                const Tooltip(
+                  message: 'Creator-approved contributor',
+                  child: Icon(
+                    Icons.verified,
+                    color: DashboardUi.blue,
+                    size: 21,
                   ),
-                ],
-              ),
+                ),
+                if (permissions.isOwner ||
+                    p.authorId == BackendService.user?.id)
+                  IconButton(
+                    tooltip: 'Hide this post',
+                    onPressed: busy ? null : () => _confirmHide(p),
+                    icon: const Icon(Icons.more_horiz),
+                  ),
+              ],
             ),
-            const Tooltip(
-              message: 'Creator-approved contributor',
-              child: Icon(Icons.verified, color: DashboardUi.blue, size: 21),
+            if (p.media.isNotEmpty) ...[
+              const SizedBox(height: 18),
+              LearningGallery(media: p.media),
+            ],
+            const SizedBox(height: 18),
+            Text(
+              p.title,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
             ),
-            if (permissions.isOwner || p.authorId == BackendService.user?.id)
-              IconButton(
-                tooltip: 'Hide this post',
-                onPressed: busy ? null : () => _confirmHide(p),
-                icon: const Icon(Icons.more_horiz),
-              ),
+            if (p.body.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              LearningCaption(key: ValueKey(p.id), body: p.body),
+            ],
+            const SizedBox(height: 18),
+            const Divider(color: DashboardUi.line),
+            Wrap(
+              spacing: 18,
+              children: [
+                TextButton.icon(
+                  onPressed: busy
+                      ? null
+                      : () async {
+                          if (await _signedIn())
+                            _action(
+                              () =>
+                                  LearningService.reaction(p, 'like', !p.liked),
+                            );
+                        },
+                  icon: Icon(p.liked ? Icons.favorite : Icons.favorite_border),
+                  label: Text('${p.likes} ${p.likes == 1 ? 'like' : 'likes'}'),
+                ),
+                TextButton.icon(
+                  onPressed: () => _comments(p),
+                  icon: const Icon(Icons.chat_bubble_outline),
+                  label: Text(
+                    '${p.comments} ${p.comments == 1 ? 'comment' : 'comments'}',
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
-        const SizedBox(height: 18),
-        Text(
-          p.title,
-          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
-        ),
-        if (p.body.isNotEmpty) ...[
-          const SizedBox(height: 12),
-          SelectableText(
-            p.body,
-            style: const TextStyle(fontSize: 15, height: 1.65),
-          ),
-        ],
-        if (p.media.isNotEmpty) ...[
-          const SizedBox(height: 18),
-          LearningGallery(media: p.media),
-        ],
-        const SizedBox(height: 18),
-        const Divider(color: DashboardUi.line),
-        Wrap(
-          spacing: 18,
-          children: [
-            TextButton.icon(
-              onPressed: busy
-                  ? null
-                  : () async {
-                      if (await _signedIn())
-                        _action(
-                          () => LearningService.reaction(p, 'like', !p.liked),
-                        );
-                    },
-              icon: Icon(p.liked ? Icons.favorite : Icons.favorite_border),
-              label: Text('${p.likes} ${p.likes == 1 ? 'like' : 'likes'}'),
-            ),
-            TextButton.icon(
-              onPressed: busy
-                  ? null
-                  : () async {
-                      if (await _signedIn())
-                        _action(
-                          () => LearningService.reaction(p, 'save', !p.saved),
-                        );
-                    },
-              icon: Icon(p.saved ? Icons.bookmark : Icons.bookmark_outline),
-              label: Text(p.saved ? 'Saved' : 'Save lesson'),
-            ),
-          ],
-        ),
-      ],
+      ),
     ),
   );
   Future<void> _confirmHide(LearningPost p) async {
@@ -660,7 +764,7 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
   Future<void> _compose() async {
     await showDialog<void>(
       context: context,
-      builder: (_) => const LearningPostComposer(),
+      builder: (_) => LearningPostComposer(initialArea: area),
     );
     if (mounted) refresh();
   }
@@ -1367,7 +1471,8 @@ class _LearningGalleryState extends State<LearningGallery> {
 }
 
 class LearningPostComposer extends StatefulWidget {
-  const LearningPostComposer({super.key});
+  const LearningPostComposer({super.key, this.initialArea});
+  final LearningArea? initialArea;
   @override
   State<LearningPostComposer> createState() => _LearningPostComposerState();
 }
@@ -1375,6 +1480,13 @@ class LearningPostComposer extends StatefulWidget {
 class _LearningPostComposerState extends State<LearningPostComposer> {
   final title = TextEditingController(), body = TextEditingController();
   String topic = 'both';
+  LearningArea? area;
+  @override
+  void initState() {
+    super.initState();
+    area = widget.initialArea;
+  }
+
   final files = <LearningUpload>[];
   bool busy = false;
   String? error;
@@ -1415,6 +1527,18 @@ class _LearningPostComposerState extends State<LearningPostComposer> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            OutlinedButton.icon(
+              onPressed: busy
+                  ? null
+                  : () async {
+                      final value = await chooseLearningArea(context);
+                      if (value != null && mounted)
+                        setState(() => area = value);
+                    },
+              icon: const Icon(Icons.location_on_outlined),
+              label: Text(area?.name ?? 'Choose the post community'),
+            ),
+            const SizedBox(height: 12),
             TextField(
               controller: title,
               maxLength: 160,
@@ -1498,6 +1622,7 @@ class _LearningPostComposerState extends State<LearningPostComposer> {
                     body.text,
                     topic,
                     files,
+                    area: area,
                   );
                   if (mounted) Navigator.pop(context);
                 } catch (e) {
@@ -1675,6 +1800,37 @@ class _LearningSeminarComposerState extends State<LearningSeminarComposer> {
               },
         child: Text(busy ? 'Scheduling…' : 'Schedule session'),
       ),
+    ],
+  );
+}
+
+class LearningCaption extends StatefulWidget {
+  const LearningCaption({super.key, required this.body});
+  final String body;
+  @override
+  State<LearningCaption> createState() => _LearningCaptionState();
+}
+
+class _LearningCaptionState extends State<LearningCaption> {
+  bool expanded = false;
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      if (expanded)
+        SelectableText(widget.body, style: const TextStyle(height: 1.5))
+      else
+        Text(
+          widget.body,
+          maxLines: 3,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(height: 1.5),
+        ),
+      if (widget.body.length > 160 || widget.body.split('\n').length > 3)
+        TextButton(
+          onPressed: () => setState(() => expanded = !expanded),
+          child: Text(expanded ? 'Less' : 'Read more'),
+        ),
     ],
   );
 }

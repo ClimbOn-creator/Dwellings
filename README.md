@@ -190,7 +190,7 @@ Transaction Room in the main navigation opens the restored document learning lib
 
 ## Learning Dashboard and private R2 media
 
-The boxed **I want to learn** action opens a fourth, separate Learning workspace (`learning-dashboard`, `learning-seminars`, `learning-map`). Its menu contains only Learning Dashboard, Live seminars, Buying & selling map and Profile. Anyone can read published lessons and explore the map; signed-in learners can save lessons, like posts, register for sessions and save concept progress. Eight buying stages and eight selling/transfer stages include explanations, related document guides and short understanding checks.
+The boxed **I want to learn** action opens a fourth, separate Learning workspace (`learning-dashboard`, `learning-seminars`, `learning-map`). Its menu contains Learning Dashboard, Live seminars, Buying & selling map, Deal comparison quiz, Transaction Room and Profile. Resources is embedded in the Learning dashboard sidebar. Saved lessons has been removed from the interface; historical saved records are retained. Anyone can read published lessons and explore the map; signed-in learners can like posts, comment, reply in threads, register for sessions and save concept progress. Eight buying stages and eight selling/transfer stages include explanations, related document guides and short understanding checks.
 
 Only the confirmed creator account `rw0882308@gmail.com`, already an Affinity owner, can approve or revoke registered contributors under **Contributor approvals**. The approval is checked in database policies and again during R2 uploads. No example feed posts, public seminars or new accounts are seeded. Existing site copy, pictures and account data are preserved.
 
@@ -210,3 +210,13 @@ The additive migrations `20261012182447_learning_dashboard.sql` and `20261012185
 Live seminars use the approved host's external HTTPS meeting link (for example Zoom) and optional replay. The app schedules sessions, RSVPs and calendar downloads; it does not broadcast video itself.
 
 Map concepts are informed by BDC's [buying steps](https://www.bdc.ca/en/articles-tools/start-buy-business/buy-business/what-are-steps-buying-business), [due diligence](https://www.bdc.ca/en/articles-tools/start-buy-business/buy-business/buying-business-conducting-due-diligence), and [negotiating a sale](https://www.bdc.ca/en/articles-tools/change-ownership/sell-business/how-to-negotiate-the-sale-of-your-business).
+
+### Nearby social feed and Pebble
+
+Learning posts require a community selected by the approved publisher. Learners choose their community or explicitly request device location to find a nearby community. Device coordinates are discarded; only the community's broad coordinates rounded to 0.1 degree are used. Signed-in area preferences are private to the account through RLS. Guests keep their selection on the device. Coordinates with finer precision are rejected by the database. Posts without an area remain stored but do not enter the local feed.
+
+The server filters published posts from currently approved contributors to a 200 km radius using the community area coordinates. Recommended order uses logarithmic likes and active comment counts, recency decay and a small proximity weight. The Newest option keeps the same radius and sorts by date. No follows graph is used. The radius is approximate because community areas are coarse; at most 100 ranked posts are fetched per refresh.
+
+Comments are readable on published, approved posts. Signed-in learners may add comments and nested replies (up to eight reply levels), including learners who cannot publish posts. Cross-post replies and author impersonation are prevented by database rules. Twenty comments per five minutes is the posting limit. The author or creator may remove a comment; text is cleared and a tombstone preserves replies. The comment sheet fetches 100 comments initially and can load more. The transaction-only verification is in `test/sql/learning_social_access.sql`. The migration `20261013161150_learning_local_feed_comments.sql` has been applied to the configured project.
+
+Pebble's small button is fixed at the bottom left across scroll, except on the landing page. Its X returns the help button to the header; requesting help there restores Pebble. Page-specific walkthroughs and profile completion behavior remain available.

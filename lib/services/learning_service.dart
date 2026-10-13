@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:typed_data';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'backend_service.dart';
+import 'learning_area_service.dart';
 
 class LearningPermissions {
   const LearningPermissions({this.canPublish = false, this.isOwner = false});
@@ -37,13 +38,18 @@ class LearningPost {
     required this.topic,
     required this.createdAt,
     this.likes = 0,
+    this.comments = 0,
+    this.areaName,
+    this.distanceKm,
     this.liked = false,
     this.saved = false,
     this.media = const [],
   });
   final String id, authorId, author, title, body, topic;
   final DateTime createdAt;
-  final int likes;
+  final int likes, comments;
+  final String? areaName;
+  final double? distanceKm;
   final bool liked, saved;
   final List<LearningAttachment> media;
 }
@@ -141,14 +147,35 @@ class LearningService {
       throw StateError('Only creator-approved contributors can publish.');
   }
 
-  static Future<List<LearningPost>> posts() async {
+  static Future<List<LearningPost>> posts({
+    LearningArea? area,
+    String order = 'recommended',
+  }) async {
     if (!BackendService.configured) return [];
+    if (area == null) return [];
+    final ranked = await client.rpc(
+      'learning_local_feed',
+      params: {
+        'latitude': LearningArea.coarse(area.latitude),
+        'longitude': LearningArea.coarse(area.longitude),
+        'feed_order': order,
+      },
+    );
+    final matches = List<Map<String, dynamic>>.from(ranked);
+    if (matches.isEmpty) return [];
+    final ranks = {
+      for (var i = 0; i < matches.length; i++) matches[i]['post_id']: i,
+    };
+    final distances = {
+      for (final m in matches)
+        m['post_id']: (m['distance_km'] as num).toDouble(),
+    };
     final rows = await client
         .from('learning_posts')
         .select('*,learning_media(*)')
         .eq('status', 'published')
-        .order('created_at', ascending: false)
-        .limit(50);
+        .inFilter('id', matches.map((m) => m['post_id']).toList());
+    rows.sort((a, b) => ranks[a['id']]!.compareTo(ranks[b['id']]!));
     if (rows.isEmpty) return [];
     final names = await client
         .from('learning_publishers')
@@ -192,6 +219,9 @@ class LearningService {
           topic: row['topic'],
           createdAt: DateTime.parse(row['created_at']).toLocal(),
           likes: row['likes_count'],
+          comments: row['comments_count'] ?? 0,
+          areaName: row['area_name'],
+          distanceKm: distances[row['id']],
           liked: reactions.any(
             (r) => r['post_id'] == row['id'] && r['kind'] == 'like',
           ),
@@ -209,9 +239,11 @@ class LearningService {
     String title,
     String body,
     String topic,
-    List<LearningUpload> files,
-  ) async {
+    List<LearningUpload> files, {
+    LearningArea? area,
+  }) async {
     await _requirePublisher();
+    if (area == null) throw StateError('Choose the community for this post.');
     if (title.trim().length < 3 ||
         title.trim().length > 160 ||
         body.length > 12000)
@@ -228,6 +260,7 @@ class LearningService {
           'body': body.trim(),
           'topic': topic,
           'status': 'draft',
+          ...area.toJson(),
         })
         .select('id')
         .single();
@@ -386,6 +419,47 @@ class LearningService {
     );
   }
 
+  static Future<List<LearningComment>> comments(
+    String postId, {
+    int limit = 100,
+  }) async {
+    final rows = await client
+        .from('learning_comments')
+        .select()
+        .eq('post_id', postId)
+        .order('created_at')
+        .order('id')
+        .limit(limit);
+    return rows.map(LearningComment.fromJson).toList();
+  }
+
+  static Future<void> comment(
+    String postId,
+    String body, {
+    String? parentId,
+  }) async {
+    final user = BackendService.user;
+    if (user == null) throw StateError('Sign in to comment.');
+    if (body.trim().isEmpty || body.trim().length > 2000)
+      throw StateError('Write a comment of 1–2,000 characters.');
+    await client.from('learning_comments').insert({
+      'post_id': postId,
+      'author_id': user.id,
+      'body': body.trim(),
+      'parent_id': parentId,
+    });
+  }
+
+  static Future<void> removeComment(String id) async {
+    await client
+        .from('learning_comments')
+        .update({
+          'body': '',
+          'removed_at': DateTime.now().toUtc().toIso8601String(),
+        })
+        .eq('id', id);
+  }
+
   static Future<Set<String>> progress() async {
     if (BackendService.user == null) return {};
     final rows = await client
@@ -411,4 +485,34 @@ class LearningService {
           .eq('concept_id', id);
     }
   }
+}
+
+class LearningComment {
+  const LearningComment({
+    required this.id,
+    required this.postId,
+    required this.authorId,
+    required this.author,
+    required this.body,
+    required this.createdAt,
+    this.parentId,
+    this.depth = 0,
+    this.removed = false,
+  });
+  final String id, postId, authorId, author, body;
+  final String? parentId;
+  final int depth;
+  final bool removed;
+  final DateTime createdAt;
+  factory LearningComment.fromJson(Map<String, dynamic> j) => LearningComment(
+    id: j['id'],
+    postId: j['post_id'],
+    authorId: j['author_id'],
+    author: j['author_name'],
+    body: j['body'],
+    parentId: j['parent_id'],
+    depth: j['depth'],
+    removed: j['removed_at'] != null,
+    createdAt: DateTime.parse(j['created_at']),
+  );
 }
