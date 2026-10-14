@@ -156,4 +156,74 @@ void main() {
     expect(find.text('BUSINESS C'), findsNothing);
     expect(tester.takeException(), isNull);
   });
+  for (final width in [390.0, 1100.0]) {
+    testWidgets(
+      'embedded quiz keeps motion and all eight explanations at width $width',
+      (tester) async {
+        SharedPreferences.setMockInitialValues({});
+        tester.view.physicalSize = Size(width, 1000);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        await tester.pumpWidget(
+          const MaterialApp(
+            home: Scaffold(
+              body: SingleChildScrollView(
+                child: BusinessComparisonQuiz(embedded: true),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(find.byType(Scaffold), findsOneWidget);
+        for (var round = 0; round < 8; round++) {
+          final button = find.text('I would choose business A');
+          await tester.ensureVisible(button);
+          await tester.tap(button);
+          await tester.pump();
+          if (round == 0) {
+            await tester.pump(const Duration(milliseconds: 850));
+            final loser = tester.widget<Transform>(
+              find.byKey(const ValueKey('scale-B')),
+            );
+            expect(loser.transform.entry(0, 0), lessThan(.8));
+            expect(loser.transform.entry(0, 0), greaterThan(.01));
+            await tester.pump(const Duration(milliseconds: 300));
+            await tester.pump();
+            await tester.pump(const Duration(milliseconds: 180));
+            expect(
+              tester
+                  .widget<Transform>(find.byKey(const ValueKey('slide-C')))
+                  .transform
+                  .entry(0, 3),
+              greaterThan(0),
+            );
+          }
+          await tester.pumpAndSettle();
+          expect(tester.takeException(), isNull);
+        }
+        expect(find.text('Review your eight choices'), findsOneWidget);
+        for (var round = 1; round <= 8; round++) {
+          expect(find.text('Comparison $round'), findsOneWidget);
+        }
+        expect(
+          find.textContaining('You chose Evergreen Maintenance'),
+          findsNWidgets(8),
+        );
+        expect(
+          find.textContaining(
+            'Annual return: \$200,000 ÷ \$1,000,000 purchase price = 20.0%',
+          ),
+          findsNWidgets(8),
+        );
+        expect(find.textContaining('Other option:'), findsNWidgets(8));
+        await tester.ensureVisible(find.text('Retake the quiz'));
+        await tester.tap(find.text('Retake the quiz'));
+        await tester.pumpAndSettle();
+        expect(find.text('1 / 8'), findsOneWidget);
+        expect(find.text('Review your eight choices'), findsNothing);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
 }

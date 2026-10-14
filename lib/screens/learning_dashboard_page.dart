@@ -1,3 +1,4 @@
+import 'deal_comparison_page.dart';
 import 'dart:async';
 import '../widgets/canada_event_map.dart';
 import '../widgets/learning_example_cover.dart';
@@ -31,7 +32,7 @@ import '../services/nova_training_controller.dart';
 import '../widgets/learning_area_picker.dart';
 import '../widgets/learning_comments.dart';
 
-enum LearningView { feed, seminars, map, resources, contributors }
+enum LearningView { feed, seminars, map, quiz, resources, contributors }
 
 class LearningDashboardPage extends StatefulWidget {
   const LearningDashboardPage({
@@ -299,7 +300,8 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
       height: 1.45,
     ),
   );
-  String get guide => 'learning-${view.name}';
+  String get guide =>
+      view == LearningView.quiz ? 'comparison' : 'learning-${view.name}';
   void show(LearningView next) {
     setState(() => view = next);
   }
@@ -360,6 +362,7 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
               'Buying & selling map',
               Icons.account_tree_outlined,
             ),
+            (LearningView.quiz, 'Deal comparison quiz', Icons.compare_arrows),
             (LearningView.resources, 'Resources', Icons.public),
           ])
             DashboardUi.nav(
@@ -411,10 +414,18 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
               ),
               const SizedBox(height: 22),
             ],
+            Offstage(
+              offstage: view != LearningView.quiz,
+              child: TickerMode(
+                enabled: view == LearningView.quiz,
+                child: const DealComparisonPage(embedded: true),
+              ),
+            ),
             switch (view) {
               LearningView.feed => _feed(),
               LearningView.seminars => _seminars(),
               LearningView.map => _map(),
+              LearningView.quiz => const SizedBox.shrink(),
               LearningView.resources => const BuyerResourcesPanel(),
               LearningView.contributors => _contributors(),
             },
@@ -427,6 +438,7 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
     LearningView.feed => 'Learning feed',
     LearningView.seminars => 'Live seminars',
     LearningView.map => 'Buying & selling map',
+    LearningView.quiz => 'Deal comparison quiz',
     LearningView.resources => 'Resources',
     LearningView.contributors => 'Contributor approvals',
   };

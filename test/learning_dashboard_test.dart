@@ -197,4 +197,24 @@ void main() {
     expect(find.text('Contributor approvals'), findsOneWidget);
     await tester.pumpWidget(const SizedBox.shrink());
   });
+  testWidgets(
+    'quiz is a visible dashboard tab with an embedded sign-in panel',
+    (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: LearningDashboardPage(
+            initialView: LearningView.quiz,
+            loadPosts: () async => [],
+            loadSeminars: () async => [],
+          ),
+        ),
+      );
+      await tester.pump(const Duration(seconds: 1));
+      expect(find.text('Deal comparison quiz'), findsWidgets);
+      expect(find.text('Sign in to start'), findsOneWidget);
+      expect(find.byType(Scaffold), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
 }

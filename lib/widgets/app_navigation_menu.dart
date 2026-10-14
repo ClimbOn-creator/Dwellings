@@ -69,7 +69,6 @@ List<AppNavigationDestination> destinationsForTunnel(AppTunnel tunnel) =>
         AppNavigationDestination.learningDashboard,
         AppNavigationDestination.learningSeminars,
         AppNavigationDestination.learningMap,
-        AppNavigationDestination.dealComparison,
         AppNavigationDestination.transactionRoom,
         AppNavigationDestination.profile,
       ],

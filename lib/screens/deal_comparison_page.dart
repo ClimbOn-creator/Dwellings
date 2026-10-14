@@ -17,7 +17,8 @@ const _muted = Color(0xFF607172);
 
 /// Every route into the quiz requires an authenticated account.
 class DealComparisonPage extends StatefulWidget {
-  const DealComparisonPage({super.key});
+  const DealComparisonPage({super.key, this.embedded = false});
+  final bool embedded;
   @override
   State<DealComparisonPage> createState() => _QuizAccessState();
 }
@@ -27,18 +28,64 @@ class _QuizAccessState extends State<DealComparisonPage> {
   Widget build(BuildContext context) => StreamBuilder(
     stream: BackendService.authChanges,
     builder: (context, _) => BackendService.user == null
-        ? AuthPage(
-            onAuthenticated: () {
-              if (mounted) setState(() {});
-            },
-          )
-        : BusinessComparisonQuiz(key: ValueKey(BackendService.user!.id)),
+        ? widget.embedded
+              ? Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SiteText(
+                          contentKey: 'quiz.dashboard.title',
+                          literal: true,
+                          'Deal comparison quiz',
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        const SiteText(
+                          contentKey: 'quiz.dashboard.signInIntro',
+                          literal: true,
+                          'Sign in to compare businesses and keep your choices and explanations in your dashboard.',
+                        ),
+                        const SizedBox(height: 16),
+                        FilledButton(
+                          onPressed: () async {
+                            await Navigator.of(context).push(
+                              MaterialPageRoute<void>(
+                                builder: (_) => const AuthPage(),
+                              ),
+                            );
+                            if (mounted) setState(() {});
+                          },
+                          child: const SiteText(
+                            contentKey: 'quiz.dashboard.signIn',
+                            literal: true,
+                            'Sign in to start',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              : AuthPage(
+                  onAuthenticated: () {
+                    if (mounted) setState(() {});
+                  },
+                )
+        : BusinessComparisonQuiz(
+            key: ValueKey(BackendService.user!.id),
+            embedded: widget.embedded,
+          ),
   );
 }
 
 /// Quiz surface, mounted by DealComparisonPage after authentication.
 class BusinessComparisonQuiz extends StatefulWidget {
-  const BusinessComparisonQuiz({super.key});
+  const BusinessComparisonQuiz({super.key, this.embedded = false});
+  final bool embedded;
 
   @override
   State<BusinessComparisonQuiz> createState() => _DealComparisonPageState();
@@ -193,47 +240,12 @@ class _DealComparisonPageState extends State<BusinessComparisonQuiz>
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    backgroundColor: const Color(0xFFE7F0FF),
-    appBar: AppBar(
-      automaticallyImplyLeading: false,
-      toolbarHeight: 82,
-      backgroundColor: const Color(0xFFF7F8F4),
-      surfaceTintColor: Colors.transparent,
-      title: const HomeBrandButton(size: 66, dark: false),
-      actions: const [
-        AppNavigationMenu(guidePage: 'comparison', dark: false),
-        SizedBox(width: 12),
-      ],
-    ),
-    body: _loading
-        ? const Center(child: CircularProgressIndicator(color: _green))
-        : _foundation == null && _error != null
-        ? Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SiteText(
-                  contentKey: 'copy.deal_comparison_page.m1',
-                  literal: false,
-                  _error!,
-                ),
-                TextButton(
-                  onPressed: _load,
-                  child: const SiteText(
-                    contentKey: 'copy.deal_comparison_page.1',
-                    literal: true,
-                    'Retry',
-                  ),
-                ),
-              ],
-            ),
-          )
-        : DecoratedBox(
+  Widget build(BuildContext context) => widget.embedded
+      ? ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: DecoratedBox(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
                 colors: [
                   Color(0xFFDDEBFF),
                   Color(0xFFEAE0FF),
@@ -241,27 +253,97 @@ class _DealComparisonPageState extends State<BusinessComparisonQuiz>
                 ],
               ),
             ),
-            child: LayoutBuilder(
-              builder: (context, viewport) => SingleChildScrollView(
-                padding: EdgeInsets.all(viewport.maxWidth < 600 ? 16 : 28),
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      maxWidth: 1380,
-                      minHeight: (viewport.maxHeight - 56).clamp(
-                        0,
-                        double.infinity,
-                      ),
-                    ),
-                    child: _step == quizBusinesses.length - 1
-                        ? _complete()
-                        : _quiz(),
-                  ),
-                ),
-              ),
+            child: Padding(
+              padding: const EdgeInsets.all(18),
+              child: _loading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _foundation == null && _error != null
+                  ? Column(
+                      children: [
+                        Text(_error!),
+                        TextButton(
+                          onPressed: _load,
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    )
+                  : _step == quizBusinesses.length - 1
+                  ? _complete()
+                  : _quiz(),
             ),
           ),
-  );
+        )
+      : Scaffold(
+          backgroundColor: const Color(0xFFE7F0FF),
+          appBar: AppBar(
+            automaticallyImplyLeading: false,
+            toolbarHeight: 82,
+            backgroundColor: const Color(0xFFF7F8F4),
+            surfaceTintColor: Colors.transparent,
+            title: const HomeBrandButton(size: 66, dark: false),
+            actions: const [
+              AppNavigationMenu(guidePage: 'comparison', dark: false),
+              SizedBox(width: 12),
+            ],
+          ),
+          body: _loading
+              ? const Center(child: CircularProgressIndicator(color: _green))
+              : _foundation == null && _error != null
+              ? Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SiteText(
+                        contentKey: 'copy.deal_comparison_page.m1',
+                        literal: false,
+                        _error!,
+                      ),
+                      TextButton(
+                        onPressed: _load,
+                        child: const SiteText(
+                          contentKey: 'copy.deal_comparison_page.1',
+                          literal: true,
+                          'Retry',
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              : DecoratedBox(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Color(0xFFDDEBFF),
+                        Color(0xFFEAE0FF),
+                        Color(0xFFD4F3EC),
+                      ],
+                    ),
+                  ),
+                  child: LayoutBuilder(
+                    builder: (context, viewport) => SingleChildScrollView(
+                      padding: EdgeInsets.all(
+                        viewport.maxWidth < 600 ? 16 : 28,
+                      ),
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxWidth: 1380,
+                            minHeight: (viewport.maxHeight - 56).clamp(
+                              0,
+                              double.infinity,
+                            ),
+                          ),
+                          child: _step == quizBusinesses.length - 1
+                              ? _complete()
+                              : _quiz(),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+        );
 
   Widget _quiz() {
     return Column(
@@ -362,7 +444,7 @@ class _DealComparisonPageState extends State<BusinessComparisonQuiz>
                         key: ValueKey('slide-${business.id}'),
                         offset: Offset(
                           _fullMotion && loser && _entering
-                              ? MediaQuery.sizeOf(context).width * (1 - arrival)
+                              ? box.maxWidth * (1 - arrival)
                               : 0,
                           0,
                         ),
@@ -514,7 +596,7 @@ class _DealComparisonPageState extends State<BusinessComparisonQuiz>
               ? 'Saving your choices…'
               : _savedToAccount
               ? 'Saved to your account for personalized scores on the bulletin board.'
-              : 'Saved on this device. Sign in to keep these preferences across devices.',
+              : 'Your choices and explanations are available below.',
           style: const TextStyle(color: _muted, fontSize: 16),
         ),
         const SizedBox(height: 24),
@@ -548,6 +630,8 @@ class _DealComparisonPageState extends State<BusinessComparisonQuiz>
             _error!,
             style: const TextStyle(color: Colors.red),
           ),
+        const SizedBox(height: 24),
+        _reviewChoices(),
         const SizedBox(height: 20),
         Wrap(
           spacing: 16,
@@ -612,6 +696,113 @@ class _DealComparisonPageState extends State<BusinessComparisonQuiz>
       ],
     ),
   );
+  Widget _reviewChoices() => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      const SiteText(
+        contentKey: 'quiz.review.title',
+        literal: true,
+        'Review your eight choices',
+        style: TextStyle(
+          color: _ink,
+          fontSize: 26,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+      const SizedBox(height: 8),
+      const SiteText(
+        contentKey: 'quiz.review.intro',
+        literal: true,
+        'There is no single correct answer. Compare the numbers and trade-offs behind each choice.',
+        style: TextStyle(color: _muted, height: 1.5),
+      ),
+      for (var i = 0; i < _choices.length; i++)
+        Card(
+          margin: const EdgeInsets.only(top: 16),
+          child: Padding(
+            padding: const EdgeInsets.all(18),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Comparison ${i + 1}',
+                  style: const TextStyle(
+                    color: _green,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                LayoutBuilder(
+                  builder: (context, box) {
+                    final chosen = _reviewBusiness(_choices[i].winner, true);
+                    final other = _reviewBusiness(_choices[i].loser, false);
+                    return box.maxWidth < 650
+                        ? Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              chosen,
+                              const SizedBox(height: 20),
+                              other,
+                            ],
+                          )
+                        : Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(child: chosen),
+                              const SizedBox(width: 24),
+                              Expanded(child: other),
+                            ],
+                          );
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+      const SizedBox(height: 12),
+      const SiteText(
+        contentKey: 'quiz.review.calculationNote',
+        literal: true,
+        'Illustrative all-cash purchases in CAD. Annual return is cash flow divided by purchase price; financing, taxes and future changes are not included.',
+        style: TextStyle(color: _muted, fontSize: 12, height: 1.5),
+      ),
+    ],
+  );
+
+  Widget _reviewBusiness(QuizBusiness business, bool chosen) {
+    String money(double value) =>
+        NumberFormat.currency(symbol: r'$', decimalDigits: 0).format(value);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          chosen
+              ? 'You chose ${business.name}'
+              : 'Other option: ${business.name}',
+          style: TextStyle(
+            color: chosen ? _green : const Color(0xFF7A42CE),
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 10),
+        Text(
+          'Annual cash flow: ${money(business.revenue)} revenue − ${money(business.expenses)} expenses − ${money(business.salary)} owner salary = ${money(business.cash)}',
+          style: const TextStyle(color: _ink, height: 1.5),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Annual return: ${money(business.cash)} ÷ ${money(business.equity)} purchase price = ${business.annualReturn.toStringAsFixed(1)}%',
+          style: const TextStyle(color: _ink, height: 1.5),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          '${business.role} · ${business.time}\n${business.horizon} · ${business.risk}\nStrength: ${business.strength}',
+          style: const TextStyle(color: _muted, height: 1.5),
+        ),
+      ],
+    );
+  }
 }
 
 class _BusinessDocument extends StatelessWidget {

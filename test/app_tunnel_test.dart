@@ -54,7 +54,6 @@ void main() {
         'learningDashboard',
         'learningSeminars',
         'learningMap',
-        'dealComparison',
         'transactionRoom',
         'profile',
       ],

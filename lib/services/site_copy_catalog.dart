@@ -1,6 +1,16 @@
 // These IDs are permanent. Rewrite the fallback VALUE while retaining its ID.
 // Never regenerate or renumber this registry during a redesign.
 const siteCopyCatalog = <String, String>{
+  'quiz.dashboard.signInIntro':
+      'Sign in to compare businesses and keep your choices and explanations in your dashboard.',
+  'quiz.dashboard.title': 'Deal comparison quiz',
+  'quiz.dashboard.signIn': 'Sign in to start',
+  'quiz.review.title': 'Review your eight choices',
+  'quiz.review.intro':
+      'There is no single correct answer. Compare the numbers and trade-offs behind each choice.',
+  'quiz.review.calculationNote':
+      'Illustrative all-cash purchases in CAD. Annual return is cash flow divided by purchase price; financing, taxes and future changes are not included.',
+
   "learning.events.localTime": "Times shown in your local time zone",
   "learning.events.mapHelp":
       "Zoom into your town. Hover or tap a pin for its picture and time, then visit the event website. Nearby pins group together. Times are shown in your local time zone.",
@@ -2461,8 +2471,7 @@ const siteCopyCatalog = <String, String>{
   '8a6979e4': "Saved",
   'cc6b8ffa': "Saved analyses",
   '5a079326': "Saved businesses",
-  '732f8a38':
-      "Saved on this device. Sign in to keep these preferences across devices.",
+  '732f8a38': "Your choices and explanations are available below.",
   '515bbb55': "Saved opportunities",
   '1c1e29ab': "Saved to your account",
   '27d436ea':
