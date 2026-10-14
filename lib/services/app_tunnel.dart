@@ -10,8 +10,10 @@ class AppTunnelController {
   static AppTunnel forModule(String? module) => switch (module) {
     'learning-dashboard' ||
     'learning-seminars' ||
+    'learning-pipeline' ||
     'learning-quiz' ||
     'learning-map' => AppTunnel.learning,
+    'buyer-pipeline' ||
     'buyer-dashboard' ||
     'buyer-learning' ||
     'deal-rooms' ||

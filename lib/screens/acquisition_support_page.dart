@@ -161,12 +161,6 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
           surfaceTintColor: Colors.transparent,
           title: const HomeBrandButton(size: 66, dark: false),
           actions: [
-            if (MediaQuery.sizeOf(context).width >= 700)
-              _button(
-                'copy.acquisition_support_page.1',
-                'START MY PATH',
-                () => startBuyerLearning(context),
-              ),
             const SizedBox(width: 8),
             const AppNavigationMenu(
               guidePage: 'landing',
@@ -306,7 +300,13 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
               onPressed: () => startLearning(context),
               child: const Text(
                 'I want to learn',
-                style: TextStyle(color: Colors.white),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontFamily: 'Arial',
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0,
+                ),
               ),
             ),
             TextButton(

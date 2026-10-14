@@ -132,6 +132,12 @@ class AffinityApp extends StatelessWidget {
       'learning-seminars' => const LearningDashboardPage(
         initialView: LearningView.seminars,
       ),
+      'buyer-pipeline' => const DealRoomsPage(
+        initialView: BuyerDashboardView.pipeline,
+      ),
+      'learning-pipeline' => const LearningDashboardPage(
+        initialView: LearningView.pipeline,
+      ),
       'learning-quiz' => const LearningDashboardPage(
         initialView: LearningView.quiz,
       ),

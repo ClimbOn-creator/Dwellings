@@ -11,6 +11,25 @@ List<NovaStep> novaPageWalkthrough(String page) {
   final mainPageSteps = pebbleMainPageSteps(page);
   if (mainPageSteps != null) {
     steps = mainPageSteps;
+  } else if (page == 'buyer/pipeline' || page == 'learning-pipeline') {
+    steps = [
+      NovaStep(
+        'pipeline-stages',
+        'Follow your deals',
+        'Your saved acquisitions are grouped into Sourcing, Under review, LOI / diligence and Closing. These are your private deals in either dashboard.',
+        page,
+        NovaMood.planning,
+        target: 'buyer.home.stage.0',
+      ),
+      NovaStep(
+        'pipeline-open',
+        'Review a deal',
+        'Open a deal card to review its workspace, tasks and supporting documents. Search narrows your saved pipeline; Search businesses opens new opportunities.',
+        page,
+        NovaMood.curious,
+        target: 'buyer.home.start',
+      ),
+    ];
   } else if (page.startsWith('buyer/dealScreen')) {
     final mode = page.split('/').length > 2 ? page.split('/')[2] : 'business';
     final first = mode == 'assets'

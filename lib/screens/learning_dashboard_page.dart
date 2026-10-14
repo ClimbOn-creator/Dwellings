@@ -1,3 +1,4 @@
+import 'deal_rooms_page.dart';
 import 'deal_comparison_page.dart';
 import 'dart:async';
 import '../widgets/canada_event_map.dart';
@@ -32,7 +33,15 @@ import '../services/nova_training_controller.dart';
 import '../widgets/learning_area_picker.dart';
 import '../widgets/learning_comments.dart';
 
-enum LearningView { feed, seminars, map, quiz, resources, contributors }
+enum LearningView {
+  feed,
+  seminars,
+  map,
+  quiz,
+  pipeline,
+  resources,
+  contributors,
+}
 
 class LearningDashboardPage extends StatefulWidget {
   const LearningDashboardPage({
@@ -363,6 +372,7 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
               Icons.account_tree_outlined,
             ),
             (LearningView.quiz, 'Deal comparison quiz', Icons.compare_arrows),
+            (LearningView.pipeline, 'Pipeline', Icons.view_kanban_outlined),
             (LearningView.resources, 'Resources', Icons.public),
           ])
             DashboardUi.nav(
@@ -426,6 +436,10 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
               LearningView.seminars => _seminars(),
               LearningView.map => _map(),
               LearningView.quiz => const SizedBox.shrink(),
+              LearningView.pipeline => DealRoomsPage(
+                key: ValueKey(BackendService.user?.id),
+                embeddedPipeline: true,
+              ),
               LearningView.resources => const BuyerResourcesPanel(),
               LearningView.contributors => _contributors(),
             },
@@ -439,6 +453,7 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
     LearningView.seminars => 'Live seminars',
     LearningView.map => 'Buying & selling map',
     LearningView.quiz => 'Deal comparison quiz',
+    LearningView.pipeline => 'Pipeline',
     LearningView.resources => 'Resources',
     LearningView.contributors => 'Contributor approvals',
   };
