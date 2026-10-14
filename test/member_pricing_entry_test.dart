@@ -1,0 +1,210 @@
+import 'package:dwelling_iq/screens/footer_information_page.dart';
+import 'package:dwelling_iq/models/footer_page_content.dart';
+import 'package:dwelling_iq/screens/become_member_page.dart';
+import 'package:dwelling_iq/services/membership_service.dart';
+import 'package:dwelling_iq/screens/acquisition_support_page.dart';
+import 'package:dwelling_iq/screens/tunnel_pages.dart';
+import 'package:dwelling_iq/screens/member_deal_marketplace_page.dart';
+import 'package:dwelling_iq/screens/assistant_workspace_page.dart';
+import 'package:dwelling_iq/services/app_tunnel.dart';
+import 'package:dwelling_iq/widgets/app_navigation_menu.dart';
+import 'package:dwelling_iq/widgets/site_parallax_image.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+void main() {
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+    AppTunnelController.select(AppTunnel.landing);
+  });
+  testWidgets(
+    'new professional applications offer only the confirmed Member plan',
+    (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: BecomeMemberPage(
+            initialType: MemberType.businessBroker,
+            onHome: () {},
+            onAbout: () {},
+            onTeam: () {},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final plan = find.text(r'Professional membership · $149 CAD / month');
+      await tester.scrollUntilVisible(
+        plan,
+        600,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
+      expect(plan, findsOneWidget);
+      expect(find.text('Free member'), findsNothing);
+      expect(find.text('Featured'), findsNothing);
+      expect(
+        tester
+            .widget<ChoiceChip>(
+              find.ancestor(of: plan, matching: find.byType(ChoiceChip)),
+            )
+            .selected,
+        isTrue,
+      );
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
+  test('Member footer entry selects Member pricing from every app area', () {
+    for (final role in AppTunnel.values) {
+      AppTunnelController.select(role);
+      expect(
+        footerDestination(FooterTopic.memberStudio),
+        isA<MemberPricingPage>(),
+      );
+      expect(AppTunnelController.current.value, AppTunnel.member);
+    }
+  });
+  for (final width in [390.0, 1440.0]) {
+    testWidgets(
+      'member landing entry shows pricing before dashboard at $width',
+      (tester) async {
+        tester.view.physicalSize = Size(width, 1000);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        await tester.pumpWidget(
+          const MaterialApp(home: AcquisitionSupportPage()),
+        );
+        await tester.pump(const Duration(seconds: 1));
+        final button = find.text('I PROVIDE PROFESSIONAL SERVICES');
+        await tester.ensureVisible(button);
+        await tester.tap(button);
+        await tester.pumpAndSettle();
+        expect(find.byType(MemberPricingPage), findsOneWidget);
+        expect(find.byType(MemberDealMarketplacePage), findsNothing);
+        expect(find.text(r'$149 CAD / month'), findsOneWidget);
+        expect(find.text('Buyer, Seller & Learning'), findsOneWidget);
+        expect(find.text('Free member'), findsNothing);
+        expect(find.text('Featured'), findsNothing);
+        final next = find.byKey(const Key('member-pricing-continue'));
+        await tester.ensureVisible(next);
+        await tester.tap(next);
+        await tester.pumpAndSettle();
+        expect(find.byType(MemberDealMarketplacePage), findsOneWidget);
+        expect(AppTunnelController.current.value, AppTunnel.member);
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(const SizedBox.shrink());
+      },
+    );
+    testWidgets(
+      'landing expands with plan comparison and consulting at $width',
+      (tester) async {
+        tester.view.physicalSize = Size(width, 1000);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        await tester.pumpWidget(
+          const MaterialApp(home: AcquisitionSupportPage()),
+        );
+        await tester.pump(const Duration(seconds: 1));
+        final pricing = find.text('View membership pricing');
+        await tester.scrollUntilVisible(
+          pricing,
+          700,
+          scrollable: find.byType(Scrollable).first,
+        );
+        await tester.pumpAndSettle();
+        expect(find.byType(MembershipPlanCards), findsOneWidget);
+        expect(find.text(r'$149 CAD / month'), findsOneWidget);
+        expect(find.text('Buyer, Seller & Learning'), findsOneWidget);
+        expect(find.text('Free member'), findsNothing);
+        expect(find.text('Featured'), findsNothing);
+        final consulting = find.text('Explore personal consulting');
+        await tester.scrollUntilVisible(
+          consulting,
+          600,
+          scrollable: find.byType(Scrollable).first,
+        );
+        await tester.pumpAndSettle();
+        await tester.tap(consulting);
+        await tester.pumpAndSettle();
+        expect(find.byType(PersonalizedConsultingPage), findsOneWidget);
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(const SizedBox.shrink());
+      },
+    );
+    testWidgets(
+      'consulting photos grow without changing permanent slots at $width',
+      (tester) async {
+        tester.view.physicalSize = Size(width, 1000);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        await tester.pumpWidget(
+          const MaterialApp(home: PersonalizedConsultingPage()),
+        );
+        await tester.pumpAndSettle();
+        final hero = find.byKey(
+          const ValueKey(
+            'consulting-photo-image.assistant.consulting.background',
+          ),
+        );
+        expect(tester.getSize(hero).height, width < 800 ? 460 : 720);
+        expect(
+          tester.getSize(hero).width,
+          greaterThan(width < 800 ? 380 : 700),
+        );
+        final conversationPhoto = find.byKey(
+          const ValueKey('consulting-photo-image.assistant_workspace_page.m2'),
+        );
+        await tester.scrollUntilVisible(
+          conversationPhoto,
+          500,
+          scrollable: find.byType(Scrollable).first,
+        );
+        await tester.pumpAndSettle();
+        expect(
+          tester.getSize(conversationPhoto).height,
+          width < 800 ? 440 : 640,
+        );
+        expect(
+          tester.getSize(conversationPhoto).width,
+          greaterThan(width < 800 ? 340 : 650),
+        );
+        expect(
+          tester.getSize(conversationPhoto).width,
+          lessThan(width < 800 ? 390 : 900),
+        );
+        expect(
+          tester
+              .widgetList<SiteParallaxImage>(find.byType(SiteParallaxImage))
+              .first
+              .maxTravel,
+          150,
+        );
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(const SizedBox.shrink());
+      },
+    );
+  }
+  for (final role in AppTunnel.values) {
+    testWidgets('consulting is available and retains $role navigation', (
+      tester,
+    ) async {
+      AppTunnelController.select(role);
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(body: AppNavigationMenu(guidePage: 'profile')),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Open navigation'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Personal consulting'));
+      await tester.pumpAndSettle();
+      expect(find.byType(PersonalizedConsultingPage), findsOneWidget);
+      expect(AppTunnelController.current.value, role);
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+  }
+}

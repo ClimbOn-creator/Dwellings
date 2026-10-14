@@ -77,7 +77,13 @@ class TunnelPageShell extends StatelessWidget {
   );
 }
 
-Widget _panel(String id, String title, String body, {Widget? action}) => Card(
+Widget _panel(
+  String id,
+  String title,
+  String body, {
+  Widget? action,
+  Widget? price,
+}) => Card(
   elevation: 0,
   color: Colors.white,
   shape: RoundedRectangleBorder(
@@ -94,6 +100,7 @@ Widget _panel(String id, String title, String body, {Widget? action}) => Card(
           title,
           style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w600),
         ),
+        if (price != null) ...[const SizedBox(height: 14), price],
         const SizedBox(height: 12),
         SiteCopyText(
           'tunnel.$id.body',
@@ -106,69 +113,101 @@ Widget _panel(String id, String title, String body, {Widget? action}) => Card(
   ),
 );
 
+class MembershipPlanCards extends StatelessWidget {
+  const MembershipPlanCards({super.key, this.showApplyButtons = true});
+  final bool showApplyButtons;
+  @override
+  Widget build(BuildContext context) => NovaTarget(
+    id: 'member-pricing.plans',
+    child: LayoutBuilder(
+      builder: (context, box) {
+        final width = box.maxWidth >= 840
+            ? (box.maxWidth - 16) / 2
+            : box.maxWidth;
+        return Wrap(
+          spacing: 16,
+          runSpacing: 16,
+          children: [
+            SizedBox(
+              width: width,
+              child: _panel(
+                'pricing.professional',
+                'Professional membership',
+                'Professional profile and reviews, Deal Rooms, introductions, pipeline and analytics.',
+                price: const SiteCopyText(
+                  'membership.plan.professional.price',
+                  r'$149 CAD / month',
+                  style: TextStyle(
+                    color: _forest,
+                    fontSize: 28,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                action: showApplyButtons
+                    ? FilledButton(
+                        onPressed: () =>
+                            startMemberSetup(context, tier: 'professional'),
+                        child: const SiteCopyText(
+                          'tunnel.pricing.apply',
+                          'Apply for membership',
+                        ),
+                      )
+                    : null,
+              ),
+            ),
+            SizedBox(
+              width: width,
+              child: _panel(
+                'pricing.free_access',
+                'Buyer, Seller & Learning',
+                'The Buyer, Seller and Learning dashboards are free. Explore the learning feed, events and business tools without a paid Member plan.',
+                price: const SiteCopyText(
+                  'membership.access.free.price',
+                  'Free',
+                  style: TextStyle(
+                    color: _forest,
+                    fontSize: 28,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    ),
+  );
+}
+
 class MemberPricingPage extends StatelessWidget {
   const MemberPricingPage({super.key});
   @override
   Widget build(BuildContext context) => TunnelPageShell(
     guide: 'member-pricing',
-    title: 'Choose your membership',
+    title: 'Member pricing',
     intro:
-        'Build your presence on Affinity. Compare the membership options before you apply.',
+        'Professional membership is \$149 CAD per month. Buyer, Seller and Learning access stays free.',
     children: [
-      NovaTarget(
-        id: 'member-pricing.plans',
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final width = constraints.maxWidth >= 840
-                ? (constraints.maxWidth - 24) / 3
-                : constraints.maxWidth;
-            return Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              children: [
-                for (final plan in const [
-                  (
-                    'free',
-                    'Free member',
-                    'Public profile, reviews and limited introductions.',
-                  ),
-                  (
-                    'professional',
-                    'Professional',
-                    'Deal Rooms, qualified introductions, pipeline and analytics.',
-                  ),
-                  (
-                    'featured',
-                    'Featured',
-                    'Everything in Professional plus clearly disclosed promotion.',
-                  ),
-                ])
-                  SizedBox(
-                    width: width,
-                    child: _panel(
-                      'pricing.${plan.$1}',
-                      plan.$2,
-                      plan.$3,
-                      action: FilledButton(
-                        onPressed: () =>
-                            startMemberSetup(context, tier: plan.$1),
-                        child: const SiteCopyText(
-                          'tunnel.pricing.apply',
-                          'Apply for membership',
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            );
-          },
-        ),
-      ),
+      const MembershipPlanCards(),
       const SizedBox(height: 20),
       _panel(
         'pricing.availability',
         'Clear terms before you commit',
-        'Paid plan prices have not been published yet. Applying records your preferred plan; it does not charge you or start a paid subscription. Final availability and pricing must be confirmed before purchase.',
+        'Membership is \$149 CAD per month. Applying records your interest; it does not charge you or start a subscription. Billing arrangements are confirmed before any payment.',
+      ),
+      const SizedBox(height: 24),
+      FilledButton.icon(
+        key: const Key('member-pricing-continue'),
+        onPressed: () => Navigator.of(context).pushReplacement(
+          MaterialPageRoute<void>(
+            builder: (_) => const MemberDealMarketplacePage(),
+          ),
+        ),
+        icon: const Icon(Icons.dashboard_outlined),
+        label: const SiteCopyText(
+          'membership.pricing.continue',
+          'Continue to Member dashboard',
+        ),
       ),
     ],
   );
@@ -224,7 +263,7 @@ class MemberMarketingPage extends StatelessWidget {
       _panel(
         'marketing.promotion',
         '4. Consider promotion thoughtfully',
-        'The Featured plan includes clearly disclosed promotion. Sponsored placement does not establish credentials or guarantee leads. Compare the options on Pricing, and keep your profile useful even without paid promotion.',
+        'Keep promotion clear and useful. Sponsored placement does not establish credentials or guarantee leads. Keep your profile useful and use Pricing to review the Member plan.',
       ),
     ],
   );

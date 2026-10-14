@@ -1,3 +1,4 @@
+import 'tunnel_pages.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/footer_page_content.dart';
@@ -30,10 +31,10 @@ class FooterInformationPage extends StatefulWidget {
 
 Widget footerDestination(FooterTopic topic) {
   if (topic.isInformationPage) return FooterInformationPage(topic: topic);
-  if (AppTunnelController.current.value == AppTunnel.landing) {
-    AppTunnelController.select(
-      topic == FooterTopic.memberStudio ? AppTunnel.member : AppTunnel.buyer,
-    );
+  if (topic == FooterTopic.memberStudio) {
+    AppTunnelController.select(AppTunnel.member);
+  } else if (AppTunnelController.current.value == AppTunnel.landing) {
+    AppTunnelController.select(AppTunnel.buyer);
   }
   return footerToolDestination(topic);
 }
@@ -48,7 +49,7 @@ Widget footerToolDestination(FooterTopic topic) => switch (topic) {
   FooterTopic.pipeline || FooterTopic.approach => const DealRoomsPage(
     initialSide: PlatformSide.business,
   ),
-  FooterTopic.memberStudio => const MemberDealMarketplacePage(),
+  FooterTopic.memberStudio => const MemberPricingPage(),
   FooterTopic.directory => const MemberDealMarketplacePage(
     initialView: MemberDashboardView.professionals,
   ),

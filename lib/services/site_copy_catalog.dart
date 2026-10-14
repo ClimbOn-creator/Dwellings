@@ -1,6 +1,28 @@
 // These IDs are permanent. Rewrite the fallback VALUE while retaining its ID.
 // Never regenerate or renumber this registry during a redesign.
 const siteCopyCatalog = <String, String>{
+  'membership.access.free.price': 'Free',
+  'tunnel.pricing.free_access.title': 'Buyer, Seller & Learning',
+  'tunnel.pricing.free_access.body':
+      'The Buyer, Seller and Learning dashboards are free. Explore the learning feed, events and business tools without a paid Member plan.',
+
+  'membership.plan.free.price': 'Free',
+  'membership.plan.professional.price': r'$149 CAD / month',
+  'membership.plan.featured.price': 'Contact for pricing',
+  'membership.pricing.continue': 'Continue to Member dashboard',
+  'home.pricing.eyebrow': 'MEMBERSHIP & PRICING',
+  'home.pricing.title': 'Free to explore. Membership for professionals.',
+  'home.pricing.intro':
+      'Buyer, Seller and Learning dashboards are free. Professionals can join the Member side of Affinity for \$149 CAD per month, bringing their profile, introductions and deal work together in one workspace.',
+  'home.pricing.terms':
+      'The monthly membership applies only to the Member side of Affinity. Buyers, sellers and learners can use their dashboards without a paid membership.',
+  'home.pricing.action': 'View membership pricing',
+  'home.consulting.eyebrow': 'A CONVERSATION WHEN YOU NEED ONE',
+  'home.consulting.title': 'Bring your next decision into focus.',
+  'home.consulting.intro':
+      'Use Affinity to learn and organize your work, then explore personal consulting when a specific acquisition question needs a closer look. Understand the approach, see the focus areas and set up a conversation around your situation.',
+  'home.consulting.action': 'Explore personal consulting',
+
   'quiz.dashboard.signInIntro':
       'Sign in to compare businesses and keep your choices and explanations in your dashboard.',
   'quiz.dashboard.title': 'Deal comparison quiz',
@@ -278,8 +300,8 @@ const siteCopyCatalog = <String, String>{
       "Everything in Professional plus clearly disclosed promotion.",
   "tunnel.pricing.featured.title": "Featured",
   "tunnel.pricing.professional.body":
-      "Deal Rooms, qualified introductions, pipeline and analytics.",
-  "tunnel.pricing.professional.title": "Professional",
+      "Professional profile and reviews, Deal Rooms, introductions, pipeline and analytics.",
+  "tunnel.pricing.professional.title": "Professional membership",
   "tunnel.pricing.free.body":
       "Public profile, reviews and limited introductions.",
   "tunnel.pricing.free.title": "Free member",
@@ -290,7 +312,7 @@ const siteCopyCatalog = <String, String>{
       "Please try again. If this persists, the seller analytics update may still need to be installed on the server.",
   "tunnel.posts.error.title": "Posts could not load",
   "tunnel.marketing.promotion.body":
-      "The Featured plan includes clearly disclosed promotion. Sponsored placement does not establish credentials or guarantee leads. Compare the options on Pricing, and keep your profile useful even without paid promotion.",
+      "Keep promotion clear and useful. Sponsored placement does not establish credentials or guarantee leads. Keep your profile useful and use Pricing to review the Member plan.",
   "tunnel.marketing.promotion.title": "4. Consider promotion thoughtfully",
   "tunnel.marketing.reviews.body":
       "After working together, invite clients to leave an honest member review. Do not promise incentives or invent testimonials. A detailed experience helps future clients understand your approach.",
@@ -303,7 +325,7 @@ const siteCopyCatalog = <String, String>{
       "Use a clear portrait, your profession and service region. Write up to 200 words about your personal experience, who you help and the work you do. Keep qualifications and contact details current.",
   "tunnel.marketing.profile.title": "1. Start with your profile",
   "tunnel.pricing.availability.body":
-      "Paid plan prices have not been published yet. Applying records your preferred plan; it does not charge you or start a paid subscription. Final availability and pricing must be confirmed before purchase.",
+      "Membership is \$149 CAD per month. Applying records your interest; it does not charge you or start a subscription. Billing arrangements are confirmed before any payment.",
   "tunnel.pricing.availability.title": "Clear terms before you commit",
   'tunnel.seller.room.start': 'Prepare your seller transaction plan',
   'tunnel.seller.room.intro':
@@ -319,9 +341,9 @@ const siteCopyCatalog = <String, String>{
   'tunnel.posts.total': 'Posts',
   'tunnel.posts.active': 'Active',
   'tunnel.posts.saves': 'Buyer saves',
-  'tunnel.member-pricing.title': 'Choose your membership',
+  'tunnel.member-pricing.title': 'Member pricing',
   'tunnel.member-pricing.intro':
-      'Build your presence on Affinity. Compare the membership options before you apply.',
+      'Professional membership is \$149 CAD per month. Buyer, Seller and Learning access stays free.',
   'tunnel.member-marketing.title': 'Make your expertise easy to find',
   'tunnel.member-marketing.intro':
       'A practical plan for building a credible presence and attracting relevant introductions on Affinity.',
@@ -1343,7 +1365,7 @@ const siteCopyCatalog = <String, String>{
   'e7d83514': "Choose date",
   '34ac61f':
       "Choose the asset type and enter the complete purchase, operating, financing and location picture.",
-  'f0532886': "Choose the workspace you want to start with",
+  'f0532886': "Your professional membership",
   '409f1744': "Choose what feels closest",
   'd4c8600':
       "Choose whether this is a home, an investment, a commercial asset or a development opportunity.",

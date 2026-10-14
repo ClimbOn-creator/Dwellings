@@ -39,7 +39,10 @@ Future<void> startSellerLearning(BuildContext context) {
   );
 }
 
-Future<void> startMemberSetup(BuildContext context, {String tier = 'free'}) {
+Future<void> startMemberSetup(
+  BuildContext context, {
+  String tier = 'professional',
+}) {
   AppTunnelController.select(AppTunnel.member);
   return openAccountPage(
     context,

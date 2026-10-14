@@ -1,3 +1,4 @@
+import '../screens/assistant_workspace_page.dart';
 import '../screens/transaction_learning_page.dart';
 import '../screens/learning_dashboard_page.dart';
 import '../screens/deal_comparison_page.dart';
@@ -41,6 +42,7 @@ enum AppNavigationDestination {
   learningDashboard,
   learningSeminars,
   learningMap,
+  consulting,
 }
 
 List<AppNavigationDestination> destinationsForTunnel(AppTunnel tunnel) =>
@@ -50,6 +52,7 @@ List<AppNavigationDestination> destinationsForTunnel(AppTunnel tunnel) =>
         AppNavigationDestination.sellerDashboard,
         AppNavigationDestination.memberStudio,
         AppNavigationDestination.learningDashboard,
+        AppNavigationDestination.consulting,
       ],
       AppTunnel.buyer => [
         AppNavigationDestination.buyerDashboard,
@@ -58,12 +61,14 @@ List<AppNavigationDestination> destinationsForTunnel(AppTunnel tunnel) =>
         AppNavigationDestination.transactionRoom,
         AppNavigationDestination.businessesForSale,
         AppNavigationDestination.dealComparison,
+        AppNavigationDestination.consulting,
       ],
       AppTunnel.seller => [
         AppNavigationDestination.sellerDashboard,
         AppNavigationDestination.transactionRoom,
         AppNavigationDestination.sellerPosts,
         AppNavigationDestination.profile,
+        AppNavigationDestination.consulting,
       ],
       AppTunnel.learning => [
         AppNavigationDestination.learningDashboard,
@@ -71,12 +76,14 @@ List<AppNavigationDestination> destinationsForTunnel(AppTunnel tunnel) =>
         AppNavigationDestination.learningMap,
         AppNavigationDestination.transactionRoom,
         AppNavigationDestination.profile,
+        AppNavigationDestination.consulting,
       ],
       AppTunnel.member => [
         AppNavigationDestination.memberPricing,
         AppNavigationDestination.memberStudio,
         AppNavigationDestination.profile,
         AppNavigationDestination.memberMarketing,
+        AppNavigationDestination.consulting,
       ],
     };
 
@@ -110,6 +117,7 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
   }
 
   String _label(AppNavigationDestination destination) => switch (destination) {
+    AppNavigationDestination.consulting => 'Personal consulting',
     AppNavigationDestination.resources => 'Resources',
     AppNavigationDestination.sellerDashboard => 'Seller dashboard',
     AppNavigationDestination.buyerDashboard => 'Buyer dashboard',
@@ -137,6 +145,7 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
     AppNavigationDestination.learningMap => const LearningDashboardPage(
       initialView: LearningView.map,
     ),
+    AppNavigationDestination.consulting => const PersonalizedConsultingPage(),
     AppNavigationDestination.resources => const BuyerResourcesPage(),
     AppNavigationDestination.sellerDashboard => const SellerDashboardPage(),
     AppNavigationDestination.buyerDashboard => const DealRoomsPage(
@@ -149,7 +158,7 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
     AppNavigationDestination.sellerPosts => const SellerPostsPage(),
     AppNavigationDestination.memberPricing => const MemberPricingPage(),
     AppNavigationDestination.memberMarketing => const MemberMarketingPage(),
-    AppNavigationDestination.memberStudio => const MemberDealMarketplacePage(),
+    AppNavigationDestination.memberStudio => const MemberPricingPage(),
     AppNavigationDestination.profile =>
       BackendService.user == null
           ? AuthPage(

@@ -60,7 +60,7 @@ class _BecomeMemberPageState extends State<BecomeMemberPage> {
   bool _professionalAttestation = false;
   bool _submitting = false;
   bool _complete = false;
-  late String _requestedTier = widget.initialTier;
+  String _requestedTier = 'professional';
 
   static const _professionalSpecialties = [
     'Residential',
@@ -332,7 +332,7 @@ class _BecomeMemberPageState extends State<BecomeMemberPage> {
             LayoutBuilder(
               builder: (context, constraints) {
                 final width = constraints.maxWidth >= 850
-                    ? (constraints.maxWidth - 24) / 3
+                    ? (constraints.maxWidth - 12) / 2
                     : constraints.maxWidth;
                 return Wrap(
                   spacing: 12,
@@ -340,8 +340,8 @@ class _BecomeMemberPageState extends State<BecomeMemberPage> {
                   children: [
                     _membershipCard(
                       width,
-                      'Community member',
-                      'For property buyers and business-acquisition seekers.',
+                      'Buyer, Seller & Learning · Free',
+                      'Free access for buyers, sellers and people learning about business ownership.',
                       const [
                         'Acquisition Blueprint and readiness tools',
                         'Deal screening and saved pipeline',
@@ -350,22 +350,12 @@ class _BecomeMemberPageState extends State<BecomeMemberPage> {
                     ),
                     _membershipCard(
                       width,
-                      'Professional member',
+                      'Professional member · \$149 CAD / month',
                       'For realtors, lenders, lawyers, accountants, consultants, and other transaction professionals.',
                       const [
                         'Reviewed professional profile',
                         'Consented professional connections',
                         'Marketing Studio and client templates',
-                      ],
-                    ),
-                    _membershipCard(
-                      width,
-                      'Featured partner',
-                      'For verified professionals seeking additional, clearly disclosed visibility.',
-                      const [
-                        'Professional member workspace',
-                        'Clearly labelled promotional placement',
-                        'No purchased verification or guaranteed ranking',
                       ],
                     ),
                   ],
@@ -607,7 +597,7 @@ class _BecomeMemberPageState extends State<BecomeMemberPage> {
       const SiteText(
         contentKey: 'copy.become_member_page.9',
         literal: true,
-        'Choose the workspace you want to start with',
+        'Your professional membership',
         style: TextStyle(fontWeight: FontWeight.w700),
       ),
       const SizedBox(height: 12),
@@ -615,24 +605,12 @@ class _BecomeMemberPageState extends State<BecomeMemberPage> {
         builder: (context, constraints) {
           const tiers = [
             (
-              'free',
-              'Free member',
-              'Public profile, reviews and limited introductions.',
-            ),
-            (
               'professional',
-              'Professional',
-              'Deal Rooms, qualified introductions, pipeline and analytics.',
-            ),
-            (
-              'featured',
-              'Featured',
-              'Everything in Professional plus clearly disclosed promotion.',
+              'Professional membership · \$149 CAD / month',
+              'Professional profile, Deal Rooms, introductions, pipeline and analytics.',
             ),
           ];
-          final width = constraints.maxWidth >= 720
-              ? (constraints.maxWidth - 20) / 3
-              : constraints.maxWidth;
+          final width = constraints.maxWidth;
           return Wrap(
             spacing: 10,
             runSpacing: 10,

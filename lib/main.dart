@@ -176,8 +176,7 @@ class AffinityApp extends StatelessWidget {
       'deal-comparison' => const DealComparisonPage(),
       'bulletin-board' ||
       'businesses-for-sale' => const BusinessSaleBulletinPage(),
-      'member-studio' ||
-      'member-dashboard' => const MemberDealMarketplacePage(),
+      'member-studio' || 'member-dashboard' => const MemberPricingPage(),
       'personal-consulting' => const PersonalizedConsultingPage(),
       'content-studio' => const ContentStudioPage(),
       'notifications' => const NotificationCenterPage(),

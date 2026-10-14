@@ -1,3 +1,5 @@
+import 'tunnel_pages.dart';
+import 'assistant_workspace_page.dart';
 import 'member_deal_marketplace_page.dart';
 import '../widgets/nova_panel.dart';
 import '../services/nova_service.dart';
@@ -59,7 +61,7 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
     AppTunnelController.select(
       page is SellerDashboardPage
           ? AppTunnel.seller
-          : page is MemberDealMarketplacePage
+          : page is MemberDealMarketplacePage || page is MemberPricingPage
           ? AppTunnel.member
           : AppTunnel.buyer,
     );
@@ -211,7 +213,7 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
               onBuyer: () => _open(
                 const DealRoomsPage(initialSide: PlatformSide.business),
               ),
-              onMember: () => _open(const MemberDealMarketplacePage()),
+              onMember: () => _open(const MemberPricingPage()),
               onLearn: () => startLearning(context),
               onSeller: () => _open(const SellerDashboardPage()),
             ),
@@ -222,6 +224,8 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
         _reveal(_buyerBenefits()),
         _reveal(_audiences()),
         _reveal(_path()),
+        _reveal(_membershipPricing()),
+        _reveal(_consultingIntroduction()),
         _reveal(_questions()),
         _reveal(_closing()),
         const SliverToBoxAdapter(child: MembershipFooter()),
@@ -326,7 +330,7 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
             ),
             const SizedBox(height: 12),
             TextButton.icon(
-              onPressed: () => startMemberSetup(context),
+              onPressed: () => _open(const MemberPricingPage()),
               style: TextButton.styleFrom(
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(
@@ -660,8 +664,9 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
         ),
         const SizedBox(height: 20),
         TextButton.icon(
-          onPressed: () =>
-              member ? startMemberSetup(context) : startBuyerLearning(context),
+          onPressed: () => member
+              ? _open(const MemberPricingPage())
+              : startBuyerLearning(context),
           iconAlignment: IconAlignment.end,
           icon: const Icon(Icons.arrow_outward),
           style: TextButton.styleFrom(
@@ -671,6 +676,73 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
             member ? 'EXPLORE MEMBER STUDIO' : 'BUILD MY BLUEPRINT',
             contentKey: 'copy.acquisition_support_page.m6',
             style: const TextStyle(fontSize: 14),
+          ),
+        ),
+      ],
+    ),
+  );
+
+  Widget _membershipPricing() => _section(
+    Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _label('home.pricing.eyebrow', 'MEMBERSHIP & PRICING'),
+        const SizedBox(height: 22),
+        _copy(
+          'home.pricing.title',
+          'Free to explore. Membership for professionals.',
+          size: 42,
+          height: 1.12,
+        ),
+        const SizedBox(height: 20),
+        _copy(
+          'home.pricing.intro',
+          'Buyer, Seller and Learning dashboards are free. Professionals can join the Member side of Affinity for \$149 CAD per month, bringing their profile, introductions and deal work together in one workspace.',
+        ),
+        const SizedBox(height: 30),
+        const MembershipPlanCards(showApplyButtons: false),
+        const SizedBox(height: 24),
+        _copy(
+          'home.pricing.terms',
+          'The monthly membership applies only to the Member side of Affinity. Buyers, sellers and learners can use their dashboards without a paid membership.',
+          size: 16,
+        ),
+        const SizedBox(height: 24),
+        _button(
+          'home.pricing.action',
+          'View membership pricing',
+          () => _open(const MemberPricingPage()),
+        ),
+      ],
+    ),
+    color: _cream,
+  );
+
+  Widget _consultingIntroduction() => _section(
+    Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _label('home.consulting.eyebrow', 'A CONVERSATION WHEN YOU NEED ONE'),
+        const SizedBox(height: 22),
+        _copy(
+          'home.consulting.title',
+          'Bring your next decision into focus.',
+          size: 42,
+          height: 1.12,
+        ),
+        const SizedBox(height: 20),
+        _copy(
+          'home.consulting.intro',
+          'Use Affinity to learn and organize your work, then explore personal consulting when a specific acquisition question needs a closer look. Understand the approach, see the focus areas and set up a conversation around your situation.',
+        ),
+        const SizedBox(height: 24),
+        _button(
+          'home.consulting.action',
+          'Explore personal consulting',
+          () => Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => const PersonalizedConsultingPage(),
+            ),
           ),
         ),
       ],
@@ -760,7 +832,7 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
             _button(
               'home.closing.member',
               'Explore membership',
-              () => startMemberSetup(context),
+              () => _open(const MemberPricingPage()),
             ),
           ],
         ),

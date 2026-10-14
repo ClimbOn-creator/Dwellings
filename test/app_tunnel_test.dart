@@ -38,15 +38,28 @@ void main() {
         'transactionRoom',
         'businessesForSale',
         'dealComparison',
+        'consulting',
       ],
     ),
     (
       AppTunnel.seller,
-      ['sellerDashboard', 'transactionRoom', 'sellerPosts', 'profile'],
+      [
+        'sellerDashboard',
+        'transactionRoom',
+        'sellerPosts',
+        'profile',
+        'consulting',
+      ],
     ),
     (
       AppTunnel.member,
-      ['memberPricing', 'memberStudio', 'profile', 'memberMarketing'],
+      [
+        'memberPricing',
+        'memberStudio',
+        'profile',
+        'memberMarketing',
+        'consulting',
+      ],
     ),
     (
       AppTunnel.learning,
@@ -56,6 +69,7 @@ void main() {
         'learningMap',
         'transactionRoom',
         'profile',
+        'consulting',
       ],
     ),
   ]) {

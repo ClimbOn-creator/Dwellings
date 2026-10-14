@@ -1,3 +1,4 @@
+import 'tunnel_pages.dart';
 import '../services/app_tunnel.dart';
 import 'learning_dashboard_page.dart';
 import 'seller_dashboard_page.dart';
@@ -694,7 +695,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   builder: (_) => switch (AppTunnelController.current.value) {
                     AppTunnel.seller => const SellerDashboardPage(),
                     AppTunnel.learning => const LearningDashboardPage(),
-                    AppTunnel.member => const MemberDealMarketplacePage(),
+                    AppTunnel.member => const MemberPricingPage(),
                     _ => const DealRoomsPage(
                       initialSide: PlatformSide.business,
                     ),

@@ -434,6 +434,7 @@ class _PersonalizedConsultingPageState
               )
             : BorderRadius.zero,
         child: SizedBox(
+          key: ValueKey('consulting-photo-$key'),
           height: height,
           width: double.infinity,
           child: SiteParallaxImage(
@@ -450,7 +451,7 @@ class _PersonalizedConsultingPageState
   Widget _section({
     required Widget child,
     Color color = Colors.white,
-    double vertical = 86,
+    double vertical = 64,
   }) => Container(
     width: double.infinity,
     decoration: BoxDecoration(
@@ -458,12 +459,12 @@ class _PersonalizedConsultingPageState
       border: const Border(top: BorderSide(color: line, width: .7)),
     ),
     padding: EdgeInsets.symmetric(
-      horizontal: MediaQuery.sizeOf(context).width < 760 ? 24 : 64,
+      horizontal: MediaQuery.sizeOf(context).width < 760 ? 16 : 40,
       vertical: vertical,
     ),
     child: Center(
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 1160),
+        constraints: const BoxConstraints(maxWidth: 1320),
         child: child,
       ),
     ),
@@ -541,7 +542,7 @@ class _PersonalizedConsultingPageState
       final photo = _photo(
         'image.assistant.consulting.background',
         'assets/images/affinity-consulting.jpg',
-        compact ? 340 : 580,
+        compact ? 460 : 720,
       );
       return ColoredBox(
         color: _cream,
@@ -549,8 +550,8 @@ class _PersonalizedConsultingPageState
             ? Column(children: [words, photo])
             : Row(
                 children: [
-                  Expanded(child: words),
-                  Expanded(child: photo),
+                  Expanded(flex: 5, child: words),
+                  Expanded(flex: 6, child: photo),
                 ],
               ),
       );
@@ -565,7 +566,7 @@ class _PersonalizedConsultingPageState
         final image = _photo(
           'image.assistant_workspace_page.m1',
           'assets/images/affinity-consulting.jpg',
-          compact ? 370 : 560,
+          compact ? 480 : 680,
           arch: true,
         );
         final copy = Column(
@@ -591,13 +592,13 @@ class _PersonalizedConsultingPageState
           ],
         );
         return compact
-            ? Column(children: [image, const SizedBox(height: 36), copy])
+            ? Column(children: [image, const SizedBox(height: 28), copy])
             : Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Expanded(flex: 4, child: image),
-                  const SizedBox(width: 80),
-                  Expanded(flex: 6, child: copy),
+                  Expanded(flex: 5, child: image),
+                  const SizedBox(width: 40),
+                  Expanded(flex: 5, child: copy),
                 ],
               );
       },
@@ -638,16 +639,16 @@ class _PersonalizedConsultingPageState
           child: _photo(
             'image.assistant_workspace_page.m2',
             'assets/images/commercial-atrium.jpg',
-            compact ? 320 : 490,
+            compact ? 440 : 640,
           ),
         );
         return compact
-            ? Column(children: [photo, const SizedBox(height: 36), words])
+            ? Column(children: [photo, const SizedBox(height: 28), words])
             : Row(
                 children: [
-                  Expanded(child: words),
-                  const SizedBox(width: 70),
-                  Expanded(child: photo),
+                  Expanded(flex: 5, child: words),
+                  const SizedBox(width: 40),
+                  Expanded(flex: 6, child: photo),
                 ],
               );
       },

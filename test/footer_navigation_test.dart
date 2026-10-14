@@ -1,3 +1,4 @@
+import 'package:dwelling_iq/screens/tunnel_pages.dart';
 import 'package:dwelling_iq/services/app_tunnel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -197,7 +198,7 @@ void main() {
       );
       expect(
         footerDestination(FooterTopic.memberStudio),
-        isA<MemberDealMarketplacePage>(),
+        isA<MemberPricingPage>(),
       );
       expect(footerDestination(FooterTopic.pipeline), isA<DealRoomsPage>());
       for (final topic in FooterTopic.values) {
