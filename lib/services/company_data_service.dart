@@ -40,6 +40,28 @@ class CompanyDataReport {
       ])
         for (final row in rows(section))
           [section, row['label'] ?? row['day'], row['count'], row['bytes']],
+      for (final entry in (data['histories'] as Map? ?? {}).entries) ...[
+        [
+          'Dataset totals',
+          entry.key,
+          'Current total',
+          entry.value['current_total'],
+        ],
+        [
+          'Dataset totals',
+          entry.key,
+          'Selected period',
+          entry.value['period_total'],
+        ],
+        [
+          'Dataset totals',
+          entry.key,
+          'Previous period',
+          entry.value['previous_total'],
+        ],
+        for (final point in (entry.value['series'] as List? ?? []))
+          ['Daily UTC counts', entry.key, point['day'], point['count']],
+      ],
       ['File metadata', 'Uploaded file bytes', number('uploaded_file_bytes')],
       [
         'Definitions',
@@ -75,7 +97,7 @@ class CompanyDataService {
       throw StateError('Sign in required');
     }
     final result = await Supabase.instance.client.rpc(
-      'load_affinity_company_data',
+      'load_affinity_data_explorer',
       params: {'report_days': days},
     );
     return CompanyDataReport(Map<String, dynamic>.from(result as Map));

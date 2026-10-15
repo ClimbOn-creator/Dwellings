@@ -45,7 +45,7 @@ void main() {
       };
     } else if (path.endsWith('/is_affinity_data_owner')) {
       result = owner;
-    } else if (path.endsWith('/load_affinity_company_data')) {
+    } else if (path.endsWith('/load_affinity_data_explorer')) {
       result = {
         'totals': {'Registered accounts': 13},
         'inventory': [],
@@ -90,7 +90,7 @@ void main() {
     expect(BackendService.user, isNotNull);
     await tester.pumpWidget(const MaterialApp(home: CompanyDataPage()));
     await tester.pumpAndSettle();
-    expect(find.text('Your company, in numbers'), findsOneWidget);
+    expect(find.text('Data monitor'), findsOneWidget);
     await tester.runAsync(() => Supabase.instance.client.auth.signOut());
     await tester.pumpAndSettle();
     expect(find.byType(CompanyDataReportView), findsNothing);

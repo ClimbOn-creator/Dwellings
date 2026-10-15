@@ -27,3 +27,17 @@ No historical click backfill, signed-out tracking, quiz-answer tracking, search 
 - `test/company_data_session_test.dart` with the mock backend defines: owner sign-out clears data; no tracking before opt-in/after opt-out or sign-out; owners excluded; only fixed category field sent.
 - `test/sql/company_data_access.sql`: live backend transaction, rolled back: both owners allowed; anon, ordinary user, reviewer, forged user metadata and revoked owner denied; bounded date ranges; aggregate report shape; analytics field allowlist.
 - Security advisors: the new counter table intentionally has no direct RLS policy or client grants (RPC-only). New security-definer RPCs have fixed search paths, no anonymous execution, explicit authorization and minimal output. Existing project-wide advisor warnings were not changed by this feature.
+
+## Dataset explorer and comparisons
+
+The owner workspace now has a dark dataset explorer with a persistent left list on desktop and a dataset sheet on smaller screens. Thirty-five datasets have separate graph/detail views, including independent location, role, profession, membership-status and pipeline-stage snapshots. Choose **Compare two datasets** to select A and B, switch between grouped bars and lines, and inspect values by hovering or tapping a point. Breakdowns, daily counts and definitions are separate detail tabs.
+
+`load_affinity_data_explorer` calls the existing owner-checked reporting function and adds 26 dense daily UTC histories, period totals and preceding-period totals. Source queries are a fixed server-side allowlist; no caller can supply table names or SQL. No raw profile records, messages, documents or financial contents are returned. The older RPC remains available for older deployed clients.
+
+Charts show daily counts through 31 days, aligned seven-day sums through 90 days, and calendar-month sums for longer windows. Bucket sums retain the selected-period totals. Previous-period percent changes are unavailable when their denominator is zero. These are retained-record creation/completion dates, not a reconstructed ledger of deleted records or historical status changes.
+
+Current breakdowns and the sidebar are labelled as current totals; app-area breakdowns use the selected period. Attachments without timestamps and storage-size datasets show current snapshot graphs. Comparing a snapshot to a historical dataset switches both to current values. Mixed byte/count comparisons use explicitly labelled separate scales. Two metrics shown together do not establish a conversion rate or causal relationship.
+
+CSV reports include daily histories and current/selected/previous-period totals. A periodic refresh preserves the dataset and comparison selections; authentication changes still clear private data immediately.
+
+Security tests in `test/sql/company_data_explorer_access.sql` cover the new RPC, including both owners, denied roles, revoked access, bounded windows, complete histories and reconciliation of daily sums to period totals. The Supabase authenticated SECURITY DEFINER advisory is intentional for this aggregate owner endpoint: its body checks the database owner allowlist before reading across users' records, has a fixed search path, and has no anonymous execution grant.
