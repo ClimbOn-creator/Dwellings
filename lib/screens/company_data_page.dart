@@ -624,8 +624,11 @@ class _CompanyDataReportViewState extends State<CompanyDataReportView> {
   );
   Widget _metric(CompanyDataset d, Color color) {
     final v = values(d);
+    final snapshotComparison =
+        _compare && (!values(a).hasHistory || !values(b).hasHistory);
+    final showPeriod = v.hasHistory && !snapshotComparison;
     final change = v.changePercent;
-    final changeText = !v.hasHistory
+    final changeText = !showPeriod
         ? 'Snapshot only'
         : change != null
         ? '${change >= 0 ? '+' : ''}${change.toStringAsFixed(1)}% vs previous ${widget.days} days'
@@ -639,17 +642,14 @@ class _CompanyDataReportViewState extends State<CompanyDataReportView> {
           text(d.title, size: 13, color: dataMuted),
           const SizedBox(height: 12),
           text(
-            formatDataValue(
-              v.hasHistory ? v.period : v.current,
-              bytes: d.bytes,
-            ),
+            formatDataValue(showPeriod ? v.period : v.current, bytes: d.bytes),
             size: 34,
             color: color,
             weight: FontWeight.w700,
           ),
           const SizedBox(height: 4),
           text(
-            v.hasHistory
+            showPeriod
                 ? 'New records / visits · last ${widget.days} days'
                 : 'Current stored total',
             size: 11,

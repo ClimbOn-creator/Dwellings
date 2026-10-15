@@ -328,8 +328,9 @@ class DatasetValues {
       'pipeline_stages' => 'Deal rooms',
       _ => null,
     };
-    if (facetTotal != null)
+    if (facetTotal != null) {
       return (report.totals[facetTotal] as num? ?? 0).toDouble();
+    }
 
     if (dataset.id == 'database_bytes') {
       return report

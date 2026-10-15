@@ -264,6 +264,44 @@ void main() {
       },
     );
   }
+  testWidgets(
+    'snapshot comparisons use current values in both cards and graph',
+    (tester) async {
+      tester.view.physicalSize = const Size(1440, 1000);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final report = sample();
+      (report.data['totals'] as Map)['Profiles with a saved location'] = 3;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: CompanyDataReportView(
+              report: report,
+              days: 30,
+              onDaysChanged: (_) {},
+              onRefresh: () {},
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('dataset-profile_locations')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('compare-mode')));
+      await tester.pumpAndSettle();
+      expect(find.text('Current stored total'), findsNWidgets(2));
+      expect(find.text('New records / visits · last 30 days'), findsNothing);
+      final chart = tester.widget<CompanyDataChart>(
+        find.byType(CompanyDataChart),
+      );
+      expect(chart.snapshot, isTrue);
+      expect(chart.series[0].points.single.value, 3);
+      expect(chart.series[1].points.single.value, 12);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
   testWidgets('mixed units use labelled axes and snapshot comparison', (
     tester,
   ) async {
