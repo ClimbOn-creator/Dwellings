@@ -1,3 +1,5 @@
+import '../screens/company_data_page.dart';
+import 'company_data_access.dart';
 import '../screens/assistant_workspace_page.dart';
 import '../screens/transaction_learning_page.dart';
 import '../screens/learning_dashboard_page.dart';
@@ -43,6 +45,8 @@ enum AppNavigationDestination {
   learningSeminars,
   learningMap,
   consulting,
+  companyData,
+  usagePrivacy,
 }
 
 List<AppNavigationDestination> destinationsForTunnel(AppTunnel tunnel) =>
@@ -117,6 +121,8 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
   }
 
   String _label(AppNavigationDestination destination) => switch (destination) {
+    AppNavigationDestination.companyData => 'Company data · owners only',
+    AppNavigationDestination.usagePrivacy => 'Usage privacy',
     AppNavigationDestination.consulting => 'Personal consulting',
     AppNavigationDestination.resources => 'Resources',
     AppNavigationDestination.sellerDashboard => 'Seller dashboard',
@@ -138,6 +144,8 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
     BuildContext context,
     AppNavigationDestination destination,
   ) => switch (destination) {
+    AppNavigationDestination.companyData => const CompanyDataPage(),
+    AppNavigationDestination.usagePrivacy => const SizedBox.shrink(),
     AppNavigationDestination.learningDashboard => const LearningDashboardPage(),
     AppNavigationDestination.learningSeminars => const LearningDashboardPage(
       initialView: LearningView.seminars,
@@ -176,6 +184,10 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
       : const ProfilePage();
 
   void _open(BuildContext context, AppNavigationDestination destination) {
+    if (destination == AppNavigationDestination.usagePrivacy) {
+      showUsagePrivacy(context);
+      return;
+    }
     if (widget.guidePage == 'landing' ||
         AppTunnelController.current.value == AppTunnel.landing) {
       final tunnel = switch (destination) {
@@ -188,7 +200,14 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
       AppTunnelController.select(tunnel);
     }
     Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => _page(context, destination)),
+      MaterialPageRoute<void>(
+        settings: RouteSettings(
+          name: destination == AppNavigationDestination.companyData
+              ? 'owner-data'
+              : destination.name,
+        ),
+        builder: (_) => _page(context, destination),
+      ),
     );
   }
 
@@ -308,59 +327,83 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
               ),
             ),
           ),
-        PopupMenuButton<AppNavigationDestination>(
-          tooltip: 'Open navigation',
-          color: widget.dark ? const Color(0xFF171728) : Colors.white,
-          offset: const Offset(0, 44),
-          onSelected: (destination) => _open(context, destination),
-          itemBuilder: (_) => [
-            for (final destination in destinationsForTunnel(
-              widget.guidePage == 'landing'
-                  ? AppTunnel.landing
-                  : AppTunnelController.current.value,
-            )) ...[
-              PopupMenuItem(
-                value: destination,
-                height: 43,
-                child:
-                    destination == AppNavigationDestination.buyerDashboard ||
-                        destination ==
-                            AppNavigationDestination.sellerDashboard ||
-                        destination == AppNavigationDestination.transactionRoom
-                    ? SiteCopyText(
-                        'navigation.${destination.name}',
-                        _label(destination),
+        CompanyDataAccess(
+          builder: (context, ownerAllowed) =>
+              PopupMenuButton<AppNavigationDestination>(
+                tooltip: 'Open navigation',
+                color: widget.dark ? const Color(0xFF171728) : Colors.white,
+                offset: const Offset(0, 44),
+                onSelected: (destination) => _open(context, destination),
+                itemBuilder: (_) => [
+                  if (ownerAllowed)
+                    PopupMenuItem(
+                      value: AppNavigationDestination.companyData,
+                      child: Text(
+                        'Company data · owners only',
                         style: TextStyle(
-                          color: widget.dark
-                              ? Colors.white
-                              : const Color(0xFF161616),
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      )
-                    : SiteText(
-                        contentKey: 'copy.app_navigation_menu.m2',
-                        literal: false,
-                        _label(destination),
-                        style: TextStyle(
-                          color: widget.dark
-                              ? Colors.white
-                              : const Color(0xFF161616),
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
+                          color: widget.dark ? Colors.white : Colors.black,
                         ),
                       ),
+                    ),
+                  PopupMenuItem(
+                    value: AppNavigationDestination.usagePrivacy,
+                    child: Text(
+                      'Usage privacy',
+                      style: TextStyle(
+                        color: widget.dark ? Colors.white : Colors.black,
+                      ),
+                    ),
+                  ),
+                  for (final destination in destinationsForTunnel(
+                    widget.guidePage == 'landing'
+                        ? AppTunnel.landing
+                        : AppTunnelController.current.value,
+                  )) ...[
+                    PopupMenuItem(
+                      value: destination,
+                      height: 43,
+                      child:
+                          destination ==
+                                  AppNavigationDestination.buyerDashboard ||
+                              destination ==
+                                  AppNavigationDestination.sellerDashboard ||
+                              destination ==
+                                  AppNavigationDestination.transactionRoom
+                          ? SiteCopyText(
+                              'navigation.${destination.name}',
+                              _label(destination),
+                              style: TextStyle(
+                                color: widget.dark
+                                    ? Colors.white
+                                    : const Color(0xFF161616),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            )
+                          : SiteText(
+                              contentKey: 'copy.app_navigation_menu.m2',
+                              literal: false,
+                              _label(destination),
+                              style: TextStyle(
+                                color: widget.dark
+                                    ? Colors.white
+                                    : const Color(0xFF161616),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                    ),
+                  ],
+                ],
+                child: SizedBox.square(
+                  dimension: 44,
+                  child: Icon(
+                    Icons.menu_rounded,
+                    color: widget.dark ? Colors.white : const Color(0xFF161616),
+                    size: 28,
+                  ),
+                ),
               ),
-            ],
-          ],
-          child: SizedBox.square(
-            dimension: 44,
-            child: Icon(
-              Icons.menu_rounded,
-              color: widget.dark ? Colors.white : const Color(0xFF161616),
-              size: 28,
-            ),
-          ),
         ),
       ],
     );

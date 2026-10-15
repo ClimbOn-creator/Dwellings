@@ -460,6 +460,15 @@ const footerPages = <FooterTopic, FooterPageContent>{
         "Use the Contact page for the company’s published contact details when available. Describe the account information or privacy question involved, and avoid sending passwords or sensitive deal documents in an initial message.",
         ["Account questions", "Profile corrections", "Privacy requests"],
       ),
+      FooterSection(
+        "Optional usage measurement",
+        "If you opt in, Affinity saves anonymous daily counts of the app areas you open while signed in. These totals contain no names, account IDs, IP addresses, full URLs, form answers, messages or documents. Your choice is stored for your account on this browser and can be changed under Usage privacy. Turning it off stops future measurement; existing anonymous totals cannot be traced back to your account. The approved owners can also view summaries of saved account and business records to operate the service.",
+        [
+          "Optional signed-in usage counts",
+          "Anonymous daily totals",
+          "Change your choice under Usage privacy",
+        ],
+      ),
     ],
     faqs: [
       (

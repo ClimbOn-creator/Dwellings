@@ -1,6 +1,13 @@
 // These IDs are permanent. Rewrite the fallback VALUE while retaining its ID.
 // Never regenerate or renumber this registry during a redesign.
 const siteCopyCatalog = <String, String>{
+  'footer.page.privacy.section.5.title': 'Optional usage measurement',
+  'footer.page.privacy.section.5.body':
+      'If you opt in, Affinity saves anonymous daily counts of the app areas you open while signed in. These totals contain no names, account IDs, IP addresses, full URLs, form answers, messages or documents. Your choice is stored for your account on this browser and can be changed under Usage privacy. Turning it off stops future measurement; existing anonymous totals cannot be traced back to your account. The approved owners can also view summaries of saved account and business records to operate the service.',
+  'footer.page.privacy.section.5.point.0': 'Optional signed-in usage counts',
+  'footer.page.privacy.section.5.point.1': 'Anonymous daily totals',
+  'footer.page.privacy.section.5.point.2':
+      'Change your choice under Usage privacy',
   'membership.access.free.price': 'Free',
   'tunnel.pricing.free_access.title': 'Buyer, Seller & Learning',
   'tunnel.pricing.free_access.body':

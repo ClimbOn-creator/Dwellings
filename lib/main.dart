@@ -1,3 +1,6 @@
+import 'screens/company_data_page.dart';
+import 'services/usage_analytics_service.dart';
+import 'widgets/company_data_access.dart';
 import 'screens/tunnel_pages.dart';
 import 'screens/buyer_resources_page.dart';
 import 'services/app_tunnel.dart';
@@ -29,6 +32,7 @@ import 'services/site_content_service.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await BackendService.initialize();
+  await UsageAnalyticsService.initialize();
   final preferences = await SharedPreferences.getInstance();
   await preferences.setBool('affinity.landing.motion', true);
   await SiteContentService.initialize();
@@ -57,11 +61,16 @@ class AffinityApp extends StatelessWidget {
     );
     return MaterialApp(
       navigatorKey: novaNavigatorKey,
-      navigatorObservers: [CalculatorHelpRouteObserver()],
+      navigatorObservers: [
+        CalculatorHelpRouteObserver(),
+        UsageNavigationObserver(),
+      ],
       builder: (context, child) => NovaTrainingHost(
         navigatorKey: novaNavigatorKey,
         child: CalculatorHelpHost(
-          child: SiteEditorShell(child: child ?? const SizedBox.shrink()),
+          child: UsagePrivacyHost(
+            child: SiteEditorShell(child: child ?? const SizedBox.shrink()),
+          ),
         ),
       ),
       debugShowCheckedModeBanner: false,
@@ -178,6 +187,7 @@ class AffinityApp extends StatelessWidget {
       'businesses-for-sale' => const BusinessSaleBulletinPage(),
       'member-studio' || 'member-dashboard' => const MemberPricingPage(),
       'personal-consulting' => const PersonalizedConsultingPage(),
+      'owner-data' => const CompanyDataPage(),
       'content-studio' => const ContentStudioPage(),
       'notifications' => const NotificationCenterPage(),
       'professional-onboarding' => const ProfessionalOnboardingPage(),

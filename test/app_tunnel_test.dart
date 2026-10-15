@@ -93,7 +93,9 @@ void main() {
           )
           .map((item) => item.value!.name)
           .toList();
-      expect(actual, destinations);
+      expect(actual, ['usagePrivacy', ...destinations]);
+      expect(find.text('Company data · owners only'), findsNothing);
+      expect(find.text('Usage privacy'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
   }
