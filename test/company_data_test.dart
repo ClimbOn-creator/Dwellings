@@ -1,3 +1,5 @@
+import 'package:dwelling_iq/widgets/calculator_help_sidebar.dart';
+import 'package:dwelling_iq/widgets/site_inline_editor.dart';
 import 'package:dwelling_iq/screens/company_data_page.dart';
 import 'package:dwelling_iq/services/company_data_service.dart';
 import 'package:dwelling_iq/services/usage_analytics_service.dart';
@@ -32,6 +34,29 @@ CompanyDataReport sample() => CompanyDataReport({
 Widget _accessPreview(BuildContext context, bool allowed) =>
     allowed ? const Text('Private data entry') : const SizedBox.shrink();
 void main() {
+  testWidgets(
+    'privacy shell keeps app content at full viewport when no prompt is shown',
+    (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          builder: (_, child) => CalculatorHelpHost(
+            child: UsagePrivacyHost(child: SiteEditorShell(child: child!)),
+          ),
+          home: const Scaffold(
+            body: Center(child: Text('App content visible')),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(tester.getSize(find.byType(Scaffold)), const Size(800, 600));
+      expect(
+        tester.getCenter(find.text('App content visible')),
+        const Offset(400, 300),
+      );
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
   test('export protects spreadsheet formulas and retains report context', () {
     final csv = sample().toCsv();
     expect(csv, contains("'="));

@@ -83,6 +83,7 @@ class UsagePrivacyHost extends StatelessWidget {
   final Widget child;
   @override
   Widget build(BuildContext context) => Stack(
+    fit: StackFit.expand,
     children: [
       Positioned.fill(child: child),
       ValueListenableBuilder<bool?>(
