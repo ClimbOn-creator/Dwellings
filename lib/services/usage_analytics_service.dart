@@ -111,7 +111,13 @@ class UsageAnalyticsService {
 
 class UsageNavigationObserver extends NavigatorObserver {
   void _visit(Route<dynamic>? route) {
-    if (route is! PageRoute || route.settings.name == 'owner-data') return;
+    if (route is! PageRoute ||
+        route.settings.name == 'owner-data' ||
+        route.settings.name == '/nova-training-preview' ||
+        (route.settings.name == '/' &&
+            Uri.base.queryParameters['module'] == 'owner-data')) {
+      return;
+    }
     scheduleMicrotask(
       () => UsageAnalyticsService.visit(
         UsageAnalyticsService.featureFor(

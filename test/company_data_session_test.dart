@@ -1,3 +1,4 @@
+import 'package:dwelling_iq/services/app_tunnel.dart';
 import 'dart:convert';
 import 'package:dwelling_iq/screens/company_data_page.dart';
 import 'package:dwelling_iq/services/backend_service.dart';
@@ -121,6 +122,17 @@ void main() {
           'consulting',
         }, contains(row['feature_name']));
       }
+      final beforePreview = recorded.length;
+      AppTunnelController.select(AppTunnel.member);
+      UsageNavigationObserver().didPush(
+        MaterialPageRoute<void>(
+          settings: const RouteSettings(name: '/nova-training-preview'),
+          builder: (_) => const SizedBox.shrink(),
+        ),
+        null,
+      );
+      await Future<void>.delayed(Duration.zero);
+      expect(recorded.length, beforePreview);
       await UsageAnalyticsService.choose(false);
       final before = recorded.length;
       await UsageAnalyticsService.visit('consulting');
