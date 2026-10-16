@@ -115,7 +115,7 @@ class UsagePrivacyHost extends StatelessWidget {
                             ),
                             const SizedBox(height: 8),
                             const Text(
-                              'Allow anonymous daily counts of the app areas you open while signed in? No names, IPs, form answers or private content. Change this any time under Usage privacy.',
+                              'Allow anonymous daily counts of the app areas you open while signed in? No names, IPs, form answers or private content. Change this any time on the Privacy page.',
                             ),
                             const SizedBox(height: 10),
                             Wrap(

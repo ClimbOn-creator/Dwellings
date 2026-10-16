@@ -125,6 +125,13 @@ void main() {
         expect(find.text('Amelia Foster · Example'), findsNothing);
         expect(find.byTooltip('Member messages'), findsNothing);
         expect(find.text('Messages'), findsNothing);
+        expect(find.byTooltip('Private updates'), findsNothing);
+        await tester.tap(find.byTooltip('Open navigation'));
+        await tester.pumpAndSettle();
+        expect(find.text('Company data · owners only'), findsNothing);
+        expect(find.text('Usage privacy'), findsNothing);
+        await tester.tapAt(const Offset(5, 200));
+        await tester.pumpAndSettle();
         // Waiting beyond the old refresh interval must not poll messaging RPCs.
         await tester.pump(const Duration(seconds: 31));
         expect(

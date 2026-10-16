@@ -1,6 +1,6 @@
 # Private company data dashboard
 
-Open `/?module=owner-data` while signed in with either existing `affinity_admins` account whose role is `owner`, or open the navigation menu and choose **Company data · owners only**. Reviewers, content editors and ordinary members do not gain access. No allow-list entries were added or changed.
+Open `/?module=owner-data` while signed in with either existing `affinity_admins` account whose role is `owner`. Reviewers, content editors and ordinary members do not gain access. No allow-list entries were added or changed.
 
 `load_affinity_company_data` checks the current database owner role on every call. It returns aggregate JSON only. The page clears its payload on authentication events, ignores obsolete requests and rechecks access every minute. The server denies direct report requests after role revocation. Summary downloads are owner-initiated CSV files with spreadsheet formula escaping.
 
@@ -17,7 +17,7 @@ Open `/?module=owner-data` while signed in with either existing `affinity_admins
 
 `affinity_usage_daily` stores only UTC date, one of six fixed feature categories, and an incrementing visit count. It has no account ID, visitor ID, IP, session ID, full URL, location, message/document body or form value. RLS and revoked table grants prohibit direct access; narrowly scoped functions handle counters and owner reporting.
 
-The app records navigation counts only after explicit opt-in, only while signed in, and excludes owners. Consent is stored per account on that browser, with **Usage privacy** available in the header to change it. Visits within 30 seconds in the same area are deduplicated in memory. Anonymous daily aggregates persist across deployments and cannot be linked back to users. They are neither unique-user counts nor verified business outcomes. Caller-supplied counters can be noisy and are not suitable for billing.
+The app records navigation counts only after explicit opt-in, only while signed in, and excludes owners. Consent is stored per account on that browser, with **Usage settings** available on the Privacy page to change it. Visits within 30 seconds in the same area are deduplicated in memory. Anonymous daily aggregates persist across deployments and cannot be linked back to users. They are neither unique-user counts nor verified business outcomes. Caller-supplied counters can be noisy and are not suitable for billing.
 
 No historical click backfill, signed-out tracking, quiz-answer tracking, search tracking, attendance verification, external conversion tracking or payment integration is included. The dashboard identifies these gaps. Local-only drafts do not appear in company totals.
 

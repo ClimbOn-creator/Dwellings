@@ -96,10 +96,12 @@ class AppNavigationMenu extends StatefulWidget {
     this.dark = true,
     this.onSideChanged,
     this.guidePage,
+    this.showPrivateUpdates = true,
   });
 
   // Kept while older callers are migrated to the single acquisition app.
   final String? guidePage;
+  final bool showPrivateUpdates;
   final PlatformSide side;
   final bool dark;
   final ValueChanged<PlatformSide>? onSideChanged;
@@ -266,7 +268,7 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
                 )
               : const SizedBox.shrink(),
         ),
-        if (BackendService.user != null)
+        if (widget.showPrivateUpdates && BackendService.user != null)
           FutureBuilder<int>(
             future: MemberBetaService.unreadCount(),
             builder: (context, snapshot) => Badge(
@@ -327,83 +329,59 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
               ),
             ),
           ),
-        CompanyDataAccess(
-          builder: (context, ownerAllowed) =>
-              PopupMenuButton<AppNavigationDestination>(
-                tooltip: 'Open navigation',
-                color: widget.dark ? const Color(0xFF171728) : Colors.white,
-                offset: const Offset(0, 44),
-                onSelected: (destination) => _open(context, destination),
-                itemBuilder: (_) => [
-                  if (ownerAllowed)
-                    PopupMenuItem(
-                      value: AppNavigationDestination.companyData,
-                      child: Text(
-                        'Company data · owners only',
+        PopupMenuButton<AppNavigationDestination>(
+          tooltip: 'Open navigation',
+          color: widget.dark ? const Color(0xFF171728) : Colors.white,
+          offset: const Offset(0, 44),
+          onSelected: (destination) => _open(context, destination),
+          itemBuilder: (_) => [
+            for (final destination in destinationsForTunnel(
+              widget.guidePage == 'landing'
+                  ? AppTunnel.landing
+                  : AppTunnelController.current.value,
+            )) ...[
+              PopupMenuItem(
+                value: destination,
+                height: 43,
+                child:
+                    destination == AppNavigationDestination.buyerDashboard ||
+                        destination ==
+                            AppNavigationDestination.sellerDashboard ||
+                        destination == AppNavigationDestination.transactionRoom
+                    ? SiteCopyText(
+                        'navigation.${destination.name}',
+                        _label(destination),
                         style: TextStyle(
-                          color: widget.dark ? Colors.white : Colors.black,
+                          color: widget.dark
+                              ? Colors.white
+                              : const Color(0xFF161616),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      )
+                    : SiteText(
+                        contentKey: 'copy.app_navigation_menu.m2',
+                        literal: false,
+                        _label(destination),
+                        style: TextStyle(
+                          color: widget.dark
+                              ? Colors.white
+                              : const Color(0xFF161616),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
-                    ),
-                  PopupMenuItem(
-                    value: AppNavigationDestination.usagePrivacy,
-                    child: Text(
-                      'Usage privacy',
-                      style: TextStyle(
-                        color: widget.dark ? Colors.white : Colors.black,
-                      ),
-                    ),
-                  ),
-                  for (final destination in destinationsForTunnel(
-                    widget.guidePage == 'landing'
-                        ? AppTunnel.landing
-                        : AppTunnelController.current.value,
-                  )) ...[
-                    PopupMenuItem(
-                      value: destination,
-                      height: 43,
-                      child:
-                          destination ==
-                                  AppNavigationDestination.buyerDashboard ||
-                              destination ==
-                                  AppNavigationDestination.sellerDashboard ||
-                              destination ==
-                                  AppNavigationDestination.transactionRoom
-                          ? SiteCopyText(
-                              'navigation.${destination.name}',
-                              _label(destination),
-                              style: TextStyle(
-                                color: widget.dark
-                                    ? Colors.white
-                                    : const Color(0xFF161616),
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            )
-                          : SiteText(
-                              contentKey: 'copy.app_navigation_menu.m2',
-                              literal: false,
-                              _label(destination),
-                              style: TextStyle(
-                                color: widget.dark
-                                    ? Colors.white
-                                    : const Color(0xFF161616),
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                    ),
-                  ],
-                ],
-                child: SizedBox.square(
-                  dimension: 44,
-                  child: Icon(
-                    Icons.menu_rounded,
-                    color: widget.dark ? Colors.white : const Color(0xFF161616),
-                    size: 28,
-                  ),
-                ),
               ),
+            ],
+          ],
+          child: SizedBox.square(
+            dimension: 44,
+            child: Icon(
+              Icons.menu_rounded,
+              color: widget.dark ? Colors.white : const Color(0xFF161616),
+              size: 28,
+            ),
+          ),
         ),
       ],
     );

@@ -16,6 +16,35 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     AppTunnelController.select(AppTunnel.landing);
   });
+  testWidgets('Privacy page opens usage settings outside navigation menu', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: FooterInformationPage(topic: FooterTopic.privacy),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final settings = find.byKey(const Key('privacy-usage-settings'));
+    await tester.scrollUntilVisible(
+      settings,
+      400,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(settings);
+    await tester.pumpAndSettle();
+    expect(
+      find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.text('Optional usage measurement'),
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('No thanks'), findsOneWidget);
+    expect(find.text('Allow usage counts'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
   testWidgets('only the four Affinity links open dedicated pages', (
     tester,
   ) async {

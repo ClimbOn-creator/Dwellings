@@ -7,6 +7,7 @@ import 'package:dwelling_iq/screens/member_deal_marketplace_page.dart';
 import 'package:dwelling_iq/screens/learning_dashboard_page.dart';
 import 'package:dwelling_iq/services/learning_service.dart';
 import 'package:dwelling_iq/widgets/canada_event_map.dart';
+import 'package:dwelling_iq/widgets/app_navigation_menu.dart';
 import 'package:dwelling_iq/widgets/private_deal_entry.dart';
 
 void main() {
@@ -25,6 +26,13 @@ void main() {
         await tester.pumpWidget(MaterialApp(home: page));
         await tester.pumpAndSettle();
         expect(find.text(label), findsOneWidget);
+        expect(find.byTooltip('Pipeline'), findsNothing);
+        expect(
+          tester
+              .widget<AppNavigationMenu>(find.byType(AppNavigationMenu))
+              .showPrivateUpdates,
+          isFalse,
+        );
         expect(tester.getTopLeft(find.text(label)).dy, lessThan(72));
         expect(tester.getSize(find.text(label)).height, greaterThan(0));
         expect(tester.takeException(), isNull);
@@ -73,6 +81,12 @@ void main() {
         expect(map.height, greaterThan(800));
         expect(map.width, greaterThan(width - (width >= 900 ? 250 : 25)));
         expect(find.text('Learning dash'), findsOneWidget);
+        expect(
+          tester
+              .widget<AppNavigationMenu>(find.byType(AppNavigationMenu))
+              .showPrivateUpdates,
+          isFalse,
+        );
         expect(find.text('Example event'), findsNothing);
         expect(find.byType(TextField), findsNothing);
         expect(find.text('Reserve my place'), findsNothing);

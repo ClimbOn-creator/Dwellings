@@ -5,6 +5,7 @@ import '../models/footer_page_content.dart';
 import '../models/platform_side.dart';
 import '../services/site_content_service.dart';
 import '../widgets/app_navigation_menu.dart';
+import '../widgets/company_data_access.dart';
 import '../widgets/home_brand_button.dart';
 import '../widgets/membership_footer.dart';
 import '../widgets/site_copy_text.dart';
@@ -301,6 +302,16 @@ class _FooterInformationPageState extends State<FooterInformationPage> {
   Widget _sections() => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
+      if (widget.topic == FooterTopic.privacy)
+        Padding(
+          padding: const EdgeInsets.only(bottom: 24),
+          child: OutlinedButton.icon(
+            key: const Key('privacy-usage-settings'),
+            onPressed: () => showUsagePrivacy(context),
+            icon: const Icon(Icons.tune),
+            label: _copy('usageSettings.action', 'Usage settings'),
+          ),
+        ),
       for (var i = 0; i < page.sections.length; i++)
         Container(
           key: _sectionKeys[i],

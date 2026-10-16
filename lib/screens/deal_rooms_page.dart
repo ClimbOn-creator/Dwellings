@@ -353,15 +353,6 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                   contentKey: 'copy.deal_rooms_page.m3',
                 ),
                 actions: [
-                  if (_dashboardView != BuyerDashboardView.pipeline)
-                    IconButton(
-                      tooltip: 'Pipeline',
-                      icon: const Icon(Icons.view_kanban_outlined),
-                      onPressed: () => setState(() {
-                        _dashboardView = BuyerDashboardView.pipeline;
-                        _showArchived = false;
-                      }),
-                    ),
                   if (_dashboardView != BuyerDashboardView.home)
                     IconButton(
                       tooltip: 'Back to dashboard',
@@ -375,6 +366,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                     side: PlatformSide.business,
                     dark: false,
                     guidePage: 'buyer/${_dashboardView.name}',
+                    showPrivateUpdates: false,
                   ),
                   const SizedBox(width: 12),
                 ],

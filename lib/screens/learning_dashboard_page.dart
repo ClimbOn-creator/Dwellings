@@ -327,7 +327,11 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
           contentKey: 'dashboard.header.learning',
         ),
         actions: [
-          AppNavigationMenu(guidePage: guide, dark: false),
+          AppNavigationMenu(
+            guidePage: guide,
+            dark: false,
+            showPrivateUpdates: false,
+          ),
           const SizedBox(width: 12),
         ],
       ),

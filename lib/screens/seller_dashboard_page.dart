@@ -326,6 +326,7 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
         ),
         actions: [
           AppNavigationMenu(
+            showPrivateUpdates: false,
             side: PlatformSide.business,
             dark: false,
             guidePage:

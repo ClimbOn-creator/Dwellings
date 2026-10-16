@@ -446,6 +446,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
             icon: const Icon(Icons.refresh_rounded),
           ),
         AppNavigationMenu(
+          showPrivateUpdates: false,
           side: PlatformSide.business,
           dark: false,
           guidePage: 'member/${_view.name}',

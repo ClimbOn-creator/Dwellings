@@ -462,11 +462,11 @@ const footerPages = <FooterTopic, FooterPageContent>{
       ),
       FooterSection(
         "Optional usage measurement",
-        "If you opt in, Affinity saves anonymous daily counts of the app areas you open while signed in. These totals contain no names, account IDs, IP addresses, full URLs, form answers, messages or documents. Your choice is stored for your account on this browser and can be changed under Usage privacy. Turning it off stops future measurement; existing anonymous totals cannot be traced back to your account. The approved owners can also view summaries of saved account and business records to operate the service.",
+        "If you opt in, Affinity saves anonymous daily counts of the app areas you open while signed in. These totals contain no names, account IDs, IP addresses, full URLs, form answers, messages or documents. Your choice is stored for your account on this browser and can be changed on the Privacy page. Turning it off stops future measurement; existing anonymous totals cannot be traced back to your account. The approved owners can also view summaries of saved account and business records to operate the service.",
         [
           "Optional signed-in usage counts",
           "Anonymous daily totals",
-          "Change your choice under Usage privacy",
+          "Change your choice on the Privacy page",
         ],
       ),
     ],
