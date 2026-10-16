@@ -1,3 +1,4 @@
+import 'widgets/affinity_button_gradients.dart';
 import 'screens/company_data_page.dart';
 import 'services/usage_analytics_service.dart';
 import 'widgets/company_data_access.dart';
@@ -74,53 +75,55 @@ class AffinityApp extends StatelessWidget {
       ),
       debugShowCheckedModeBanner: false,
       title: 'Affinity',
-      theme: base.copyWith(
-        pageTransitionsTheme: const PageTransitionsTheme(
-          builders: {
-            TargetPlatform.android: _AffinityPageTransitionsBuilder(),
-            TargetPlatform.iOS: _AffinityPageTransitionsBuilder(),
-            TargetPlatform.macOS: _AffinityPageTransitionsBuilder(),
-            TargetPlatform.windows: _AffinityPageTransitionsBuilder(),
-            TargetPlatform.linux: _AffinityPageTransitionsBuilder(),
-            TargetPlatform.fuchsia: _AffinityPageTransitionsBuilder(),
-          },
-        ),
-        textTheme: base.textTheme.apply(bodyColor: ink, displayColor: ink),
-        inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(color: Color(0xFFD9D9D9)),
+      theme: AffinityButtonGradients.apply(
+        base.copyWith(
+          pageTransitionsTheme: const PageTransitionsTheme(
+            builders: {
+              TargetPlatform.android: _AffinityPageTransitionsBuilder(),
+              TargetPlatform.iOS: _AffinityPageTransitionsBuilder(),
+              TargetPlatform.macOS: _AffinityPageTransitionsBuilder(),
+              TargetPlatform.windows: _AffinityPageTransitionsBuilder(),
+              TargetPlatform.linux: _AffinityPageTransitionsBuilder(),
+              TargetPlatform.fuchsia: _AffinityPageTransitionsBuilder(),
+            },
           ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(color: Color(0xFFD9D9D9)),
-          ),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 14,
-            vertical: 14,
-          ),
-        ),
-        filledButtonTheme: FilledButtonThemeData(
-          style: FilledButton.styleFrom(
-            shape: RoundedRectangleBorder(
+          textTheme: base.textTheme.apply(bodyColor: ink, displayColor: ink),
+          inputDecorationTheme: InputDecorationTheme(
+            filled: true,
+            fillColor: Colors.white,
+            border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(color: Color(0xFFD9D9D9)),
             ),
-            textStyle: const TextStyle(
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0,
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(color: Color(0xFFD9D9D9)),
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 14,
             ),
           ),
-        ),
-        outlinedButtonTheme: OutlinedButtonThemeData(
-          style: OutlinedButton.styleFrom(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+          filledButtonTheme: FilledButtonThemeData(
+            style: FilledButton.styleFrom(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              textStyle: const TextStyle(
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0,
+              ),
             ),
-            textStyle: const TextStyle(
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0,
+          ),
+          outlinedButtonTheme: OutlinedButtonThemeData(
+            style: OutlinedButton.styleFrom(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              textStyle: const TextStyle(
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0,
+              ),
             ),
           ),
         ),

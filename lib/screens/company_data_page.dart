@@ -1,3 +1,4 @@
+import '../widgets/affinity_button_gradients.dart';
 import '../widgets/home_brand_button.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
@@ -93,7 +94,7 @@ class _CompanyDataPageState extends State<CompanyDataPage> {
 
   @override
   Widget build(BuildContext context) => Theme(
-    data: ThemeData.dark(useMaterial3: true),
+    data: AffinityButtonGradients.apply(ThemeData.dark(useMaterial3: true)),
     child: Scaffold(
       backgroundColor: _canvas,
       appBar: AppBar(
@@ -230,22 +231,24 @@ class _CompanyDataReportViewState extends State<CompanyDataReportView> {
   Widget build(BuildContext context) {
     final base = Theme.of(context);
     return Theme(
-      data: ThemeData.dark(useMaterial3: true).copyWith(
-        scaffoldBackgroundColor: _canvas,
-        colorScheme: const ColorScheme.dark(
-          primary: dataCyan,
-          secondary: dataMint,
-          surface: _panel,
-        ),
-        textTheme: base.textTheme.apply(
-          bodyColor: Colors.white,
-          displayColor: Colors.white,
-        ),
-        dividerColor: _line,
-        inputDecorationTheme: const InputDecorationTheme(
-          filled: true,
-          fillColor: _canvas,
-          border: OutlineInputBorder(borderSide: BorderSide(color: _line)),
+      data: AffinityButtonGradients.apply(
+        ThemeData.dark(useMaterial3: true).copyWith(
+          scaffoldBackgroundColor: _canvas,
+          colorScheme: const ColorScheme.dark(
+            primary: dataCyan,
+            secondary: dataMint,
+            surface: _panel,
+          ),
+          textTheme: base.textTheme.apply(
+            bodyColor: Colors.white,
+            displayColor: Colors.white,
+          ),
+          dividerColor: _line,
+          inputDecorationTheme: const InputDecorationTheme(
+            filled: true,
+            fillColor: _canvas,
+            border: OutlineInputBorder(borderSide: BorderSide(color: _line)),
+          ),
         ),
       ),
       child: LayoutBuilder(

@@ -227,7 +227,6 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
         _reveal(_membershipPricing()),
         _reveal(_consultingIntroduction()),
         _reveal(_questions()),
-        _reveal(_closing()),
         const SliverToBoxAdapter(child: MembershipFooter()),
       ],
     ),
@@ -814,41 +813,6 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
     ),
     color: const Color(0xFFF1F3EE),
     vertical: 80,
-  );
-
-  Widget _closing() => _section(
-    Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _label('home.closing.eyebrow', 'MAKE ROOM FOR WHAT’S NEXT'),
-        const SizedBox(height: 24),
-        _copy(
-          'home.closing.title',
-          'Your ambition deserves\na clear next step.',
-          size: MediaQuery.sizeOf(context).width < 700 ? 44 : 72,
-          weight: FontWeight.w500,
-          height: 1.02,
-        ),
-        const SizedBox(height: 32),
-        Wrap(
-          spacing: 18,
-          runSpacing: 16,
-          children: [
-            _button(
-              'home.closing.buyer',
-              'Build my Blueprint',
-              () => startBuyerLearning(context),
-            ),
-            _button(
-              'home.closing.member',
-              'Explore membership',
-              () => _open(const MemberPricingPage()),
-            ),
-          ],
-        ),
-      ],
-    ),
-    color: _acid,
   );
 
   Widget _movingMarketing() {
