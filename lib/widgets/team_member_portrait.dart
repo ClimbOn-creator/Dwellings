@@ -45,12 +45,12 @@ class _TeamMemberPortraitState extends State<TeamMemberPortrait> {
                 onFocusChange: (value) => setState(() => _focus = value),
                 onTap: widget.onToggle,
                 child: SizedBox.square(
-                  dimension: 108,
+                  dimension: 88,
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
                       ProfilePhoto(
-                        size: 108,
+                        size: 88,
                         photoUrl: provider.photoUrl,
                         exampleIndex: provider.photoIndex,
                       ),
@@ -63,7 +63,7 @@ class _TeamMemberPortraitState extends State<TeamMemberPortrait> {
                           child: Container(
                             color: const Color(0xDC173747),
                             alignment: Alignment.center,
-                            padding: const EdgeInsets.all(10),
+                            padding: const EdgeInsets.all(6),
                             child: widget.busy
                                 ? const SizedBox.square(
                                     dimension: 24,
@@ -80,7 +80,7 @@ class _TeamMemberPortraitState extends State<TeamMemberPortrait> {
                                             ? Icons.remove_rounded
                                             : Icons.add_rounded,
                                         color: Colors.white,
-                                        size: 26,
+                                        size: 20,
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
@@ -89,7 +89,8 @@ class _TeamMemberPortraitState extends State<TeamMemberPortrait> {
                                         textScaler: TextScaler.noScaling,
                                         style: const TextStyle(
                                           color: Colors.white,
-                                          fontSize: 12,
+                                          fontSize: 11,
+                                          height: 1.1,
                                           fontWeight: FontWeight.w600,
                                         ),
                                       ),

@@ -265,7 +265,7 @@ const pebbleMainPageCopy = <String, List<(String, String, String, String?)>>{
     (
       'updates',
       'Your private updates',
-      'This page shows activity intended for your account, such as deal changes, professional introductions and replies. It is separate from the conversation inbox.',
+      'This page shows activity intended for your account, such as deal changes and professional introductions.',
       null,
     ),
     (
@@ -276,8 +276,8 @@ const pebbleMainPageCopy = <String, List<(String, String, String, String?)>>{
     ),
     (
       'messages',
-      'Read conversations',
-      'Open Messaging from your dashboard to read and reply to conversations. Creator-only example threads are marked Example and allow you to preview the inbox without contacting anyone.',
+      'Review introductions',
+      'Review professional introductions beside the relevant deal, and open member profiles to see their experience and contact details.',
       null,
     ),
   ],

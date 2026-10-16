@@ -92,8 +92,8 @@ List<NovaStep> novaWalkthrough(String role) => [
       ),
       NovaStep(
         'member-responses',
-        'Follow your conversations',
-        'Messages opens your conversation inbox. Choose a thread to read and reply, or use the Deal responses tab for professional introductions and buyer decisions. Creator example threads are clearly labeled and do not send messages.',
+        'Review deal responses',
+        'Open Deal responses to review professional introductions and buyer decisions.',
         'member/dealResponses',
         NovaMood.planning,
       ),

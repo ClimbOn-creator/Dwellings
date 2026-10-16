@@ -130,7 +130,7 @@ List<NovaStep> novaPageWalkthrough(String page) {
       ),
       'page:NotificationCenterPage': (
         "Your private updates",
-        "Review the latest notifications and open the relevant conversation or deal. The updates on this page relate to your account.",
+        "Review the latest notifications and open the relevant deal or profile. The updates on this page relate to your account.",
       ),
       'page:ConnectionBriefPage': (
         "Build a connection brief",

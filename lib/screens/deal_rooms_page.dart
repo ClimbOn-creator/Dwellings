@@ -28,6 +28,7 @@ import '../services/business_service.dart';
 import '../widgets/home_brand_button.dart';
 import '../widgets/topo_background.dart';
 import '../widgets/profile_photo.dart';
+import '../widgets/team_member_portrait.dart';
 import '../widgets/app_navigation_menu.dart';
 import '../widgets/dashboard_ui.dart';
 import '../widgets/buyer_deal_screen.dart';
@@ -50,6 +51,7 @@ enum BuyerDashboardView {
   pipeline,
   dealScreen,
   transactionPlan,
+  quiz,
   team,
   resources,
 }
@@ -87,6 +89,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
   Future<(List<DealRoomBundle>, List<MarketplaceProvider>)>? _buyerBroadcast;
   late PlatformSide _side;
   bool _creating = false;
+  String? _teamBusyId;
   bool _showAll = true;
   bool _showArchived = false;
   BuyerDashboardView _dashboardView = BuyerDashboardView.home;
@@ -197,7 +200,14 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
     final bundles = await _loadPlannerBundles();
     List<MarketplaceProvider> team = const [];
     try {
-      team = await AccountService.loadTeam();
+      if (widget.loadTeamProviders != null) {
+        final (providers, selected) = await widget.loadTeamProviders!();
+        team = providers
+            .where((provider) => selected.contains(provider.id))
+            .toList();
+      } else {
+        team = await AccountService.loadTeam();
+      }
     } catch (_) {}
     return (bundles, team);
   }
@@ -436,6 +446,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                           _transactionPlanner(),
                         BuyerDashboardView.resources => _resourcesPage(),
                         BuyerDashboardView.team => _buyerTeamPage(),
+                        BuyerDashboardView.quiz => _buyerQuiz(),
                         _ => _buyerDashboardLive(allRooms),
                       },
                     ),
@@ -450,11 +461,17 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                   BuyerDashboardView.transactionPlan => _transactionPlanner(),
                   BuyerDashboardView.resources => _resourcesPage(),
                   BuyerDashboardView.team => _buyerTeamPage(),
+                  BuyerDashboardView.quiz => _buyerQuiz(),
                   _ => _buyerDashboardLive(allRooms),
                 };
         },
       );
     },
+  );
+
+  Widget _buyerQuiz() => SingleChildScrollView(
+    padding: EdgeInsets.all(MediaQuery.sizeOf(context).width < 600 ? 12 : 20),
+    child: const DealComparisonPage(embedded: true),
   );
 
   Widget _buyerSidebar() => Container(
@@ -506,30 +523,14 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
           DashboardUi.nav(
             'Deal comparison quiz',
             Icons.compare_arrows_rounded,
-            false,
-            () => Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (_) => const DealComparisonPage(),
-              ),
-            ),
+            _dashboardView == BuyerDashboardView.quiz,
+            () => setState(() => _dashboardView = BuyerDashboardView.quiz),
           ),
           DashboardUi.nav(
             'Resources',
             Icons.library_books_outlined,
             _dashboardView == BuyerDashboardView.resources,
             () => setState(() => _dashboardView = BuyerDashboardView.resources),
-          ),
-          DashboardUi.nav(
-            'Messaging',
-            Icons.chat_bubble_outline,
-            false,
-            () => Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (_) => const MemberDealMarketplacePage(
-                  initialView: MemberDashboardView.dealResponses,
-                ),
-              ),
-            ),
           ),
           DashboardUi.nav(
             'My team',
@@ -819,10 +820,8 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                               label: const Text('Enter a private deal'),
                             ),
                             TextButton(
-                              onPressed: () => Navigator.of(context).push(
-                                MaterialPageRoute<void>(
-                                  builder: (_) => const DealComparisonPage(),
-                                ),
+                              onPressed: () => setState(
+                                () => _dashboardView = BuyerDashboardView.quiz,
                               ),
                               child: const Text('Compare what fits me'),
                             ),
@@ -1034,58 +1033,17 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                 spacing: 10,
                 runSpacing: 10,
                 children: [
-                  for (final provider in team.take(6))
-                    InkWell(
-                      onTap: () => _openTeamProfile(provider),
-                      borderRadius: BorderRadius.circular(10),
-                      child: Container(
-                        width: narrow ? width - 74 : 185,
-                        padding: const EdgeInsets.all(9),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF7F9FD),
-                          border: Border.all(color: DashboardUi.line),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Row(
-                          children: [
-                            ProfilePhoto(
-                              size: 38,
-                              photoUrl: provider.photoUrl,
-                              exampleIndex: provider.photoIndex,
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    provider.name,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w800,
-                                    ),
-                                  ),
-                                  Text(
-                                    provider.specialty,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      color: DashboardUi.muted,
-                                      fontSize: 9,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const Icon(
-                              Icons.chevron_right_rounded,
-                              size: 16,
-                              color: DashboardUi.muted,
-                            ),
-                          ],
-                        ),
+                  for (final provider in team)
+                    SizedBox(
+                      width: 140,
+                      child: TeamMemberPortrait(
+                        provider: provider,
+                        selected: true,
+                        busy: _teamBusyId == provider.id,
+                        onProfile: () => _openTeamProfile(provider),
+                        onToggle: _teamBusyId == null
+                            ? () => _removeDashboardTeamMember(provider)
+                            : null,
                       ),
                     ),
                 ],
@@ -1118,6 +1076,23 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
       ),
     ),
   );
+
+  Future<void> _removeDashboardTeamMember(MarketplaceProvider provider) async {
+    setState(() => _teamBusyId = provider.id);
+    try {
+      await MarketplaceService.removeFromTeam(provider.id);
+      if (mounted) setState(() => _buyerBroadcast = _loadBuyerBroadcast());
+    } catch (_) {
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not update your team. Please try again.'),
+          ),
+        );
+    } finally {
+      if (mounted) setState(() => _teamBusyId = null);
+    }
+  }
 
   Future<void> _openTeamProfile(MarketplaceProvider provider) async {
     await Navigator.of(context).push(

@@ -1193,7 +1193,7 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
                 children: [
                   for (final provider in team)
                     SizedBox(
-                      width: 160,
+                      width: 140,
                       child: TeamMemberPortrait(
                         provider: provider,
                         selected: true,

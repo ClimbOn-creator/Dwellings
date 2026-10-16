@@ -75,14 +75,13 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
   Future<List<MemberDealPitch>>? _responsesFuture;
   Future<List<MemberDealPitch>> get _responses =>
       _responsesFuture ??= MemberDealMarketplaceService.loadBuyerResponses();
-  bool _showDealResponses = false;
   late Future<List<MarketplaceProvider>> _professionals;
   late Future<MarketplaceProvider?> _myProfessionalProfile;
   late Future<bool> _creatorAccess;
   late Future<List<MemberConversationSummary>> _conversations;
   Future<List<MemberChatMessage>> _chatMessages = Future.value(const []);
   MemberConversationSummary? _selectedConversation;
-  _InteractionMode _interactionMode = _InteractionMode.inbox;
+  _InteractionMode _interactionMode = _InteractionMode.deal;
   Timer? _messageRefreshTimer;
   String _professionalQuery = '';
   String _dealQuery = '';
@@ -109,23 +108,26 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
     _loadSavedOpportunities();
     _replyEmail.text = BackendService.user?.email ?? '';
     final initialChatProvider = widget.initialChatProvider;
-    if (initialChatProvider != null) {
+    if (MemberNetworkService.messagingEnabled && initialChatProvider != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _startMemberChat(initialChatProvider);
       });
     }
-    _messageRefreshTimer = Timer.periodic(const Duration(seconds: 15), (_) {
-      if (mounted && BackendService.user != null) {
-        setState(() {
-          _conversations = MemberNetworkService.loadConversations();
-          final conversation = _selectedConversation;
-          if (_interactionMode == _InteractionMode.chat &&
-              conversation != null) {
-            _chatMessages = MemberNetworkService.loadMessages(conversation.id);
-          }
-        });
-      }
-    });
+    if (MemberNetworkService.messagingEnabled)
+      _messageRefreshTimer = Timer.periodic(const Duration(seconds: 15), (_) {
+        if (mounted && BackendService.user != null) {
+          setState(() {
+            _conversations = MemberNetworkService.loadConversations();
+            final conversation = _selectedConversation;
+            if (_interactionMode == _InteractionMode.chat &&
+                conversation != null) {
+              _chatMessages = MemberNetworkService.loadMessages(
+                conversation.id,
+              );
+            }
+          });
+        }
+      });
   }
 
   Future<void> _loadSavedOpportunities() async {
@@ -184,7 +186,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
     _professionals = MarketplaceService.loadAffinityMembers();
     _myProfessionalProfile = MarketplaceService.loadMyProfessionalProfile();
     _creatorAccess = AffinityAdminService.isAdmin();
-    _conversations = MemberNetworkService.loadConversations();
+    _conversations = Future.value(const []);
   }
 
   Future<bool> _ensureSignedIn() async {
@@ -536,7 +538,9 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
             ),
             const SizedBox(width: 14),
             if (_view != MemberDashboardView.home &&
-                _view != MemberDashboardView.dealResponses)
+                _view != MemberDashboardView.dealResponses &&
+                (MemberNetworkService.messagingEnabled ||
+                    _selectedOpportunity != null))
               AnimatedContainer(
                 duration: const Duration(milliseconds: 220),
                 curve: Curves.easeOutCubic,
@@ -1073,7 +1077,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
           child: SiteText(
             contentKey: 'copy.member_deal_marketplace_page.m4',
             literal: true,
-            'MESSAGES',
+            'DEAL INTRODUCTION',
             style: TextStyle(
               color: _green,
               fontSize: 9,
@@ -1115,19 +1119,20 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                   style: const TextStyle(fontWeight: FontWeight.w800),
                 ),
               ),
-              IconButton(
-                onPressed: () => setState(() {
-                  _interactionMode = _InteractionMode.inbox;
-                  _selectedConversation = null;
-                }),
-                tooltip: 'Member messages',
-                icon: Icon(
-                  Icons.chat_bubble_outline_rounded,
-                  color: _interactionMode == _InteractionMode.inbox
-                      ? _green
-                      : _muted,
+              if (MemberNetworkService.messagingEnabled)
+                IconButton(
+                  onPressed: () => setState(() {
+                    _interactionMode = _InteractionMode.inbox;
+                    _selectedConversation = null;
+                  }),
+                  tooltip: 'Member messages',
+                  icon: Icon(
+                    Icons.chat_bubble_outline_rounded,
+                    color: _interactionMode == _InteractionMode.inbox
+                        ? _green
+                        : _muted,
+                  ),
                 ),
-              ),
               if (_selectedOpportunity != null)
                 IconButton(
                   onPressed: () =>
@@ -1666,6 +1671,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
     MarketplaceProvider provider, {
     MemberDealOpportunity? deal,
   }) async {
+    if (!MemberNetworkService.messagingEnabled) return;
     if (provider.isExample) {
       _message('Example profiles cannot receive live messages.');
       return;
@@ -2029,55 +2035,13 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
       MemberDashboardView.opportunityDetail => _expandedOpportunity(),
       MemberDashboardView.saved => _savedOpportunities(),
       MemberDashboardView.professionals => _professionalDirectory(),
-      MemberDashboardView.dealResponses => _messagesWorkspace(),
+      MemberDashboardView.dealResponses => _pitchList(
+        _responses,
+        buyerView: true,
+      ),
       MemberDashboardView.profile => _professionalProfileWorkspace(),
     };
   }
-
-  Widget _messagesWorkspace() => Column(
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: [
-      Wrap(
-        spacing: 8,
-        children: [
-          TextButton(
-            onPressed: () => setState(() => _showDealResponses = false),
-            child: SiteCopyText(
-              'messages.workspace.inbox',
-              'Messages',
-              style: TextStyle(
-                fontWeight: !_showDealResponses
-                    ? FontWeight.w800
-                    : FontWeight.w400,
-              ),
-            ),
-          ),
-          TextButton(
-            onPressed: () => setState(() => _showDealResponses = true),
-            child: SiteCopyText(
-              'messages.workspace.responses',
-              'Deal responses',
-              style: TextStyle(
-                fontWeight: _showDealResponses
-                    ? FontWeight.w800
-                    : FontWeight.w400,
-              ),
-            ),
-          ),
-        ],
-      ),
-      const SizedBox(height: 8),
-      if (_showDealResponses)
-        _pitchList(_responses, buyerView: true)
-      else
-        SizedBox(
-          height: MediaQuery.sizeOf(context).height < 620
-              ? 440
-              : MediaQuery.sizeOf(context).height - 230,
-          child: _memberInteractionPanel(fullPage: true),
-        ),
-    ],
-  );
 
   Widget _studioHeading(String eyebrow, String title, String description) =>
       Padding(
@@ -3725,11 +3689,12 @@ class _DealTeamStrip extends StatelessWidget {
                         Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            _teamAction(
-                              Icons.chat_bubble_outline_rounded,
-                              'Message member',
-                              () => onMessage(member),
-                            ),
+                            if (MemberNetworkService.messagingEnabled)
+                              _teamAction(
+                                Icons.chat_bubble_outline_rounded,
+                                'Message member',
+                                () => onMessage(member),
+                              ),
                             _teamAction(
                               Icons.person_add_alt_1_outlined,
                               'Refer member',
@@ -4776,7 +4741,7 @@ class _ProfessionalCard extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
-                if (onMessage != null)
+                if (MemberNetworkService.messagingEnabled && onMessage != null)
                   IconButton(
                     onPressed: onMessage,
                     tooltip: 'Message ${provider.name}',

@@ -89,9 +89,13 @@ class MemberChatMessage {
 }
 
 class MemberNetworkService {
+  /// Messaging is paused across every app surface; retained records are untouched.
+  static const messagingEnabled = false;
+
   static SupabaseClient get _client => Supabase.instance.client;
 
   static Future<List<MemberConversationSummary>> loadConversations() async {
+    if (!messagingEnabled) return const [];
     if (!BackendService.configured || BackendService.user == null) {
       return const [];
     }
@@ -106,11 +110,14 @@ class MemberNetworkService {
   }
 
   static List<MemberConversationSummary> get creatorExampleConversations =>
-      CreatorMessageExamples.conversationsFor(BackendService.user?.email);
+      messagingEnabled
+      ? CreatorMessageExamples.conversationsFor(BackendService.user?.email)
+      : const [];
 
   static Future<List<MemberChatMessage>> loadMessages(
     String conversationId,
   ) async {
+    if (!messagingEnabled) return const [];
     if (CreatorMessageExamples.ownsId(conversationId)) {
       return CreatorMessageExamples.messagesFor(
         BackendService.user?.email,
@@ -149,6 +156,8 @@ class MemberNetworkService {
     required String providerId,
     String? opportunityId,
   }) async {
+    if (!messagingEnabled)
+      throw StateError('Messaging is currently unavailable.');
     _requireMember();
     return await _client.rpc(
           'start_member_conversation',
@@ -161,6 +170,8 @@ class MemberNetworkService {
   }
 
   static Future<void> sendMessage(String conversationId, String body) async {
+    if (!messagingEnabled)
+      throw StateError('Messaging is currently unavailable.');
     if (CreatorMessageExamples.ownsId(conversationId)) {
       throw StateError(
         'Example conversations are a preview. No message is sent.',
@@ -177,6 +188,7 @@ class MemberNetworkService {
   }
 
   static Future<void> markRead(String conversationId) async {
+    if (!messagingEnabled) return;
     if (CreatorMessageExamples.ownsId(conversationId)) return;
     if (!BackendService.configured || BackendService.user == null) return;
     await _client.rpc(

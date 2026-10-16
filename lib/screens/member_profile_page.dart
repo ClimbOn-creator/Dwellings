@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../services/backend_service.dart';
+import '../services/member_network_service.dart';
 import '../services/marketplace_service.dart';
 import '../widgets/home_brand_button.dart';
 import '../widgets/profile_photo.dart';
@@ -39,6 +40,7 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
 
   MarketplaceProvider get provider => widget.provider;
   bool get _canMessage =>
+      MemberNetworkService.messagingEnabled &&
       !provider.isExample &&
       (widget.onMessage != null || widget.messageDestinationBuilder != null);
 

@@ -2,6 +2,25 @@ import 'package:dwelling_iq/services/member_network_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test(
+    'paused messaging never fetches, sends, starts or marks conversations',
+    () async {
+      expect(MemberNetworkService.messagingEnabled, isFalse);
+      expect(await MemberNetworkService.loadConversations(), isEmpty);
+      expect(await MemberNetworkService.loadMessages('any-id'), isEmpty);
+      expect(MemberNetworkService.creatorExampleConversations, isEmpty);
+      await MemberNetworkService.markRead('any-id');
+      await expectLater(
+        MemberNetworkService.sendMessage('any-id', 'hello'),
+        throwsStateError,
+      );
+      await expectLater(
+        MemberNetworkService.startConversation(providerId: 'any-id'),
+        throwsStateError,
+      );
+    },
+  );
+
   test('conversation summaries parse unread and deal context', () {
     final conversation = MemberConversationSummary.fromJson({
       'conversation_id': 'conversation-1',

@@ -20,7 +20,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'models/platform_side.dart';
 import 'screens/deal_rooms_page.dart';
 import 'screens/seller_dashboard_page.dart';
-import 'screens/deal_comparison_page.dart';
 import 'screens/member_deal_marketplace_page.dart';
 import 'screens/content_studio_page.dart';
 import 'screens/notification_center_page.dart';
@@ -182,7 +181,9 @@ class AffinityApp extends StatelessWidget {
       'seller-dashboard' ||
       'succession-transfer' => const SellerDashboardPage(),
       'deal-rooms' => const DealRoomsPage(initialSide: PlatformSide.business),
-      'deal-comparison' => const DealComparisonPage(),
+      'deal-comparison' => const DealRoomsPage(
+        initialView: BuyerDashboardView.quiz,
+      ),
       'bulletin-board' ||
       'businesses-for-sale' => const BusinessSaleBulletinPage(),
       'member-studio' || 'member-dashboard' => const MemberPricingPage(),

@@ -3,7 +3,6 @@ import 'company_data_access.dart';
 import '../screens/assistant_workspace_page.dart';
 import '../screens/transaction_learning_page.dart';
 import '../screens/learning_dashboard_page.dart';
-import '../screens/deal_comparison_page.dart';
 import '../services/app_tunnel.dart';
 import '../screens/tunnel_pages.dart';
 import '../screens/member_deal_marketplace_page.dart';
@@ -160,7 +159,9 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
       initialSide: PlatformSide.business,
     ),
     AppNavigationDestination.transactionRoom => const TransactionLearningPage(),
-    AppNavigationDestination.dealComparison => const DealComparisonPage(),
+    AppNavigationDestination.dealComparison => const DealRoomsPage(
+      initialView: BuyerDashboardView.quiz,
+    ),
     AppNavigationDestination.businessesForSale =>
       const BusinessSaleBulletinPage(),
     AppNavigationDestination.sellerPosts => const SellerPostsPage(),

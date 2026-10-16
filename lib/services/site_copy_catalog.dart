@@ -1,6 +1,7 @@
 // These IDs are permanent. Rewrite the fallback VALUE while retaining its ID.
 // Never regenerate or renumber this registry during a redesign.
 const siteCopyCatalog = <String, String>{
+  'copy.member_deal_marketplace_page.m4': 'DEAL INTRODUCTION',
   'footer.page.privacy.section.5.title': 'Optional usage measurement',
   'footer.page.privacy.section.5.body':
       'If you opt in, Affinity saves anonymous daily counts of the app areas you open while signed in. These totals contain no names, account IDs, IP addresses, full URLs, form answers, messages or documents. Your choice is stored for your account on this browser and can be changed under Usage privacy. Turning it off stops future measurement; existing anonymous totals cannot be traced back to your account. The approved owners can also view summaries of saved account and business records to operate the service.',
@@ -437,13 +438,13 @@ const siteCopyCatalog = <String, String>{
       "Sign in to see the rooms available to your account. If your list is empty, start a private deal from the buyer dashboard and return here to work on it.",
   "nova.training.pebble-notifications-updates.title": "Your private updates",
   "nova.training.pebble-notifications-updates.body":
-      "This page shows activity intended for your account, such as deal changes, professional introductions and replies. It is separate from the conversation inbox.",
+      "This page shows activity intended for your account, such as deal changes and professional introductions.",
   "nova.training.pebble-notifications-open.title": "Follow an update",
   "nova.training.pebble-notifications-open.body":
       "Open an update to continue in the relevant part of the app. Read and unread styling helps you see which updates you have already checked.",
-  "nova.training.pebble-notifications-messages.title": "Read conversations",
+  "nova.training.pebble-notifications-messages.title": "Review introductions",
   "nova.training.pebble-notifications-messages.body":
-      "Open Messaging from your dashboard to read and reply to conversations. Creator-only example threads are marked Example and allow you to preview the inbox without contacting anyone.",
+      "Review professional introductions beside the relevant deal, and open member profiles to see their experience and contact details.",
   "nova.training.pebble-resource-provider-organization.title":
       "About this provider",
   "nova.training.pebble-resource-provider-organization.body":
@@ -561,7 +562,7 @@ const siteCopyCatalog = <String, String>{
   'nova.training.pebble-page-page:NotificationCenterPage.title':
       "Your private updates",
   'nova.training.pebble-page-page:NotificationCenterPage.body':
-      "Review the latest notifications and open the relevant conversation or deal. The updates on this page relate to your account.",
+      "Review the latest notifications and open the relevant deal or profile. The updates on this page relate to your account.",
   'nova.training.pebble-page-page:ConnectionBriefPage.title':
       "Build a connection brief",
   'nova.training.pebble-page-page:ConnectionBriefPage.body':
@@ -874,9 +875,9 @@ const siteCopyCatalog = <String, String>{
   'nova.training.member-opportunities.title': "Explore an opportunity",
   'nova.training.member-opportunities.body':
       "Review the approved anonymous brief and support needed before introducing yourself. Private buyer information is not part of this feed.",
-  'nova.training.member-responses.title': "Follow your conversations",
+  'nova.training.member-responses.title': "Review deal responses",
   'nova.training.member-responses.body':
-      "Messages opens your conversation inbox. Choose a thread to read and reply, or use the Deal responses tab for professional introductions and buyer decisions. Creator example threads are clearly labeled and do not send messages.",
+      "Open Deal responses to review professional introductions and buyer decisions.",
   'nova.training.member-resources.title': "Find support for clients",
   'nova.training.member-resources.body':
       "Use the government programs directory to explore support relevant to a client’s location and planned use of funds.",

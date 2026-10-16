@@ -1,5 +1,7 @@
 import 'package:dwelling_iq/screens/deal_comparison_page.dart';
+import 'package:dwelling_iq/screens/deal_rooms_page.dart';
 import 'package:dwelling_iq/widgets/nova_training_host.dart';
+import 'package:dwelling_iq/services/nova_training_controller.dart';
 import 'dart:convert';
 import 'package:dwelling_iq/screens/member_deal_marketplace_page.dart';
 import 'package:dwelling_iq/services/backend_service.dart';
@@ -106,7 +108,7 @@ void main() {
   });
   for (final width in [390.0, 1440.0]) {
     testWidgets(
-      'creator sees sample inbox and bubbles without sending or loading live sample threads',
+      'messaging stays absent for signed-in owners at all widths',
       (tester) async {
         tester.view.physicalSize = Size(width, 1000);
         tester.view.devicePixelRatio = 1;
@@ -120,25 +122,19 @@ void main() {
           ),
         );
         await tester.pumpAndSettle();
-        expect(find.text('Amelia Foster · Example'), findsOneWidget);
-        expect(find.text('Affinity review desk'), findsNothing);
-        await tester.tap(find.text('Amelia Foster · Example'));
-        await tester.pumpAndSettle();
-        expect(
-          find.text('Thanks, Amelia. What should I review first?'),
-          findsOneWidget,
-        );
-        expect(
-          find.text(
-            'Example conversation · Replies are disabled in this preview.',
-          ),
-          findsOneWidget,
-        );
+        expect(find.text('Amelia Foster · Example'), findsNothing);
+        expect(find.byTooltip('Member messages'), findsNothing);
+        expect(find.text('Messages'), findsNothing);
+        // Waiting beyond the old refresh interval must not poll messaging RPCs.
+        await tester.pump(const Duration(seconds: 31));
         expect(
           requests.any(
             (p) =>
+                p.endsWith('/list_member_conversations') ||
+                p.endsWith('/start_member_conversation') ||
                 p.endsWith('/send_member_message') ||
                 p.endsWith('/load_member_messages') ||
+                p.endsWith('/load_member_messages_with_receipts') ||
                 p.endsWith('/mark_member_conversation_read'),
           ),
           isFalse,
@@ -148,9 +144,44 @@ void main() {
       skip: !BackendService.configured,
     );
   }
+  for (final width in [390.0, 1440.0]) {
+    testWidgets(
+      'buyer quiz completes and reviews all answers inside dashboard at $width',
+      (tester) async {
+        SharedPreferences.setMockInitialValues({});
+        tester.view.physicalSize = Size(width, 1000);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        await tester.pumpWidget(
+          const MaterialApp(
+            home: DealRoomsPage(initialView: BuyerDashboardView.quiz),
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(find.byType(Scaffold), findsOneWidget);
+        for (var round = 0; round < 8; round++) {
+          final choice = find.text('I would choose business A');
+          await tester.ensureVisible(choice);
+          await tester.tap(choice);
+          await tester.pumpAndSettle();
+          expect(tester.takeException(), isNull);
+        }
+        expect(find.text('Review your eight choices'), findsOneWidget);
+        for (var round = 1; round <= 8; round++) {
+          expect(find.text('Comparison $round'), findsOneWidget);
+        }
+        expect(find.byType(DealRoomsPage), findsOneWidget);
+        expect(find.byType(Scaffold), findsOneWidget);
+        await tester.pumpWidget(const SizedBox.shrink());
+      },
+      skip: !BackendService.configured,
+    );
+  }
   testWidgets(
     'signed-in comparison uses its own page guide',
     (tester) async {
+      NovaTrainingController.instance.dismissDock();
       tester.view.physicalSize = const Size(1440, 1000);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
