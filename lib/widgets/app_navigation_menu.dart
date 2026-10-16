@@ -55,12 +55,10 @@ List<AppNavigationDestination> destinationsForTunnel(AppTunnel tunnel) =>
         AppNavigationDestination.sellerDashboard,
         AppNavigationDestination.memberStudio,
         AppNavigationDestination.learningDashboard,
-        AppNavigationDestination.consulting,
       ],
       AppTunnel.buyer => [
         AppNavigationDestination.buyerDashboard,
         AppNavigationDestination.resources,
-        AppNavigationDestination.profile,
         AppNavigationDestination.transactionRoom,
         AppNavigationDestination.businessesForSale,
         AppNavigationDestination.consulting,
@@ -69,7 +67,6 @@ List<AppNavigationDestination> destinationsForTunnel(AppTunnel tunnel) =>
         AppNavigationDestination.sellerDashboard,
         AppNavigationDestination.transactionRoom,
         AppNavigationDestination.sellerPosts,
-        AppNavigationDestination.profile,
         AppNavigationDestination.consulting,
       ],
       AppTunnel.learning => [
@@ -85,7 +82,6 @@ List<AppNavigationDestination> destinationsForTunnel(AppTunnel tunnel) =>
         AppNavigationDestination.memberStudio,
         AppNavigationDestination.profile,
         AppNavigationDestination.memberMarketing,
-        AppNavigationDestination.consulting,
       ],
     };
 

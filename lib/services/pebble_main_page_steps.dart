@@ -73,7 +73,7 @@ const pebbleMainPageCopy = <String, List<(String, String, String, String?)>>{
     (
       'plans',
       'Compare memberships',
-      'Compare Free, Professional and Featured. Paid prices are not published yet; applying does not start a paid subscription.',
+      'Compare free Buyer, Seller and Learning access with Professional membership at \$149 CAD per month. Each card lists its benefits; applying does not start a paid subscription.',
       'member-pricing.plans',
     ),
     (

@@ -302,22 +302,28 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
                 shape: const RoundedRectangleBorder(),
               ),
               onPressed: () => startLearning(context),
-              child: const Text(
+              child: const SiteCopyText(
+                'home.learn.action',
                 'I want to learn',
                 style: TextStyle(
                   color: Colors.white,
-                  fontFamily: 'Arial',
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: .5,
                 ),
               ),
             ),
             TextButton(
               onPressed: () => _open(const SellerDashboardPage()),
-              child: const Text(
-                'Succession or transfer',
-                style: TextStyle(color: Colors.white),
+              child: const SiteCopyText(
+                'home.seller.action',
+                'SUCCESSION OR TRANSFER',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: .5,
+                ),
               ),
             ),
             _button(
@@ -343,7 +349,11 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
               label: const SiteCopyText(
                 'copy.acquisition_support_page.3',
                 'I PROVIDE PROFESSIONAL SERVICES',
-                style: TextStyle(fontSize: 12),
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: .5,
+                ),
               ),
             ),
           ],

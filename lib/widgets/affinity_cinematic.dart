@@ -255,12 +255,6 @@ class _AffinityCinemaHeroState extends State<AffinityCinemaHero>
                                         'home.learn.action',
                                         'I want to learn',
                                         widget.onLearn!,
-                                        labelStyle: const TextStyle(
-                                          fontFamily: 'Arial',
-                                          fontSize: 15,
-                                          fontWeight: FontWeight.w700,
-                                          letterSpacing: 0,
-                                        ),
                                         outline: true,
                                       ),
                                   ],
@@ -375,17 +369,10 @@ class _AffinityCinemaHeroState extends State<AffinityCinemaHero>
 }
 
 class _CinemaButton extends StatelessWidget {
-  const _CinemaButton(
-    this.id,
-    this.label,
-    this.onTap, {
-    this.outline = false,
-    this.labelStyle,
-  });
+  const _CinemaButton(this.id, this.label, this.onTap, {this.outline = false});
   final String id, label;
   final VoidCallback onTap;
   final bool outline;
-  final TextStyle? labelStyle;
   @override
   Widget build(BuildContext context) => OutlinedButton.icon(
     onPressed: onTap,
@@ -401,13 +388,11 @@ class _CinemaButton extends StatelessWidget {
     label: SiteCopyText(
       id,
       label,
-      style:
-          labelStyle ??
-          const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            letterSpacing: .5,
-          ),
+      style: const TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w600,
+        letterSpacing: .5,
+      ),
     ),
   );
 }

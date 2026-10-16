@@ -11,32 +11,44 @@ import 'buyer_command_centre_test.dart' as data;
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
   testWidgets(
-    'greeting types Unicode safely, keeps its height, and replays when reopened',
+    'greeting reveals left to right even with reduced motion and replays on return',
     (tester) async {
       Widget page() => const MaterialApp(
-        home: Scaffold(
-          body: SizedBox(
-            width: 300,
-            child: BuyerGreeting(
-              greeting: 'Good morning, Will 👋',
-              summary: '2 active acquisitions · 0 actions need attention',
+        home: MediaQuery(
+          data: MediaQueryData(disableAnimations: true),
+          child: Scaffold(
+            body: SizedBox(
+              width: 300,
+              child: BuyerGreeting(
+                greeting: 'Good morning, Will 👋',
+                summary: '2 active acquisitions · 0 actions need attention',
+              ),
             ),
           ),
         ),
       );
       await tester.pumpWidget(page());
       final visible = find.byKey(const ValueKey('buyer-greeting-visible'));
-      expect(tester.widget<Text>(visible).data, isEmpty);
+      final reveal = find.byKey(
+        const ValueKey('buyer-greeting-visible-reveal'),
+      );
+      Rect clip() => tester
+          .widget<ClipRect>(reveal)
+          .clipper!
+          .getClip(tester.getSize(reveal));
+      expect(clip().width, 0);
       final height = tester.getSize(find.byType(BuyerGreeting)).height;
-      await tester.pump(const Duration(milliseconds: 200));
-      expect(tester.widget<Text>(visible).data, startsWith('Good'));
-      expect(tester.widget<Text>(visible).data, isNot('Good morning, Will 👋'));
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(milliseconds: 900));
+      expect(clip().left, 0);
+      expect(clip().width, greaterThan(0));
+      expect(clip().width, lessThan(tester.getSize(reveal).width));
       expect(tester.widget<Text>(visible).data, 'Good morning, Will 👋');
+      await tester.pumpAndSettle();
+      expect(clip().width, tester.getSize(reveal).width);
       expect(tester.getSize(find.byType(BuyerGreeting)).height, height);
       await tester.pumpWidget(const SizedBox());
       await tester.pumpWidget(page());
-      expect(tester.widget<Text>(visible).data, isEmpty);
+      expect(clip().width, 0);
       await tester.pumpAndSettle();
     },
   );

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dashboard_ui.dart';
 
-/// Replays when Home is opened, without shifting the surrounding dashboard.
+/// A horizontal reveal replays each time Home is opened, with stable layout.
 class BuyerGreeting extends StatefulWidget {
   const BuyerGreeting({
     super.key,
@@ -15,98 +15,80 @@ class BuyerGreeting extends StatefulWidget {
 
 class _BuyerGreetingState extends State<BuyerGreeting>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _typing;
-  int get _titleLength => widget.greeting.characters.length;
-  int get _length => _titleLength + widget.summary.characters.length;
+  late final AnimationController _reveal;
   @override
   void initState() {
     super.initState();
-    _typing = AnimationController(vsync: this);
-    _start();
-  }
-
-  void _start() {
-    _typing.duration = Duration(milliseconds: _length * 24);
-    _typing.forward(from: 0);
+    _reveal = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2400),
+      // The owner explicitly requests this animation on every dashboard visit.
+      animationBehavior: AnimationBehavior.preserve,
+    )..forward();
   }
 
   @override
   void didUpdateWidget(covariant BuyerGreeting oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.greeting != widget.greeting ||
-        oldWidget.summary != widget.summary)
-      _start();
+    if (oldWidget.greeting != widget.greeting) _reveal.forward(from: 0);
   }
 
   @override
   void dispose() {
-    _typing.dispose();
+    _reveal.dispose();
     super.dispose();
   }
 
-  Widget _line(String text, int count, TextStyle style, String key) =>
+  Widget _line(String text, double progress, TextStyle style, String key) =>
       Semantics(
         label: text,
         child: ExcludeSemantics(
-          child: LayoutBuilder(
-            builder: (context, box) {
-              final painter = TextPainter(
-                text: TextSpan(
-                  text: text,
-                  style: DefaultTextStyle.of(context).style.merge(style),
-                ),
-                textDirection: Directionality.of(context),
-                textScaler: MediaQuery.textScalerOf(context),
-              )..layout(maxWidth: box.maxWidth);
-              final height = painter.height;
-              painter.dispose();
-              return SizedBox(
-                height: height,
-                child: Align(
-                  alignment: Alignment.topLeft,
-                  child: Text(
-                    text.characters
-                        .take(count.clamp(0, text.characters.length))
-                        .toString(),
-                    key: ValueKey(key),
-                    style: style,
-                  ),
-                ),
-              );
-            },
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: ClipRect(
+              key: ValueKey('$key-reveal'),
+              clipper: _GreetingRevealClipper(progress),
+              child: Text(text, key: ValueKey(key), style: style),
+            ),
           ),
         ),
       );
 
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
-    animation: _typing,
-    builder: (context, _) {
-      final count = MediaQuery.disableAnimationsOf(context)
-          ? _length
-          : (_typing.value * _length).floor();
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _line(
-            widget.greeting,
-            count,
-            const TextStyle(
-              fontSize: 27,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -.8,
-            ),
-            'buyer-greeting-visible',
+    animation: _reveal,
+    builder: (context, _) => Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _line(
+          widget.greeting,
+          Curves.easeInOut.transform((_reveal.value / .8).clamp(0, 1)),
+          const TextStyle(
+            fontSize: 27,
+            fontWeight: FontWeight.w800,
+            letterSpacing: -.8,
           ),
-          const SizedBox(height: 5),
-          _line(
-            widget.summary,
-            count - _titleLength,
-            const TextStyle(color: DashboardUi.muted),
-            'buyer-summary-visible',
-          ),
-        ],
-      );
-    },
+          'buyer-greeting-visible',
+        ),
+        const SizedBox(height: 5),
+        _line(
+          widget.summary,
+          Curves.easeInOut.transform(((_reveal.value - .2) / .8).clamp(0, 1)),
+          const TextStyle(color: DashboardUi.muted),
+          'buyer-summary-visible',
+        ),
+      ],
+    ),
   );
+}
+
+class _GreetingRevealClipper extends CustomClipper<Rect> {
+  const _GreetingRevealClipper(this.progress);
+  final double progress;
+  @override
+  Rect getClip(Size size) =>
+      Rect.fromLTWH(0, 0, size.width * progress, size.height);
+  @override
+  bool shouldReclip(_GreetingRevealClipper oldClipper) =>
+      progress != oldClipper.progress;
 }

@@ -55,6 +55,28 @@ const siteCopyCatalog = <String, String>{
   'footer.page.privacy.section.5.point.1': 'Anonymous daily totals',
   'footer.page.privacy.section.5.point.2':
       'Change your choice on the Privacy page',
+  "membership.plan.professional.billing":
+      "Monthly membership · Canadian dollars",
+  "membership.plan.free_access.billing": "No paid membership required",
+  "membership.plan.free_access.action": "Start learning for free",
+  "membership.plan.professional.explore": "Explore membership",
+  "membership.plan.professional.benefit.0":
+      "Professional profile and client reviews",
+  "membership.plan.professional.benefit.1":
+      "Presence in the professional directory",
+  "membership.plan.professional.benefit.2": "Business and deal introductions",
+  "membership.plan.professional.benefit.3": "Deal Rooms and pipeline tools",
+  "membership.plan.professional.benefit.4": "Member workspace and analytics",
+  "membership.plan.free_access.benefit.0":
+      "Buyer dashboard and private deal tracking",
+  "membership.plan.free_access.benefit.1":
+      "Seller dashboard and transfer planning",
+  "membership.plan.free_access.benefit.2":
+      "Learning feed, seminars and Canada event map",
+  "membership.plan.free_access.benefit.3":
+      "Deal comparison quiz with answer reviews",
+  "membership.plan.free_access.benefit.4":
+      "Build and manage your professional team",
   'membership.access.free.price': 'Free',
   'tunnel.pricing.free_access.title': 'Buyer, Seller & Learning',
   'tunnel.pricing.free_access.body':
@@ -342,7 +364,7 @@ const siteCopyCatalog = <String, String>{
       "Choose Apply for membership to sign in and record your preferred workspace. You can return home through the Affinity logo to choose another side of the app.",
   "nova.training.pebble-member-pricing-apply.title": "Apply when ready",
   "nova.training.pebble-member-pricing-plans.body":
-      "Compare Free, Professional and Featured. Paid prices are not published yet; applying does not start a paid subscription.",
+      "Compare free Buyer, Seller and Learning access with Professional membership at \$149 CAD per month. Each card lists its benefits; applying does not start a paid subscription.",
   "nova.training.pebble-member-pricing-plans.title": "Compare memberships",
   "nova.training.pebble-seller-posts-list.body":
       "Review listing status and current buyer saves, then edit a post or preview its public listing. Saves are bookmarks; they are not view counts or inquiries.",

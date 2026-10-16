@@ -116,65 +116,200 @@ Widget _panel(
 class MembershipPlanCards extends StatelessWidget {
   const MembershipPlanCards({super.key, this.showApplyButtons = true});
   final bool showApplyButtons;
+
+  Widget _copy(String key, String text, TextStyle style) =>
+      SiteCopyText(key, text, style: style);
+
+  Widget _plan(BuildContext context, {required bool member}) {
+    final ink = member ? Colors.white : _forest;
+    final muted = member ? const Color(0xFFCEDCD5) : const Color(0xFF5C7065);
+    final id = member ? 'professional' : 'free_access';
+    final benefits = member
+        ? const [
+            'Professional profile and client reviews',
+            'Presence in the professional directory',
+            'Business and deal introductions',
+            'Deal Rooms and pipeline tools',
+            'Member workspace and analytics',
+          ]
+        : const [
+            'Buyer dashboard and private deal tracking',
+            'Seller dashboard and transfer planning',
+            'Learning feed, seminars and Canada event map',
+            'Deal comparison quiz with answer reviews',
+            'Build and manage your professional team',
+          ];
+    return Container(
+      key: ValueKey('pricing-card-$id'),
+      padding: const EdgeInsets.all(28),
+      decoration: BoxDecoration(
+        color: member ? const Color(0xFF164F3D) : const Color(0xFFF4F3ED),
+        border: Border.all(
+          color: member ? const Color(0xFFD6F185) : const Color(0xFFD1DDD4),
+          width: member ? 2 : 1,
+        ),
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(
+                member
+                    ? Icons.workspace_premium_outlined
+                    : Icons.explore_outlined,
+                color: member ? const Color(0xFFD6F185) : _forest,
+                size: 30,
+              ),
+              const SizedBox(height: 18),
+              _copy(
+                'tunnel.pricing.$id.title',
+                member ? 'Professional membership' : 'Buyer, Seller & Learning',
+                TextStyle(
+                  fontSize: 23,
+                  fontWeight: FontWeight.w700,
+                  color: ink,
+                ),
+              ),
+              const SizedBox(height: 12),
+              _copy(
+                'tunnel.pricing.$id.body',
+                member
+                    ? 'Professional profile and reviews, Deal Rooms, introductions, pipeline and analytics.'
+                    : 'The Buyer, Seller and Learning dashboards are free. Explore the learning feed, events and business tools without a paid Member plan.',
+                TextStyle(fontSize: 15, height: 1.5, color: muted),
+              ),
+              const SizedBox(height: 28),
+              _copy(
+                member
+                    ? 'membership.plan.professional.price'
+                    : 'membership.access.free.price',
+                member ? r'$149 CAD / month' : 'Free',
+                TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.w700,
+                  color: ink,
+                  height: 1.2,
+                ),
+              ),
+              const SizedBox(height: 8),
+              _copy(
+                'membership.plan.$id.billing',
+                member
+                    ? 'Monthly membership · Canadian dollars'
+                    : 'No paid membership required',
+                TextStyle(fontSize: 13, color: muted),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 24),
+                child: Divider(color: ink.withValues(alpha: .2), height: 1),
+              ),
+              for (var i = 0; i < benefits.length; i++)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        Icons.check_rounded,
+                        size: 21,
+                        color: member ? const Color(0xFFD6F185) : _forest,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _copy(
+                          'membership.plan.$id.benefit.$i',
+                          benefits[i],
+                          TextStyle(fontSize: 15, height: 1.45, color: ink),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+          Padding(
+            padding: const EdgeInsets.only(top: 16),
+            child: SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                style: FilledButton.styleFrom(
+                  backgroundColor: member ? const Color(0xFFD6F185) : _forest,
+                  foregroundColor: member ? _forest : Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: 20,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onPressed: () {
+                  if (!member) {
+                    startLearning(context);
+                  } else if (showApplyButtons) {
+                    startMemberSetup(context, tier: 'professional');
+                  } else {
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const MemberPricingPage(),
+                      ),
+                    );
+                  }
+                },
+                child: _copy(
+                  !member
+                      ? 'membership.plan.free_access.action'
+                      : showApplyButtons
+                      ? 'tunnel.pricing.apply'
+                      : 'membership.plan.professional.explore',
+                  !member
+                      ? 'Start learning for free'
+                      : showApplyButtons
+                      ? 'Apply for membership'
+                      : 'Explore membership',
+                  const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) => NovaTarget(
     id: 'member-pricing.plans',
-    child: LayoutBuilder(
-      builder: (context, box) {
-        final width = box.maxWidth >= 840
-            ? (box.maxWidth - 16) / 2
-            : box.maxWidth;
-        return Wrap(
-          spacing: 16,
-          runSpacing: 16,
-          children: [
-            SizedBox(
-              width: width,
-              child: _panel(
-                'pricing.professional',
-                'Professional membership',
-                'Professional profile and reviews, Deal Rooms, introductions, pipeline and analytics.',
-                price: const SiteCopyText(
-                  'membership.plan.professional.price',
-                  r'$149 CAD / month',
-                  style: TextStyle(
-                    color: _forest,
-                    fontSize: 28,
-                    fontWeight: FontWeight.w700,
-                  ),
+    child: Container(
+      padding: EdgeInsets.all(MediaQuery.sizeOf(context).width < 600 ? 14 : 24),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0A3026),
+        borderRadius: BorderRadius.circular(30),
+      ),
+      child: LayoutBuilder(
+        builder: (context, box) => box.maxWidth >= 760
+            ? IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(child: _plan(context, member: false)),
+                    const SizedBox(width: 20),
+                    Expanded(child: _plan(context, member: true)),
+                  ],
                 ),
-                action: showApplyButtons
-                    ? FilledButton(
-                        onPressed: () =>
-                            startMemberSetup(context, tier: 'professional'),
-                        child: const SiteCopyText(
-                          'tunnel.pricing.apply',
-                          'Apply for membership',
-                        ),
-                      )
-                    : null,
+              )
+            : Column(
+                children: [
+                  _plan(context, member: false),
+                  const SizedBox(height: 20),
+                  _plan(context, member: true),
+                ],
               ),
-            ),
-            SizedBox(
-              width: width,
-              child: _panel(
-                'pricing.free_access',
-                'Buyer, Seller & Learning',
-                'The Buyer, Seller and Learning dashboards are free. Explore the learning feed, events and business tools without a paid Member plan.',
-                price: const SiteCopyText(
-                  'membership.access.free.price',
-                  'Free',
-                  style: TextStyle(
-                    color: _forest,
-                    fontSize: 28,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        );
-      },
+      ),
     ),
   );
 }

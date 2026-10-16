@@ -37,11 +37,19 @@ void main() {
   });
   for (final (tunnel, destinations) in [
     (
+      AppTunnel.landing,
+      [
+        'buyerDashboard',
+        'sellerDashboard',
+        'memberStudio',
+        'learningDashboard',
+      ],
+    ),
+    (
       AppTunnel.buyer,
       [
         'buyerDashboard',
         'resources',
-        'profile',
         'transactionRoom',
         'businessesForSale',
         'consulting',
@@ -49,23 +57,11 @@ void main() {
     ),
     (
       AppTunnel.seller,
-      [
-        'sellerDashboard',
-        'transactionRoom',
-        'sellerPosts',
-        'profile',
-        'consulting',
-      ],
+      ['sellerDashboard', 'transactionRoom', 'sellerPosts', 'consulting'],
     ),
     (
       AppTunnel.member,
-      [
-        'memberPricing',
-        'memberStudio',
-        'profile',
-        'memberMarketing',
-        'consulting',
-      ],
+      ['memberPricing', 'memberStudio', 'profile', 'memberMarketing'],
     ),
     (
       AppTunnel.learning,
@@ -85,10 +81,7 @@ void main() {
       AppTunnelController.select(tunnel);
       await tester.pumpWidget(
         const MaterialApp(
-          home: Scaffold(
-            appBar: null,
-            body: AppNavigationMenu(guidePage: 'profile', dark: false),
-          ),
+          home: Scaffold(appBar: null, body: AppNavigationMenu(dark: false)),
         ),
       );
       await tester.tap(find.byTooltip('Open navigation'));

@@ -64,6 +64,44 @@ void main() {
       expect(AppTunnelController.current.value, AppTunnel.member);
     }
   });
+  for (final width in [360.0, 768.0, 1440.0]) {
+    testWidgets(
+      'pricing shows five benefits per plan without overflow at $width',
+      (tester) async {
+        tester.view.physicalSize = Size(width, 1000);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        await tester.pumpWidget(const MaterialApp(home: MemberPricingPage()));
+        await tester.pumpAndSettle();
+        for (final id in ['professional', 'free_access']) {
+          final card = find.byKey(ValueKey('pricing-card-$id'));
+          expect(
+            find.descendant(
+              of: card,
+              matching: find.byIcon(Icons.check_rounded),
+            ),
+            findsNWidgets(5),
+          );
+        }
+        expect(find.text(r'$149 CAD / month'), findsOneWidget);
+        expect(find.text('Free'), findsOneWidget);
+        final free = tester.getRect(
+          find.byKey(const ValueKey('pricing-card-free_access')),
+        );
+        final member = tester.getRect(
+          find.byKey(const ValueKey('pricing-card-professional')),
+        );
+        if (width >= 1000) {
+          expect(member.top, free.top);
+          expect(member.height, free.height);
+        } else {
+          expect(member.top, greaterThan(free.bottom));
+        }
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
   for (final width in [390.0, 1440.0]) {
     testWidgets(
       'member landing entry shows pricing before dashboard at $width',
@@ -200,6 +238,11 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.byTooltip('Open navigation'));
       await tester.pumpAndSettle();
+      if (role == AppTunnel.landing || role == AppTunnel.member) {
+        expect(find.text('Personal consulting'), findsNothing);
+        await tester.pumpWidget(const SizedBox.shrink());
+        return;
+      }
       await tester.tap(find.text('Personal consulting'));
       await tester.pumpAndSettle();
       expect(find.byType(PersonalizedConsultingPage), findsOneWidget);

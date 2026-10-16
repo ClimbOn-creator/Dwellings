@@ -36,8 +36,18 @@ void main() {
               widget.contentKey == 'home.learn.action',
         ),
       );
-      expect(learn.style?.fontFamily, 'Arial');
-      expect(learn.style?.fontSize, 15);
+      for (final id in [
+        'copy.acquisition_support_page.2',
+        'copy.acquisition_support_page.3',
+        'home.seller.action',
+      ]) {
+        final button = tester.widget<SiteCopyText>(
+          find.byWidgetPredicate(
+            (widget) => widget is SiteCopyText && widget.contentKey == id,
+          ),
+        );
+        expect(learn.style, button.style);
+      }
       expect(find.text('START MY PATH'), findsNothing);
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox.shrink());
