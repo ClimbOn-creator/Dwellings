@@ -29,6 +29,8 @@ import '../widgets/home_brand_button.dart';
 import '../widgets/topo_background.dart';
 import '../widgets/profile_photo.dart';
 import '../widgets/team_member_portrait.dart';
+import '../widgets/buyer_greeting.dart';
+import '../widgets/private_deal_entry.dart';
 import '../widgets/app_navigation_menu.dart';
 import '../widgets/dashboard_ui.dart';
 import '../widgets/buyer_deal_screen.dart';
@@ -397,76 +399,105 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
     );
   }
 
-  Widget _dashboardBody() => FutureBuilder<List<DealRoom>>(
-    future: _rooms,
-    builder: (context, snapshot) {
-      if (snapshot.hasError) {
-        return Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const SiteCopyText(
-                  'buyer.load.error',
-                  'Could not load your saved deals. Please try again.',
-                ),
-                const SizedBox(height: 12),
-                OutlinedButton(
-                  onPressed: _refresh,
-                  child: const SiteCopyText('buyer.load.retry', 'Retry'),
-                ),
-              ],
-            ),
-          ),
-        );
-      }
-      if (!snapshot.hasData) {
-        return const Center(child: CircularProgressIndicator());
-      }
-      final allRooms = snapshot.data!.where((room) => room.isBusiness).toList();
-      if (widget.embeddedPipeline)
-        return _buyerDashboardLive(allRooms, pipelineOnly: true);
-      return LayoutBuilder(
-        builder: (context, box) {
-          final desktop = box.maxWidth >= 800;
-          return desktop
-              ? Row(
-                  children: [
-                    NovaTarget(id: 'buyer.workspace', child: _buyerSidebar()),
-                    const VerticalDivider(width: 1, color: DashboardUi.line),
-                    Expanded(
-                      child: switch (_dashboardView) {
-                        BuyerDashboardView.pipeline => _buyerDashboardLive(
-                          allRooms,
-                          pipelineOnly: true,
-                        ),
-                        BuyerDashboardView.dealScreen => _dashboardDealScreen(),
-                        BuyerDashboardView.transactionPlan =>
-                          _transactionPlanner(),
-                        BuyerDashboardView.resources => _resourcesPage(),
-                        BuyerDashboardView.team => _buyerTeamPage(),
-                        BuyerDashboardView.quiz => _buyerQuiz(),
-                        _ => _buyerDashboardLive(allRooms),
-                      },
-                    ),
-                  ],
-                )
-              : switch (_dashboardView) {
-                  BuyerDashboardView.pipeline => _buyerDashboardLive(
-                    allRooms,
-                    pipelineOnly: true,
+  Widget _dashboardBody() {
+    if (widget.embeddedPipeline) return _privateDealPipeline();
+    if (_dashboardView == BuyerDashboardView.pipeline) {
+      return _buyerWorkspace(_privateDealPipeline());
+    }
+    return FutureBuilder<List<DealRoom>>(
+      future: _rooms,
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SiteCopyText(
+                    'buyer.load.error',
+                    'Could not load your saved deals. Please try again.',
                   ),
-                  BuyerDashboardView.dealScreen => _dashboardDealScreen(),
-                  BuyerDashboardView.transactionPlan => _transactionPlanner(),
-                  BuyerDashboardView.resources => _resourcesPage(),
-                  BuyerDashboardView.team => _buyerTeamPage(),
-                  BuyerDashboardView.quiz => _buyerQuiz(),
-                  _ => _buyerDashboardLive(allRooms),
-                };
-        },
-      );
-    },
+                  const SizedBox(height: 12),
+                  OutlinedButton(
+                    onPressed: _refresh,
+                    child: const SiteCopyText('buyer.load.retry', 'Retry'),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        final allRooms = snapshot.data!
+            .where((room) => room.isBusiness)
+            .toList();
+        return _buyerWorkspace(switch (_dashboardView) {
+          BuyerDashboardView.dealScreen => _dashboardDealScreen(),
+          BuyerDashboardView.transactionPlan => _transactionPlanner(),
+          BuyerDashboardView.resources => _resourcesPage(),
+          BuyerDashboardView.team => _buyerTeamPage(),
+          BuyerDashboardView.quiz => _buyerQuiz(),
+          _ => _buyerDashboardLive(allRooms),
+        });
+      },
+    );
+  }
+
+  Widget _buyerWorkspace(Widget child) => LayoutBuilder(
+    builder: (context, box) => box.maxWidth >= 800
+        ? Row(
+            children: [
+              NovaTarget(id: 'buyer.workspace', child: _buyerSidebar()),
+              const VerticalDivider(width: 1, color: DashboardUi.line),
+              Expanded(child: child),
+            ],
+          )
+        : child,
+  );
+
+  Widget _privateDealPipeline() => NovaTarget(
+    id: 'buyer.pipeline.entry',
+    child: PrivateDealEntry(
+      embedded: widget.embeddedPipeline,
+      onSave: (details) async {
+        if (BackendService.user == null) {
+          await Navigator.of(
+            context,
+          ).push(MaterialPageRoute<void>(builder: (_) => const AuthPage()));
+          if (!mounted || BackendService.user == null)
+            throw StateError('Sign in to save a private deal.');
+        }
+        final room = await DealRoomService.createManualRoom(
+          title: details.title,
+          dealKind: 'business',
+          location: details.location,
+          purchasePrice: details.purchasePrice,
+          goals: details.goals,
+          profileSnapshot: details.profileSnapshot,
+          privateOnly: true,
+        );
+        if (mounted) _refresh();
+        return room;
+      },
+      onHome: () {
+        if (widget.embeddedPipeline) {
+          Navigator.of(context).push(
+            MaterialPageRoute<void>(builder: (_) => const DealRoomsPage()),
+          );
+        } else {
+          setState(() => _dashboardView = BuyerDashboardView.home);
+        }
+      },
+      onOpen: (room) async {
+        await Navigator.of(context).push(
+          MaterialPageRoute<void>(builder: (_) => DealRoomPage(room: room)),
+        );
+        if (mounted) _refresh();
+      },
+    ),
   );
 
   Widget _buyerQuiz() => SingleChildScrollView(
@@ -654,42 +685,19 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
             ],
             if (!pipelineOnly) ...[
               if (narrow) ...[
-                Text(
-                  greeting,
-                  style: const TextStyle(
-                    fontSize: 27,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -.8,
-                  ),
-                ),
-                const SizedBox(height: 5),
-                Text(summary, style: TextStyle(color: DashboardUi.muted)),
+                BuyerGreeting(greeting: greeting, summary: summary),
                 const SizedBox(height: 17),
                 _buyerSearch(),
               ] else
                 Row(
                   children: [
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            greeting,
-                            style: const TextStyle(
-                              fontSize: 27,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: -.8,
-                            ),
-                          ),
-                          const SizedBox(height: 5),
-                          Text(
-                            summary,
-                            style: TextStyle(color: DashboardUi.muted),
-                          ),
-                        ],
+                      child: BuyerGreeting(
+                        greeting: greeting,
+                        summary: summary,
                       ),
                     ),
-                    SizedBox(width: 255, child: _buyerSearch()),
+                    SizedBox(width: 270, child: _buyerSearch()),
                   ],
                 ),
               const SizedBox(height: 16),
@@ -815,7 +823,10 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                               label: const Text('Search businesses'),
                             ),
                             OutlinedButton.icon(
-                              onPressed: _creating ? null : _manualCreate,
+                              onPressed: () => setState(
+                                () => _dashboardView =
+                                    BuyerDashboardView.pipeline,
+                              ),
                               icon: const Icon(Icons.add),
                               label: const Text('Enter a private deal'),
                             ),

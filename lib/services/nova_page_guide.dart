@@ -15,19 +15,19 @@ List<NovaStep> novaPageWalkthrough(String page) {
     steps = [
       NovaStep(
         'pipeline-stages',
-        'Follow your deals',
-        'Your saved acquisitions are grouped into Sourcing, Under review, LOI / diligence and Closing. These are your private deals in either dashboard.',
+        'Add a deal you found online',
+        'Save the listing link, business name and the details you know. Links stay as references; listing details are not imported automatically.',
         page,
         NovaMood.planning,
-        target: 'buyer.home.stage.0',
+        target: 'buyer.pipeline.entry',
       ),
       NovaStep(
         'pipeline-open',
-        'Review a deal',
-        'Open a deal card to review its workspace, tasks and supporting documents. Search narrows your saved pipeline; Search businesses opens new opportunities.',
+        'Save privately',
+        'Save the deal to your own account. It appears on the buyer dashboard Home, without publishing it or inviting advisers. Open its workspace when you are ready.',
         page,
         NovaMood.curious,
-        target: 'buyer.home.start',
+        target: 'buyer.pipeline.entry',
       ),
     ];
   } else if (page.startsWith('buyer/dealScreen')) {

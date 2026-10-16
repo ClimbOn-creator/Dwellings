@@ -46,7 +46,7 @@ void main() {
   for (final width in [390.0, 1440.0]) {
     for (final embedded in [false, true]) {
       testWidgets(
-        'shared pipeline filters saved deals at $width embedded=$embedded',
+        'pipeline is a private online deal entry form at $width embedded=$embedded',
         (tester) async {
           tester.view.physicalSize = Size(width, 1000);
           tester.view.devicePixelRatio = 1;
@@ -68,13 +68,11 @@ void main() {
           );
           await tester.pumpAndSettle();
           expect(find.byType(Scaffold), findsOneWidget);
-          expect(find.text('Your pipeline'), findsOneWidget);
+          expect(find.text('Add a deal you found online'), findsOneWidget);
+          expect(find.text('Your pipeline'), findsNothing);
           expect(find.text('My personal team'), findsNothing);
-          expect(find.text('ABC Plumbing'), findsOneWidget);
-          await tester.enterText(find.byType(TextField).first, 'island');
-          await tester.pumpAndSettle();
           expect(find.text('ABC Plumbing'), findsNothing);
-          expect(find.text('Island HVAC'), findsOneWidget);
+          expect(find.text('Save private deal'), findsOneWidget);
           expect(tester.takeException(), isNull);
           await tester.pumpWidget(const SizedBox.shrink());
         },
@@ -98,8 +96,9 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.byType(Scaffold), findsOneWidget);
-      expect(find.text('Your pipeline'), findsOneWidget);
-      expect(find.text('No deals here yet'), findsNWidgets(4));
+      expect(find.text('Add a deal you found online'), findsOneWidget);
+      expect(find.text('Your pipeline'), findsNothing);
+      expect(find.text('No deals here yet'), findsNothing);
       expect(find.text('My personal team'), findsNothing);
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox.shrink());

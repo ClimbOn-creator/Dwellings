@@ -381,6 +381,7 @@ class DealRoomService {
     required String goals,
     DateTime? targetCloseDate,
     Map<String, dynamic> profileSnapshot = const {},
+    bool privateOnly = false,
   }) async {
     final user = BackendService.user;
     if (user == null) throw StateError('Sign in to start a deal.');
@@ -402,8 +403,8 @@ class DealRoomService {
               ? null
               : _dateOnly(targetCloseDate),
           'sharing_preferences': {
-            'financials': dealKind != 'business',
-            'risk': true,
+            'financials': !privateOnly && dealKind != 'business',
+            'risk': !privateOnly,
             'documents': false,
           },
         })
@@ -411,7 +412,7 @@ class DealRoomService {
         .single();
     final room = DealRoom.fromJson(Map<String, dynamic>.from(inserted));
     await _insertTemplates(room.id, dealKind);
-    await _attachSelectedTeam(room.id, dealKind, user.id);
+    if (!privateOnly) await _attachSelectedTeam(room.id, dealKind, user.id);
     return room;
   }
 

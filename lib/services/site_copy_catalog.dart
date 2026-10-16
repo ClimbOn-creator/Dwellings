@@ -1,6 +1,41 @@
 // These IDs are permanent. Rewrite the fallback VALUE while retaining its ID.
 // Never regenerate or renumber this registry during a redesign.
 const siteCopyCatalog = <String, String>{
+  'nova.training.pipeline-stages.title': 'Add a deal you found online',
+  'nova.training.pipeline-stages.body':
+      'Save the listing link, business name and the details you know. Links stay as references; listing details are not imported automatically.',
+  'nova.training.pipeline-open.title': 'Save privately',
+  'nova.training.pipeline-open.body':
+      'Save the deal to your own account. It appears on the buyer dashboard Home, without publishing it or inviting advisers. Open its workspace when you are ready.',
+
+  "buyer.pipeline.saved.title": "Saved to your private deals",
+  "buyer.pipeline.saved.body":
+      "Your deal is now on Home. It has not been published or shared with advisers.",
+  "buyer.pipeline.saved.home": "View on Home",
+  "buyer.pipeline.saved.open": "Open deal workspace",
+  "buyer.pipeline.saved.another": "Add another deal",
+  "buyer.pipeline.entry.eyebrow": "YOUR PRIVATE PIPELINE",
+  "buyer.pipeline.entry.title": "Add a deal you found online",
+  "buyer.pipeline.entry.intro":
+      "Save the listing link and the details you know. Unknown figures can stay blank. Your saved deal will appear on Home.",
+  "buyer.pipeline.entry.linkHint":
+      "Links are saved as references. Listing details are not imported automatically.",
+  "buyer.pipeline.entry.more": "More details (optional)",
+  "buyer.pipeline.entry.privacy":
+      "Only your account can access this deal. Saving does not publish it, contact the seller or invite advisers.",
+  "buyer.pipeline.entry.saving": "Saving private deal\u2026",
+  "buyer.pipeline.entry.save": "Save private deal",
+  "buyer.pipeline.entry.source_url.label": "Listing link (optional)",
+  "buyer.pipeline.entry.title.label": "Business name or deal title",
+  "buyer.pipeline.entry.location.label": "City / province (optional)",
+  "buyer.pipeline.entry.deal_details.label":
+      "What does the business do? (optional)",
+  "buyer.pipeline.entry.price.label": "Asking price (optional)",
+  "buyer.pipeline.entry.currency.label": "Currency code",
+  "buyer.pipeline.entry.country.label": "Country / jurisdiction (optional)",
+  "buyer.pipeline.entry.annual_revenue.label": "Annual revenue (optional)",
+  "buyer.pipeline.entry.reported_ebitda.label":
+      "Annual earnings / EBITDA (optional)",
   'copy.member_deal_marketplace_page.m4': 'DEAL INTRODUCTION',
   'footer.page.privacy.section.5.title': 'Optional usage measurement',
   'footer.page.privacy.section.5.body':
