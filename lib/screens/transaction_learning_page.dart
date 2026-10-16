@@ -90,24 +90,30 @@ class _TransactionLearningPageState extends State<TransactionLearningPage> {
         backgroundColor: Colors.white,
         foregroundColor: _ink,
         surfaceTintColor: Colors.white,
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const HomeBrandButton(size: 48, dark: false),
-            if (MediaQuery.sizeOf(context).width >= 620) ...[
-              const SizedBox(width: 18),
-              const Text(
-                'DOCUMENT GUIDES',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 1.2,
+        title: FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const HomeBrandButton(size: 48, dark: false),
+              if (MediaQuery.sizeOf(context).width >= 620) ...[
+                const SizedBox(width: 18),
+                const Text(
+                  'DOCUMENT GUIDES',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1.2,
+                  ),
                 ),
-              ),
+              ],
             ],
-          ],
+          ),
         ),
-        actions: const [AppNavigationMenu(guidePage: 'document-guides', dark: false)],
+        actions: const [
+          AppNavigationMenu(guidePage: 'document-guides', dark: false),
+        ],
       ),
       body: CustomScrollView(
         controller: _scroll,

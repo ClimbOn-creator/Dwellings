@@ -46,7 +46,7 @@ class _NovaCharacterState extends State<NovaCharacter> {
 
   @override
   Widget build(BuildContext context) => Semantics(
-    label: 'Pebble, ${widget.mood.name}',
+    label: 'Pika, ${widget.mood.name}',
     image: true,
     child: SizedBox.square(
       dimension: widget.size,

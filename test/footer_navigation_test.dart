@@ -139,9 +139,7 @@ void main() {
         const Offset(0, 6000),
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.byTooltip('Open navigation'));
-      await tester.pumpAndSettle();
-      final popup = find.byType(PopupMenuItem<AppNavigationDestination>);
+      final popup = find.byType(AppNavigationPill);
       for (final label in [
         'Blueprint',
         'Buyer readiness',

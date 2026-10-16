@@ -1,4 +1,4 @@
-// Pebble is a guided product walkthrough. It does not collect questions or call AI.
+// Pika is a guided product walkthrough. It does not collect questions or call AI.
 class NovaContext {
   const NovaContext({
     required this.area,
@@ -9,6 +9,6 @@ class NovaContext {
   });
   final String area, label;
   final String? dealId, lesson;
-  // Kept for source compatibility. These values are never read or sent by Pebble.
+  // Kept for source compatibility. These values are never read or sent by Pika.
   final Map<String, dynamic> facts;
 }

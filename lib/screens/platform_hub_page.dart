@@ -105,8 +105,15 @@ class PlatformHubPage extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      const HomeBrandButton(size: 44),
-                      const Spacer(),
+                      Expanded(
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: const HomeBrandButton(size: 44),
+                          ),
+                        ),
+                      ),
                       AppNavigationMenu(side: side),
                     ],
                   ),

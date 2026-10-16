@@ -1,3 +1,4 @@
+import '../widgets/pika_introduction.dart';
 import 'tunnel_pages.dart';
 import 'assistant_workspace_page.dart';
 import 'member_deal_marketplace_page.dart';
@@ -48,6 +49,8 @@ class AcquisitionSupportPage extends StatefulWidget {
 }
 
 class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
+  bool narrowScreen(BuildContext context) =>
+      MediaQuery.sizeOf(context).width < 700;
   static const _forest = Color(0xFF151A19);
   static const _acid = Color(0xFFE5E1D7);
   final _pageScroll = ScrollController();
@@ -102,12 +105,14 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
   Widget _section(
     Widget child, {
     Color color = Colors.white,
-    double vertical = 96,
+    double vertical = 120,
   }) => Container(
     color: color,
     padding: EdgeInsets.symmetric(
-      horizontal: MediaQuery.sizeOf(context).width < 700 ? 24 : 56,
-      vertical: vertical,
+      horizontal: MediaQuery.sizeOf(context).width < 700 ? 24 : 80,
+      vertical: MediaQuery.sizeOf(context).width < 700
+          ? vertical * .7
+          : vertical,
     ),
     child: Center(
       child: ConstrainedBox(
@@ -207,18 +212,30 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
                 ),
               ],
             ),
-            builder: (context, progress, height) => AffinityCinemaHero(
-              progress: progress,
-              height: height,
-              onBuyer: () => _open(
-                const DealRoomsPage(initialSide: PlatformSide.business),
+            builder: (context, progress, height) => Padding(
+              padding: EdgeInsets.fromLTRB(
+                narrowScreen(context) ? 12 : 24,
+                16,
+                narrowScreen(context) ? 12 : 24,
+                16,
               ),
-              onMember: () => _open(const MemberPricingPage()),
-              onLearn: () => startLearning(context),
-              onSeller: () => _open(const SellerDashboardPage()),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(32),
+                child: AffinityCinemaHero(
+                  progress: progress,
+                  height: height - 32,
+                  onBuyer: () => _open(
+                    const DealRoomsPage(initialSide: PlatformSide.business),
+                  ),
+                  onMember: () => _open(const MemberPricingPage()),
+                  onLearn: () => startLearning(context),
+                  onSeller: () => _open(const SellerDashboardPage()),
+                ),
+              ),
             ),
           ),
         ),
+        const SliverToBoxAdapter(child: PikaIntroduction()),
         _reveal(_goalStatement()),
         const SliverToBoxAdapter(child: AffinityTimedChapters()),
         _reveal(_buyerBenefits()),

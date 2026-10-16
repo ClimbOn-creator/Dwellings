@@ -1,6 +1,30 @@
 // These IDs are permanent. Rewrite the fallback VALUE while retaining its ID.
 // Never regenerate or renumber this registry during a redesign.
 const siteCopyCatalog = <String, String>{
+  "home.pika.eyebrow": "A LITTLE GUIDANCE. A CLEARER PATH.",
+  "home.pika.title": "Meet Pika.",
+  "home.pika.heading": "Clarity, one step\nat a time.",
+  "home.pika.intro":
+      "Buying, selling or just finding your feet? Pika helps you get comfortable with Affinity and understand your next step.",
+  "home.pika.benefit.walkthroughs": "Walkthroughs that stay with the page",
+  "home.pika.benefit.explanations":
+      "Plain-language explanations for the numbers",
+  "home.pika.benefit.pace": "Guidance you can pause and revisit",
+  "home.pika.action": "Meet Pika",
+  "home.pika.preview.name": "Pika",
+  "home.pika.preview.status": "Your Affinity guide",
+  "home.pika.preview.prompt": "What would you like a hand with?",
+  "home.pika.preview.action": "Show me around",
+  "home.pika.question.0": "Where do I start?",
+  "home.pika.question.1": "How do I compare deals?",
+  "home.pika.question.2": "Can you explain the numbers?",
+  "home.pika.answer.0":
+      "Choose Buyer if you are looking for a business, Seller if you are planning a transfer, or Learning if you want to build your understanding first. I can show you around each workspace.",
+  "home.pika.answer.1":
+      "Start with the deal comparison quiz in Learning. Review why each choice appealed to you, then save opportunities in your private Buyer pipeline as you find them.",
+  "home.pika.answer.2":
+      "Open Deal screen in the Buyer dashboard. Choose business, assets or commercial property, then use the information buttons beside the inputs for definitions, calculations and examples.",
+  'navigation.home': 'Home',
   'copy.deal_rooms_page.m3': 'Buyer dash',
   'copy.member_deal_marketplace_page.11': 'Member dash',
   'dashboard.header.seller': 'Seller dash',
@@ -293,7 +317,7 @@ const siteCopyCatalog = <String, String>{
   "learning.feed.documents": "Document examples",
   "learning.start.title": "Start with the concepts",
   "learning.start.body":
-      "Use the interactive map to understand each stage, then explore the documents and examples. Pebble can show you around this page.",
+      "Use the interactive map to understand each stage, then explore the documents and examples. Pika can show you around this page.",
   "learning.start.buy": "Buying a business",
   "learning.start.sell": "Succession or transfer",
   "learning.seminars.empty": "No sessions scheduled yet",
@@ -483,7 +507,7 @@ const siteCopyCatalog = <String, String>{
       "The deal section helps you find your saved work. Open the relevant deal to manage its own documents, financials and transaction plan; changing your account profile does not change a deal\u2019s access settings.",
   "nova.training.pebble-profile-edit.title": "Update your details",
   "nova.training.pebble-profile-edit.body":
-      "Use the profile form to update your account information and save it. Keep your contact details accurate. Pebble training status is also available here if you want to request a guide again.",
+      "Use the profile form to update your account information and save it. Keep your contact details accurate. Pika training status is also available here if you want to request a guide again.",
   "nova.training.pebble-auth-signin.title": "Sign in to your account",
   "nova.training.pebble-auth-signin.body":
       "Enter your email and password to continue with your saved deals and profile. Signing in restores the work attached to that account.",
@@ -542,7 +566,7 @@ const siteCopyCatalog = <String, String>{
   'transaction.rooms.retry': 'Try again',
   'nova.training.pebble-page-finish.title': "That’s this page.",
   'nova.training.pebble-page-finish.body':
-      "You can continue here, or request Pebble from the header whenever you need this page’s guide again.",
+      "You can continue here, or request Pika from the header whenever you need this page’s guide again.",
   'nova.training.pebble-calculator-tabs.title': "Choose a calculator",
   'nova.training.pebble-calculator-tabs.body':
       "Business value, asset value and commercial real estate use different assumptions. Choose the kind of opportunity you are evaluating.",
@@ -597,7 +621,7 @@ const siteCopyCatalog = <String, String>{
       "Search or filter the government and community programs on this page. Review location, eligible uses and application timing, then open the program’s official information.",
   'nova.training.pebble-page-profile.title': "Your profile",
   'nova.training.pebble-page-profile.body':
-      "Update your account details and save your changes on this page. The training section shows your completion status and lets you request Pebble again.",
+      "Update your account details and save your changes on this page. The training section shows your completion status and lets you request Pika again.",
   'nova.training.pebble-page-member-profile.title': "A professional’s profile",
   'nova.training.pebble-page-member-profile.body':
       "Review their background, personal experience, services and member reviews. Use the available contact, team and review actions when relevant.",
@@ -916,7 +940,7 @@ const siteCopyCatalog = <String, String>{
   'nova.training.seller-result-closing.title': "Cash at closing",
   'nova.training.seller-result-closing.body':
       "Subtract vendor financing, selling fees and debt paid at closing from the expected price. The result is before tax; holdbacks, earn-outs and working-capital adjustments need separate review. Results appear when the required fields are complete.",
-  'nova.training.welcome.title': "Hi, I’m Pebble.",
+  'nova.training.welcome.title': "Hi, I’m Pika.",
   'nova.training.welcome.body':
       "I’ll show you around this page. Use Next and Back, or close the guide and request me again from the header.",
   'nova.training.seller-home.title': "Your next chapter starts here",
@@ -993,12 +1017,12 @@ const siteCopyCatalog = <String, String>{
       "Personal consulting explains the support available and keeps the consultation calendar on the page. Use the booking options when you are ready to arrange help.",
   'nova.training.finish.title': "You’re ready to explore.",
   'nova.training.finish.body':
-      "You’ve finished the app walkthrough. Pebble will stay tucked away after this. You can replay any guide from Pebble walkthrough in the menu or from your profile.",
-  'copy.assistant_workspace_page.3': 'Pebble app walkthrough',
+      "You’ve finished the app walkthrough. Pika will stay tucked away after this. You can replay any guide from the Pika button in the header or from your profile.",
+  'copy.assistant_workspace_page.3': 'Pika app walkthrough',
   'copy.assistant_workspace_page.4':
-      'Explore the app with Pebble. Use Next and Back, then replay the tour whenever you need it.',
-  'nova.training.replay': 'Show me around with Pebble',
-  'nova.panel.name': 'Pebble',
+      'Explore the app with Pika. Use Next and Back, then replay the tour whenever you need it.',
+  'nova.training.replay': 'Show me around with Pika',
+  'nova.panel.name': 'Pika',
   'nova.panel.prompt': 'What would you like to understand?',
   '5e87673b': " years",
   '993d3d4f': " · Example profile",

@@ -603,7 +603,7 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
         const SizedBox(height: 12),
         copy(
           'learning.start.body',
-          'Use the interactive map to understand each stage, then explore the documents and examples. Pebble can show you around this page.',
+          'Use the interactive map to understand each stage, then explore the documents and examples. Pika can show you around this page.',
           color: DashboardUi.muted,
         ),
         const SizedBox(height: 16),

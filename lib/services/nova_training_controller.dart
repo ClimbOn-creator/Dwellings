@@ -60,7 +60,7 @@ class NovaTrainingController extends ChangeNotifier {
       if (automatic)
         NovaStep(
           'welcome',
-          'Hi, I’m Pebble.',
+          'Hi, I’m Pika.',
           'I’ll show you around this page. Use Next and Back, or close the guide and request me again from the header.',
           page,
           NovaMood.welcome,

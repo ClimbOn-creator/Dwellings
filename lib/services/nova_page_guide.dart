@@ -210,7 +210,7 @@ List<NovaStep> novaPageWalkthrough(String page) {
       ),
       'profile': (
         'Your profile',
-        'Update your account details and save your changes on this page. The training section shows your completion status and lets you request Pebble again.',
+        'Update your account details and save your changes on this page. The training section shows your completion status and lets you request Pika again.',
       ),
       'member-profile': (
         'A professional’s profile',
@@ -262,7 +262,7 @@ List<NovaStep> novaPageWalkthrough(String page) {
     NovaStep(
       'pebble-page-finish',
       'That’s this page.',
-      'You can continue here, or request Pebble from the header whenever you need this page’s guide again.',
+      'You can continue here, or request Pika from the header whenever you need this page’s guide again.',
       page,
       NovaMood.celebrating,
     ),

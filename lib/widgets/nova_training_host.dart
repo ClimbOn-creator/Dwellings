@@ -244,7 +244,7 @@ class _NovaTrainingHostState extends State<NovaTrainingHost>
                   onPressed: () =>
                       _controller.startPage(_controller.currentPage),
                   icon: Semantics(
-                    label: 'Pebble · guide to this page',
+                    label: 'Pika · guide to this page',
                     child: const NovaCharacter(size: 42),
                   ),
                 ),
@@ -252,7 +252,7 @@ class _NovaTrainingHostState extends State<NovaTrainingHost>
                   key: const Key('pebble_dismiss_dock'),
                   onPressed: _controller.dismissDock,
                   icon: Semantics(
-                    label: 'Move Pebble to the header',
+                    label: 'Move Pika to the header',
                     child: const Icon(Icons.close, size: 16),
                   ),
                 ),
@@ -304,7 +304,7 @@ class _NovaTrainingHostState extends State<NovaTrainingHost>
   );
 }
 
-/// Place Pebble beside the target, choosing the available region with the least
+/// Place Pika beside the target, choosing the available region with the least
 /// overlap. The character and speech bubble move together; neither is docked.
 Offset novaGuidePosition(
   Size screen,
@@ -391,7 +391,7 @@ class NovaTourCard extends StatelessWidget {
                     children: [
                       const SiteCopyText(
                         'nova.panel.name',
-                        'Pebble',
+                        'Pika',
                         style: TextStyle(
                           color: Color(0xFF164F3D),
                           fontSize: 13,

@@ -2720,8 +2720,15 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
               children: [
                 Row(
                   children: [
-                    const HomeBrandButton(size: 46),
-                    const Spacer(),
+                    Expanded(
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: const HomeBrandButton(size: 46),
+                        ),
+                      ),
+                    ),
                     AppNavigationMenu(side: _side),
                   ],
                 ),
@@ -4391,25 +4398,39 @@ class _DealRoomPageState extends State<DealRoomPage> {
         surfaceTintColor: Colors.transparent,
         foregroundColor: _ink,
         elevation: 0,
-        title: Row(
-          children: [
-            const HomeBrandButton(size: 48, dark: false),
-            const SizedBox(width: 18),
-            Container(width: 1, height: 28, color: _line),
-            const SizedBox(width: 18),
-            Flexible(
-              child: SiteText(
-                contentKey: 'copy.deal_rooms_page.m62',
-                literal: false,
-                _room.title,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
+        title: LayoutBuilder(
+          builder: (context, box) => box.maxWidth < 260
+              ? SiteText(
+                  contentKey: 'copy.deal_rooms_page.m62',
+                  literal: false,
+                  _room.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
+                )
+              : Row(
+                  children: [
+                    const HomeBrandButton(size: 48, dark: false),
+                    const SizedBox(width: 18),
+                    Container(width: 1, height: 28, color: _line),
+                    const SizedBox(width: 18),
+                    Flexible(
+                      child: SiteText(
+                        contentKey: 'copy.deal_rooms_page.m62',
+                        literal: false,
+                        _room.title,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ),
-          ],
         ),
         actions: [
           if (MediaQuery.sizeOf(context).width >= 720) _privacyPill(),
@@ -5932,8 +5953,15 @@ class _DealRoomPageState extends State<DealRoomPage> {
               children: [
                 Row(
                   children: [
-                    const HomeBrandButton(size: 44),
-                    const Spacer(),
+                    Expanded(
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: const HomeBrandButton(size: 44),
+                        ),
+                      ),
+                    ),
                     AppNavigationMenu(
                       guidePage: 'room/${_workspaceView.name}',
                       side: _room.isBusiness

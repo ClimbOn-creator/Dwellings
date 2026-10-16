@@ -16,7 +16,7 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     AppTunnelController.select(AppTunnel.buyer);
   });
-  testWidgets('landing has no Pebble button or automatic introduction', (
+  testWidgets('landing has no Pika button or automatic introduction', (
     tester,
   ) async {
     final controller = NovaTrainingController(
@@ -36,7 +36,7 @@ void main() {
     );
     await tester.pump(const Duration(seconds: 1));
     expect(find.byKey(const Key('pebble_page_help')), findsNothing);
-    expect(find.text('Hi, I’m Pebble.'), findsNothing);
+    expect(find.text('Hi, I’m Pika.'), findsNothing);
     expect(controller.active, isFalse);
     await tester.pumpWidget(const SizedBox.shrink());
   });
@@ -71,9 +71,9 @@ void main() {
         expect(bar.toolbarHeight, 82);
         expect(find.byType(HomeBrandButton), findsOneWidget);
         expect(find.byKey(const Key('pebble_page_help')), findsOneWidget);
-        await tester.tap(find.byTooltip('Open navigation'));
+        expect(find.text('Pika walkthrough'), findsNothing);
+        await tester.ensureVisible(find.text('Transaction Room'));
         await tester.pumpAndSettle();
-        expect(find.text('Pebble walkthrough'), findsNothing);
         await tester.tap(find.text('Transaction Room'));
         await tester.pumpAndSettle();
         expect(find.byType(TransactionLearningPage), findsOneWidget);

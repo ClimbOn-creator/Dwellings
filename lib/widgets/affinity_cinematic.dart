@@ -96,168 +96,230 @@ class _AffinityCinemaHeroState extends State<AffinityCinemaHero>
   }
 
   @override
-  Widget build(BuildContext context) {
-    final width = MediaQuery.sizeOf(context).width;
-    final narrow = width < 760;
-    final p = widget.progress;
-    final departure = (p / .56).clamp(0.0, 1.0);
-    final arrival = ((p - .42) / .4).clamp(0.0, 1.0);
-    return ColoredBox(
-      color: _night,
-      child: ClipRect(
-        child: AnimatedBuilder(
-          animation: _arrival,
-          child: SiteImage(
-            contentKey: 'image.acquisition_support_page.mbackground1',
-            original: Image.asset(
-              'assets/images/affinity-city-hero.jpg',
-              fit: BoxFit.cover,
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, box) {
+      final width = box.maxWidth;
+      final narrow = width < 760;
+      final p = widget.progress;
+      final departure = (p / .56).clamp(0.0, 1.0);
+      final arrival = ((p - .42) / .4).clamp(0.0, 1.0);
+      return ColoredBox(
+        color: _night,
+        child: ClipRect(
+          child: AnimatedBuilder(
+            animation: _arrival,
+            child: SiteImage(
+              contentKey: 'image.acquisition_support_page.mbackground1',
+              original: Image.asset(
+                'assets/images/affinity-city-hero.jpg',
+                fit: BoxFit.cover,
+              ),
             ),
-          ),
-          builder: (context, photo) {
-            final entrance = Curves.easeOutCubic.transform(_arrival.value);
-            return Stack(
-              fit: StackFit.expand,
-              children: [
-                // An obvious camera push: photography and foreground type have
-                // deliberately different trajectories and magnification.
-                Transform.translate(
-                  offset: Offset(-p * width * .07, p * 35),
-                  child: Transform.scale(
-                    scale: 1.12 + p * .58 + (1 - entrance) * .16,
-                    child: RepaintBoundary(child: photo),
+            builder: (context, photo) {
+              final entrance = Curves.easeOutCubic.transform(_arrival.value);
+              return Stack(
+                fit: StackFit.expand,
+                children: [
+                  // An obvious camera push: photography and foreground type have
+                  // deliberately different trajectories and magnification.
+                  Transform.translate(
+                    offset: Offset(-p * width * .07, p * 35),
+                    child: Transform.scale(
+                      scale: 1.12 + p * .58 + (1 - entrance) * .16,
+                      child: RepaintBoundary(child: photo),
+                    ),
                   ),
-                ),
-                DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        const Color(0x66101313),
-                        Color.lerp(
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
                           const Color(0x66101313),
-                          const Color(0xBB101313),
-                          p,
-                        )!,
-                        const Color(0xF2101313),
+                          Color.lerp(
+                            const Color(0x66101313),
+                            const Color(0xBB101313),
+                            p,
+                          )!,
+                          const Color(0xF2101313),
+                        ],
+                      ),
+                    ),
+                  ),
+                  // Architectural shutters open on arrival and separate further on scroll.
+                  IgnorePointer(
+                    child: Row(
+                      children: [
+                        Container(
+                          width: (1 - entrance) * width * .5,
+                          color: _night,
+                        ),
+                        const Spacer(),
+                        Container(
+                          width: (1 - entrance) * width * .5,
+                          color: _night,
+                        ),
                       ],
                     ),
                   ),
-                ),
-                // Architectural shutters open on arrival and separate further on scroll.
-                IgnorePointer(
-                  child: Row(
-                    children: [
-                      Container(
-                        width: (1 - entrance) * width * .5,
-                        color: _night,
+                  IgnorePointer(
+                    ignoring: departure > .85,
+                    child: Opacity(
+                      opacity: (1 - departure) * entrance,
+                      child: Transform.translate(
+                        offset: Offset(0, 34 * (1 - entrance) - p * 210),
+                        child: Transform.scale(
+                          scale: 1 + p * .3,
+                          child: Padding(
+                            padding: EdgeInsets.fromLTRB(
+                              narrow ? 24 : 80,
+                              narrow ? 48 : 62,
+                              narrow ? 24 : 80,
+                              90,
+                            ),
+                            child: _FitScene(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const SiteCopyText(
+                                    'home.eyebrow',
+                                    'BUSINESS ACQUISITION, MADE NAVIGABLE',
+                                    style: TextStyle(
+                                      color: _ivory,
+                                      fontSize: 12,
+                                      letterSpacing: 2,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 32),
+                                  ConstrainedBox(
+                                    constraints: BoxConstraints(
+                                      maxWidth: narrow ? 600 : 1040,
+                                    ),
+                                    child: SiteCopyText(
+                                      'home.title',
+                                      'Don’t just find a business.\nKnow what you’re buying into.',
+                                      style: TextStyle(
+                                        fontSize: narrow
+                                            ? 46
+                                            : width < 1150
+                                            ? 70
+                                            : 92,
+                                        height: 1.02,
+                                        letterSpacing: narrow ? -1.8 : -3.5,
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 24),
+                                  if (!narrow)
+                                    ConstrainedBox(
+                                      constraints: const BoxConstraints(
+                                        maxWidth: 660,
+                                      ),
+                                      child: SiteCopyText(
+                                        'home.intro',
+                                        'Affinity helps aspiring buyers define the right target, prepare to transact, screen real opportunities, and build the professional team needed to close with confidence.',
+                                        style: TextStyle(
+                                          color: const Color(0xFFE2E5E3),
+                                          fontSize: narrow ? 16 : 18,
+                                          height: 1.45,
+                                        ),
+                                      ),
+                                    ),
+                                  const SizedBox(height: 28),
+                                  Wrap(
+                                    spacing: 12,
+                                    runSpacing: 10,
+                                    children: [
+                                      _CinemaButton(
+                                        'copy.acquisition_support_page.2',
+                                        'I WANT TO BUY A BUSINESS',
+                                        widget.onBuyer,
+                                      ),
+                                      _CinemaButton(
+                                        'copy.acquisition_support_page.3',
+                                        'I PROVIDE PROFESSIONAL SERVICES',
+                                        widget.onMember,
+                                        outline: true,
+                                      ),
+                                      if (widget.onSeller != null)
+                                        _CinemaButton(
+                                          'home.seller.action',
+                                          'SUCCESSION OR TRANSFER',
+                                          widget.onSeller!,
+                                          outline: true,
+                                        ),
+                                      if (widget.onLearn != null)
+                                        _CinemaButton(
+                                          'home.learn.action',
+                                          'I want to learn',
+                                          widget.onLearn!,
+                                          outline: true,
+                                        ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
-                      const Spacer(),
-                      Container(
-                        width: (1 - entrance) * width * .5,
-                        color: _night,
-                      ),
-                    ],
+                    ),
                   ),
-                ),
-                IgnorePointer(
-                  ignoring: departure > .85,
-                  child: Opacity(
-                    opacity: (1 - departure) * entrance,
-                    child: Transform.translate(
-                      offset: Offset(0, 34 * (1 - entrance) - p * 210),
-                      child: Transform.scale(
-                        scale: 1 + p * .3,
+                  IgnorePointer(
+                    ignoring: arrival < .9,
+                    child: Opacity(
+                      opacity: arrival,
+                      child: Transform.translate(
+                        offset: Offset(
+                          width * .13 * (1 - arrival),
+                          widget.height * .24 * (1 - arrival),
+                        ),
                         child: Padding(
-                          padding: EdgeInsets.fromLTRB(
-                            narrow ? 24 : 80,
-                            narrow ? 48 : 62,
-                            narrow ? 24 : 80,
-                            90,
+                          padding: EdgeInsets.symmetric(
+                            horizontal: narrow ? 24 : 80,
                           ),
                           child: _FitScene(
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
+                              mainAxisAlignment: MainAxisAlignment.center,
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 const SiteCopyText(
-                                  'home.eyebrow',
-                                  'BUSINESS ACQUISITION, MADE NAVIGABLE',
+                                  'home.cinema.eyebrow',
+                                  'FROM POSSIBILITY TO PERSPECTIVE',
                                   style: TextStyle(
                                     color: _ivory,
                                     fontSize: 12,
                                     letterSpacing: 2,
                                   ),
                                 ),
-                                const SizedBox(height: 32),
-                                ConstrainedBox(
-                                  constraints: BoxConstraints(
-                                    maxWidth: narrow ? 600 : 1040,
-                                  ),
-                                  child: SiteCopyText(
-                                    'home.title',
-                                    'Don’t just find a business.\nKnow what you’re buying into.',
-                                    style: TextStyle(
-                                      fontSize: narrow
-                                          ? 46
-                                          : width < 1150
-                                          ? 70
-                                          : 92,
-                                      height: 1.02,
-                                      letterSpacing: narrow ? -1.8 : -3.5,
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w500,
-                                    ),
+                                const SizedBox(height: 24),
+                                SiteCopyText(
+                                  'home.cinema.statement',
+                                  'A bigger future.\nA clearer view.',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: narrow ? 60 : 112,
+                                    height: .98,
+                                    letterSpacing: -3,
+                                    fontWeight: FontWeight.w400,
                                   ),
                                 ),
-                                const SizedBox(height: 24),
-                                if (!narrow)
-                                  ConstrainedBox(
-                                    constraints: const BoxConstraints(
-                                      maxWidth: 660,
-                                    ),
-                                    child: SiteCopyText(
-                                      'home.intro',
-                                      'Affinity helps aspiring buyers define the right target, prepare to transact, screen real opportunities, and build the professional team needed to close with confidence.',
-                                      style: TextStyle(
-                                        color: const Color(0xFFE2E5E3),
-                                        fontSize: narrow ? 16 : 18,
-                                        height: 1.45,
-                                      ),
+                                const SizedBox(height: 30),
+                                const SizedBox(
+                                  width: 520,
+                                  child: SiteCopyText(
+                                    'home.cinema.body',
+                                    'Turn the ambition to own a business into a path you can act on. Define your target. Understand the opportunity. Bring the right people with you.',
+                                    style: TextStyle(
+                                      color: _ivory,
+                                      fontSize: 18,
+                                      height: 1.5,
                                     ),
                                   ),
-                                const SizedBox(height: 28),
-                                Wrap(
-                                  spacing: 12,
-                                  runSpacing: 10,
-                                  children: [
-                                    _CinemaButton(
-                                      'copy.acquisition_support_page.2',
-                                      'I WANT TO BUY A BUSINESS',
-                                      widget.onBuyer,
-                                    ),
-                                    _CinemaButton(
-                                      'copy.acquisition_support_page.3',
-                                      'I PROVIDE PROFESSIONAL SERVICES',
-                                      widget.onMember,
-                                      outline: true,
-                                    ),
-                                    if (widget.onSeller != null)
-                                      _CinemaButton(
-                                        'home.seller.action',
-                                        'SUCCESSION OR TRANSFER',
-                                        widget.onSeller!,
-                                        outline: true,
-                                      ),
-                                    if (widget.onLearn != null)
-                                      _CinemaButton(
-                                        'home.learn.action',
-                                        'I want to learn',
-                                        widget.onLearn!,
-                                        outline: true,
-                                      ),
-                                  ],
                                 ),
                               ],
                             ),
@@ -266,106 +328,48 @@ class _AffinityCinemaHeroState extends State<AffinityCinemaHero>
                       ),
                     ),
                   ),
-                ),
-                IgnorePointer(
-                  ignoring: arrival < .9,
-                  child: Opacity(
-                    opacity: arrival,
-                    child: Transform.translate(
-                      offset: Offset(
-                        width * .13 * (1 - arrival),
-                        widget.height * .24 * (1 - arrival),
-                      ),
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: narrow ? 24 : 80,
-                        ),
-                        child: _FitScene(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const SiteCopyText(
-                                'home.cinema.eyebrow',
-                                'FROM POSSIBILITY TO PERSPECTIVE',
-                                style: TextStyle(
-                                  color: _ivory,
-                                  fontSize: 12,
-                                  letterSpacing: 2,
-                                ),
-                              ),
-                              const SizedBox(height: 24),
-                              SiteCopyText(
-                                'home.cinema.statement',
-                                'A bigger future.\nA clearer view.',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: narrow ? 60 : 112,
-                                  height: .98,
-                                  letterSpacing: -3,
-                                  fontWeight: FontWeight.w400,
-                                ),
-                              ),
-                              const SizedBox(height: 30),
-                              const SizedBox(
-                                width: 520,
-                                child: SiteCopyText(
-                                  'home.cinema.body',
-                                  'Turn the ambition to own a business into a path you can act on. Define your target. Understand the opportunity. Bring the right people with you.',
-                                  style: TextStyle(
-                                    color: _ivory,
-                                    fontSize: 18,
-                                    height: 1.5,
-                                  ),
-                                ),
-                              ),
-                            ],
+                  Positioned(
+                    left: narrow ? 24 : 80,
+                    right: narrow ? 24 : 80,
+                    bottom: 25,
+                    child: Row(
+                      children: [
+                        const Icon(Icons.south, size: 18, color: Colors.white),
+                        const SizedBox(width: 12),
+                        const Flexible(
+                          child: SiteCopyText(
+                            'home.cinema.scroll',
+                            'SCROLL TO EXPLORE',
+                            style: TextStyle(
+                              fontSize: 11,
+                              letterSpacing: 2,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
-                      ),
+                        const Spacer(),
+                        SizedBox(
+                          width: narrow ? 70 : 160,
+                          child: LinearProgressIndicator(
+                            value: p,
+                            minHeight: 2,
+                            backgroundColor: Colors.white24,
+                            valueColor: const AlwaysStoppedAnimation(
+                              Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ),
-                Positioned(
-                  left: narrow ? 24 : 80,
-                  right: narrow ? 24 : 80,
-                  bottom: 25,
-                  child: Row(
-                    children: [
-                      const Icon(Icons.south, size: 18, color: Colors.white),
-                      const SizedBox(width: 12),
-                      const SiteCopyText(
-                        'home.cinema.scroll',
-                        'SCROLL TO EXPLORE',
-                        style: TextStyle(
-                          fontSize: 11,
-                          letterSpacing: 2,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const Spacer(),
-                      SizedBox(
-                        width: narrow ? 70 : 160,
-                        child: LinearProgressIndicator(
-                          value: p,
-                          minHeight: 2,
-                          backgroundColor: Colors.white24,
-                          valueColor: const AlwaysStoppedAnimation(
-                            Colors.white,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            );
-          },
+                ],
+              );
+            },
+          ),
         ),
-      ),
-    );
-  }
+      );
+    },
+  );
 }
 
 class _CinemaButton extends StatelessWidget {

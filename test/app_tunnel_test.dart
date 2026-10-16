@@ -84,14 +84,16 @@ void main() {
           home: Scaffold(appBar: null, body: AppNavigationMenu(dark: false)),
         ),
       );
-      await tester.tap(find.byTooltip('Open navigation'));
-      await tester.pumpAndSettle();
       final actual = tester
-          .widgetList<PopupMenuItem<AppNavigationDestination>>(
-            find.byType(PopupMenuItem<AppNavigationDestination>),
-          )
-          .map((item) => item.value!.name)
+          .widgetList<AppNavigationPill>(find.byType(AppNavigationPill))
+          .where((item) => item.destination != null)
+          .map((item) => item.destination!.name)
           .toList();
+      expect(
+        find.byType(PopupMenuButton<AppNavigationDestination>),
+        findsNothing,
+      );
+      expect(find.byKey(const ValueKey('navigation-home')), findsOneWidget);
       expect(actual, destinations);
       expect(find.text('Company data · owners only'), findsNothing);
       expect(find.text('Usage privacy'), findsNothing);

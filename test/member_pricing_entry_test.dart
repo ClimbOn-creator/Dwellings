@@ -236,13 +236,13 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.byTooltip('Open navigation'));
-      await tester.pumpAndSettle();
       if (role == AppTunnel.landing || role == AppTunnel.member) {
         expect(find.text('Personal consulting'), findsNothing);
         await tester.pumpWidget(const SizedBox.shrink());
         return;
       }
+      await tester.ensureVisible(find.text('Personal consulting'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Personal consulting'));
       await tester.pumpAndSettle();
       expect(find.byType(PersonalizedConsultingPage), findsOneWidget);

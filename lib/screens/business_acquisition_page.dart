@@ -556,8 +556,15 @@ class _BusinessAcquisitionPageState extends State<BusinessAcquisitionPage> {
               children: [
                 Row(
                   children: [
-                    const HomeBrandButton(size: 46),
-                    const Spacer(),
+                    Expanded(
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: const HomeBrandButton(size: 46),
+                        ),
+                      ),
+                    ),
                     const AppNavigationMenu(side: PlatformSide.business),
                   ],
                 ),

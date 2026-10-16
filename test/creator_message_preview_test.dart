@@ -126,8 +126,6 @@ void main() {
         expect(find.byTooltip('Member messages'), findsNothing);
         expect(find.text('Messages'), findsNothing);
         expect(find.byTooltip('Private updates'), findsNothing);
-        await tester.tap(find.byTooltip('Open navigation'));
-        await tester.pumpAndSettle();
         expect(find.text('Company data · owners only'), findsNothing);
         expect(find.text('Usage privacy'), findsNothing);
         await tester.tapAt(const Offset(5, 200));

@@ -1,3 +1,4 @@
+import 'home_brand_button.dart';
 import '../screens/company_data_page.dart';
 import 'company_data_access.dart';
 import '../screens/assistant_workspace_page.dart';
@@ -107,6 +108,8 @@ class AppNavigationMenu extends StatefulWidget {
 }
 
 class _AppNavigationMenuState extends State<AppNavigationMenu> {
+  final _selectedPill = GlobalKey();
+  String? _lastNavigationGuide;
   Future<void> _openNotifications() async {
     await Navigator.of(context).push(
       MaterialPageRoute<void>(builder: (_) => const NotificationCenterPage()),
@@ -217,9 +220,113 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
         : page;
   }
 
-  void _showPebble() {
+  void _showPika() {
     CalculatorHelpController.instance.close();
     NovaTrainingController.instance.startPage(_guidePage());
+  }
+
+  AppNavigationDestination? _activeDestination(String guide) {
+    if (guide == 'landing') return null;
+    if (guide == 'resources') return AppNavigationDestination.resources;
+    if (guide == 'member-pricing')
+      return AppNavigationDestination.memberPricing;
+    if (guide == 'member-marketing')
+      return AppNavigationDestination.memberMarketing;
+    if (guide == 'consulting') return AppNavigationDestination.consulting;
+    if (guide == 'profile') return AppNavigationDestination.profile;
+    if (guide == 'learning/seminars')
+      return AppNavigationDestination.learningSeminars;
+    if (guide == 'learning/map') return AppNavigationDestination.learningMap;
+    if (guide.startsWith('learning/'))
+      return AppNavigationDestination.learningDashboard;
+    if (guide.startsWith('buyer/'))
+      return AppNavigationDestination.buyerDashboard;
+    if (guide.startsWith('seller/'))
+      return AppNavigationDestination.sellerDashboard;
+    if (guide.startsWith('member/'))
+      return AppNavigationDestination.memberStudio;
+    return null;
+  }
+
+  Widget _navigationBar(BuildContext context) {
+    final screen = MediaQuery.sizeOf(context).width;
+    final maxWidth = screen < 600
+        ? (screen - 250).clamp(100.0, 240.0)
+        : screen < 1000
+        ? screen * .43
+        : (screen * .62).clamp(0.0, 760.0);
+    final guide = _guidePage();
+    final active = _activeDestination(guide);
+    if (_lastNavigationGuide != guide) {
+      _lastNavigationGuide = guide;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final selected = _selectedPill.currentContext;
+        if (mounted && selected != null) {
+          Scrollable.ensureVisible(selected, alignment: .5);
+        }
+      });
+    }
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxWidth: maxWidth),
+      child: Container(
+        key: const Key('affinity-navigation-bar'),
+        padding: const EdgeInsets.all(5),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFCFCF8),
+          borderRadius: BorderRadius.circular(40),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x080D2418),
+              blurRadius: 24,
+              offset: Offset(0, 6),
+            ),
+          ],
+        ),
+        child: SingleChildScrollView(
+          key: const Key('affinity-navigation-scroll'),
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AppNavigationPill(
+                key: guide == 'landing' ? _selectedPill : null,
+                label: 'Home',
+                selected: guide == 'landing',
+                onPressed: () => HomeBrandButton.open(context),
+                child: const SiteCopyText('navigation.home', 'Home'),
+              ),
+              for (final destination in destinationsForTunnel(
+                guide == 'landing'
+                    ? AppTunnel.landing
+                    : AppTunnelController.current.value,
+              ))
+                AppNavigationPill(
+                  key: destination == active ? _selectedPill : null,
+                  destination: destination,
+                  label: _label(destination),
+                  selected: destination == active,
+                  onPressed: () => _open(context, destination),
+                  child:
+                      destination == AppNavigationDestination.buyerDashboard ||
+                          destination ==
+                              AppNavigationDestination.sellerDashboard ||
+                          destination ==
+                              AppNavigationDestination.transactionRoom
+                      ? SiteCopyText(
+                          'navigation.${destination.name}',
+                          _label(destination),
+                        )
+                      : SiteText(
+                          contentKey: 'copy.app_navigation_menu.m2',
+                          literal: false,
+                          _label(destination),
+                        ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -230,6 +337,8 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
+        _navigationBar(context),
+        const SizedBox(width: 8),
         if (_guidePage() != 'landing')
           ListenableBuilder(
             listenable: NovaTrainingController.instance,
@@ -238,10 +347,10 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
                     !NovaTrainingController.instance.docked)
                 ? IconButton(
                     key: const Key('pebble_page_help'),
-                    tooltip: 'Pebble · guide to this page',
+                    tooltip: 'Pika · guide to this page',
                     onPressed: () {
                       NovaTrainingController.instance.restoreDock();
-                      _showPebble();
+                      _showPika();
                     },
                     icon: const NovaCharacter(size: 32),
                   )
@@ -325,61 +434,63 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
               ),
             ),
           ),
-        PopupMenuButton<AppNavigationDestination>(
-          tooltip: 'Open navigation',
-          color: widget.dark ? const Color(0xFF171728) : Colors.white,
-          offset: const Offset(0, 44),
-          onSelected: (destination) => _open(context, destination),
-          itemBuilder: (_) => [
-            for (final destination in destinationsForTunnel(
-              widget.guidePage == 'landing'
-                  ? AppTunnel.landing
-                  : AppTunnelController.current.value,
-            )) ...[
-              PopupMenuItem(
-                value: destination,
-                height: 43,
-                child:
-                    destination == AppNavigationDestination.buyerDashboard ||
-                        destination ==
-                            AppNavigationDestination.sellerDashboard ||
-                        destination == AppNavigationDestination.transactionRoom
-                    ? SiteCopyText(
-                        'navigation.${destination.name}',
-                        _label(destination),
-                        style: TextStyle(
-                          color: widget.dark
-                              ? Colors.white
-                              : const Color(0xFF161616),
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      )
-                    : SiteText(
-                        contentKey: 'copy.app_navigation_menu.m2',
-                        literal: false,
-                        _label(destination),
-                        style: TextStyle(
-                          color: widget.dark
-                              ? Colors.white
-                              : const Color(0xFF161616),
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-              ),
-            ],
-          ],
-          child: SizedBox.square(
-            dimension: 44,
-            child: Icon(
-              Icons.menu_rounded,
-              color: widget.dark ? Colors.white : const Color(0xFF161616),
-              size: 28,
-            ),
-          ),
-        ),
       ],
     );
   }
+}
+
+/// A direct destination in the shared, horizontally scrollable top bar.
+class AppNavigationPill extends StatelessWidget {
+  const AppNavigationPill({
+    super.key,
+    this.destination,
+    required this.label,
+    required this.selected,
+    required this.onPressed,
+    required this.child,
+  });
+  final AppNavigationDestination? destination;
+  final String label;
+  final bool selected;
+  final VoidCallback onPressed;
+  final Widget child;
+  @override
+  Widget build(BuildContext context) => Semantics(
+    selected: selected,
+    button: true,
+    child: Tooltip(
+      message: label,
+      excludeFromSemantics: true,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          key: ValueKey('navigation-${destination?.name ?? 'home'}'),
+          borderRadius: BorderRadius.circular(36),
+          onTap: onPressed,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 240),
+            curve: Curves.easeOutCubic,
+            padding: const EdgeInsets.symmetric(horizontal: 17, vertical: 13),
+            decoration: BoxDecoration(
+              color: selected ? const Color(0xFF122815) : Colors.transparent,
+              borderRadius: BorderRadius.circular(36),
+            ),
+            child: DefaultTextStyle(
+              style: Theme.of(context).textTheme.labelLarge!.copyWith(
+                color: selected
+                    ? const Color(0xFFBFDC99)
+                    : const Color(0xFF172817),
+                fontSize: 14,
+                fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+              ),
+              child: IconTheme(
+                data: const IconThemeData(size: 18),
+                child: child,
+              ),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
 }

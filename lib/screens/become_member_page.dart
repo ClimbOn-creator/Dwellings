@@ -232,8 +232,15 @@ class _BecomeMemberPageState extends State<BecomeMemberPage> {
         children: [
           Row(
             children: [
-              const HomeBrandButton(size: 48),
-              const Spacer(),
+              Expanded(
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: const HomeBrandButton(size: 48),
+                  ),
+                ),
+              ),
               const AppNavigationMenu(),
             ],
           ),

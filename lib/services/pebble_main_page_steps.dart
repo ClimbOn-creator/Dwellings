@@ -217,7 +217,7 @@ const pebbleMainPageCopy = <String, List<(String, String, String, String?)>>{
     (
       'edit',
       'Update your details',
-      'Use the profile form to update your account information and save it. Keep your contact details accurate. Pebble training status is also available here if you want to request a guide again.',
+      'Use the profile form to update your account information and save it. Keep your contact details accurate. Pika training status is also available here if you want to request a guide again.',
       'profile.editor',
     ),
   ],

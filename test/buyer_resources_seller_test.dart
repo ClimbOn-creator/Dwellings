@@ -22,7 +22,7 @@ void main() {
       await tester.pumpAndSettle();
       final entry = width < 800
           ? find.text('Resources — grants & community support')
-          : find.text('Resources');
+          : find.text('Resources').last;
       await tester.ensureVisible(entry);
       await tester.tap(entry);
       await tester.pumpAndSettle();
@@ -46,7 +46,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.byTooltip('Open navigation'));
+      await tester.ensureVisible(find.text(label));
       await tester.pumpAndSettle();
       await tester.tap(find.text(label));
       await tester.pumpAndSettle();

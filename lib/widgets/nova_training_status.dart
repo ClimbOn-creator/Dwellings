@@ -46,7 +46,7 @@ class _NovaTrainingStatusState extends State<NovaTrainingStatus> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text(
-                          'Pebble app training',
+                          'Pika app training',
                           style: TextStyle(
                             fontSize: 17,
                             fontWeight: FontWeight.w700,

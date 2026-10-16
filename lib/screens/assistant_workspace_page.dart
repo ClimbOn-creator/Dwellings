@@ -37,7 +37,7 @@ class GuideWorkspacePage extends StatelessWidget {
       title: const SiteText(
         contentKey: 'copy.assistant_workspace_page.3',
         literal: true,
-        'Pebble app walkthrough',
+        'Pika app walkthrough',
       ),
       actions: const [
         AppNavigationMenu(side: PlatformSide.business, dark: false),
@@ -54,7 +54,7 @@ class GuideWorkspacePage extends StatelessWidget {
               const SiteText(
                 contentKey: 'copy.assistant_workspace_page.4',
                 literal: true,
-                'Explore the app with Pebble. Use Next and Back, then replay the tour whenever you need it.',
+                'Explore the app with Pika. Use Next and Back, then replay the tour whenever you need it.',
               ),
               const SizedBox(height: 18),
               NovaPanel(

@@ -19,7 +19,7 @@ void main() {
     });
   });
   testWidgets(
-    'Pebble floats at bottom left through scroll and X moves it away',
+    'Pika floats at bottom left through scroll and X moves it away',
     (tester) async {
       final controller = NovaTrainingController(
         service: NovaTrainingService(accountId: () => null),
