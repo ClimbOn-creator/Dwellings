@@ -1,3 +1,4 @@
+import '../widgets/dashboard_header.dart';
 import '../services/app_tunnel.dart';
 import '../widgets/nova_target.dart';
 import '../widgets/nova_panel.dart';
@@ -428,29 +429,9 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
       backgroundColor: const Color(0xFFF7F5F0),
       surfaceTintColor: Colors.transparent,
       foregroundColor: _ink,
-      title: Row(
-        children: [
-          const Flexible(
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              alignment: Alignment.centerLeft,
-              child: HomeBrandButton(size: 52, dark: false),
-            ),
-          ),
-          if (MediaQuery.sizeOf(context).width >= 620) ...[
-            const SizedBox(width: 14),
-            const SiteText(
-              contentKey: 'copy.member_deal_marketplace_page.11',
-              literal: true,
-              'MEMBER STUDIO',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 1.4,
-              ),
-            ),
-          ],
-        ],
+      title: const DashboardHeader(
+        label: 'Member dash',
+        contentKey: 'copy.member_deal_marketplace_page.11',
       ),
       actions: [
         IconButton(

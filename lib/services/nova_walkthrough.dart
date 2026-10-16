@@ -400,7 +400,7 @@ List<NovaStep> novaDashboardSteps(String role) {
           : 'Bring an opportunity into the app',
       seller
           ? 'Set up plan opens your seller transaction plan. Identify your business, choose the succession or sale path and set your timing. Edit plan lets you keep that information current.'
-          : 'Search businesses opens available opportunities. Enter a private deal adds an opportunity you found yourself. Compare what fits me helps you compare options before committing.',
+          : 'Search businesses opens available opportunities. Enter a private deal adds an opportunity you found yourself. The deal comparison quiz is in the Learning dashboard.',
       '$role/home',
       NovaMood.welcome,
       target: '$role.home.start',

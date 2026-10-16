@@ -1,6 +1,16 @@
 // These IDs are permanent. Rewrite the fallback VALUE while retaining its ID.
 // Never regenerate or renumber this registry during a redesign.
 const siteCopyCatalog = <String, String>{
+  'copy.deal_rooms_page.m3': 'Buyer dash',
+  'copy.member_deal_marketplace_page.11': 'Member dash',
+  'dashboard.header.seller': 'Seller dash',
+  'dashboard.header.learning': 'Learning dash',
+  'learning.events.manage.title': 'Manage your events',
+  'learning.events.manage.empty': 'No published events to manage yet.',
+  'learning.events.manage.action': 'Manage events',
+  'learning.events.mapLoadError':
+      'Canada map could not load. Refresh to try again.',
+
   'nova.training.pipeline-stages.title': 'Add a deal you found online',
   'nova.training.pipeline-stages.body':
       'Save the listing link, business name and the details you know. Links stay as references; listing details are not imported automatically.',
@@ -293,7 +303,7 @@ const siteCopyCatalog = <String, String>{
   "nova.training.pebble-learning-seminars-schedule.title":
       "Meet and learn live",
   "nova.training.pebble-learning-seminars-schedule.body":
-      "Hover over a point, or tap it on your phone, to see the picture, title, hosting organization and local start time. Nearby events group together; zoom in or open the group. Visit website opens the host’s event or company website. Use the details below to reserve a place or add the event to your calendar.",
+      "Hover over a point, or tap it on your phone, to see the picture, title, hosting organization and local start time. Nearby events group together; zoom in or open the group. Visit website opens the host’s event or company website. Approved hosts can use Manage events to update their sessions.",
   "nova.training.pebble-learning-map-journey.title": "Explore the process",
   "nova.training.pebble-learning-map-journey.body":
       "Choose buying or selling, then click a stage in the map. Pan or zoom to follow the journey; learning does not create or publish a real deal.",
@@ -656,7 +666,7 @@ const siteCopyCatalog = <String, String>{
       "Search narrows your existing pipeline by name or location. Use Search businesses to look for a new opportunity.",
   'nova.training.buyer-home-start.title': "Bring an opportunity into the app",
   'nova.training.buyer-home-start.body':
-      "Search businesses opens available opportunities. Enter a private deal adds an opportunity you found yourself. Compare what fits me helps you compare options before committing.",
+      "Search businesses opens available opportunities. Enter a private deal adds an opportunity you found yourself. The deal comparison quiz is in the Learning dashboard.",
   'nova.training.buyer-home-stage-0.title': "Sourcing",
   'nova.training.buyer-home-stage-0.body':
       "Early opportunities start here. Open a deal card to review its details, then use the deal screen to evaluate whether to proceed.",

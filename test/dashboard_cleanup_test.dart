@@ -25,7 +25,7 @@ const member = MarketplaceProvider(
 
 void main() {
   for (final width in [390.0, 1440.0]) {
-    testWidgets('buyer opens quiz within its existing dashboard at $width', (
+    testWidgets('buyer dashboard identifies itself and has no quiz at $width', (
       tester,
     ) async {
       SharedPreferences.setMockInitialValues({});
@@ -35,27 +35,10 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
       await tester.pumpWidget(const MaterialApp(home: DealRoomsPage()));
       await tester.pumpAndSettle();
-      expect(find.text('Messaging'), findsNothing);
-      final entry = width < 800
-          ? find.text('Compare what fits me')
-          : find.text('Deal comparison quiz');
-      await tester.ensureVisible(entry);
-      await tester.tap(entry);
-      await tester.pumpAndSettle();
-      expect(find.byType(DealRoomsPage), findsOneWidget);
-      expect(
-        tester
-            .widget<DealComparisonPage>(find.byType(DealComparisonPage))
-            .embedded,
-        isTrue,
-      );
-      expect(find.text('Sign in to start'), findsOneWidget);
-      expect(find.byType(Scaffold), findsOneWidget);
-      if (width >= 800) {
-        await tester.tap(find.text('Home'));
-        await tester.pumpAndSettle();
-        expect(find.text('Your pipeline'), findsOneWidget);
-      }
+      expect(find.text('Buyer dash'), findsOneWidget);
+      expect(find.text('Deal comparison quiz'), findsNothing);
+      expect(find.text('Compare what fits me'), findsNothing);
+      expect(find.byType(DealComparisonPage), findsNothing);
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox.shrink());
     });

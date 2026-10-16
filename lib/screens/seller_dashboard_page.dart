@@ -1,3 +1,4 @@
+import '../widgets/dashboard_header.dart';
 import '../widgets/calculator_help_sidebar.dart';
 import '../widgets/nova_target.dart';
 import '../widgets/nova_panel.dart';
@@ -23,7 +24,6 @@ import '../services/backend_service.dart';
 import '../services/marketplace_service.dart';
 import '../widgets/app_navigation_menu.dart';
 import '../widgets/dashboard_ui.dart';
-import '../widgets/home_brand_button.dart';
 import 'auth_page.dart';
 import 'member_deal_marketplace_page.dart';
 import 'member_profile_page.dart';
@@ -320,22 +320,10 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
         backgroundColor: const Color(0xFFF7F5F0),
         surfaceTintColor: Colors.transparent,
         foregroundColor: DashboardUi.ink,
-        title: MediaQuery.sizeOf(context).width < 700
-            ? const HomeBrandButton(size: 48, dark: false)
-            : const Row(
-                children: [
-                  HomeBrandButton(size: 48, dark: false),
-                  SizedBox(width: 18),
-                  Text(
-                    'DEAL OS',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 1.3,
-                    ),
-                  ),
-                ],
-              ),
+        title: const DashboardHeader(
+          label: 'Seller dash',
+          contentKey: 'dashboard.header.seller',
+        ),
         actions: [
           AppNavigationMenu(
             side: PlatformSide.business,

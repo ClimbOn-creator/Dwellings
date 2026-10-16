@@ -9,6 +9,13 @@ import 'package:dwelling_iq/screens/acquisition_support_page.dart';
 import 'package:dwelling_iq/screens/tunnel_pages.dart';
 
 void main() {
+  test('legacy quiz links open Learning, not the buyer dashboard', () {
+    expect(
+      AppTunnelController.forModule('deal-comparison'),
+      AppTunnel.learning,
+    );
+  });
+
   setUp(() {
     SharedPreferences.setMockInitialValues({});
     AppTunnelController.select(AppTunnel.landing);
@@ -37,7 +44,6 @@ void main() {
         'profile',
         'transactionRoom',
         'businessesForSale',
-        'dealComparison',
         'consulting',
       ],
     ),

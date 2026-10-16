@@ -1,5 +1,5 @@
 import 'package:dwelling_iq/screens/deal_comparison_page.dart';
-import 'package:dwelling_iq/screens/deal_rooms_page.dart';
+import 'package:dwelling_iq/screens/learning_dashboard_page.dart';
 import 'package:dwelling_iq/widgets/nova_training_host.dart';
 import 'package:dwelling_iq/services/nova_training_controller.dart';
 import 'dart:convert';
@@ -146,7 +146,7 @@ void main() {
   }
   for (final width in [390.0, 1440.0]) {
     testWidgets(
-      'buyer quiz completes and reviews all answers inside dashboard at $width',
+      'learning quiz completes and reviews all answers inside dashboard at $width',
       (tester) async {
         SharedPreferences.setMockInitialValues({});
         tester.view.physicalSize = Size(width, 1000);
@@ -154,8 +154,11 @@ void main() {
         addTearDown(tester.view.resetPhysicalSize);
         addTearDown(tester.view.resetDevicePixelRatio);
         await tester.pumpWidget(
-          const MaterialApp(
-            home: DealRoomsPage(initialView: BuyerDashboardView.quiz),
+          MaterialApp(
+            home: LearningDashboardPage(
+              initialView: LearningView.quiz,
+              loadSeminars: () async => [],
+            ),
           ),
         );
         await tester.pumpAndSettle();
@@ -171,7 +174,7 @@ void main() {
         for (var round = 1; round <= 8; round++) {
           expect(find.text('Comparison $round'), findsOneWidget);
         }
-        expect(find.byType(DealRoomsPage), findsOneWidget);
+        expect(find.byType(LearningDashboardPage), findsOneWidget);
         expect(find.byType(Scaffold), findsOneWidget);
         await tester.pumpWidget(const SizedBox.shrink());
       },

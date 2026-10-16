@@ -8,6 +8,7 @@ class AppTunnelController {
   static final current = ValueNotifier<AppTunnel>(AppTunnel.landing);
   static void select(AppTunnel tunnel) => current.value = tunnel;
   static AppTunnel forModule(String? module) => switch (module) {
+    'deal-comparison' ||
     'learning-dashboard' ||
     'learning-seminars' ||
     'learning-pipeline' ||
@@ -18,7 +19,6 @@ class AppTunnelController {
     'buyer-learning' ||
     'deal-rooms' ||
     'business-calculator' ||
-    'deal-comparison' ||
     'bulletin-board' ||
     'businesses-for-sale' ||
     'resources' ||

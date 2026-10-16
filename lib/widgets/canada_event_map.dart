@@ -49,11 +49,13 @@ class CanadaEventMap extends StatefulWidget {
     required this.onOpen,
     this.area,
     this.nearby = false,
+    this.expandToFill = false,
   });
   final List<LearningSeminar> events;
   final ValueChanged<LearningSeminar> onOpen;
   final LearningArea? area;
   final bool nearby;
+  final bool expandToFill;
   @override
   State<CanadaEventMap> createState() => _CanadaEventMapState();
 }
@@ -291,7 +293,10 @@ class _CanadaEventMapState extends State<CanadaEventMap> {
         return const SizedBox(
           height: 400,
           child: Center(
-            child: Text('Canada map could not load. Events are listed below.'),
+            child: SiteCopyText(
+              'learning.events.mapLoadError',
+              'Canada map could not load. Refresh to try again.',
+            ),
           ),
         );
       if (!s.hasData)
@@ -302,7 +307,14 @@ class _CanadaEventMapState extends State<CanadaEventMap> {
       geometry = s.data;
       return LayoutBuilder(
         builder: (context, box) {
-          final size = Size(box.maxWidth, box.maxWidth < 600 ? 460 : 560);
+          final size = Size(
+            box.maxWidth,
+            widget.expandToFill && box.hasBoundedHeight
+                ? box.maxHeight
+                : box.maxWidth < 600
+                ? 460
+                : 560,
+          );
           if (size != viewport) {
             viewport = size;
             WidgetsBinding.instance.addPostFrameCallback((_) => fit());
@@ -314,9 +326,10 @@ class _CanadaEventMapState extends State<CanadaEventMap> {
           final cardWidth = math.min(340.0, size.width - 24);
           final cardHeight = active == null
               ? 0.0
-              : active.events.length > 1
-              ? 340.0
-              : 280.0;
+              : math.min(
+                  active.events.length > 1 ? 340.0 : 280.0,
+                  math.max(0.0, size.height - 24),
+                );
           final left = active == null
               ? 12.0
               : (active.point.dx + 26 + cardWidth < size.width

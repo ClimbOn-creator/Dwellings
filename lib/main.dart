@@ -181,8 +181,8 @@ class AffinityApp extends StatelessWidget {
       'seller-dashboard' ||
       'succession-transfer' => const SellerDashboardPage(),
       'deal-rooms' => const DealRoomsPage(initialSide: PlatformSide.business),
-      'deal-comparison' => const DealRoomsPage(
-        initialView: BuyerDashboardView.quiz,
+      'deal-comparison' => const LearningDashboardPage(
+        initialView: LearningView.quiz,
       ),
       'bulletin-board' ||
       'businesses-for-sale' => const BusinessSaleBulletinPage(),

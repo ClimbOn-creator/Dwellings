@@ -1,3 +1,4 @@
+import '../widgets/dashboard_header.dart';
 import 'deal_rooms_page.dart';
 import 'deal_comparison_page.dart';
 import 'dart:async';
@@ -20,7 +21,6 @@ import '../models/learning_journey.dart';
 import '../models/platform_side.dart';
 import '../widgets/dashboard_ui.dart';
 import '../widgets/app_navigation_menu.dart';
-import '../widgets/home_brand_button.dart';
 import '../widgets/learning_media_player.dart';
 import '../widgets/site_copy_text.dart';
 import '../widgets/nova_target.dart';
@@ -118,9 +118,7 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
   RealtimeChannel? eventChanges;
   int eventRevision = 0;
   bool updatingEvents = false;
-  final eventSearch = TextEditingController();
 
-  final eventKeys = <String, GlobalKey>{};
   bool seller = false, busy = false;
   int selected = 0;
   int? answer;
@@ -179,7 +177,6 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
     clock?.cancel();
     if (eventChanges != null)
       LearningService.client.removeChannel(eventChanges!);
-    eventSearch.dispose();
     super.dispose();
   }
 
@@ -325,7 +322,10 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
         toolbarHeight: 72,
         backgroundColor: const Color(0xFFF7F5F0),
         surfaceTintColor: Colors.transparent,
-        title: const HomeBrandButton(size: 48, dark: false),
+        title: const DashboardHeader(
+          label: 'Learning dash',
+          contentKey: 'dashboard.header.learning',
+        ),
         actions: [
           AppNavigationMenu(guidePage: guide, dark: false),
           const SizedBox(width: 12),
@@ -394,36 +394,66 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
       ),
     ),
   );
-  Widget _workspace(bool compact) => SingleChildScrollView(
-    padding: EdgeInsets.all(compact ? 18 : 28),
+  Widget _compactNavigation() => SingleChildScrollView(
+    scrollDirection: Axis.horizontal,
+    child: Row(
+      children: [
+        for (final v in LearningView.values.where(
+          (v) => v != LearningView.contributors || permissions.isOwner,
+        ))
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: ChoiceChip(
+              label: Text(_label(v)),
+              selected: view == v,
+              onSelected: (_) => show(v),
+            ),
+          ),
+      ],
+    ),
+  );
+
+  Widget _workspace(bool compact) => Stack(
+    fit: StackFit.expand,
+    children: [
+      Offstage(
+        offstage: view == LearningView.seminars,
+        child: TickerMode(
+          enabled: view != LearningView.seminars,
+          child: _standardWorkspace(compact),
+        ),
+      ),
+      if (view == LearningView.seminars)
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (compact)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
+                child: _compactNavigation(),
+              ),
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.all(compact ? 8 : 12),
+                child: _seminars(),
+              ),
+            ),
+          ],
+        ),
+    ],
+  );
+
+  Widget _standardWorkspace(bool compact) => SingleChildScrollView(
+    padding: EdgeInsets.all(
+      compact ? (view == LearningView.quiz ? 12 : 18) : 28,
+    ),
     child: Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 1220),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (compact) ...[
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    for (final v in LearningView.values.where(
-                      (v) =>
-                          v != LearningView.contributors || permissions.isOwner,
-                    ))
-                      Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: ChoiceChip(
-                          label: Text(_label(v)),
-                          selected: view == v,
-                          onSelected: (_) => show(v),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 22),
-            ],
+            if (compact) ...[_compactNavigation(), const SizedBox(height: 22)],
             Offstage(
               offstage: view != LearningView.quiz,
               child: TickerMode(
@@ -433,7 +463,7 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
             ),
             switch (view) {
               LearningView.feed => _feed(),
-              LearningView.seminars => _seminars(),
+              LearningView.seminars => const SizedBox.shrink(),
               LearningView.map => _map(),
               LearningView.quiz => const SizedBox.shrink(),
               LearningView.pipeline => DealRoomsPage(
@@ -778,139 +808,131 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
     if (mounted) refresh();
   }
 
+  Future<void> _manageEvents() async {
+    final events = await seminars;
+    if (!mounted) return;
+    final mine = events
+        .where(
+          (e) => permissions.isOwner || e.hostId == BackendService.user?.id,
+        )
+        .toList();
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => SafeArea(
+        child: SizedBox(
+          height: MediaQuery.sizeOf(context).height * .85,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    const Expanded(
+                      child: SiteCopyText(
+                        'learning.events.manage.title',
+                        'Manage your events',
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      tooltip: 'Close',
+                      icon: const Icon(Icons.close),
+                    ),
+                  ],
+                ),
+                if (mine.isEmpty)
+                  const SiteCopyText(
+                    'learning.events.manage.empty',
+                    'No published events to manage yet.',
+                  ),
+                for (final event in mine)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 16),
+                    child: _seminar(event),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _seminars() => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
+    crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
       if (permissions.canPublish)
         Padding(
-          padding: const EdgeInsets.only(bottom: 20),
-          child: FilledButton.icon(
-            onPressed: _schedule,
-            icon: const Icon(Icons.add),
-            label: const Text('Place an event on the map'),
+          padding: const EdgeInsets.only(bottom: 10),
+          child: Wrap(
+            spacing: 12,
+            runSpacing: 8,
+            children: [
+              FilledButton.icon(
+                onPressed: _schedule,
+                icon: const Icon(Icons.add),
+                label: const Text('Place an event on the map'),
+              ),
+              TextButton.icon(
+                onPressed: _manageEvents,
+                icon: const Icon(Icons.event_note_outlined),
+                label: const SiteCopyText(
+                  'learning.events.manage.action',
+                  'Manage events',
+                ),
+              ),
+            ],
           ),
         ),
-      NovaTarget(
-        id: 'learning-seminars.sessions',
-        child: FutureBuilder<List<LearningSeminar>>(
-          future: seminars,
-          builder: (c, s) {
-            if (!s.hasData && s.connectionState != ConnectionState.done)
-              return const Center(child: CircularProgressIndicator());
-            if (s.hasError)
-              return _error('Seminars could not load. Please try again.');
-            final published = s.data ?? [];
-            final all = [...published, ...LearningExamples.events];
-            final items = all
-                .where(
-                  (e) => '${e.title} ${e.organization} ${e.areaName}'
-                      .toLowerCase()
-                      .contains(eventSearch.text.toLowerCase()),
-                )
-                .toList();
-            final mapped = items
-                .where((e) => e.visibleOnMap(DateTime.now()))
-                .toList();
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                TextField(
-                  controller: eventSearch,
-                  onChanged: (_) => setState(() {}),
-                  decoration: const InputDecoration(
-                    prefixIcon: Icon(Icons.search),
-                    hintText: 'Search a town, event or organization',
-                  ),
-                ),
-                const SizedBox(height: 18),
-                NovaTarget(
-                  id: 'learning-seminars.map',
-                  child: CanadaEventMap(
-                    events: mapped,
-                    area: area,
-                    onOpen: (e) {
-                      if (e.informationUrl.isNotEmpty) {
-                        _openUrl(e.informationUrl);
-                        return;
-                      }
-                      final key = eventKeys[e.id];
-                      if (key?.currentContext != null)
-                        Scrollable.ensureVisible(
-                          key!.currentContext!,
-                          alignment: .15,
-                          duration: const Duration(milliseconds: 350),
-                        );
-                    },
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 16,
-                  runSpacing: 8,
-                  children: [
-                    for (final kind in const [
-                      'seminar',
-                      'meeting',
-                      'information',
-                      'workshop',
-                    ])
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            eventIcon(kind),
-                            size: 16,
-                            color: eventColor(kind),
+      Expanded(
+        child: NovaTarget(
+          id: 'learning-seminars.sessions',
+          child: FutureBuilder<List<LearningSeminar>>(
+            future: seminars,
+            builder: (context, snapshot) {
+              if (!snapshot.hasData &&
+                  snapshot.connectionState != ConnectionState.done)
+                return const Center(child: CircularProgressIndicator());
+              if (snapshot.hasError)
+                return _error('Seminars could not load. Please try again.');
+              final events = [
+                ...snapshot.data ?? <LearningSeminar>[],
+                ...LearningExamples.events,
+              ].where((e) => e.visibleOnMap(DateTime.now())).toList();
+              return NovaTarget(
+                id: 'learning-seminars.map',
+                child: CanadaEventMap(
+                  events: events,
+                  area: area,
+                  expandToFill: true,
+                  onOpen: (event) {
+                    if (event.informationUrl.isNotEmpty) {
+                      _openUrl(event.informationUrl);
+                    } else {
+                      showModalBottomSheet<void>(
+                        context: context,
+                        isScrollControlled: true,
+                        builder: (context) => SafeArea(
+                          child: SizedBox(
+                            height: MediaQuery.sizeOf(context).height * .85,
+                            child: SingleChildScrollView(
+                              padding: const EdgeInsets.all(20),
+                              child: _seminar(event),
+                            ),
                           ),
-                          const SizedBox(width: 5),
-                          Text(switch (kind) {
-                            'seminar' => 'Seminar',
-                            'meeting' => 'Meeting',
-                            'information' => 'Information',
-                            _ => 'Workshop',
-                          }, style: const TextStyle(fontSize: 12)),
-                        ],
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                copy(
-                  'learning.events.mapHelp',
-                  'Zoom into your town. Hover or tap a pin for its picture and time, then visit the event website. Nearby pins group together. Times are shown in your local time zone.',
-                  color: DashboardUi.muted,
-                  size: 12,
-                ),
-                const SizedBox(height: 24),
-                if (items.isEmpty)
-                  DashboardUi.panel(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        copy(
-                          'learning.seminars.empty',
-                          'No sessions scheduled yet',
-                          size: 22,
-                          weight: FontWeight.w700,
                         ),
-                        const SizedBox(height: 8),
-                        copy(
-                          'learning.seminars.empty.body',
-                          'Approved hosts will announce upcoming sessions here. You can explore the learning map and document examples now.',
-                          color: DashboardUi.muted,
-                        ),
-                      ],
-                    ),
-                  ),
-                for (final item in items) ...[
-                  KeyedSubtree(
-                    key: eventKeys.putIfAbsent(item.id, () => GlobalKey()),
-                    child: _seminar(item),
-                  ),
-                  const SizedBox(height: 18),
-                ],
-              ],
-            );
-          },
+                      );
+                    }
+                  },
+                ),
+              );
+            },
+          ),
         ),
       ),
     ],

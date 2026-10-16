@@ -21,7 +21,7 @@ const pebbleMainPageCopy = <String, List<(String, String, String, String?)>>{
     (
       "schedule",
       "Meet and learn live",
-      "Hover over a point, or tap it on your phone, to see the picture, title, hosting organization and local start time. Nearby events group together; zoom in or open the group. Visit website opens the host’s event or company website. Use the details below to reserve a place or add the event to your calendar.",
+      "Hover over a point, or tap it on your phone, to see the picture, title, hosting organization and local start time. Nearby events group together; zoom in or open the group. Visit website opens the host’s event or company website. Approved hosts can use Manage events to update their sessions.",
       "learning-seminars.map",
     ),
   ],

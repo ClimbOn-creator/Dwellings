@@ -1,3 +1,4 @@
+import '../widgets/dashboard_header.dart';
 import '../widgets/nova_target.dart';
 import '../widgets/nova_panel.dart';
 import '../services/nova_service.dart';
@@ -38,7 +39,6 @@ import 'acquisition_support_page.dart';
 import 'business_acquisition_page.dart';
 import 'member_profile_page.dart';
 import 'auth_page.dart';
-import 'deal_comparison_page.dart';
 import 'member_deal_marketplace_page.dart';
 
 const _ink = Color(0xFF171717);
@@ -53,7 +53,6 @@ enum BuyerDashboardView {
   pipeline,
   dealScreen,
   transactionPlan,
-  quiz,
   team,
   resources,
 }
@@ -349,24 +348,10 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                 backgroundColor: const Color(0xFFF7F5F0),
                 surfaceTintColor: Colors.transparent,
                 foregroundColor: _ink,
-                title: MediaQuery.sizeOf(context).width < 700
-                    ? const HomeBrandButton(size: 48, dark: false)
-                    : const Row(
-                        children: [
-                          HomeBrandButton(size: 48, dark: false),
-                          SizedBox(width: 18),
-                          SiteText(
-                            contentKey: 'copy.deal_rooms_page.m3',
-                            literal: true,
-                            'DEAL OS',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 1.3,
-                            ),
-                          ),
-                        ],
-                      ),
+                title: const DashboardHeader(
+                  label: 'Buyer dash',
+                  contentKey: 'copy.deal_rooms_page.m3',
+                ),
                 actions: [
                   if (_dashboardView != BuyerDashboardView.pipeline)
                     IconButton(
@@ -439,7 +424,6 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
           BuyerDashboardView.transactionPlan => _transactionPlanner(),
           BuyerDashboardView.resources => _resourcesPage(),
           BuyerDashboardView.team => _buyerTeamPage(),
-          BuyerDashboardView.quiz => _buyerQuiz(),
           _ => _buyerDashboardLive(allRooms),
         });
       },
@@ -500,11 +484,6 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
     ),
   );
 
-  Widget _buyerQuiz() => SingleChildScrollView(
-    padding: EdgeInsets.all(MediaQuery.sizeOf(context).width < 600 ? 12 : 20),
-    child: const DealComparisonPage(embedded: true),
-  );
-
   Widget _buyerSidebar() => Container(
     width: 212,
     height: double.infinity,
@@ -550,12 +529,6 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
             _dashboardView == BuyerDashboardView.dealScreen,
             () =>
                 setState(() => _dashboardView = BuyerDashboardView.dealScreen),
-          ),
-          DashboardUi.nav(
-            'Deal comparison quiz',
-            Icons.compare_arrows_rounded,
-            _dashboardView == BuyerDashboardView.quiz,
-            () => setState(() => _dashboardView = BuyerDashboardView.quiz),
           ),
           DashboardUi.nav(
             'Resources',
@@ -829,12 +802,6 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                               ),
                               icon: const Icon(Icons.add),
                               label: const Text('Enter a private deal'),
-                            ),
-                            TextButton(
-                              onPressed: () => setState(
-                                () => _dashboardView = BuyerDashboardView.quiz,
-                              ),
-                              child: const Text('Compare what fits me'),
                             ),
                           ],
                         ),

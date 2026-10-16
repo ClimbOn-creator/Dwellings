@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dwelling_iq/widgets/learning_example_cover.dart';
+import 'package:dwelling_iq/widgets/canada_event_map.dart';
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
@@ -158,7 +159,11 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('All events'), findsNothing);
     expect(find.text('Near my community'), findsNothing);
-    expect(find.text('Example event'), findsNWidgets(4));
+    expect(find.text('Example event'), findsNothing);
+    expect(
+      tester.widget<CanadaEventMap>(find.byType(CanadaEventMap)).events.length,
+      4,
+    );
     expect(find.text('Reserve my place'), findsNothing);
     expect(find.text('Add to calendar'), findsNothing);
     expect(tester.takeException(), isNull);

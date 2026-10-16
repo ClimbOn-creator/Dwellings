@@ -63,7 +63,6 @@ List<AppNavigationDestination> destinationsForTunnel(AppTunnel tunnel) =>
         AppNavigationDestination.profile,
         AppNavigationDestination.transactionRoom,
         AppNavigationDestination.businessesForSale,
-        AppNavigationDestination.dealComparison,
         AppNavigationDestination.consulting,
       ],
       AppTunnel.seller => [
@@ -159,8 +158,8 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
       initialSide: PlatformSide.business,
     ),
     AppNavigationDestination.transactionRoom => const TransactionLearningPage(),
-    AppNavigationDestination.dealComparison => const DealRoomsPage(
-      initialView: BuyerDashboardView.quiz,
+    AppNavigationDestination.dealComparison => const LearningDashboardPage(
+      initialView: LearningView.quiz,
     ),
     AppNavigationDestination.businessesForSale =>
       const BusinessSaleBulletinPage(),
