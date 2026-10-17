@@ -1,4 +1,3 @@
-import '../widgets/membership_footer.dart';
 import '../widgets/dashboard_header.dart';
 import '../widgets/calculator_help_sidebar.dart';
 import '../widgets/nova_target.dart';
@@ -480,8 +479,6 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
                           SellerDashboardView.team => const SizedBox.shrink(),
                           SellerDashboardView.settings => _plan(),
                         },
-                        const SizedBox(height: 36),
-                        const MembershipFooter(fullBleed: false),
                         const SizedBox(height: 24),
                         _nextPageAction(),
                         const SizedBox(height: 16),

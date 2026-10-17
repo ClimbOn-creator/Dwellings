@@ -1,4 +1,3 @@
-import 'footer_circle_physics.dart';
 import 'site_text.dart';
 import 'package:flutter/material.dart';
 
@@ -22,7 +21,8 @@ class SiteFooter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final compact = MediaQuery.sizeOf(context).width < 720;
-    return InteractiveCircleFooter(
+    return ColoredBox(
+      color: Colors.white,
       child: Padding(
         padding: EdgeInsets.fromLTRB(
           compact ? 22 : 54,

@@ -4,7 +4,6 @@ import '../services/app_tunnel.dart';
 import '../widgets/affinity_cinematic.dart';
 import '../widgets/app_navigation_menu.dart';
 import '../widgets/dashboard_header.dart';
-import '../widgets/membership_footer.dart';
 import '../widgets/pika_introduction.dart';
 import '../widgets/site_copy_text.dart';
 import '../widgets/site_image.dart';
@@ -153,7 +152,6 @@ class MemberOverviewPage extends StatelessWidget {
               ),
             ),
           ),
-          const MembershipFooter(),
         ],
       ),
     ),

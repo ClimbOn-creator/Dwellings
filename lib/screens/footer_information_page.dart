@@ -591,7 +591,11 @@ class _FooterInformationPageState extends State<FooterInformationPage> {
                 ),
               ),
             ),
-            const SliverToBoxAdapter(child: MembershipFooter()),
+            SliverToBoxAdapter(
+              child: MembershipFooter(
+                animateCircles: widget.topic == FooterTopic.approach,
+              ),
+            ),
           ],
         ),
       ),

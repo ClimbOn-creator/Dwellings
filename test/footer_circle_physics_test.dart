@@ -1,8 +1,52 @@
+import 'package:dwelling_iq/widgets/membership_footer.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dwelling_iq/widgets/footer_circle_physics.dart';
 
 void main() {
+  testWidgets(
+    'animated footer is opt-in and the floor sits just below copyright',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      for (final width in [390.0, 1440.0]) {
+        tester.view.physicalSize = Size(width, 1000);
+        tester.view.devicePixelRatio = 1;
+        await tester.pumpWidget(
+          const MaterialApp(
+            home: Scaffold(
+              body: SingleChildScrollView(child: MembershipFooter()),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(find.byType(InteractiveCircleFooter), findsNothing);
+        await tester.pumpWidget(
+          const MaterialApp(
+            home: Scaffold(
+              body: SingleChildScrollView(
+                child: MembershipFooter(animateCircles: true),
+              ),
+            ),
+          ),
+        );
+        // Geometry is ready after layout; gravity is tested separately below.
+        await tester.pump();
+        final floor = tester
+            .getBottomRight(find.byType(InteractiveCircleFooter))
+            .dy;
+        final copyright = tester
+            .getBottomRight(find.textContaining('© 2026 AFFINITY'))
+            .dy;
+        expect(floor - copyright, inInclusiveRange(0, 48));
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(const SizedBox.shrink());
+      }
+    },
+  );
+
   test(
     'circles fall, collide with each other, and stay within floor and walls',
     () {

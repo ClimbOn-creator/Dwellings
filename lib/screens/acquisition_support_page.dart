@@ -226,7 +226,9 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
             _reveal(_path()),
             _reveal(_membershipPricing()),
             _reveal(_questions()),
-            const SliverToBoxAdapter(child: MembershipFooter()),
+            const SliverToBoxAdapter(
+              child: MembershipFooter(animateCircles: true),
+            ),
           ],
         ),
         Positioned(

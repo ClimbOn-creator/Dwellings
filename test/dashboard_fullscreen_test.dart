@@ -1,3 +1,4 @@
+import 'package:dwelling_iq/widgets/membership_footer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -26,6 +27,7 @@ void main() {
         await tester.pumpWidget(MaterialApp(home: page));
         await tester.pumpAndSettle();
         expect(find.text(label), findsOneWidget);
+        expect(find.byType(MembershipFooter), findsNothing);
         expect(find.byTooltip('Pipeline'), findsNothing);
         expect(
           tester
@@ -85,6 +87,7 @@ void main() {
           ),
         );
         await tester.pumpAndSettle();
+        expect(find.byType(MembershipFooter), findsNothing);
         final map = tester.getSize(find.byType(CanadaEventMap));
         expect(map.height, greaterThan(800));
         expect(map.width, greaterThan(width - (width >= 900 ? 250 : 25)));

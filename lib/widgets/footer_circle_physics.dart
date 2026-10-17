@@ -288,10 +288,7 @@ class _InteractiveCircleFooterState extends State<InteractiveCircleFooter>
                 },
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.only(bottom: 260),
-              child: widget.child,
-            ),
+            widget.child,
           ],
         ),
       );

@@ -1,3 +1,4 @@
+import 'package:dwelling_iq/widgets/membership_footer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -21,6 +22,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(AffinityEntryChoices), findsOneWidget);
       expect(find.byType(PikaIntroduction), findsOneWidget);
+      expect(find.byType(MembershipFooter), findsNothing);
       expect(find.text('I WANT TO BUY A BUSINESS'), findsOneWidget);
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox.shrink());

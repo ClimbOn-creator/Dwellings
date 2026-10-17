@@ -1,4 +1,3 @@
-import '../widgets/membership_footer.dart';
 import '../widgets/dashboard_header.dart';
 import '../widgets/nova_target.dart';
 import '../widgets/nova_panel.dart';
@@ -966,16 +965,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
     const padding = EdgeInsets.fromLTRB(26, 30, 26, 56);
     return widget.embeddedPipeline
         ? Padding(padding: padding, child: content)
-        : SingleChildScrollView(
-            padding: padding,
-            child: Column(
-              children: [
-                content,
-                const SizedBox(height: 36),
-                const MembershipFooter(fullBleed: false),
-              ],
-            ),
-          );
+        : SingleChildScrollView(padding: padding, child: content);
   }
 
   Widget _pipelineBroadcastSections(

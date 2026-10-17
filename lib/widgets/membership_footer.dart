@@ -12,7 +12,12 @@ import '../services/app_tunnel.dart';
 /// Full-width site footer. The historical class name is retained so every
 /// existing screen receives the new footer without route-by-route migration.
 class MembershipFooter extends StatelessWidget {
-  const MembershipFooter({super.key, this.fullBleed = true});
+  const MembershipFooter({
+    super.key,
+    this.fullBleed = true,
+    this.animateCircles = false,
+  });
+  final bool animateCircles;
   final bool fullBleed;
 
   @override
@@ -46,64 +51,64 @@ class MembershipFooter extends StatelessWidget {
         ],
       ),
     ];
-    final footer = InteractiveCircleFooter(
-      child: Container(
-        padding: EdgeInsets.fromLTRB(
-          compact ? 26 : 64,
-          compact ? 54 : 76,
-          compact ? 26 : 64,
-          30,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (compact)
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const _FooterIdentity(),
-                  const SizedBox(height: 42),
-                  ...columns.map(
-                    (column) => Padding(
-                      padding: const EdgeInsets.only(bottom: 30),
-                      child: column,
-                    ),
-                  ),
-                ],
-              )
-            else
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Expanded(flex: 4, child: _FooterIdentity()),
-                  for (final column in columns)
-                    Expanded(flex: 2, child: column),
-                ],
-              ),
-            const SizedBox(height: 46),
-            const Divider(color: Color(0xFFDCE4DA)),
-            const SizedBox(height: 18),
-            const Row(
+    final content = Container(
+      padding: EdgeInsets.fromLTRB(
+        compact ? 26 : 64,
+        compact ? 54 : 76,
+        compact ? 26 : 64,
+        12,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (compact)
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: SiteText(
-                    contentKey: 'copy.membership_footer.m1',
-                    literal: true,
-                    '© 2026 AFFINITY · BUSINESS ACQUISITION, MADE NAVIGABLE',
-                    style: TextStyle(
-                      color: Color(0xFF68756B),
-                      fontSize: 9,
-                      letterSpacing: 1.1,
-                    ),
+                const _FooterIdentity(),
+                const SizedBox(height: 42),
+                ...columns.map(
+                  (column) => Padding(
+                    padding: const EdgeInsets.only(bottom: 30),
+                    child: column,
                   ),
                 ),
-                AuthButton(dark: false),
+              ],
+            )
+          else
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Expanded(flex: 4, child: _FooterIdentity()),
+                for (final column in columns) Expanded(flex: 2, child: column),
               ],
             ),
-          ],
-        ),
+          const SizedBox(height: 46),
+          const Divider(color: Color(0xFFDCE4DA)),
+          const SizedBox(height: 18),
+          const Row(
+            children: [
+              Expanded(
+                child: SiteText(
+                  contentKey: 'copy.membership_footer.m1',
+                  literal: true,
+                  '© 2026 AFFINITY · BUSINESS ACQUISITION, MADE NAVIGABLE',
+                  style: TextStyle(
+                    color: Color(0xFF68756B),
+                    fontSize: 9,
+                    letterSpacing: 1.1,
+                  ),
+                ),
+              ),
+              AuthButton(dark: false),
+            ],
+          ),
+        ],
       ),
     );
+    final footer = animateCircles
+        ? InteractiveCircleFooter(child: content)
+        : ColoredBox(color: Colors.white, child: content);
     if (!fullBleed) return footer;
     return UnconstrainedBox(
       constrainedAxis: Axis.vertical,
