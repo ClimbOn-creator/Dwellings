@@ -1,3 +1,4 @@
+import 'package:dwelling_iq/screens/member_overview_page.dart';
 import 'package:dwelling_iq/services/marketplace_service.dart';
 import 'package:dwelling_iq/screens/deal_rooms_page.dart';
 import 'package:dwelling_iq/screens/learning_dashboard_page.dart';
@@ -18,41 +19,37 @@ void main() {
       AppTunnel.learning,
     );
   });
-  testWidgets(
-    'landing learn button has clearer typography and removes Start my path',
-    (tester) async {
-      tester.view.physicalSize = const Size(1440, 1000);
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
-      await tester.pumpWidget(
-        const MaterialApp(home: AcquisitionSupportPage()),
-      );
-      await tester.pump(const Duration(seconds: 1));
-      final learn = tester.widget<SiteCopyText>(
+  testWidgets('moved Member overview choices keep matching typography', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1440, 1000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(const MaterialApp(home: MemberOverviewPage()));
+    await tester.pump(const Duration(seconds: 1));
+    final learn = tester.widget<SiteCopyText>(
+      find.byWidgetPredicate(
+        (widget) =>
+            widget is SiteCopyText && widget.contentKey == 'home.learn.action',
+      ),
+    );
+    for (final id in [
+      'copy.acquisition_support_page.2',
+      'copy.acquisition_support_page.3',
+      'home.seller.action',
+    ]) {
+      final button = tester.widget<SiteCopyText>(
         find.byWidgetPredicate(
-          (widget) =>
-              widget is SiteCopyText &&
-              widget.contentKey == 'home.learn.action',
+          (widget) => widget is SiteCopyText && widget.contentKey == id,
         ),
       );
-      for (final id in [
-        'copy.acquisition_support_page.2',
-        'copy.acquisition_support_page.3',
-        'home.seller.action',
-      ]) {
-        final button = tester.widget<SiteCopyText>(
-          find.byWidgetPredicate(
-            (widget) => widget is SiteCopyText && widget.contentKey == id,
-          ),
-        );
-        expect(learn.style, button.style);
-      }
-      expect(find.text('START MY PATH'), findsNothing);
-      expect(tester.takeException(), isNull);
-      await tester.pumpWidget(const SizedBox.shrink());
-    },
-  );
+      expect(learn.style, button.style);
+    }
+    expect(find.text('START MY PATH'), findsNothing);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
   for (final width in [390.0, 1440.0]) {
     for (final embedded in [false, true]) {
       testWidgets(

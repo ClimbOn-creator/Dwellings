@@ -1,3 +1,4 @@
+import 'screens/member_overview_page.dart';
 import 'widgets/affinity_button_gradients.dart';
 import 'screens/company_data_page.dart';
 import 'services/usage_analytics_service.dart';
@@ -189,7 +190,7 @@ class AffinityApp extends StatelessWidget {
       ),
       'bulletin-board' ||
       'businesses-for-sale' => const BusinessSaleBulletinPage(),
-      'member-studio' || 'member-dashboard' => const MemberPricingPage(),
+      'member-studio' || 'member-dashboard' => const MemberOverviewPage(),
       'personal-consulting' => const PersonalizedConsultingPage(),
       'owner-data' => const CompanyDataPage(),
       'content-studio' => const ContentStudioPage(),

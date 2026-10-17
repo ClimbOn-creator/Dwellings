@@ -51,7 +51,9 @@ class _PikaIntroductionState extends State<PikaIntroduction> {
   void _meetPika() {
     CalculatorHelpController.instance.close();
     NovaTrainingController.instance.restoreDock();
-    NovaTrainingController.instance.startPage('landing');
+    NovaTrainingController.instance.startPage(
+      NovaTrainingController.instance.currentPage,
+    );
   }
 
   Widget _words(bool wide) => Column(

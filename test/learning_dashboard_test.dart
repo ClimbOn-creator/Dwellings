@@ -1,5 +1,5 @@
 import 'package:dwelling_iq/models/learning_journey.dart';
-import 'package:dwelling_iq/screens/acquisition_support_page.dart';
+import 'package:dwelling_iq/screens/member_overview_page.dart';
 import 'package:dwelling_iq/screens/learning_dashboard_page.dart';
 import 'package:dwelling_iq/services/learning_service.dart';
 import 'package:dwelling_iq/services/app_tunnel.dart';
@@ -13,11 +13,11 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     AppTunnelController.select(AppTunnel.learning);
   });
-  testWidgets('boxed landing learning action opens the independent workspace', (
+  testWidgets('moved Member overview learning action opens the independent workspace', (
     tester,
   ) async {
     AppTunnelController.select(AppTunnel.landing);
-    await tester.pumpWidget(const MaterialApp(home: AcquisitionSupportPage()));
+    await tester.pumpWidget(const MaterialApp(home: MemberOverviewPage()));
     await tester.pump(const Duration(seconds: 1));
     final button = find.text('I want to learn');
     expect(button, findsOneWidget);

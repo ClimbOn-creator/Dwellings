@@ -1,6 +1,10 @@
 // These IDs are permanent. Rewrite the fallback VALUE while retaining its ID.
 // Never regenerate or renumber this registry during a redesign.
 const siteCopyCatalog = <String, String>{
+  'member.overview.eyebrow': 'YOUR NEXT CHAPTER',
+  'member.overview.title': 'Choose where you want to go.',
+  'member.overview.workspace': 'Open my professional workspace',
+  'member.overview.pricing': 'View membership pricing',
   'member.dashboard.submitDeal': 'Submit a deal to Affinity',
   "home.pika.eyebrow": "A LITTLE GUIDANCE. A CLEARER PATH.",
   "home.pika.title": "Meet Pika.",

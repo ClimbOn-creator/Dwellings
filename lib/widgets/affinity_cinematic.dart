@@ -214,53 +214,6 @@ class _AffinityCinemaHeroState extends State<AffinityCinemaHero>
                                     ),
                                   ),
                                   const SizedBox(height: 24),
-                                  if (!narrow)
-                                    ConstrainedBox(
-                                      constraints: const BoxConstraints(
-                                        maxWidth: 660,
-                                      ),
-                                      child: SiteCopyText(
-                                        'home.intro',
-                                        'Affinity helps aspiring buyers define the right target, prepare to transact, screen real opportunities, and build the professional team needed to close with confidence.',
-                                        style: TextStyle(
-                                          color: const Color(0xFFE2E5E3),
-                                          fontSize: narrow ? 16 : 18,
-                                          height: 1.45,
-                                        ),
-                                      ),
-                                    ),
-                                  const SizedBox(height: 28),
-                                  Wrap(
-                                    spacing: 12,
-                                    runSpacing: 10,
-                                    children: [
-                                      _CinemaButton(
-                                        'copy.acquisition_support_page.2',
-                                        'I WANT TO BUY A BUSINESS',
-                                        widget.onBuyer,
-                                      ),
-                                      _CinemaButton(
-                                        'copy.acquisition_support_page.3',
-                                        'I PROVIDE PROFESSIONAL SERVICES',
-                                        widget.onMember,
-                                        outline: true,
-                                      ),
-                                      if (widget.onSeller != null)
-                                        _CinemaButton(
-                                          'home.seller.action',
-                                          'SUCCESSION OR TRANSFER',
-                                          widget.onSeller!,
-                                          outline: true,
-                                        ),
-                                      if (widget.onLearn != null)
-                                        _CinemaButton(
-                                          'home.learn.action',
-                                          'I want to learn',
-                                          widget.onLearn!,
-                                          outline: true,
-                                        ),
-                                    ],
-                                  ),
                                 ],
                               ),
                             ),
@@ -370,6 +323,62 @@ class _AffinityCinemaHeroState extends State<AffinityCinemaHero>
         ),
       );
     },
+  );
+}
+
+/// The original landing introduction and choices, now on Member overview.
+class AffinityEntryChoices extends StatelessWidget {
+  const AffinityEntryChoices({
+    super.key,
+    required this.onBuyer,
+    required this.onMember,
+    required this.onSeller,
+    required this.onLearn,
+  });
+  final VoidCallback onBuyer, onMember, onSeller, onLearn;
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 900),
+        child: const SiteCopyText(
+          'home.intro',
+          'Affinity helps aspiring buyers define the right target, prepare to transact, screen real opportunities, and build the professional team needed to close with confidence.',
+          style: TextStyle(color: Color(0xFFE2E5E3), fontSize: 18, height: 1.5),
+        ),
+      ),
+      const SizedBox(height: 30),
+      Wrap(
+        spacing: 12,
+        runSpacing: 12,
+        children: [
+          _CinemaButton(
+            'copy.acquisition_support_page.2',
+            'I WANT TO BUY A BUSINESS',
+            onBuyer,
+          ),
+          _CinemaButton(
+            'copy.acquisition_support_page.3',
+            'I PROVIDE PROFESSIONAL SERVICES',
+            onMember,
+            outline: true,
+          ),
+          _CinemaButton(
+            'home.seller.action',
+            'SUCCESSION OR TRANSFER',
+            onSeller,
+            outline: true,
+          ),
+          _CinemaButton(
+            'home.learn.action',
+            'I want to learn',
+            onLearn,
+            outline: true,
+          ),
+        ],
+      ),
+    ],
   );
 }
 

@@ -8,6 +8,7 @@ void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
     NovaTrainingController.instance.pause();
+    NovaTrainingController.instance.currentPage = 'member/overview';
   });
   for (final width in [390.0, 1440.0]) {
     testWidgets(
@@ -48,7 +49,7 @@ void main() {
         await tester.pumpAndSettle();
         expect(NovaTrainingController.instance.active, isTrue);
         expect(NovaTrainingController.instance.pageOnly, isTrue);
-        expect(NovaTrainingController.instance.step.destination, 'landing');
+        expect(NovaTrainingController.instance.step.destination, 'member/overview');
         expect(tester.takeException(), isNull);
         await tester.pumpWidget(const SizedBox.shrink());
       },

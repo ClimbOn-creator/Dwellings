@@ -1,3 +1,4 @@
+import '../widgets/membership_footer.dart';
 import '../widgets/dashboard_header.dart';
 import 'deal_rooms_page.dart';
 import 'deal_comparison_page.dart';
@@ -437,9 +438,21 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
                 child: _compactNavigation(),
               ),
             Expanded(
-              child: Padding(
-                padding: EdgeInsets.all(compact ? 8 : 12),
-                child: _seminars(),
+              child: LayoutBuilder(
+                builder: (context, box) => SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      SizedBox(
+                        height: box.maxHeight,
+                        child: Padding(
+                          padding: EdgeInsets.all(compact ? 8 : 12),
+                          child: _seminars(),
+                        ),
+                      ),
+                      const MembershipFooter(fullBleed: false),
+                    ],
+                  ),
+                ),
               ),
             ),
           ],
@@ -477,6 +490,8 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
               LearningView.resources => const BuyerResourcesPanel(),
               LearningView.contributors => _contributors(),
             },
+            const SizedBox(height: 36),
+            const MembershipFooter(fullBleed: false),
           ],
         ),
       ),

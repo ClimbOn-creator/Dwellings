@@ -1,3 +1,4 @@
+import '../widgets/membership_footer.dart';
 import '../widgets/dashboard_header.dart';
 import '../services/app_tunnel.dart';
 import '../widgets/nova_target.dart';
@@ -497,7 +498,11 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                   padding: const EdgeInsets.only(bottom: 40),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [_currentView()],
+                    children: [
+                      _currentView(),
+                      const SizedBox(height: 36),
+                      const MembershipFooter(fullBleed: false),
+                    ],
                   ),
                 ),
               ),
@@ -524,7 +529,11 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                   padding: const EdgeInsets.fromLTRB(28, 26, 28, 60),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [_currentView()],
+                    children: [
+                      _currentView(),
+                      const SizedBox(height: 36),
+                      const MembershipFooter(fullBleed: false),
+                    ],
                   ),
                 ),
               ),

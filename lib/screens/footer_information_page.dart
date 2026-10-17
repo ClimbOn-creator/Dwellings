@@ -1,3 +1,4 @@
+import 'member_overview_page.dart';
 import 'tunnel_pages.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -50,7 +51,7 @@ Widget footerToolDestination(FooterTopic topic) => switch (topic) {
   FooterTopic.pipeline || FooterTopic.approach => const DealRoomsPage(
     initialSide: PlatformSide.business,
   ),
-  FooterTopic.memberStudio => const MemberPricingPage(),
+  FooterTopic.memberStudio => const MemberOverviewPage(),
   FooterTopic.directory => const MemberDealMarketplacePage(
     initialView: MemberDashboardView.professionals,
   ),

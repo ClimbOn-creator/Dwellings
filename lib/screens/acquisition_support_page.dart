@@ -1,4 +1,3 @@
-import '../widgets/pika_introduction.dart';
 import 'tunnel_pages.dart';
 import 'assistant_workspace_page.dart';
 import 'member_deal_marketplace_page.dart';
@@ -220,14 +219,12 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
                 ),
               ),
             ),
-            const SliverToBoxAdapter(child: PikaIntroduction()),
             _reveal(_goalStatement()),
             const SliverToBoxAdapter(child: AffinityTimedChapters()),
             _reveal(_buyerBenefits()),
             _reveal(_audiences()),
             _reveal(_path()),
             _reveal(_membershipPricing()),
-            _reveal(_consultingIntroduction()),
             _reveal(_questions()),
             const SliverToBoxAdapter(child: MembershipFooter()),
           ],

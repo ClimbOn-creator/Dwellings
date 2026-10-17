@@ -1,3 +1,4 @@
+import 'footer_circle_physics.dart';
 import 'site_text.dart';
 import 'package:flutter/material.dart';
 
@@ -21,8 +22,7 @@ class SiteFooter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final compact = MediaQuery.sizeOf(context).width < 720;
-    return ColoredBox(
-      color: const Color(0xFF053827),
+    return InteractiveCircleFooter(
       child: Padding(
         padding: EdgeInsets.fromLTRB(
           compact ? 22 : 54,
@@ -58,7 +58,7 @@ class SiteFooter extends StatelessWidget {
                 ],
               ),
             const SizedBox(height: 48),
-            Container(height: 1, color: Colors.white.withValues(alpha: .1)),
+            Container(height: 1, color: const Color(0xFFDCE4DA)),
             const SizedBox(height: 22),
             const Row(
               children: [
@@ -120,7 +120,7 @@ class _FooterLinks extends StatelessWidget {
     spacing: 8,
     runSpacing: 8,
     children: [
-      const AuthButton(dark: true),
+      const AuthButton(dark: false),
       _FooterButton(label: 'ABOUT', onTap: onAbout),
       _FooterButton(label: 'TEAM', onTap: onTeam),
     ],
@@ -136,9 +136,9 @@ class _FooterButton extends StatelessWidget {
   Widget build(BuildContext context) => OutlinedButton(
     onPressed: onTap,
     style: OutlinedButton.styleFrom(
-      foregroundColor: const Color(0xFFC7C7D2),
+      foregroundColor: const Color(0xFF405F4A),
       backgroundColor: Colors.transparent,
-      side: const BorderSide(color: Colors.white24),
+      side: const BorderSide(color: Color(0xFFDCE4DA)),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
     ),
     child: SiteText(

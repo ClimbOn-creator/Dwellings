@@ -1,3 +1,4 @@
+import 'package:dwelling_iq/screens/member_overview_page.dart';
 import 'package:dwelling_iq/screens/footer_information_page.dart';
 import 'package:dwelling_iq/models/footer_page_content.dart';
 import 'package:dwelling_iq/screens/become_member_page.dart';
@@ -54,12 +55,12 @@ void main() {
       await tester.pumpWidget(const SizedBox.shrink());
     },
   );
-  test('Member footer entry selects Member pricing from every app area', () {
+  test('Member footer opens the overview from every app area', () {
     for (final role in AppTunnel.values) {
       AppTunnelController.select(role);
       expect(
         footerDestination(FooterTopic.memberStudio),
-        isA<MemberPricingPage>(),
+        isA<MemberOverviewPage>(),
       );
       expect(AppTunnelController.current.value, AppTunnel.member);
     }
@@ -104,15 +105,13 @@ void main() {
   }
   for (final width in [390.0, 1440.0]) {
     testWidgets(
-      'member landing entry shows pricing before dashboard at $width',
+      'Member overview professional entry keeps pricing before the workspace at $width',
       (tester) async {
         tester.view.physicalSize = Size(width, 1000);
         tester.view.devicePixelRatio = 1;
         addTearDown(tester.view.resetPhysicalSize);
         addTearDown(tester.view.resetDevicePixelRatio);
-        await tester.pumpWidget(
-          const MaterialApp(home: AcquisitionSupportPage()),
-        );
+        await tester.pumpWidget(const MaterialApp(home: MemberOverviewPage()));
         await tester.pump(const Duration(seconds: 1));
         final button = find.text('I PROVIDE PROFESSIONAL SERVICES');
         await tester.ensureVisible(button);
@@ -135,7 +134,7 @@ void main() {
       },
     );
     testWidgets(
-      'landing expands with plan comparison and consulting at $width',
+      'Home keeps pricing and removes the consulting promotion at $width',
       (tester) async {
         tester.view.physicalSize = Size(width, 1000);
         tester.view.devicePixelRatio = 1;
@@ -157,23 +156,7 @@ void main() {
         expect(find.text('Buyer, Seller & Learning'), findsOneWidget);
         expect(find.text('Free member'), findsNothing);
         expect(find.text('Featured'), findsNothing);
-        final consulting = find.text('Explore personal consulting');
-        await tester.scrollUntilVisible(
-          consulting,
-          600,
-          scrollable: find.byType(Scrollable).first,
-        );
-        await tester.pumpAndSettle();
-        // Keep the target below the floating navigation.
-        await Scrollable.ensureVisible(
-          tester.element(consulting),
-          alignment: .4,
-        );
-        await tester.pumpAndSettle();
-        await tester.tap(consulting);
-        await tester.pumpAndSettle();
-        expect(find.byType(PersonalizedConsultingPage), findsOneWidget);
-        expect(tester.takeException(), isNull);
+        expect(find.text('Explore personal consulting'), findsNothing);
         await tester.pumpWidget(const SizedBox.shrink());
       },
     );
