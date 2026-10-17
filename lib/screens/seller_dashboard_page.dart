@@ -316,6 +316,7 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
     child: Scaffold(
       backgroundColor: DashboardUi.canvas,
       appBar: AppBar(
+        automaticallyImplyLeading: MediaQuery.sizeOf(context).width >= 900,
         toolbarHeight: 72,
         backgroundColor: const Color(0xFFF7F5F0),
         surfaceTintColor: Colors.transparent,

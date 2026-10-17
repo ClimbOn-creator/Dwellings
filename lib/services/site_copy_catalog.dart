@@ -1,6 +1,7 @@
 // These IDs are permanent. Rewrite the fallback VALUE while retaining its ID.
 // Never regenerate or renumber this registry during a redesign.
 const siteCopyCatalog = <String, String>{
+  'member.dashboard.submitDeal': 'Submit a deal to Affinity',
   "home.pika.eyebrow": "A LITTLE GUIDANCE. A CLEARER PATH.",
   "home.pika.title": "Meet Pika.",
   "home.pika.heading": "Clarity, one step\nat a time.",
@@ -24,6 +25,18 @@ const siteCopyCatalog = <String, String>{
       "Start with the deal comparison quiz in Learning. Review why each choice appealed to you, then save opportunities in your private Buyer pipeline as you find them.",
   "home.pika.answer.2":
       "Open Deal screen in the Buyer dashboard. Choose business, assets or commercial property, then use the information buttons beside the inputs for definitions, calculations and examples.",
+  "navigation.organizer.dashboard": "Dashboard",
+  "navigation.organizer.about": "About us",
+  "navigation.organizer.buyerDashboard.description":
+      "Track private deals and build your team.",
+  "navigation.organizer.sellerDashboard.description":
+      "Plan your succession or business transfer.",
+  "navigation.organizer.memberStudio.description":
+      "Your professional profile and deal workspace.",
+  "navigation.organizer.learningDashboard.description":
+      "Learn, compare opportunities and explore events.",
+  "navigation.memberStudio": "Member dashboard",
+  "navigation.learningDashboard": "Learning dashboard",
   'navigation.home': 'Home',
   'copy.deal_rooms_page.m3': 'Buyer dash',
   'copy.member_deal_marketplace_page.11': 'Member dash',

@@ -18,9 +18,10 @@ class AffinityScrollScene extends StatelessWidget {
     required this.screens,
     required this.builder,
     required this.fallback,
+    this.viewportInset = 82,
   });
   final ScrollController controller;
-  final double startOffset, screens;
+  final double startOffset, screens, viewportInset;
   final Widget Function(BuildContext, double, double) builder;
   final Widget fallback;
 
@@ -35,7 +36,7 @@ class AffinityScrollScene extends StatelessWidget {
           MediaQuery.textScalerOf(context).scale(16) > 22 ||
           size.height < 600;
       if (still) return fallback;
-      final height = size.height - 82;
+      final height = size.height - viewportInset;
       final distance = height * (screens - 1);
       return SizedBox(
         height: height * screens,

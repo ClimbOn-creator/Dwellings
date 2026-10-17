@@ -521,7 +521,12 @@ class _FooterInformationPageState extends State<FooterInformationPage> {
                         child: HomeBrandButton(size: 38, dark: false),
                       ),
                     ),
-                    const AppNavigationMenu(dark: false),
+                    AppNavigationMenu(
+                      dark: false,
+                      guidePage: widget.topic == FooterTopic.approach
+                          ? 'about-us'
+                          : null,
+                    ),
                   ],
                 ),
                 vertical: 20,

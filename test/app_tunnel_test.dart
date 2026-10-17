@@ -35,46 +35,13 @@ void main() {
       expect(AppTunnelController.forModule(module), AppTunnel.landing);
     }
   });
-  for (final (tunnel, destinations) in [
-    (
-      AppTunnel.landing,
-      [
-        'buyerDashboard',
-        'sellerDashboard',
-        'memberStudio',
-        'learningDashboard',
-      ],
-    ),
-    (
-      AppTunnel.buyer,
-      [
-        'buyerDashboard',
-        'resources',
-        'transactionRoom',
-        'businessesForSale',
-        'consulting',
-      ],
-    ),
-    (
-      AppTunnel.seller,
-      ['sellerDashboard', 'transactionRoom', 'sellerPosts', 'consulting'],
-    ),
-    (
-      AppTunnel.member,
-      ['memberPricing', 'memberStudio', 'profile', 'memberMarketing'],
-    ),
-    (
-      AppTunnel.learning,
-      [
-        'learningDashboard',
-        'learningSeminars',
-        'learningMap',
-        'transactionRoom',
-        'profile',
-        'consulting',
-      ],
-    ),
-  ]) {
+  for (final tunnel in AppTunnel.values) {
+    const destinations = [
+      'buyerDashboard',
+      'sellerDashboard',
+      'memberStudio',
+      'learningDashboard',
+    ];
     testWidgets('$tunnel menu contains only its permitted destinations', (
       tester,
     ) async {
@@ -84,6 +51,13 @@ void main() {
           home: Scaffold(appBar: null, body: AppNavigationMenu(dark: false)),
         ),
       );
+      await tester.pumpAndSettle();
+      expect(find.text('Home'), findsOneWidget);
+      expect(find.text('Dashboard'), findsOneWidget);
+      expect(find.text('About us'), findsOneWidget);
+      expect(find.byType(AppNavigationPill), findsNothing);
+      await tester.tap(find.text('Dashboard'));
+      await tester.pumpAndSettle();
       final actual = tester
           .widgetList<AppNavigationPill>(find.byType(AppNavigationPill))
           .where((item) => item.destination != null)
@@ -93,7 +67,7 @@ void main() {
         find.byType(PopupMenuButton<AppNavigationDestination>),
         findsNothing,
       );
-      expect(find.byKey(const ValueKey('navigation-home')), findsOneWidget);
+      expect(find.byKey(const ValueKey('organizer-tab-0')), findsOneWidget);
       expect(actual, destinations);
       expect(find.text('Company data · owners only'), findsNothing);
       expect(find.text('Usage privacy'), findsNothing);

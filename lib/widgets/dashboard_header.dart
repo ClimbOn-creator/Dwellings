@@ -18,13 +18,16 @@ class DashboardHeader extends StatelessWidget {
         label,
         style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
       );
-      if (box.maxWidth < 240) {
+      if (box.maxWidth < 240 || MediaQuery.sizeOf(context).width < 1100) {
         return InkWell(
           onTap: () => HomeBrandButton.open(context),
-          child: FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: Alignment.centerLeft,
-            child: name,
+          child: SizedBox(
+            width: MediaQuery.sizeOf(context).width < 700 ? 56 : 130,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: name,
+            ),
           ),
         );
       }

@@ -344,6 +344,8 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
           : Scaffold(
               backgroundColor: DashboardUi.canvas,
               appBar: AppBar(
+                automaticallyImplyLeading:
+                    MediaQuery.sizeOf(context).width >= 900,
                 toolbarHeight: 72,
                 backgroundColor: const Color(0xFFF7F5F0),
                 surfaceTintColor: Colors.transparent,
@@ -353,7 +355,8 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                   contentKey: 'copy.deal_rooms_page.m3',
                 ),
                 actions: [
-                  if (_dashboardView != BuyerDashboardView.home)
+                  if (_dashboardView != BuyerDashboardView.home &&
+                      MediaQuery.sizeOf(context).width >= 700)
                     IconButton(
                       tooltip: 'Back to dashboard',
                       onPressed: () => setState(

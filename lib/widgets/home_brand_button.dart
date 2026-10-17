@@ -39,7 +39,7 @@ class HomeBrandButton extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(2),
           child: AffinityLogo(
-            size: size,
+            size: MediaQuery.sizeOf(context).width < 700 ? 22 : size,
             showWordmark: showWordmark,
             dark: dark,
           ),

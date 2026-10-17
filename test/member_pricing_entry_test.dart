@@ -164,6 +164,12 @@ void main() {
           scrollable: find.byType(Scrollable).first,
         );
         await tester.pumpAndSettle();
+        // Keep the target below the floating navigation.
+        await Scrollable.ensureVisible(
+          tester.element(consulting),
+          alignment: .4,
+        );
+        await tester.pumpAndSettle();
         await tester.tap(consulting);
         await tester.pumpAndSettle();
         expect(find.byType(PersonalizedConsultingPage), findsOneWidget);
@@ -226,28 +232,23 @@ void main() {
     );
   }
   for (final role in AppTunnel.values) {
-    testWidgets('consulting is available and retains $role navigation', (
-      tester,
-    ) async {
-      AppTunnelController.select(role);
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(body: AppNavigationMenu(guidePage: 'profile')),
-        ),
-      );
-      await tester.pumpAndSettle();
-      if (role == AppTunnel.landing || role == AppTunnel.member) {
+    testWidgets(
+      'organizer groups dashboard tools without consulting links for $role',
+      (tester) async {
+        AppTunnelController.select(role);
+        await tester.pumpWidget(
+          const MaterialApp(
+            home: Scaffold(body: AppNavigationMenu(guidePage: 'profile')),
+          ),
+        );
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Dashboard'));
+        await tester.pumpAndSettle();
         expect(find.text('Personal consulting'), findsNothing);
+        expect(find.byType(AppNavigationPill), findsNWidgets(4));
+        expect(tester.takeException(), isNull);
         await tester.pumpWidget(const SizedBox.shrink());
-        return;
-      }
-      await tester.ensureVisible(find.text('Personal consulting'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Personal consulting'));
-      await tester.pumpAndSettle();
-      expect(find.byType(PersonalizedConsultingPage), findsOneWidget);
-      expect(AppTunnelController.current.value, role);
-      await tester.pumpWidget(const SizedBox.shrink());
-    });
+      },
+    );
   }
 }

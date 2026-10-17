@@ -1,3 +1,6 @@
+import 'navigation_organizer.dart';
+import '../models/footer_page_content.dart';
+import '../screens/footer_information_page.dart';
 import 'home_brand_button.dart';
 import '../screens/company_data_page.dart';
 import 'company_data_access.dart';
@@ -108,8 +111,16 @@ class AppNavigationMenu extends StatefulWidget {
 }
 
 class _AppNavigationMenuState extends State<AppNavigationMenu> {
-  final _selectedPill = GlobalKey();
-  String? _lastNavigationGuide;
+  final _organizerPortal = OverlayPortalController();
+  final _organizerKey = GlobalKey<NavigationOrganizerState>();
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _organizerPortal.show();
+    });
+  }
+
   Future<void> _openNotifications() async {
     await Navigator.of(context).push(
       MaterialPageRoute<void>(builder: (_) => const NotificationCenterPage()),
@@ -189,8 +200,13 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
       showUsagePrivacy(context);
       return;
     }
-    if (widget.guidePage == 'landing' ||
-        AppTunnelController.current.value == AppTunnel.landing) {
+    _organizerKey.currentState?.close();
+    if ({
+      AppNavigationDestination.buyerDashboard,
+      AppNavigationDestination.sellerDashboard,
+      AppNavigationDestination.memberStudio,
+      AppNavigationDestination.learningDashboard,
+    }.contains(destination)) {
       final tunnel = switch (destination) {
         AppNavigationDestination.buyerDashboard => AppTunnel.buyer,
         AppNavigationDestination.sellerDashboard => AppTunnel.seller,
@@ -225,216 +241,250 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
     NovaTrainingController.instance.startPage(_guidePage());
   }
 
-  AppNavigationDestination? _activeDestination(String guide) {
-    if (guide == 'landing') return null;
-    if (guide == 'resources') return AppNavigationDestination.resources;
-    if (guide == 'member-pricing')
-      return AppNavigationDestination.memberPricing;
-    if (guide == 'member-marketing')
-      return AppNavigationDestination.memberMarketing;
-    if (guide == 'consulting') return AppNavigationDestination.consulting;
-    if (guide == 'profile') return AppNavigationDestination.profile;
-    if (guide == 'learning/seminars')
-      return AppNavigationDestination.learningSeminars;
-    if (guide == 'learning/map') return AppNavigationDestination.learningMap;
-    if (guide.startsWith('learning/'))
-      return AppNavigationDestination.learningDashboard;
-    if (guide.startsWith('buyer/'))
-      return AppNavigationDestination.buyerDashboard;
-    if (guide.startsWith('seller/'))
-      return AppNavigationDestination.sellerDashboard;
-    if (guide.startsWith('member/'))
-      return AppNavigationDestination.memberStudio;
-    return null;
-  }
-
-  Widget _navigationBar(BuildContext context) {
-    final screen = MediaQuery.sizeOf(context).width;
-    final maxWidth = screen < 600
-        ? (screen - 250).clamp(100.0, 240.0)
-        : screen < 1000
-        ? screen * .43
-        : (screen * .62).clamp(0.0, 760.0);
-    final guide = _guidePage();
-    final active = _activeDestination(guide);
-    if (_lastNavigationGuide != guide) {
-      _lastNavigationGuide = guide;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        final selected = _selectedPill.currentContext;
-        if (mounted && selected != null) {
-          Scrollable.ensureVisible(selected, alignment: .5);
-        }
-      });
-    }
-    return ConstrainedBox(
-      constraints: BoxConstraints(maxWidth: maxWidth),
-      child: Container(
-        key: const Key('affinity-navigation-bar'),
-        padding: const EdgeInsets.all(5),
-        decoration: BoxDecoration(
-          color: const Color(0xFFFCFCF8),
-          borderRadius: BorderRadius.circular(40),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x080D2418),
-              blurRadius: 24,
-              offset: Offset(0, 6),
+  Widget _organizer() => NavigationOrganizer(
+    key: _organizerKey,
+    activeTab: _guidePage() == 'landing'
+        ? 0
+        : _guidePage() == 'about-us'
+        ? 2
+        : 1,
+    onHome: () => HomeBrandButton.open(context),
+    onAbout: () => Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        settings: const RouteSettings(name: 'about-us'),
+        builder: (_) =>
+            const FooterInformationPage(topic: FooterTopic.approach),
+      ),
+    ),
+    dashboards: [
+      for (final (destination, icon, description) in const [
+        (
+          AppNavigationDestination.buyerDashboard,
+          Icons.search_rounded,
+          'Track private deals and build your team.',
+        ),
+        (
+          AppNavigationDestination.sellerDashboard,
+          Icons.swap_horiz_rounded,
+          'Plan your succession or business transfer.',
+        ),
+        (
+          AppNavigationDestination.memberStudio,
+          Icons.business_center_outlined,
+          'Your professional profile and deal workspace.',
+        ),
+        (
+          AppNavigationDestination.learningDashboard,
+          Icons.school_outlined,
+          'Learn, compare opportunities and explore events.',
+        ),
+      ])
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            AppNavigationPill(
+              destination: destination,
+              label: _label(destination),
+              selected: false,
+              onPressed: () => _open(context, destination),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(icon, size: 25, color: const Color(0xFF4D7654)),
+                  const SizedBox(height: 16),
+                  SiteCopyText(
+                    'navigation.${destination.name}',
+                    _label(destination),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 9),
+                  SiteCopyText(
+                    'navigation.organizer.${destination.name}.description',
+                    description,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      height: 1.5,
+                      color: Color(0xFF657067),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  const Icon(Icons.arrow_forward_rounded, size: 19),
+                ],
+              ),
             ),
+            for (final link in switch (destination) {
+              AppNavigationDestination.buyerDashboard => [
+                AppNavigationDestination.resources,
+                AppNavigationDestination.businessesForSale,
+                AppNavigationDestination.transactionRoom,
+              ],
+              AppNavigationDestination.sellerDashboard => [
+                AppNavigationDestination.sellerPosts,
+              ],
+              AppNavigationDestination.memberStudio => [
+                AppNavigationDestination.memberPricing,
+                AppNavigationDestination.memberMarketing,
+              ],
+              AppNavigationDestination.learningDashboard => [
+                AppNavigationDestination.learningSeminars,
+                AppNavigationDestination.learningMap,
+              ],
+              _ => <AppNavigationDestination>[],
+            })
+              TextButton(
+                key: ValueKey('navigation-${link.name}'),
+                onPressed: () {
+                  AppTunnelController.select(switch (destination) {
+                    AppNavigationDestination.buyerDashboard => AppTunnel.buyer,
+                    AppNavigationDestination.sellerDashboard =>
+                      AppTunnel.seller,
+                    AppNavigationDestination.memberStudio => AppTunnel.member,
+                    _ => AppTunnel.learning,
+                  });
+                  _open(context, link);
+                },
+                style: TextButton.styleFrom(
+                  alignment: Alignment.centerLeft,
+                  foregroundColor: const Color(0xFF536454),
+                ),
+                child: SiteText(
+                  contentKey: 'copy.app_navigation_menu.m2',
+                  literal: false,
+                  _label(link),
+                  style: const TextStyle(fontSize: 13),
+                ),
+              ),
           ],
         ),
-        child: SingleChildScrollView(
-          key: const Key('affinity-navigation-scroll'),
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              AppNavigationPill(
-                key: guide == 'landing' ? _selectedPill : null,
-                label: 'Home',
-                selected: guide == 'landing',
-                onPressed: () => HomeBrandButton.open(context),
-                child: const SiteCopyText('navigation.home', 'Home'),
-              ),
-              for (final destination in destinationsForTunnel(
-                guide == 'landing'
-                    ? AppTunnel.landing
-                    : AppTunnelController.current.value,
-              ))
-                AppNavigationPill(
-                  key: destination == active ? _selectedPill : null,
-                  destination: destination,
-                  label: _label(destination),
-                  selected: destination == active,
-                  onPressed: () => _open(context, destination),
-                  child:
-                      destination == AppNavigationDestination.buyerDashboard ||
-                          destination ==
-                              AppNavigationDestination.sellerDashboard ||
-                          destination ==
-                              AppNavigationDestination.transactionRoom
-                      ? SiteCopyText(
-                          'navigation.${destination.name}',
-                          _label(destination),
-                        )
-                      : SiteText(
-                          contentKey: 'copy.app_navigation_menu.m2',
-                          literal: false,
-                          _label(destination),
-                        ),
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+    ],
+  );
 
   @override
   Widget build(BuildContext context) {
     if (ModalRoute.of(context)?.isCurrent != false) {
       NovaTrainingController.instance.currentPage = _guidePage();
     }
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _navigationBar(context),
-        const SizedBox(width: 8),
-        if (_guidePage() != 'landing')
-          ListenableBuilder(
-            listenable: NovaTrainingController.instance,
-            builder: (context, _) =>
-                (!NovaTrainingController.instance.hosted ||
-                    !NovaTrainingController.instance.docked)
-                ? IconButton(
-                    key: const Key('pebble_page_help'),
-                    tooltip: 'Pika · guide to this page',
-                    onPressed: () {
-                      NovaTrainingController.instance.restoreDock();
-                      _showPika();
-                    },
-                    icon: const NovaCharacter(size: 32),
-                  )
-                : const SizedBox.shrink(),
+    final compact = MediaQuery.sizeOf(context).width < 700;
+    final current = ModalRoute.isCurrentOf(context) ?? true;
+    return OverlayPortal(
+      controller: _organizerPortal,
+      overlayChildBuilder: (_) =>
+          current ? _organizer() : const SizedBox.shrink(),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: compact
+                ? 0
+                : organizerWidth(MediaQuery.sizeOf(context).width),
           ),
-        FutureBuilder<bool>(
-          future: SiteContentService.canEdit(),
-          builder: (context, snapshot) => snapshot.data == true
-              ? IconButton(
-                  tooltip: 'Edit site content',
-                  onPressed: () => Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => const ContentStudioPage(),
-                    ),
-                  ),
+          const SizedBox(width: 8),
+          if (!compact && _guidePage() != 'landing')
+            ListenableBuilder(
+              listenable: NovaTrainingController.instance,
+              builder: (context, _) =>
+                  (!NovaTrainingController.instance.hosted ||
+                      !NovaTrainingController.instance.docked)
+                  ? IconButton(
+                      key: const Key('pebble_page_help'),
+                      tooltip: 'Pika · guide to this page',
+                      onPressed: () {
+                        NovaTrainingController.instance.restoreDock();
+                        _showPika();
+                      },
+                      icon: const NovaCharacter(size: 32),
+                    )
+                  : const SizedBox.shrink(),
+            ),
+          if (!compact)
+            FutureBuilder<bool>(
+              future: SiteContentService.canEdit(),
+              builder: (context, snapshot) => snapshot.data == true
+                  ? IconButton(
+                      tooltip: 'Edit site content',
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => const ContentStudioPage(),
+                        ),
+                      ),
+                      icon: Icon(
+                        Icons.edit_note_rounded,
+                        color: widget.dark
+                            ? Colors.white
+                            : const Color(0xFF161616),
+                      ),
+                    )
+                  : const SizedBox.shrink(),
+            ),
+          if (!compact &&
+              widget.showPrivateUpdates &&
+              BackendService.user != null)
+            FutureBuilder<int>(
+              future: MemberBetaService.unreadCount(),
+              builder: (context, snapshot) => Badge(
+                isLabelVisible: (snapshot.data ?? 0) > 0,
+                label: SiteText(
+                  contentKey: 'copy.app_navigation_menu.m1',
+                  literal: false,
+                  '${snapshot.data ?? 0}',
+                ),
+                child: IconButton(
+                  tooltip: 'Private updates',
+                  onPressed: _openNotifications,
                   icon: Icon(
-                    Icons.edit_note_rounded,
+                    Icons.notifications_none_rounded,
                     color: widget.dark ? Colors.white : const Color(0xFF161616),
                   ),
-                )
-              : const SizedBox.shrink(),
-        ),
-        if (widget.showPrivateUpdates && BackendService.user != null)
-          FutureBuilder<int>(
-            future: MemberBetaService.unreadCount(),
-            builder: (context, snapshot) => Badge(
-              isLabelVisible: (snapshot.data ?? 0) > 0,
-              label: SiteText(
-                contentKey: 'copy.app_navigation_menu.m1',
-                literal: false,
-                '${snapshot.data ?? 0}',
-              ),
-              child: IconButton(
-                tooltip: 'Private updates',
-                onPressed: _openNotifications,
-                icon: Icon(
-                  Icons.notifications_none_rounded,
-                  color: widget.dark ? Colors.white : const Color(0xFF161616),
                 ),
               ),
             ),
-          ),
-        if (BackendService.user == null)
-          IconButton(
-            tooltip: 'Sign in',
-            onPressed: () => _open(context, AppNavigationDestination.profile),
-            icon: Icon(
-              Icons.person_outline_rounded,
-              color: widget.dark ? Colors.white : const Color(0xFF161616),
-            ),
-          )
-        else
-          FutureBuilder<AccountProfile?>(
-            future: AccountService.loadProfile(),
-            builder: (context, snapshot) => Tooltip(
-              message: 'My profile',
-              child: Semantics(
-                button: true,
-                label: 'Open my profile',
-                child: InkWell(
-                  onTap: () => _open(context, AppNavigationDestination.profile),
-                  customBorder: const CircleBorder(),
-                  child: Container(
-                    width: 38,
-                    height: 38,
-                    padding: const EdgeInsets.all(2),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: widget.dark
-                            ? Colors.white.withValues(alpha: .55)
-                            : const Color(0xFFD2D0C9),
+          if (BackendService.user == null)
+            IconButton(
+              tooltip: 'Sign in',
+              onPressed: () => _open(context, AppNavigationDestination.profile),
+              icon: Icon(
+                Icons.person_outline_rounded,
+                color: widget.dark ? Colors.white : const Color(0xFF161616),
+              ),
+            )
+          else
+            FutureBuilder<AccountProfile?>(
+              future: AccountService.loadProfile(),
+              builder: (context, snapshot) => Tooltip(
+                message: 'My profile',
+                child: Semantics(
+                  button: true,
+                  label: 'Open my profile',
+                  child: InkWell(
+                    onTap: () =>
+                        _open(context, AppNavigationDestination.profile),
+                    customBorder: const CircleBorder(),
+                    child: Container(
+                      width: 38,
+                      height: 38,
+                      padding: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: widget.dark
+                              ? Colors.white.withValues(alpha: .55)
+                              : const Color(0xFFD2D0C9),
+                        ),
                       ),
-                    ),
-                    child: ProfilePhoto(
-                      size: 32,
-                      photoUrl: snapshot.data?.photoUrl ?? '',
+                      child: ProfilePhoto(
+                        size: 32,
+                        photoUrl: snapshot.data?.photoUrl ?? '',
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
-      ],
+        ],
+      ),
     );
   }
 }

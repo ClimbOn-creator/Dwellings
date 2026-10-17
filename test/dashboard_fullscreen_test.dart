@@ -12,7 +12,7 @@ import 'package:dwelling_iq/widgets/private_deal_entry.dart';
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
-  for (final width in [390.0, 1440.0, 2560.0]) {
+  for (final width in [390.0, 700.0, 1440.0, 2560.0]) {
     testWidgets('role labels stay in the top bar at $width', (tester) async {
       tester.view.physicalSize = Size(width, 1000);
       tester.view.devicePixelRatio = 1;
@@ -35,6 +35,14 @@ void main() {
         );
         expect(tester.getTopLeft(find.text(label)).dy, lessThan(72));
         expect(tester.getSize(find.text(label)).height, greaterThan(0));
+        final bar = tester.getRect(
+          find.byKey(const Key('affinity-navigation-bar')),
+        );
+        expect(
+          tester.getBottomRight(find.text(label)).dx,
+          lessThanOrEqualTo(bar.left),
+          reason: 'The role label must stay clear of the organizer',
+        );
         expect(tester.takeException(), isNull);
         await tester.pumpWidget(const SizedBox.shrink());
       }

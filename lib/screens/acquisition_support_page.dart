@@ -49,8 +49,6 @@ class AcquisitionSupportPage extends StatefulWidget {
 }
 
 class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
-  bool narrowScreen(BuildContext context) =>
-      MediaQuery.sizeOf(context).width < 700;
   static const _forest = Color(0xFF151A19);
   static const _acid = Color(0xFFE5E1D7);
   final _pageScroll = ScrollController();
@@ -155,75 +153,64 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
 
   Widget _buildPage(BuildContext context, bool motionEnabled) => Scaffold(
     backgroundColor: _cream,
-    body: CustomScrollView(
-      controller: _pageScroll,
-      slivers: [
-        SliverAppBar(
-          pinned: true,
-          automaticallyImplyLeading: false,
-          toolbarHeight: 82,
-          elevation: 0,
-          scrolledUnderElevation: 1,
-          backgroundColor: const Color(0xFFF7F8F4),
-          surfaceTintColor: Colors.transparent,
-          title: const HomeBrandButton(size: 66, dark: false),
-          actions: [
-            const SizedBox(width: 8),
-            const AppNavigationMenu(
-              guidePage: 'landing',
-              side: PlatformSide.business,
-              dark: false,
-            ),
-            const SizedBox(width: 12),
-          ],
-        ),
-        SliverToBoxAdapter(
-          child: AffinityScrollScene(
-            controller: _pageScroll,
-            startOffset: 0,
-            screens: 2.7,
-            fallback: Column(
-              children: [
-                _hero(),
-                _section(
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _label(
-                        'home.cinema.eyebrow',
-                        'FROM POSSIBILITY TO PERSPECTIVE',
+    body: Stack(
+      children: [
+        CustomScrollView(
+          controller: _pageScroll,
+          slivers: [
+            SliverToBoxAdapter(
+              child: AffinityScrollScene(
+                controller: _pageScroll,
+                startOffset: 0,
+                screens: 2.7,
+                viewportInset: 0,
+                fallback: Column(
+                  children: [
+                    SizedBox(
+                      height: MediaQuery.sizeOf(context).height,
+                      child: AffinityCinemaHero(
+                        progress: 0,
+                        height: MediaQuery.sizeOf(context).height,
+                        onBuyer: () => _open(
+                          const DealRoomsPage(
+                            initialSide: PlatformSide.business,
+                          ),
+                        ),
+                        onMember: () => _open(const MemberPricingPage()),
+                        onLearn: () => startLearning(context),
+                        onSeller: () => _open(const SellerDashboardPage()),
                       ),
-                      const SizedBox(height: 24),
-                      _copy(
-                        'home.cinema.statement',
-                        'A bigger future.\nA clearer view.',
-                        size: 48,
-                        height: 1.05,
+                    ),
+                    _section(
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _label(
+                            'home.cinema.eyebrow',
+                            'FROM POSSIBILITY TO PERSPECTIVE',
+                          ),
+                          const SizedBox(height: 24),
+                          _copy(
+                            'home.cinema.statement',
+                            'A bigger future.\nA clearer view.',
+                            size: 48,
+                            height: 1.05,
+                          ),
+                          const SizedBox(height: 24),
+                          _copy(
+                            'home.cinema.body',
+                            'Turn the ambition to own a business into a path you can act on. Define your target. Understand the opportunity. Bring the right people with you.',
+                          ),
+                          const SizedBox(height: 24),
+                          _label('home.cinema.scroll', 'SCROLL TO EXPLORE'),
+                        ],
                       ),
-                      const SizedBox(height: 24),
-                      _copy(
-                        'home.cinema.body',
-                        'Turn the ambition to own a business into a path you can act on. Define your target. Understand the opportunity. Bring the right people with you.',
-                      ),
-                      const SizedBox(height: 24),
-                      _label('home.cinema.scroll', 'SCROLL TO EXPLORE'),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            builder: (context, progress, height) => Padding(
-              padding: EdgeInsets.fromLTRB(
-                narrowScreen(context) ? 12 : 24,
-                16,
-                narrowScreen(context) ? 12 : 24,
-                16,
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(32),
-                child: AffinityCinemaHero(
+                builder: (context, progress, height) => AffinityCinemaHero(
                   progress: progress,
-                  height: height - 32,
+                  height: height,
                   onBuyer: () => _open(
                     const DealRoomsPage(initialSide: PlatformSide.business),
                   ),
@@ -233,18 +220,40 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
                 ),
               ),
             ),
+            const SliverToBoxAdapter(child: PikaIntroduction()),
+            _reveal(_goalStatement()),
+            const SliverToBoxAdapter(child: AffinityTimedChapters()),
+            _reveal(_buyerBenefits()),
+            _reveal(_audiences()),
+            _reveal(_path()),
+            _reveal(_membershipPricing()),
+            _reveal(_consultingIntroduction()),
+            _reveal(_questions()),
+            const SliverToBoxAdapter(child: MembershipFooter()),
+          ],
+        ),
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: SafeArea(
+            bottom: false,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              child: Row(
+                children: [
+                  const HomeBrandButton(size: 52, dark: false),
+                  const Spacer(),
+                  const AppNavigationMenu(
+                    guidePage: 'landing',
+                    side: PlatformSide.business,
+                    dark: true,
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
-        const SliverToBoxAdapter(child: PikaIntroduction()),
-        _reveal(_goalStatement()),
-        const SliverToBoxAdapter(child: AffinityTimedChapters()),
-        _reveal(_buyerBenefits()),
-        _reveal(_audiences()),
-        _reveal(_path()),
-        _reveal(_membershipPricing()),
-        _reveal(_consultingIntroduction()),
-        _reveal(_questions()),
-        const SliverToBoxAdapter(child: MembershipFooter()),
       ],
     ),
   );

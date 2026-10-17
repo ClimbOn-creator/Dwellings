@@ -104,6 +104,9 @@ void main() {
           scrollable: find.byType(Scrollable).first,
         );
         await tester.pumpAndSettle();
+        // Keep section controls below the floating organizer.
+        await Scrollable.ensureVisible(tester.element(section), alignment: .4);
+        await tester.pumpAndSettle();
         await tester.tap(section);
         await tester.pumpAndSettle();
         final target = find.text(topic.content.sections[1].body);

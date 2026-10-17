@@ -425,6 +425,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: DashboardUi.canvas,
     appBar: AppBar(
+      automaticallyImplyLeading: MediaQuery.sizeOf(context).width >= 900,
       toolbarHeight: 72,
       backgroundColor: const Color(0xFFF7F5F0),
       surfaceTintColor: Colors.transparent,
@@ -434,11 +435,12 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
         contentKey: 'copy.member_deal_marketplace_page.11',
       ),
       actions: [
-        IconButton(
-          onPressed: _submitDeal,
-          tooltip: 'Submit a deal to Affinity',
-          icon: const Icon(Icons.add_business_outlined),
-        ),
+        if (MediaQuery.sizeOf(context).width >= 700)
+          IconButton(
+            onPressed: _submitDeal,
+            tooltip: 'Submit a deal to Affinity',
+            icon: const Icon(Icons.add_business_outlined),
+          ),
         if (MediaQuery.sizeOf(context).width >= 620)
           IconButton(
             onPressed: _reloadAndRebuild,
@@ -480,6 +482,15 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _viewSelector(),
+              if (box.maxWidth < 700)
+                TextButton.icon(
+                  onPressed: _submitDeal,
+                  icon: const Icon(Icons.add_business_outlined),
+                  label: const SiteCopyText(
+                    'member.dashboard.submitDeal',
+                    'Submit a deal to Affinity',
+                  ),
+                ),
               const SizedBox(height: 12),
               Expanded(
                 child: SingleChildScrollView(

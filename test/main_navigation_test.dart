@@ -70,8 +70,13 @@ void main() {
         expect(bar.automaticallyImplyLeading, isFalse);
         expect(bar.toolbarHeight, 82);
         expect(find.byType(HomeBrandButton), findsOneWidget);
-        expect(find.byKey(const Key('pebble_page_help')), findsOneWidget);
+        expect(
+          find.byKey(const Key('pebble_page_help')),
+          width < 700 ? findsNothing : findsOneWidget,
+        );
         expect(find.text('Pika walkthrough'), findsNothing);
+        await tester.tap(find.text('Dashboard'));
+        await tester.pumpAndSettle();
         await tester.ensureVisible(find.text('Transaction Room'));
         await tester.pumpAndSettle();
         await tester.tap(find.text('Transaction Room'));
