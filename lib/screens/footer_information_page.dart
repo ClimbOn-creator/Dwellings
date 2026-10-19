@@ -5,6 +5,7 @@ import '../models/platform_side.dart';
 import '../services/site_content_service.dart';
 import '../widgets/app_navigation_menu.dart';
 import '../widgets/about_story.dart';
+import '../widgets/marketing_motion.dart';
 import '../widgets/company_data_access.dart';
 import '../widgets/home_brand_button.dart';
 import '../widgets/membership_footer.dart';
@@ -162,6 +163,13 @@ class _FooterInformationPageState extends State<FooterInformationPage> {
     final heading = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        if (widget.topic == FooterTopic.approach) ...[
+          const Align(
+            alignment: Alignment.centerRight,
+            child: MarketingMotionToggle(),
+          ),
+          const SizedBox(height: 24),
+        ],
         _copy(
           'group',
           page.group,
@@ -486,7 +494,10 @@ class _FooterInformationPageState extends State<FooterInformationPage> {
   );
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => widget.topic == FooterTopic.approach
+      ? MarketingMotionScope(child: Builder(builder: _buildPage))
+      : _buildPage(context);
+  Widget _buildPage(BuildContext context) {
     if (!widget.topic.isInformationPage)
       return footerToolDestination(widget.topic);
     final wide = MediaQuery.sizeOf(context).width >= 960;
@@ -542,7 +553,12 @@ class _FooterInformationPageState extends State<FooterInformationPage> {
               ),
             ),
             SliverToBoxAdapter(
-              child: _bounded(_hero(wide), vertical: wide ? 76 : 40),
+              child: _bounded(
+                widget.topic == FooterTopic.approach
+                    ? MarketingReveal(controller: _scroll, child: _hero(wide))
+                    : _hero(wide),
+                vertical: wide ? 76 : 40,
+              ),
             ),
             if (widget.topic == FooterTopic.approach)
               SliverToBoxAdapter(child: AboutStory(controller: _scroll)),

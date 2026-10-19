@@ -3,6 +3,7 @@ import '../models/about_story_content.dart';
 import 'site_copy_text.dart';
 import 'site_parallax_image.dart';
 import 'learning_media_player.dart';
+import 'marketing_motion.dart';
 
 const _ink = Color(0xFF173A27);
 
@@ -29,9 +30,12 @@ class AboutStory extends StatelessWidget {
       vertical: narrow ? 64 : 104,
     ),
     child: Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 1200),
-        child: child,
+      child: MarketingReveal(
+        controller: controller,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1200),
+          child: child,
+        ),
       ),
     ),
   );
@@ -40,7 +44,8 @@ class AboutStory extends StatelessWidget {
         controller: controller,
         contentKey: key,
         asset: asset,
-        maxTravel: 80,
+        maxTravel: 130,
+        scrollFactor: .42,
         child: SizedBox(height: height, width: double.infinity, child: child),
       );
   void _film(BuildContext context) => showDialog<void>(
@@ -124,16 +129,18 @@ class AboutStory extends StatelessWidget {
             ),
           ],
         ),
-        const Color(0xFFE9E3EF),
+        const Color(0xFFBDA3DD),
         narrow,
       );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _photo(
-          'image.about.watershed',
-          'assets/images/pact-watershed.jpg',
-          narrow ? 440 : 620,
+        MarketingFilm(
+          controller: controller,
+          contentKey: 'image.about.watershed',
+          imageAsset: 'assets/images/pact-watershed.jpg',
+          videoAsset: 'assets/product_tours/pact-river.mp4',
+          height: narrow ? 480 : 660,
           child: Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
@@ -142,7 +149,12 @@ class AboutStory extends StatelessWidget {
                 colors: [Color(0x10000000), Color(0xB8002019)],
               ),
             ),
-            padding: EdgeInsets.all(narrow ? 24 : 64),
+            padding: EdgeInsets.fromLTRB(
+              narrow ? 24 : 64,
+              64,
+              narrow ? 24 : 64,
+              90,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.end,
@@ -189,8 +201,33 @@ class AboutStory extends StatelessWidget {
               ),
             ],
           ),
-          const Color(0xFFDCE5D0),
+          const Color(0xFFA7C975),
           narrow,
+        ),
+        MarketingReveal(
+          controller: controller,
+          child: _photo(
+            'image.about.workshop',
+            'assets/images/pact-workshop.jpg',
+            narrow ? 340 : 480,
+          ),
+        ),
+        MarketingFilm(
+          controller: controller,
+          contentKey: 'image.about.collaboration',
+          imageAsset: 'assets/images/pact-collaboration.jpg',
+          videoAsset: 'assets/product_tours/pact-collaboration.mp4',
+          height: narrow ? 360 : 500,
+          child: Container(
+            color: const Color(0x66072539),
+            alignment: Alignment.bottomLeft,
+            padding: EdgeInsets.fromLTRB(narrow ? 24 : 64, 24, 24, 90),
+            child: SiteCopyText(
+              'marketing.media.collaboration.title',
+              marketingMotionCopy['marketing.media.collaboration.title']!,
+              style: TextStyle(color: Colors.white, fontSize: narrow ? 42 : 72),
+            ),
+          ),
         ),
         _panel(
           LayoutBuilder(
@@ -198,14 +235,26 @@ class AboutStory extends StatelessWidget {
               final words = Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _text('pledge.eyebrow', size: 12),
+                  _text('pledge.eyebrow', size: 12, color: Colors.white),
                   const SizedBox(height: 24),
-                  _text('pledge.amount', size: narrow ? 100 : 150),
-                  _text('pledge.title', size: narrow ? 36 : 48),
+                  _text(
+                    'pledge.amount',
+                    size: narrow ? 100 : 150,
+                    color: const Color(0xFF8DE3F0),
+                  ),
+                  _text(
+                    'pledge.title',
+                    size: narrow ? 36 : 48,
+                    color: Colors.white,
+                  ),
                   const SizedBox(height: 26),
-                  _text('pledge.body', size: 18),
+                  _text('pledge.body', size: 18, color: Colors.white),
                   const SizedBox(height: 24),
-                  _text('pledge.note', size: 13),
+                  _text(
+                    'pledge.note',
+                    size: 13,
+                    color: const Color(0xFFC4EAF1),
+                  ),
                 ],
               );
               final photo = Column(
@@ -220,7 +269,11 @@ class AboutStory extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  _text('photo.credit', size: 11),
+                  _text(
+                    'photo.credit',
+                    size: 11,
+                    color: const Color(0xFFC4EAF1),
+                  ),
                 ],
               );
               return narrow
@@ -234,7 +287,7 @@ class AboutStory extends StatelessWidget {
                     );
             },
           ),
-          const Color(0xFFF4F1EB),
+          const Color(0xFF155774),
           narrow,
         ),
       ],

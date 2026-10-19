@@ -5,3 +5,7 @@
 - `pact-team-0/1/2.png`: original neutral portrait placeholders, not photographs of real team members. Three permanent editable image slots await owner-provided photos. Names Moose, Karl and Potato supplied by the owner; roles and portraits remain owner-editable.
 
 The 1% of profits pledge is supplied by the owner. It is a commitment, not a claim of prior donations or membership in a certification scheme.
+
+## Additional animated media
+- `pact-workshop.jpg`: Zhen Yao, https://unsplash.com/photos/two-men-working-in-a-workshop-with-shelves-of-supplies-Fhl-y01fSvg — free Unsplash License. Illustrative workshop photo; not Pact staff.
+- `pact-collaboration.jpg` / `pact-collaboration.mp4`: Artem Podrez, https://www.pexels.com/video/group-of-people-working-together-8519330/ — free Pexels License. Illustrative business footage, trimmed to 10 seconds, 1280px, muted. Not Pact staff.

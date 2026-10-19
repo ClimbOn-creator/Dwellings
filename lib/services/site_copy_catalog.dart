@@ -1,11 +1,13 @@
 import '../models/dashboard_showcase_content.dart';
 import '../models/about_story_content.dart';
+import '../models/marketing_motion_content.dart';
 
 // These IDs are permanent. Rewrite the fallback VALUE while retaining its ID.
 // Never regenerate or renumber this registry during a redesign.
 const siteCopyCatalog = <String, String>{
   ...dashboardShowcaseCopy,
   ...aboutStoryCopy,
+  ...marketingMotionCopy,
   'member.overview.eyebrow': 'YOUR NEXT CHAPTER',
   'member.overview.title': 'Choose where you want to go.',
   'member.overview.workspace': 'Open my professional workspace',

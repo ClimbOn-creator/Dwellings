@@ -84,7 +84,7 @@ void main() {
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull);
         final member = find.text('Open Member dashboard').first;
-        await tester.ensureVisible(member);
+        await Scrollable.ensureVisible(tester.element(member), alignment: .3);
         await tester.pumpAndSettle();
         await tester.tap(member);
         await tester.pumpAndSettle();

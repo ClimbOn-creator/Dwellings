@@ -9,19 +9,21 @@ import '../widgets/learning_media_player.dart';
 import '../widgets/pika_introduction.dart';
 import '../widgets/site_copy_text.dart';
 import '../widgets/site_image.dart';
+import '../widgets/site_parallax_image.dart';
+import '../widgets/marketing_motion.dart';
 import 'deal_rooms_page.dart';
 import 'seller_dashboard_page.dart';
 import 'member_deal_marketplace_page.dart';
 import 'learning_dashboard_page.dart';
 
 const _forest = Color(0xFF173A27);
-const _paper = Color(0xFFF3F2EC);
+const _paper = Color(0xFFBFD9DD);
 const _roles = ['buyer', 'seller', 'member', 'learning'];
 const _colors = [
-  Color(0xFFDCE5D0),
-  Color(0xFFE9E0D0),
-  Color(0xFFDADDE7),
-  Color(0xFFDCEAE9),
+  Color(0xFFA7C975),
+  Color(0xFFE9AB87),
+  Color(0xFFBBA0DC),
+  Color(0xFF80BAD4),
 ];
 
 /// Public product presentation; independent of account and workspace roles.
@@ -33,6 +35,13 @@ class DashboardShowcasePage extends StatefulWidget {
 
 class _DashboardShowcasePageState extends State<DashboardShowcasePage> {
   int _preview = 0, _tour = 0;
+  final _scroll = ScrollController();
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
   final _spaces = GlobalKey(), _tours = GlobalKey();
   bool get narrow => MediaQuery.sizeOf(context).width < 800;
   Widget _copy(
@@ -130,7 +139,7 @@ class _DashboardShowcasePageState extends State<DashboardShowcasePage> {
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 1320),
-              child: child,
+              child: MarketingReveal(controller: _scroll, child: child),
             ),
           ),
         ),
@@ -218,6 +227,11 @@ class _DashboardShowcasePageState extends State<DashboardShowcasePage> {
     Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        const Align(
+          alignment: Alignment.centerRight,
+          child: MarketingMotionToggle(),
+        ),
+        const SizedBox(height: 20),
         _copy('hero.eyebrow', size: 11, weight: FontWeight.w700),
         const SizedBox(height: 34),
         _copy('hero.title', size: narrow ? 49 : 88, weight: FontWeight.w500),
@@ -338,6 +352,26 @@ class _DashboardShowcasePageState extends State<DashboardShowcasePage> {
                           ),
                         ],
                       ),
+                      const SizedBox(height: 24),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: SiteParallaxImage(
+                          controller: _scroll,
+                          contentKey: 'image.showcase.workspace.${_roles[i]}',
+                          asset: [
+                            'assets/images/pact-workshop.jpg',
+                            'assets/images/affinity-reflection-facade.jpg',
+                            'assets/images/pact-collaboration.jpg',
+                            'assets/images/affinity-consulting.jpg',
+                          ][i],
+                          maxTravel: 100,
+                          scrollFactor: .4,
+                          child: const SizedBox(
+                            height: 220,
+                            width: double.infinity,
+                          ),
+                        ),
+                      ),
                       const SizedBox(height: 30),
                       _copy('${_roles[i]}.title', size: narrow ? 30 : 37),
                       const SizedBox(height: 20),
@@ -357,7 +391,9 @@ class _DashboardShowcasePageState extends State<DashboardShowcasePage> {
     key: _spaces,
   );
   @override
-  Widget build(BuildContext context) => Scaffold(
+  Widget build(BuildContext context) =>
+      MarketingMotionScope(child: Builder(builder: _buildPage));
+  Widget _buildPage(BuildContext context) => Scaffold(
     backgroundColor: Colors.white,
     appBar: AppBar(
       automaticallyImplyLeading: false,
@@ -375,10 +411,43 @@ class _DashboardShowcasePageState extends State<DashboardShowcasePage> {
       ],
     ),
     body: SingleChildScrollView(
+      controller: _scroll,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _hero(),
+          MarketingFilm(
+            controller: _scroll,
+            contentKey: 'image.showcase.collaboration',
+            imageAsset: 'assets/images/pact-collaboration.jpg',
+            videoAsset: 'assets/product_tours/pact-collaboration.mp4',
+            height: narrow ? 460 : 560,
+            child: Container(
+              color: const Color(0x66072539),
+              alignment: Alignment.bottomLeft,
+              padding: EdgeInsets.fromLTRB(narrow ? 24 : 64, 24, 24, 90),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SiteCopyText(
+                    'marketing.media.collaboration.title',
+                    marketingMotionCopy['marketing.media.collaboration.title']!,
+                    style: TextStyle(
+                      fontSize: narrow ? 44 : 78,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  SiteCopyText(
+                    'marketing.media.collaboration.body',
+                    marketingMotionCopy['marketing.media.collaboration.body']!,
+                    style: const TextStyle(fontSize: 18, color: Colors.white),
+                  ),
+                ],
+              ),
+            ),
+          ),
           _workspaces(),
           _section(
             Column(
@@ -392,6 +461,18 @@ class _DashboardShowcasePageState extends State<DashboardShowcasePage> {
                 const SizedBox(height: 36),
                 _tabs(_tour, _selectTour),
                 const SizedBox(height: 22),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: MarketingFilm(
+                    key: ValueKey('inline-tour-$_tour'),
+                    controller: _scroll,
+                    contentKey: 'image.showcase.tour.${_roles[_tour]}',
+                    imageAsset: 'assets/product_tours/${_roles[_tour]}.png',
+                    videoAsset: 'assets/product_tours/${_roles[_tour]}.mp4',
+                    height: narrow ? 240 : 540,
+                  ),
+                ),
+                const SizedBox(height: 24),
                 Stack(
                   alignment: Alignment.center,
                   children: [

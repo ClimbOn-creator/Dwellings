@@ -14,11 +14,13 @@ class SiteParallaxImage extends StatelessWidget {
     required this.child,
     this.maxTravel = 54,
     this.scrollFactor = .16,
+    this.movingBackground,
   });
   final ScrollController controller;
   final String contentKey, asset;
   final Widget child;
   final double maxTravel, scrollFactor;
+  final Widget? movingBackground;
 
   @override
   Widget build(BuildContext context) {
@@ -40,12 +42,25 @@ class SiteParallaxImage extends StatelessWidget {
                 ),
                 children: [
                   RepaintBoundary(
-                    child: SiteImage(
-                      contentKey: contentKey,
-                      original: Image.asset(
-                        asset,
-                        fit: BoxFit.cover,
-                        excludeFromSemantics: true,
+                    child: ValueListenableBuilder<int>(
+                      valueListenable: SiteContentService.revision,
+                      builder: (context, _, _) => Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          SiteImage(
+                            contentKey: contentKey,
+                            original: Image.asset(
+                              asset,
+                              fit: BoxFit.cover,
+                              excludeFromSemantics: true,
+                            ),
+                          ),
+                          if (movingBackground != null &&
+                              !reduced &&
+                              !editing &&
+                              SiteContentService.published(contentKey) == null)
+                            movingBackground!,
+                        ],
                       ),
                     ),
                   ),
