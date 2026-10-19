@@ -99,11 +99,13 @@ class AppNavigationMenu extends StatefulWidget {
     this.onSideChanged,
     this.guidePage,
     this.showPrivateUpdates = true,
+    this.openDashboardMenu = false,
   });
 
   // Kept while older callers are migrated to the single acquisition app.
   final String? guidePage;
   final bool showPrivateUpdates;
+  final bool openDashboardMenu;
   final PlatformSide side;
   final bool dark;
   final ValueChanged<PlatformSide>? onSideChanged;
@@ -243,18 +245,23 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
 
   Widget _organizer() => NavigationOrganizer(
     key: _organizerKey,
+    initiallyOpen: widget.openDashboardMenu,
     activeTab: _guidePage() == 'landing'
         ? 0
         : _guidePage() == 'about-us'
         ? 2
         : 1,
     onDashboard: () {
+      if (_guidePage() == 'dashboards') {
+        _organizerKey.currentState?.toggleMenu();
+        return;
+      }
       NovaTrainingController.instance.currentPage = 'dashboards';
       AppTunnelController.select(AppTunnel.landing);
       Navigator.of(context).push(
         MaterialPageRoute<void>(
           settings: const RouteSettings(name: 'dashboards'),
-          builder: (_) => const DashboardShowcasePage(),
+          builder: (_) => const DashboardShowcasePage(openDashboardMenu: true),
         ),
       );
     },

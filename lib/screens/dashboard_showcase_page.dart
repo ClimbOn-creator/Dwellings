@@ -27,7 +27,8 @@ const _colors = [
 
 /// Public product presentation; independent of account and workspace roles.
 class DashboardShowcasePage extends StatefulWidget {
-  const DashboardShowcasePage({super.key});
+  const DashboardShowcasePage({super.key, this.openDashboardMenu = false});
+  final bool openDashboardMenu;
   @override
   State<DashboardShowcasePage> createState() => _DashboardShowcasePageState();
 }
@@ -395,13 +396,14 @@ class _DashboardShowcasePageState extends State<DashboardShowcasePage> {
       backgroundColor: _paper,
       surfaceTintColor: Colors.transparent,
       title: HomeBrandButton(size: narrow ? 22 : 44, dark: false),
-      actions: const [
+      actions: [
         AppNavigationMenu(
+          openDashboardMenu: widget.openDashboardMenu,
           guidePage: 'dashboards',
           dark: false,
           showPrivateUpdates: false,
         ),
-        SizedBox(width: 12),
+        const SizedBox(width: 12),
       ],
     ),
     body: SingleChildScrollView(

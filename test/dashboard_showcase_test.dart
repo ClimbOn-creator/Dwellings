@@ -64,6 +64,28 @@ void main() {
         await tester.tap(find.text('Dashboard'));
         await tester.pumpAndSettle();
         expect(find.byType(DashboardShowcasePage), findsOneWidget);
+        expect(
+          find.byKey(const Key('dashboard-navigation-panel')),
+          findsOneWidget,
+        );
+        await tester.tap(find.byKey(const Key('dashboard-menu-toggle')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('dashboard-menu-toggle')));
+        await tester.pumpAndSettle();
+        expect(
+          find.byKey(const Key('dashboard-navigation-panel')),
+          findsOneWidget,
+        );
+        expect(
+          find.byType(DashboardShowcasePage, skipOffstage: false),
+          findsOneWidget,
+        );
+        await tester.tap(find.text('Dashboard'));
+        await tester.pumpAndSettle();
+        expect(
+          find.byKey(const Key('dashboard-navigation-panel')),
+          findsNothing,
+        );
         if (width < 700) {
           final logo = tester.getRect(find.byType(HomeBrandButton));
           final bar = tester.getRect(

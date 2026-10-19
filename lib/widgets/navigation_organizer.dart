@@ -17,9 +17,11 @@ class NavigationOrganizer extends StatefulWidget {
     required this.onHome,
     required this.onAbout,
     this.onDashboard,
+    this.initiallyOpen = false,
     required this.dashboards,
   });
   final int activeTab;
+  final bool initiallyOpen;
   final VoidCallback onHome, onAbout;
   final VoidCallback? onDashboard;
   final List<Widget> dashboards;
@@ -28,7 +30,18 @@ class NavigationOrganizer extends StatefulWidget {
 }
 
 class NavigationOrganizerState extends State<NavigationOrganizer> {
-  bool _open = false;
+  late bool _open;
+  @override
+  void initState() {
+    super.initState();
+    _open = widget.initiallyOpen;
+    if (_open) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _open) _panelFocus.requestFocus();
+      });
+    }
+  }
+
   int? _hovered;
   final _dashboardFocus = FocusNode();
   final _panelFocus = FocusNode();
@@ -45,7 +58,6 @@ class NavigationOrganizerState extends State<NavigationOrganizer> {
 
   void _choose(int tab) {
     if (tab == 1 && widget.onDashboard != null) {
-      close();
       widget.onDashboard!();
       return;
     }
@@ -61,7 +73,7 @@ class NavigationOrganizerState extends State<NavigationOrganizer> {
     }
   }
 
-  void _toggleMenu() {
+  void toggleMenu() {
     setState(() => _open = !_open);
     if (_open)
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -118,9 +130,7 @@ class NavigationOrganizerState extends State<NavigationOrganizer> {
                             child: Semantics(
                               button: true,
                               selected: widget.activeTab == i,
-                              expanded: i == 1 && widget.onDashboard == null
-                                  ? _open
-                                  : null,
+                              expanded: i == 1 ? _open : null,
                               child: InkWell(
                                 key: ValueKey('organizer-tab-$i'),
                                 focusNode: i == 1 ? _dashboardFocus : null,
@@ -180,7 +190,7 @@ class NavigationOrganizerState extends State<NavigationOrganizer> {
                                             ),
                                             padding: EdgeInsets.zero,
                                             iconSize: width < 280 ? 13 : 17,
-                                            onPressed: _toggleMenu,
+                                            onPressed: () => _choose(1),
                                             icon: Icon(
                                               _open
                                                   ? Icons.keyboard_arrow_up
