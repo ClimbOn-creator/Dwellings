@@ -1,3 +1,4 @@
+import 'widgets/app_display_scale.dart';
 import 'screens/dashboard_showcase_page.dart';
 import 'widgets/affinity_button_gradients.dart';
 import 'screens/company_data_page.dart';
@@ -66,11 +67,13 @@ class AffinityApp extends StatelessWidget {
         CalculatorHelpRouteObserver(),
         UsageNavigationObserver(),
       ],
-      builder: (context, child) => NovaTrainingHost(
-        navigatorKey: novaNavigatorKey,
-        child: CalculatorHelpHost(
-          child: UsagePrivacyHost(
-            child: SiteEditorShell(child: child ?? const SizedBox.shrink()),
+      builder: (context, child) => AppDisplayScale(
+        child: NovaTrainingHost(
+          navigatorKey: novaNavigatorKey,
+          child: CalculatorHelpHost(
+            child: UsagePrivacyHost(
+              child: SiteEditorShell(child: child ?? const SizedBox.shrink()),
+            ),
           ),
         ),
       ),
