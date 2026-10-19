@@ -27,7 +27,7 @@ void main() {
           find.byKey(const Key('affinity-navigation-bar')),
         );
         expect(bar.center.dx, closeTo(width / 2, .5));
-        expect(bar.width, lessThanOrEqualTo(336));
+        expect(bar.width, lessThanOrEqualTo(420));
         expect(find.byType(SliverAppBar), findsNothing);
         final photo = tester.getRect(find.byType(AffinityCinemaHero));
         expect(photo.left, 0);

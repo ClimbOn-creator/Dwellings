@@ -4,6 +4,7 @@ import '../models/footer_page_content.dart';
 import '../models/platform_side.dart';
 import '../services/site_content_service.dart';
 import '../widgets/app_navigation_menu.dart';
+import '../widgets/about_story.dart';
 import '../widgets/company_data_access.dart';
 import '../widgets/home_brand_button.dart';
 import '../widgets/membership_footer.dart';
@@ -246,6 +247,7 @@ class _FooterInformationPageState extends State<FooterInformationPage> {
         ],
       ),
     );
+    if (widget.topic == FooterTopic.approach) return heading;
     return wide
         ? Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -498,26 +500,34 @@ class _FooterInformationPageState extends State<FooterInformationPage> {
               child: _bounded(
                 Row(
                   children: [
-                    IconButton(
-                      tooltip: 'Back',
-                      onPressed: () {
-                        if (Navigator.canPop(context)) {
-                          Navigator.pop(context);
-                        } else {
-                          Navigator.of(context).pushReplacement(
-                            MaterialPageRoute<void>(
-                              builder: (_) => const AcquisitionSupportPage(),
-                            ),
-                          );
-                        }
-                      },
-                      icon: const Icon(Icons.arrow_back),
+                    if (MediaQuery.sizeOf(context).width >= 700)
+                      IconButton(
+                        tooltip: 'Back',
+                        onPressed: () {
+                          if (Navigator.canPop(context)) {
+                            Navigator.pop(context);
+                          } else {
+                            Navigator.of(context).pushReplacement(
+                              MaterialPageRoute<void>(
+                                builder: (_) => const AcquisitionSupportPage(),
+                              ),
+                            );
+                          }
+                        },
+                        icon: const Icon(Icons.arrow_back),
+                      ),
+                    SizedBox(
+                      width: MediaQuery.sizeOf(context).width < 700 ? 0 : 8,
                     ),
-                    const SizedBox(width: 8),
-                    const Expanded(
+                    Expanded(
                       child: Align(
                         alignment: Alignment.centerLeft,
-                        child: HomeBrandButton(size: 38, dark: false),
+                        child: HomeBrandButton(
+                          size: MediaQuery.sizeOf(context).width < 700
+                              ? 18
+                              : 38,
+                          dark: false,
+                        ),
                       ),
                     ),
                     AppNavigationMenu(
@@ -534,6 +544,8 @@ class _FooterInformationPageState extends State<FooterInformationPage> {
             SliverToBoxAdapter(
               child: _bounded(_hero(wide), vertical: wide ? 76 : 40),
             ),
+            if (widget.topic == FooterTopic.approach)
+              SliverToBoxAdapter(child: AboutStory(controller: _scroll)),
             SliverToBoxAdapter(
               child: _bounded(
                 wide
@@ -557,6 +569,10 @@ class _FooterInformationPageState extends State<FooterInformationPage> {
                 vertical: 64,
               ),
             ),
+            if (widget.topic == FooterTopic.approach)
+              SliverToBoxAdapter(
+                child: AboutStory(controller: _scroll, team: true),
+              ),
             SliverToBoxAdapter(
               child: _bounded(
                 Column(

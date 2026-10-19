@@ -3,8 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'site_copy_text.dart';
 
-double organizerWidth(double screenWidth) =>
-    screenWidth < 700 ? (screenWidth * .58).clamp(186.0, 250.0) : 336;
+double organizerWidth(double screenWidth) => screenWidth < 700
+    ? (screenWidth * (screenWidth < 360 ? .58 : .60)).clamp(186.0, 280.0)
+    : screenWidth < 900
+    ? 388
+    : 420;
 
 /// A viewport-centred organizer, with a click-open dashboard panel.
 class NavigationOrganizer extends StatefulWidget {
@@ -81,7 +84,9 @@ class NavigationOrganizerState extends State<NavigationOrganizer> {
           padding: const EdgeInsets.all(5),
           child: LayoutBuilder(
             builder: (context, box) {
-              final tabWidth = box.maxWidth / 3;
+              final unit = box.maxWidth / 3.2;
+              final widths = [unit * .8, unit * 1.4, unit];
+              final starts = [0.0, widths[0], widths[0] + widths[1]];
               return Stack(
                 children: [
                   AnimatedPositioned(
@@ -90,8 +95,8 @@ class NavigationOrganizerState extends State<NavigationOrganizer> {
                     curve: Curves.easeOutCubic,
                     top: 0,
                     bottom: 0,
-                    left: (_hovered ?? widget.activeTab) * tabWidth,
-                    width: tabWidth,
+                    left: starts[_hovered ?? widget.activeTab],
+                    width: widths[_hovered ?? widget.activeTab],
                     child: AnimatedOpacity(
                       duration: const Duration(milliseconds: 120),
                       opacity: _hovered == null ? 0 : 1,
@@ -106,7 +111,8 @@ class NavigationOrganizerState extends State<NavigationOrganizer> {
                   Row(
                     children: [
                       for (var i = 0; i < 3; i++)
-                        Expanded(
+                        SizedBox(
+                          width: widths[i],
                           child: MouseRegion(
                             onEnter: (_) => setState(() => _hovered = i),
                             child: Semantics(
@@ -151,11 +157,7 @@ class NavigationOrganizerState extends State<NavigationOrganizer> {
                                             ][i],
                                             maxLines: 1,
                                             style: TextStyle(
-                                              fontSize: width < 210
-                                                  ? 9
-                                                  : width < 280
-                                                  ? 11
-                                                  : 14,
+                                              fontSize: width < 280 ? 12 : 16,
                                               fontWeight: FontWeight.w600,
                                               color: widget.activeTab == i
                                                   ? const Color(0xFFBDD89D)

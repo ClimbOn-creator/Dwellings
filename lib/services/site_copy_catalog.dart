@@ -1,8 +1,11 @@
 import '../models/dashboard_showcase_content.dart';
+import '../models/about_story_content.dart';
+
 // These IDs are permanent. Rewrite the fallback VALUE while retaining its ID.
 // Never regenerate or renumber this registry during a redesign.
 const siteCopyCatalog = <String, String>{
   ...dashboardShowcaseCopy,
+  ...aboutStoryCopy,
   'member.overview.eyebrow': 'YOUR NEXT CHAPTER',
   'member.overview.title': 'Choose where you want to go.',
   'member.overview.workspace': 'Open my professional workspace',
@@ -704,8 +707,7 @@ const siteCopyCatalog = <String, String>{
   'nova.training.pebble-page-page:AboutPage.title': "About Pact",
   'nova.training.pebble-page-page:AboutPage.body':
       "Read about Pact’s approach and use the page’s actions to explore the relevant service or app path.",
-  'nova.training.pebble-page-page:CapabilitiesPage.title':
-      "Pact capabilities",
+  'nova.training.pebble-page-page:CapabilitiesPage.title': "Pact capabilities",
   'nova.training.pebble-page-page:CapabilitiesPage.body':
       "Review the services and capabilities described here, then use the relevant page action to continue.",
   'nova.training.pebble-page-page:PlatformHubPage.title': "Choose a workspace",
@@ -2724,8 +2726,7 @@ const siteCopyCatalog = <String, String>{
   '4ee2162f':
       "Structured tools for your Blueprint, deals, calendar, and member workspace.",
   '5c0f41af': "Submit a deal to Pact",
-  '7c5dcc7b':
-      "Submitted for Pact review. It remains private until approved.",
+  '7c5dcc7b': "Submitted for Pact review. It remains private until approved.",
   '44ffe077': "Summary access",
   '5a49d071': "Summit Property Services",
   'd3b29385': "Supply pressure",

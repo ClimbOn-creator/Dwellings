@@ -302,61 +302,56 @@ class _DashboardShowcasePageState extends State<DashboardShowcasePage> {
         const SizedBox(height: 28),
         _copy('spaces.title', size: narrow ? 42 : 68),
         const SizedBox(height: 60),
-        for (var i = 0; i < 4; i++)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 80),
-            child: LayoutBuilder(
-              builder: (context, box) {
-                final words = Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _copy(
-                      '${_roles[i]}.label',
-                      size: 11,
-                      weight: FontWeight.w700,
-                    ),
-                    const SizedBox(height: 24),
-                    _copy('${_roles[i]}.title', size: narrow ? 32 : 43),
-                    const SizedBox(height: 24),
-                    _copy('${_roles[i]}.body', size: 16),
-                    const SizedBox(height: 20),
-                    _copy(
-                      '${_roles[i]}.features',
-                      size: 12,
-                      color: const Color(0xFF6B776E),
-                    ),
-                    const SizedBox(height: 28),
-                    _button('${_roles[i]}.action', () => _open(i)),
-                  ],
-                );
-                final picture = Container(
-                  padding: EdgeInsets.all(narrow ? 12 : 24),
+        LayoutBuilder(
+          builder: (context, box) => Wrap(
+            spacing: 24,
+            runSpacing: 24,
+            children: [
+              for (var i = 0; i < 4; i++)
+                Container(
+                  width: narrow ? box.maxWidth : (box.maxWidth - 24) / 2,
+                  padding: EdgeInsets.all(narrow ? 26 : 40),
                   decoration: BoxDecoration(
                     color: _colors[i],
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(24),
                   ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: AspectRatio(aspectRatio: 1.6, child: _image(i)),
-                  ),
-                );
-                if (narrow)
-                  return Column(
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [picture, const SizedBox(height: 32), words],
-                  );
-                final pair = [
-                  Expanded(flex: 5, child: words),
-                  const SizedBox(width: 72),
-                  Expanded(flex: 7, child: picture),
-                ];
-                return Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: i.isEven ? pair : pair.reversed.toList(),
-                );
-              },
-            ),
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          _copy(
+                            '${_roles[i]}.label',
+                            size: 12,
+                            weight: FontWeight.w700,
+                          ),
+                          Icon(
+                            [
+                              Icons.travel_explore,
+                              Icons.swap_horiz,
+                              Icons.people_outline,
+                              Icons.auto_stories_outlined,
+                            ][i],
+                            size: 32,
+                            color: _forest,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 30),
+                      _copy('${_roles[i]}.title', size: narrow ? 30 : 37),
+                      const SizedBox(height: 20),
+                      _copy('${_roles[i]}.body'),
+                      const SizedBox(height: 20),
+                      _copy('${_roles[i]}.features', size: 12),
+                      const SizedBox(height: 26),
+                      _button('${_roles[i]}.action', () => _open(i)),
+                    ],
+                  ),
+                ),
+            ],
           ),
+        ),
       ],
     ),
     key: _spaces,
@@ -400,13 +395,6 @@ class _DashboardShowcasePageState extends State<DashboardShowcasePage> {
                 Stack(
                   alignment: Alignment.center,
                   children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(20),
-                      child: AspectRatio(
-                        aspectRatio: 1.6,
-                        child: _image(_tour),
-                      ),
-                    ),
                     FilledButton.icon(
                       key: const Key('showcase-play-tour'),
                       onPressed: () => _watch(_tour),

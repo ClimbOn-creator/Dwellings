@@ -16,6 +16,55 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     AppTunnelController.select(AppTunnel.landing);
   });
+  for (final width in [390.0, 1440.0]) {
+    testWidgets(
+      'About story shows the pledge, film and three editable team slots at $width',
+      (tester) async {
+        tester.view.physicalSize = Size(width, 1000);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        await tester.pumpWidget(
+          const MaterialApp(
+            home: FooterInformationPage(topic: FooterTopic.approach),
+          ),
+        );
+        await tester.pumpAndSettle();
+        final film = find.byKey(const Key('about-river-film'));
+        await tester.scrollUntilVisible(
+          film,
+          400,
+          scrollable: find.byType(Scrollable).first,
+        );
+        await Scrollable.ensureVisible(tester.element(film), alignment: .4);
+        await tester.pumpAndSettle();
+        await tester.tap(film);
+        await tester.pumpAndSettle();
+        expect(find.byType(Dialog), findsOneWidget);
+        expect(
+          find.text('Vancouver Island · Film by Sergey Guk / Pexels'),
+          findsOneWidget,
+        );
+        await tester.tap(find.byTooltip('Close film'));
+        await tester.pumpAndSettle();
+        for (final text in [
+          'Of our profits. For water conservation.',
+          'Moose',
+          'Karl',
+          'Potato',
+        ]) {
+          await tester.scrollUntilVisible(
+            find.text(text),
+            400,
+            scrollable: find.byType(Scrollable).first,
+          );
+          expect(find.text(text), findsOneWidget);
+        }
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(const SizedBox.shrink());
+      },
+    );
+  }
   testWidgets('Privacy page opens usage settings outside navigation menu', (
     tester,
   ) async {
@@ -31,6 +80,8 @@ void main() {
       400,
       scrollable: find.byType(Scrollable).first,
     );
+    await tester.pumpAndSettle();
+    await Scrollable.ensureVisible(tester.element(settings), alignment: .3);
     await tester.pumpAndSettle();
     await tester.tap(settings);
     await tester.pumpAndSettle();

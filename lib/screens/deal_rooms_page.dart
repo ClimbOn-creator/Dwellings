@@ -355,6 +355,13 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                   contentKey: 'copy.deal_rooms_page.m3',
                 ),
                 actions: [
+                  const SizedBox(width: 8),
+                  AppNavigationMenu(
+                    side: PlatformSide.business,
+                    dark: false,
+                    guidePage: 'buyer/${_dashboardView.name}',
+                    showPrivateUpdates: false,
+                  ),
                   if (_dashboardView != BuyerDashboardView.home &&
                       MediaQuery.sizeOf(context).width >= 700)
                     IconButton(
@@ -364,13 +371,6 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                       ),
                       icon: const Icon(Icons.arrow_back_rounded),
                     ),
-                  const SizedBox(width: 8),
-                  AppNavigationMenu(
-                    side: PlatformSide.business,
-                    dark: false,
-                    guidePage: 'buyer/${_dashboardView.name}',
-                    showPrivateUpdates: false,
-                  ),
                   const SizedBox(width: 12),
                 ],
               ),
