@@ -219,7 +219,7 @@ void main() {
           ),
         );
         await tester.pumpAndSettle();
-        await tester.tap(find.text('Dashboard'));
+        await tester.tap(find.byKey(const Key('dashboard-menu-toggle')));
         await tester.pumpAndSettle();
         expect(find.text('Personal consulting'), findsNothing);
         expect(find.byType(AppNavigationPill), findsNWidgets(4));

@@ -1,3 +1,4 @@
+import '../services/site_content_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'site_copy_text.dart';
@@ -12,10 +13,12 @@ class NavigationOrganizer extends StatefulWidget {
     required this.activeTab,
     required this.onHome,
     required this.onAbout,
+    this.onDashboard,
     required this.dashboards,
   });
   final int activeTab;
   final VoidCallback onHome, onAbout;
+  final VoidCallback? onDashboard;
   final List<Widget> dashboards;
   @override
   State<NavigationOrganizer> createState() => NavigationOrganizerState();
@@ -38,6 +41,11 @@ class NavigationOrganizerState extends State<NavigationOrganizer> {
   }
 
   void _choose(int tab) {
+    if (tab == 1 && widget.onDashboard != null) {
+      close();
+      widget.onDashboard!();
+      return;
+    }
     if (tab == 1) {
       setState(() => _open = !_open);
       if (_open)
@@ -48,6 +56,14 @@ class NavigationOrganizerState extends State<NavigationOrganizer> {
       close();
       (tab == 0 ? widget.onHome : widget.onAbout)();
     }
+  }
+
+  void _toggleMenu() {
+    setState(() => _open = !_open);
+    if (_open)
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _open) _panelFocus.requestFocus();
+      });
   }
 
   Widget _bar(double width) => Material(
@@ -96,7 +112,9 @@ class NavigationOrganizerState extends State<NavigationOrganizer> {
                             child: Semantics(
                               button: true,
                               selected: widget.activeTab == i,
-                              expanded: i == 1 ? _open : null,
+                              expanded: i == 1 && widget.onDashboard == null
+                                  ? _open
+                                  : null,
                               child: InkWell(
                                 key: ValueKey('organizer-tab-$i'),
                                 focusNode: i == 1 ? _dashboardFocus : null,
@@ -114,20 +132,56 @@ class NavigationOrganizerState extends State<NavigationOrganizer> {
                                     borderRadius: BorderRadius.circular(32),
                                   ),
                                   alignment: Alignment.center,
-                                  child: SiteCopyText(
-                                    [
-                                      'navigation.home',
-                                      'navigation.organizer.dashboard',
-                                      'navigation.organizer.about',
-                                    ][i],
-                                    ['Home', 'Dashboard', 'About us'][i],
-                                    style: TextStyle(
-                                      fontSize: width < 280 ? 11 : 14,
-                                      fontWeight: FontWeight.w600,
-                                      color: widget.activeTab == i
-                                          ? const Color(0xFFBDD89D)
-                                          : const Color(0xFF172817),
-                                    ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Flexible(
+                                        child: SiteCopyText(
+                                          [
+                                            'navigation.home',
+                                            'navigation.organizer.dashboard',
+                                            'navigation.organizer.about',
+                                          ][i],
+                                          ['Home', 'Dashboard', 'About us'][i],
+                                          style: TextStyle(
+                                            fontSize: width < 210
+                                                ? 9
+                                                : width < 280
+                                                ? 11
+                                                : 14,
+                                            fontWeight: FontWeight.w600,
+                                            color: widget.activeTab == i
+                                                ? const Color(0xFFBDD89D)
+                                                : const Color(0xFF172817),
+                                          ),
+                                        ),
+                                      ),
+                                      if (i == 1 && widget.onDashboard != null)
+                                        SizedBox(
+                                          width: width < 280 ? 16 : 22,
+                                          height: 36,
+                                          child: IconButton(
+                                            key: const Key(
+                                              'dashboard-menu-toggle',
+                                            ),
+                                            tooltip: SiteContentService.text(
+                                              'navigation.organizer.choose',
+                                              'Choose a dashboard',
+                                            ),
+                                            padding: EdgeInsets.zero,
+                                            iconSize: width < 280 ? 13 : 17,
+                                            onPressed: _toggleMenu,
+                                            icon: Icon(
+                                              _open
+                                                  ? Icons.keyboard_arrow_up
+                                                  : Icons.keyboard_arrow_down,
+                                              color: widget.activeTab == 1
+                                                  ? const Color(0xFFBDD89D)
+                                                  : const Color(0xFF172817),
+                                            ),
+                                          ),
+                                        ),
+                                    ],
                                   ),
                                 ),
                               ),

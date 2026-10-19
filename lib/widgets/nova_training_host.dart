@@ -79,6 +79,7 @@ class _NovaTrainingHostState extends State<NovaTrainingHost>
         _controller.active)
       return;
     if (_controller.currentPage != 'landing' &&
+        _controller.currentPage != 'dashboards' &&
         !_controller.service.progress.completed) {
       _controller.startPage(_controller.currentPage, automatic: true);
     }

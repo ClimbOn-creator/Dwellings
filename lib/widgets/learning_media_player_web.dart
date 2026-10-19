@@ -3,9 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:web/web.dart' as web;
 
 class LearningMediaPlayer extends StatefulWidget {
-  const LearningMediaPlayer({super.key, required this.url, this.audio = false});
+  const LearningMediaPlayer({
+    super.key,
+    required this.url,
+    this.audio = false,
+    this.poster,
+  });
   final String url;
   final bool audio;
+  final String? poster;
   @override
   State<LearningMediaPlayer> createState() => _LearningMediaPlayerState();
 }
@@ -21,6 +27,7 @@ class _LearningMediaPlayerState extends State<LearningMediaPlayer> {
     ui.platformViewRegistry.registerViewFactory(id, (_) {
       final e = widget.audio ? web.HTMLAudioElement() : web.HTMLVideoElement();
       e.src = widget.url;
+      if (widget.poster != null) e.setAttribute('poster', widget.poster!);
       e.controls = true;
       e.preload = 'metadata';
       e.style.width = '100%';

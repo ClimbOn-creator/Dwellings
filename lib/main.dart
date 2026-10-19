@@ -1,3 +1,4 @@
+import 'screens/dashboard_showcase_page.dart';
 import 'widgets/affinity_button_gradients.dart';
 import 'screens/company_data_page.dart';
 import 'services/usage_analytics_service.dart';
@@ -165,6 +166,7 @@ class AffinityApp extends StatelessWidget {
       'network' => const AcquisitionSupportPage(),
       'resources' => const BuyerResourcesPage(),
       'seller-posts' => const SellerPostsPage(),
+      'dashboards' || 'dashboard' => const DashboardShowcasePage(),
       'member-pricing' => const MemberPricingPage(),
       'member-marketing' => const MemberMarketingPage(),
       'seller-transaction-room' => const TransactionLearningPage(),

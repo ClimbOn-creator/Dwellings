@@ -46,7 +46,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Dashboard'));
+      await tester.tap(find.byKey(const Key('dashboard-menu-toggle')));
       await tester.pumpAndSettle();
       await tester.ensureVisible(find.text(label));
       await tester.pumpAndSettle();

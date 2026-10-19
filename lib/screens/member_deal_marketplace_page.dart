@@ -1,3 +1,4 @@
+import '../widgets/dashboard_greeting.dart';
 import '../widgets/dashboard_header.dart';
 import '../services/app_tunnel.dart';
 import '../widgets/nova_target.dart';
@@ -636,18 +637,10 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (narrow) ...[
-                    const Text(
-                      'Good morning ✨',
-                      style: TextStyle(
-                        fontSize: 27,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -.8,
-                      ),
-                    ),
-                    const SizedBox(height: 5),
-                    const Text(
-                      'Discover opportunities and keep buyer conversations moving.',
-                      style: TextStyle(color: DashboardUi.muted),
+                    const DashboardGreeting(
+                      summary:
+                          'Discover opportunities and keep buyer conversations moving.',
+                      emoji: '✨',
                     ),
                     const SizedBox(height: 16),
                     _memberHomeSearch(),
@@ -655,23 +648,10 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                     Row(
                       children: [
                         const Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Good morning ✨',
-                                style: TextStyle(
-                                  fontSize: 27,
-                                  fontWeight: FontWeight.w800,
-                                  letterSpacing: -.8,
-                                ),
-                              ),
-                              SizedBox(height: 5),
-                              Text(
+                          child: DashboardGreeting(
+                            summary:
                                 'Discover opportunities and keep buyer conversations moving.',
-                                style: TextStyle(color: DashboardUi.muted),
-                              ),
-                            ],
+                            emoji: '✨',
                           ),
                         ),
                         SizedBox(width: 235, child: _memberHomeSearch()),

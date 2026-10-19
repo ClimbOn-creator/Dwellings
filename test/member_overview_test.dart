@@ -40,7 +40,7 @@ void main() {
       expect(find.byType(AffinityEntryChoices), findsNothing);
       expect(find.text('I WANT TO BUY A BUSINESS'), findsNothing);
       expect(find.text('Explore personal consulting'), findsNothing);
-      await tester.tap(find.text('Dashboard'));
+      await tester.tap(find.byKey(const Key('dashboard-menu-toggle')));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('navigation-memberStudio')));
       await tester.pumpAndSettle();

@@ -38,7 +38,7 @@ void main() {
         expect(find.text('Dashboard'), findsOneWidget);
         expect(find.text('About us'), findsOneWidget);
         expect(find.byType(AppNavigationPill), findsNothing);
-        await tester.tap(find.text('Dashboard'));
+        await tester.tap(find.byKey(const Key('dashboard-menu-toggle')));
         await tester.pumpAndSettle();
         expect(find.byType(AppNavigationPill), findsNWidgets(4));
         await tester.tapAt(const Offset(5, 500));
@@ -82,7 +82,7 @@ void main() {
       final finish = tester.getTopLeft(highlight).dx;
       expect(middle, greaterThan(start));
       expect(middle, lessThan(finish));
-      await tester.tap(find.text('Dashboard'));
+      await tester.tap(find.byKey(const Key('dashboard-menu-toggle')));
       await tester.pumpAndSettle();
       expect(
         find.byKey(const Key('dashboard-navigation-panel')),

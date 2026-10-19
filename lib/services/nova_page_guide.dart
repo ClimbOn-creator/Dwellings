@@ -112,6 +112,10 @@ List<NovaStep> novaPageWalkthrough(String page) {
         'Government programs',
         'Search or filter the government and community programs on this page. Review location, eligible uses and application timing, then open the program’s official information.',
       ),
+      'dashboards': (
+        'Meet the Pact workspaces',
+        'Explore the four dashboard previews, play a short product tour, or choose Buyer, Seller, Member or Learning to open that workspace. The Pika introduction lets you try common questions before you begin.',
+      ),
       'landing': (
         'Choose your path',
         'Start with buying, succession or transfer, or professional membership. The actions on this page take you into the path you choose.',

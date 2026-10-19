@@ -1,3 +1,5 @@
+import '../services/site_content_service.dart';
+import '../widgets/dashboard_greeting.dart';
 import '../widgets/dashboard_header.dart';
 import 'deal_rooms_page.dart';
 import 'deal_comparison_page.dart';
@@ -506,6 +508,13 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
   Widget _feed() => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
+      DashboardGreeting(
+        summary: SiteContentService.text(
+          'learning.greeting.summary',
+          'Make room for your next discovery.',
+        ),
+      ),
+      const SizedBox(height: 24),
       if (permissions.canPublish)
         Padding(
           padding: const EdgeInsets.only(bottom: 18),

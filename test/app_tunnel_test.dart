@@ -56,7 +56,7 @@ void main() {
       expect(find.text('Dashboard'), findsOneWidget);
       expect(find.text('About us'), findsOneWidget);
       expect(find.byType(AppNavigationPill), findsNothing);
-      await tester.tap(find.text('Dashboard'));
+      await tester.tap(find.byKey(const Key('dashboard-menu-toggle')));
       await tester.pumpAndSettle();
       final actual = tester
           .widgetList<AppNavigationPill>(find.byType(AppNavigationPill))

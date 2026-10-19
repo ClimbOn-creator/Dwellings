@@ -1,6 +1,8 @@
+import '../models/dashboard_showcase_content.dart';
 // These IDs are permanent. Rewrite the fallback VALUE while retaining its ID.
 // Never regenerate or renumber this registry during a redesign.
 const siteCopyCatalog = <String, String>{
+  ...dashboardShowcaseCopy,
   'member.overview.eyebrow': 'YOUR NEXT CHAPTER',
   'member.overview.title': 'Choose where you want to go.',
   'member.overview.workspace': 'Open my professional workspace',

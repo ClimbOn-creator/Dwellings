@@ -30,6 +30,7 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
+    - assets/product_tours/
     - assets/images/
     - assets/brand/
     - assets/resource_logos/

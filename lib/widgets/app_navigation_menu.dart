@@ -1,3 +1,4 @@
+import '../screens/dashboard_showcase_page.dart';
 import 'navigation_organizer.dart';
 import '../models/footer_page_content.dart';
 import '../screens/footer_information_page.dart';
@@ -246,6 +247,15 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
         : _guidePage() == 'about-us'
         ? 2
         : 1,
+    onDashboard: () {
+      AppTunnelController.select(AppTunnel.landing);
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          settings: const RouteSettings(name: 'dashboards'),
+          builder: (_) => const DashboardShowcasePage(),
+        ),
+      );
+    },
     onHome: () => HomeBrandButton.open(context),
     onAbout: () => Navigator.of(context).push(
       MaterialPageRoute<void>(

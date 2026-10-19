@@ -1,3 +1,4 @@
+import 'package:dwelling_iq/screens/dashboard_showcase_page.dart';
 import 'package:dwelling_iq/services/app_tunnel.dart';
 import 'package:dwelling_iq/screens/acquisition_support_page.dart';
 import 'package:dwelling_iq/screens/buyer_resources_page.dart';
@@ -16,30 +17,35 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     AppTunnelController.select(AppTunnel.buyer);
   });
-  testWidgets('landing has no Pika button or automatic introduction', (
-    tester,
-  ) async {
-    final controller = NovaTrainingController(
-      service: NovaTrainingService(accountId: () => null),
-    )..currentPage = 'landing';
-    final navigator = GlobalKey<NavigatorState>();
-    await tester.pumpWidget(
-      MaterialApp(
-        navigatorKey: navigator,
-        builder: (_, child) => NovaTrainingHost(
+  for (final publicPage in ['landing', 'dashboards']) {
+    testWidgets('$publicPage has no automatic Pika introduction', (
+      tester,
+    ) async {
+      final controller = NovaTrainingController(
+        service: NovaTrainingService(accountId: () => null),
+      )..currentPage = publicPage;
+      final navigator = GlobalKey<NavigatorState>();
+      await tester.pumpWidget(
+        MaterialApp(
           navigatorKey: navigator,
-          controller: controller,
-          child: child!,
+          builder: (_, child) => NovaTrainingHost(
+            navigatorKey: navigator,
+            controller: controller,
+            child: child!,
+          ),
+          home: publicPage == 'landing'
+              ? const AcquisitionSupportPage()
+              : const DashboardShowcasePage(),
         ),
-        home: const AcquisitionSupportPage(),
-      ),
-    );
-    await tester.pump(const Duration(seconds: 1));
-    expect(find.byKey(const Key('pebble_page_help')), findsNothing);
-    expect(find.text('Hi, I’m Pika.'), findsNothing);
-    expect(controller.active, isFalse);
-    await tester.pumpWidget(const SizedBox.shrink());
-  });
+      );
+      await tester.pump(const Duration(seconds: 1));
+      if (publicPage == 'landing')
+        expect(find.byKey(const Key('pebble_page_help')), findsNothing);
+      expect(find.text('Hi, I’m Pika.'), findsNothing);
+      expect(controller.active, isFalse);
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+  }
   for (final width in [390.0, 1440.0]) {
     testWidgets(
       'Resources keeps full main header at $width and room navigation is distinct',
@@ -75,7 +81,7 @@ void main() {
           width < 700 ? findsNothing : findsOneWidget,
         );
         expect(find.text('Pika walkthrough'), findsNothing);
-        await tester.tap(find.text('Dashboard'));
+        await tester.tap(find.byKey(const Key('dashboard-menu-toggle')));
         await tester.pumpAndSettle();
         await tester.ensureVisible(find.text('Transaction Room'));
         await tester.pumpAndSettle();

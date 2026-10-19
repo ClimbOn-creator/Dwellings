@@ -1,3 +1,4 @@
+import '../widgets/dashboard_greeting.dart';
 import '../widgets/dashboard_header.dart';
 import '../widgets/calculator_help_sidebar.dart';
 import '../widgets/nova_target.dart';
@@ -797,12 +798,6 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
   );
 
   Widget _overview() {
-    final hour = DateTime.now().hour;
-    final greeting = hour < 12
-        ? 'Good morning'
-        : hour < 17
-        ? 'Good afternoon'
-        : 'Good evening';
     final name = _businessController.text.trim();
     final active = name.isNotEmpty;
     final next = _nextTask;
@@ -835,23 +830,8 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
     return LayoutBuilder(
       builder: (context, box) {
         final narrow = box.maxWidth < 740;
-        final heading = Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '$greeting 👋',
-              style: const TextStyle(
-                fontSize: 27,
-                fontWeight: FontWeight.w800,
-                letterSpacing: -.8,
-              ),
-            ),
-            const SizedBox(height: 5),
-            const Text(
-              'Keep every transfer moving.',
-              style: TextStyle(color: DashboardUi.muted),
-            ),
-          ],
+        const heading = DashboardGreeting(
+          summary: 'Keep every transfer moving.',
         );
         final search = NovaTarget(
           id: "seller.home.search",
