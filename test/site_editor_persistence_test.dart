@@ -254,7 +254,7 @@ void main() {
         ),
       );
       await tester.pumpWidget(
-        page('Old default', 'assets/brand/affinity-logo.png'),
+        page('Old default', 'assets/brand/pact-logo-dark.png'),
       );
       await tester.pumpAndSettle();
       expect(find.text('Owner wording'), findsOneWidget);
@@ -262,7 +262,7 @@ void main() {
       await tester.pumpWidget(
         page(
           'Completely redesigned default',
-          'assets/brand/affinity-footer-logo.png',
+          'assets/brand/pact-logo-light.png',
         ),
       );
       await tester.pumpAndSettle();

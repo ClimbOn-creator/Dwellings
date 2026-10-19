@@ -79,7 +79,7 @@ const pebbleMainPageCopy = <String, List<(String, String, String, String?)>>{
     (
       'apply',
       'Apply when ready',
-      'Choose Apply for membership to sign in and record your preferred workspace. You can return home through the Affinity logo to choose another side of the app.',
+      'Choose Apply for membership to sign in and record your preferred workspace. You can return home through the Pact logo to choose another side of the app.',
       'member-pricing.plans',
     ),
   ],
@@ -133,7 +133,7 @@ const pebbleMainPageCopy = <String, List<(String, String, String, String?)>>{
     (
       'providers',
       'Explore a provider',
-      'Open an organization card to see its programs. Compare eligibility, eligible costs, deadlines and application details. Affinity connects you to the provider; the provider decides eligibility.',
+      'Open an organization card to see its programs. Compare eligibility, eligible costs, deadlines and application details. Pact connects you to the provider; the provider decides eligibility.',
       'resources.providers',
     ),
     (
@@ -231,7 +231,7 @@ const pebbleMainPageCopy = <String, List<(String, String, String, String?)>>{
     (
       'create',
       'Create an account',
-      'Choose the account-creation option if you are new to Affinity. Use an email you can access and follow the verification instructions shown after registration.',
+      'Choose the account-creation option if you are new to Pact. Use an email you can access and follow the verification instructions shown after registration.',
       'auth.form',
     ),
     (
@@ -297,7 +297,7 @@ const pebbleMainPageCopy = <String, List<(String, String, String, String?)>>{
     (
       'official',
       'Confirm with the provider',
-      'Follow the official program link for current requirements and application instructions. Affinity helps you find the connection; the organization manages the program.',
+      'Follow the official program link for current requirements and application instructions. Pact helps you find the connection; the organization manages the program.',
       null,
     ),
   ],

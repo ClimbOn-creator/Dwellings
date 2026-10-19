@@ -211,7 +211,7 @@ const footerPages = <FooterTopic, FooterPageContent>{
     ],
     faqs: [
       (
-        "Can I add a deal found outside Affinity?",
+        "Can I add a deal found outside Pact?",
         "Yes. The buyer dashboard includes a private-deal entry so you can organize an opportunity you sourced yourself.",
       ),
       (
@@ -223,7 +223,7 @@ const footerPages = <FooterTopic, FooterPageContent>{
   FooterTopic.memberStudio: FooterPageContent(
     label: "Member Studio",
     group: "PROFESSIONALS",
-    headline: "Your professional home in Affinity.",
+    headline: "Your professional home in Pact.",
     intro:
         "Present your experience, explore buyer opportunities and manage the conversations that matter to your work. Member Studio brings your profile and deal activity together.",
     action: "Open Member Studio",
@@ -374,10 +374,10 @@ const footerPages = <FooterTopic, FooterPageContent>{
   ),
   FooterTopic.approach: FooterPageContent(
     label: "Our approach",
-    group: "AFFINITY",
+    group: "PACT",
     headline: "Better judgment. More deliberate decisions.",
     intro:
-        "Affinity helps buyers, owners and professionals move through a business acquisition with clearer information, useful tools and the right people around the table.",
+        "Pact helps buyers, owners and professionals move through a business acquisition with clearer information, useful tools and the right people around the table.",
     action: "Explore the buyer workspace",
     sections: [
       FooterSection(
@@ -406,7 +406,7 @@ const footerPages = <FooterTopic, FooterPageContent>{
     ],
     faqs: [
       (
-        "Who is Affinity for?",
+        "Who is Pact for?",
         "Buyers exploring an acquisition, owners planning a sale or succession, and professionals who support business transactions.",
       ),
       (
@@ -417,10 +417,10 @@ const footerPages = <FooterTopic, FooterPageContent>{
   ),
   FooterTopic.privacy: FooterPageContent(
     label: "Privacy",
-    group: "AFFINITY",
+    group: "PACT",
     headline: "Understand what you share.",
     intro:
-        "A practical guide to account information, public profiles and deal activity in Affinity. Review the visibility of information before publishing it or sharing it with other people.",
+        "A practical guide to account information, public profiles and deal activity in Pact. Review the visibility of information before publishing it or sharing it with other people.",
     action: "",
     sections: [
       FooterSection(
@@ -462,7 +462,7 @@ const footerPages = <FooterTopic, FooterPageContent>{
       ),
       FooterSection(
         "Optional usage measurement",
-        "If you opt in, Affinity saves anonymous daily counts of the app areas you open while signed in. These totals contain no names, account IDs, IP addresses, full URLs, form answers, messages or documents. Your choice is stored for your account on this browser and can be changed on the Privacy page. Turning it off stops future measurement; existing anonymous totals cannot be traced back to your account. The approved owners can also view summaries of saved account and business records to operate the service.",
+        "If you opt in, Pact saves anonymous daily counts of the app areas you open while signed in. These totals contain no names, account IDs, IP addresses, full URLs, form answers, messages or documents. Your choice is stored for your account on this browser and can be changed on the Privacy page. Turning it off stops future measurement; existing anonymous totals cannot be traced back to your account. The approved owners can also view summaries of saved account and business records to operate the service.",
         [
           "Optional signed-in usage counts",
           "Anonymous daily totals",
@@ -483,15 +483,15 @@ const footerPages = <FooterTopic, FooterPageContent>{
   ),
   FooterTopic.terms: FooterPageContent(
     label: "Terms",
-    group: "AFFINITY",
+    group: "PACT",
     headline: "A shared understanding of the platform.",
     intro:
-        "Read how Affinity’s tools, professional directory and transaction workspaces are intended to be used. Agree deal-specific obligations and professional services separately with the people involved.",
+        "Read how Pact’s tools, professional directory and transaction workspaces are intended to be used. Agree deal-specific obligations and professional services separately with the people involved.",
     action: "",
     sections: [
       FooterSection(
-        "The role of Affinity",
-        "Affinity provides tools for organizing acquisition decisions and discovering professional support. Buyers, sellers and professionals remain responsible for their own decisions, information and agreements.",
+        "The role of Pact",
+        "Pact provides tools for organizing acquisition decisions and discovering professional support. Buyers, sellers and professionals remain responsible for their own decisions, information and agreements.",
         [
           "Decision tools",
           "Professional discovery",
@@ -533,7 +533,7 @@ const footerPages = <FooterTopic, FooterPageContent>{
     ],
     faqs: [
       (
-        "Does Affinity promise that a deal will close?",
+        "Does Pact promise that a deal will close?",
         "No. Closing depends on the parties, financing, diligence and the agreements they make.",
       ),
       (
@@ -544,7 +544,7 @@ const footerPages = <FooterTopic, FooterPageContent>{
   ),
   FooterTopic.contact: FooterPageContent(
     label: "Contact",
-    group: "AFFINITY",
+    group: "PACT",
     headline: "Let’s get you to the right place.",
     intro:
         "Whether you have an account question, want to discuss an acquisition or need specialist expertise, start with the route that fits your question.",

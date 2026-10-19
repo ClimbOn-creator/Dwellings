@@ -36,10 +36,10 @@ export async function onRequestPost({ request, env }) {
         method: "POST",
         headers: { authorization: `Bearer ${env.RESEND_API_KEY}`, "content-type": "application/json" },
         body: JSON.stringify({
-          from: env.AFFINITY_FROM_EMAIL || env.CONSULTING_FROM_EMAIL || "Affinity <onboarding@resend.dev>",
+          from: (env.AFFINITY_FROM_EMAIL || env.CONSULTING_FROM_EMAIL || "Pact <onboarding@resend.dev>").replace(/\bAffinity\b/g, "Pact").replace(/\bAFFINITY\b/g, "PACT"),
           to: [user.email],
           subject: item.title,
-          text: `${item.message}\n\nOpen Affinity: ${link}\n\nThis is a private transactional update about your Affinity account.`,
+          text: `${item.message}\n\nOpen Pact: ${link}\n\nThis is a private transactional update about your Pact account.`,
         }),
       });
       if (!emailResponse.ok) throw new Error("email provider rejected request");

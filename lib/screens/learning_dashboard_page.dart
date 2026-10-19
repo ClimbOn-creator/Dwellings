@@ -1114,7 +1114,7 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
         .replaceAll(';', r'\;')
         .replaceAll('\r', '');
     final ics =
-        'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Affinity//Learning//EN\r\nBEGIN:VEVENT\r\nUID:${s.id}@affinity-learning\r\nDTSTAMP:${date(DateTime.now())}\r\nDTSTART:${date(s.startsAt)}\r\nDTEND:${date(s.endsAt)}\r\nSUMMARY:${escape(s.title)}\r\nURL:${s.informationUrl}\r\nDESCRIPTION:${escape(s.description)}\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n';
+        'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Pact//Learning//EN\r\nBEGIN:VEVENT\r\nUID:${s.id}@affinity-learning\r\nDTSTAMP:${date(DateTime.now())}\r\nDTSTART:${date(s.startsAt)}\r\nDTEND:${date(s.endsAt)}\r\nSUMMARY:${escape(s.title)}\r\nURL:${s.informationUrl}\r\nDESCRIPTION:${escape(s.description)}\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n';
     try {
       await FilePicker.platform.saveFile(
         fileName: 'learning-seminar.ics',

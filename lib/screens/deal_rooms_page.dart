@@ -2249,7 +2249,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
               children: [
                 const SiteCopyText(
                   'buyer.learning.intro',
-                  'Learn the acquisition process, then apply it to a real opportunity. Add a business from Affinity, another website, a broker or a direct conversation. Your private deal keeps the facts, evidence gaps and next steps together.',
+                  'Learn the acquisition process, then apply it to a real opportunity. Add a business from Pact, another website, a broker or a direct conversation. Your private deal keeps the facts, evidence gaps and next steps together.',
                   style: TextStyle(color: _ink, height: 1.5, fontSize: 15),
                 ),
                 const SizedBox(height: 16),
@@ -2655,7 +2655,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                 const SizedBox(height: 12),
                 _sideInsight(
                   'PRIVACY',
-                  'Nothing reaches the Member Studio until you submit it and Affinity approves an anonymous brief.',
+                  'Nothing reaches the Member Studio until you submit it and Pact approves an anonymous brief.',
                 ),
                 const SizedBox(height: 18),
                 OutlinedButton.icon(
@@ -3648,7 +3648,7 @@ class DealIntakeDialogState extends State<DealIntakeDialog> {
       _stepIntro(
         'STEP 3',
         'Your acquisition plan',
-        'Record the decision context. Affinity will turn this into tasks, evidence requests, and professional needs.',
+        'Record the decision context. Pact will turn this into tasks, evidence requests, and professional needs.',
       ),
       DealIntakeForm(controllers: _extra, stage: 2),
       _moneyField(
@@ -3669,7 +3669,7 @@ class DealIntakeDialogState extends State<DealIntakeDialog> {
         subtitle: const SiteText(
           contentKey: 'copy.deal_rooms_page.11',
           literal: true,
-          'Helps Affinity identify relevant lenders and capital partners.',
+          'Helps Pact identify relevant lenders and capital partners.',
         ),
         onChanged: (value) => setState(() => _financingNeeded = value),
       ),
@@ -3715,7 +3715,7 @@ class DealIntakeDialogState extends State<DealIntakeDialog> {
       _stepIntro(
         'STEP 4',
         'Create the private workspace',
-        'Affinity will create a guided acquisition plan. Nothing is published to members automatically.',
+        'Pact will create a guided acquisition plan. Nothing is published to members automatically.',
       ),
       _reviewLine(
         'Deal',
@@ -4734,7 +4734,7 @@ class _DealRoomPageState extends State<DealRoomPage> {
     _DealWorkspaceView.overview => 'Overview',
     _DealWorkspaceView.profile => 'Deal profile',
     _DealWorkspaceView.financials => 'Financial model',
-    _DealWorkspaceView.evaluation => 'Affinity evaluation',
+    _DealWorkspaceView.evaluation => 'Pact evaluation',
     _DealWorkspaceView.documents => 'Documents',
     _DealWorkspaceView.plan => 'Transaction plan',
     _DealWorkspaceView.team => 'Deal team',
@@ -4894,7 +4894,7 @@ class _DealRoomPageState extends State<DealRoomPage> {
                 Icons.lock_person_outlined,
                 'MEMBER STUDIO',
                 'Private until you submit',
-                'Affinity reviews the deal before any anonymous opportunity is shown to members.',
+                'Pact reviews the deal before any anonymous opportunity is shown to members.',
                 action: 'PRIVACY PREVIEW',
                 onTap: () =>
                     setState(() => _workspaceView = _DealWorkspaceView.privacy),
@@ -5163,7 +5163,7 @@ class _DealRoomPageState extends State<DealRoomPage> {
         const SizedBox(height: 18),
         _workspaceNotice(
           Icons.info_outline_rounded,
-          'Affinity review is evidence-led',
+          'Pact review is evidence-led',
           'Scores guide screening; they do not replace quality of earnings, legal, tax, lender, or operational diligence.',
         ),
       ],
@@ -5363,7 +5363,7 @@ class _DealRoomPageState extends State<DealRoomPage> {
             ),
             _privacyToggle(
               'risk',
-              'Share Affinity evaluation',
+              'Share Pact evaluation',
               'Approved deal-team professionals can view risk and viability outputs.',
             ),
           ],
@@ -5397,7 +5397,7 @@ class _DealRoomPageState extends State<DealRoomPage> {
                   SiteText(
                     contentKey: 'copy.deal_rooms_page.m80',
                     literal: true,
-                    'ANONYMOUS BUYER · AFFINITY REVIEWED',
+                    'ANONYMOUS BUYER · PACT REVIEWED',
                     style: TextStyle(
                       fontSize: 9,
                       fontWeight: FontWeight.w900,
@@ -5431,7 +5431,7 @@ class _DealRoomPageState extends State<DealRoomPage> {
               const SiteText(
                 contentKey: 'copy.deal_rooms_page.16',
                 literal: true,
-                'Affinity writes and approves the summary, price band, support needs, and score label before publication.',
+                'Pact writes and approves the summary, price band, support needs, and score label before publication.',
                 style: TextStyle(color: _lilac, height: 1.5),
               ),
             ],
@@ -5638,7 +5638,7 @@ class _DealRoomPageState extends State<DealRoomPage> {
         SiteText(
           contentKey: 'copy.deal_rooms_page.m91',
           literal: true,
-          'When a verified Affinity member responds to an approved anonymous opportunity, their short pitch will appear here.',
+          'When a verified Pact member responds to an approved anonymous opportunity, their short pitch will appear here.',
           textAlign: TextAlign.center,
           style: TextStyle(color: _lilac, fontSize: 12, height: 1.5),
         ),

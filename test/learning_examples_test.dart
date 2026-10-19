@@ -100,7 +100,7 @@ void main() {
       expect(find.text('Alex (example)'), findsOneWidget);
       await tester.tap(find.text('1 reply'));
       await tester.pumpAndSettle();
-      expect(find.text('Affinity (example)'), findsOneWidget);
+      expect(find.text('Pact (example)'), findsOneWidget);
       await tester.tap(find.widgetWithText(TextButton, 'Reply').first);
       await tester.pump();
       await tester.enterText(find.byType(TextField), 'My preview reply');

@@ -271,7 +271,7 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
             content: const SiteText(
               contentKey: 'copy.home_screen.1',
               literal: true,
-              'Analysis saved to your Affinity account.',
+              'Analysis saved to your Pact account.',
             ),
             behavior: SnackBarBehavior.floating,
             action: SnackBarAction(
@@ -668,7 +668,7 @@ class _UnderwritingScreenState extends State<UnderwritingScreen> {
             const SiteText(
               contentKey: 'copy.home_screen.8',
               literal: true,
-              'Assessment values are dated tax values—not appraisals. Affinity uses them only as a discrepancy and due-diligence signal.',
+              'Assessment values are dated tax values—not appraisals. Pact uses them only as a discrepancy and due-diligence signal.',
               style: TextStyle(color: _muted, fontSize: 10, height: 1.5),
             ),
           ],
@@ -1223,7 +1223,7 @@ class _FuturistManifesto extends StatelessWidget {
                     const SiteText(
                       contentKey: 'copy.home_screen.17',
                       literal: true,
-                      'Affinity connects the place, the income, the debt, the exit and the risk in one visible system.',
+                      'Pact connects the place, the income, the debt, the exit and the risk in one visible system.',
                       style: TextStyle(
                         color: _muted,
                         fontSize: 15,

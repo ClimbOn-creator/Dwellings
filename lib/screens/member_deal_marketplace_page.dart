@@ -257,7 +257,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
             content: const SiteText(
               contentKey: 'copy.member_deal_marketplace_page.2',
               literal: true,
-              'Your Deal Screen and Pipeline create the private source record Affinity reviews. Nothing is published automatically.',
+              'Your Deal Screen and Pipeline create the private source record Pact reviews. Nothing is published automatically.',
             ),
             actions: [
               TextButton(
@@ -306,14 +306,14 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                 const SiteText(
                   contentKey: 'copy.member_deal_marketplace_page.5',
                   literal: true,
-                  'Send a deal to Affinity',
+                  'Send a deal to Pact',
                   style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
                 ),
                 const SizedBox(height: 8),
                 const SiteText(
                   contentKey: 'copy.member_deal_marketplace_page.6',
                   literal: true,
-                  'Affinity receives the private assessment. Members see nothing until we create and approve an anonymous summary.',
+                  'Pact receives the private assessment. Members see nothing until we create and approve an anonymous summary.',
                   style: TextStyle(color: _muted, height: 1.45),
                 ),
                 const SizedBox(height: 18),
@@ -354,7 +354,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
             content: const SiteText(
               contentKey: 'copy.member_deal_marketplace_page.8',
               literal: true,
-              'Every submitted deal needs a short paragraph explaining the business, what interests you, and what you are trying to accomplish. This remains private until Affinity creates the anonymous member brief.',
+              'Every submitted deal needs a short paragraph explaining the business, what interests you, and what you are trying to accomplish. This remains private until Pact creates the anonymous member brief.',
             ),
             actions: [
               TextButton(
@@ -388,7 +388,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
       await MemberDealMarketplaceService.submitForReview(selected.id);
       if (mounted) {
         _message(
-          'Submitted for Affinity review. It remains private until approved.',
+          'Submitted for Pact review. It remains private until approved.',
         );
       }
     } catch (error) {
@@ -438,7 +438,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
         if (MediaQuery.sizeOf(context).width >= 700)
           IconButton(
             onPressed: _submitDeal,
-            tooltip: 'Submit a deal to Affinity',
+            tooltip: 'Submit a deal to Pact',
             icon: const Icon(Icons.add_business_outlined),
           ),
         if (MediaQuery.sizeOf(context).width >= 620)
@@ -488,7 +488,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                   icon: const Icon(Icons.add_business_outlined),
                   label: const SiteCopyText(
                     'member.dashboard.submitDeal',
-                    'Submit a deal to Affinity',
+                    'Submit a deal to Pact',
                   ),
                 ),
               const SizedBox(height: 12),
@@ -1184,7 +1184,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
         SiteText(
           contentKey: 'copy.member_deal_marketplace_page.m7',
           literal: true,
-          'Open an Affinity-reviewed deal and make one concise, relevant introduction. The buyer remains anonymous unless they choose to connect.',
+          'Open an Pact-reviewed deal and make one concise, relevant introduction. The buyer remains anonymous unless they choose to connect.',
           textAlign: TextAlign.center,
           style: TextStyle(color: _muted, fontSize: 12, height: 1.5),
         ),
@@ -1748,7 +1748,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
         );
     if (referral == null || !mounted) return;
     if (deal.isPreview) {
-      _message('Referrals become available on live Affinity-reviewed deals.');
+      _message('Referrals become available on live Pact-reviewed deals.');
       return;
     }
     try {
@@ -2014,7 +2014,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
       return _AccessState(
         title: 'Your private member workspace',
         message:
-            'Sign in to open this area. Recommendations, saved deals, buyer responses, and professional-profile information are tied only to your Affinity account.',
+            'Sign in to open this area. Recommendations, saved deals, buyer responses, and professional-profile information are tied only to your Pact account.',
         action: 'SIGN IN',
         onTap: () async {
           if (await _ensureSignedIn() && mounted) setState(_reload);
@@ -2188,7 +2188,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                   const SiteText(
                     contentKey: 'copy.member_deal_marketplace_page.17',
                     literal: true,
-                    'ANONYMOUS ACQUISITION BRIEF · AFFINITY REVIEWED',
+                    'ANONYMOUS ACQUISITION BRIEF · PACT REVIEWED',
                     style: TextStyle(
                       color: _green,
                       fontSize: 9,
@@ -2267,7 +2267,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
               const SiteText(
                 contentKey: 'copy.member_deal_marketplace_page.19',
                 literal: true,
-                'Affinity removes the company name, exact address, buyer identity, contact details, and other identifying information before members can view this brief.',
+                'Pact removes the company name, exact address, buyer identity, contact details, and other identifying information before members can view this brief.',
                 style: TextStyle(color: _muted, height: 1.5),
               ),
             ],
@@ -2400,7 +2400,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
           Icons.groups_2_outlined,
           'Support requested by the buyer',
           deal.supportNeeded.isEmpty
-              ? 'Affinity has not assigned professional requirements yet.'
+              ? 'Pact has not assigned professional requirements yet.'
               : deal.supportNeeded.join(' · '),
         ),
         const SizedBox(height: 18),
@@ -2478,7 +2478,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
           _studioHeading(
             'PERSONALIZED DISCOVERY',
             'Recommended for you',
-            'Affinity ranks reviewed opportunities against your services, regions, and deal-size preferences.',
+            'Pact ranks reviewed opportunities against your services, regions, and deal-size preferences.',
           ),
           FutureBuilder<bool>(
             future: _creatorAccess,
@@ -2616,7 +2616,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _studioHeading(
-            'MY AFFINITY PROFILE',
+            'MY PACT PROFILE',
             provider == null ? 'Your profile' : 'Welcome, ${provider.name}',
             'Manage your private account and the professional identity connected to it. Only verified directory fields are shown to other members.',
           ),
@@ -2654,7 +2654,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                         SiteText(
                           contentKey: 'copy.member_deal_marketplace_page.m35',
                           literal: false,
-                          provider?.name ?? 'Affinity member',
+                          provider?.name ?? 'Pact member',
                           style: const TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.w800,
@@ -2684,7 +2684,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
             _studioPanel(
               Icons.badge_outlined,
               'Create your professional profile',
-              'Add the public professional details that will appear in the directory. Affinity links the profile to this signed-in account and reviews it before publication.',
+              'Add the public professional details that will appear in the directory. Pact links the profile to this signed-in account and reviews it before publication.',
               action: 'CREATE PROFESSIONAL PROFILE',
               onTap: _openProfessionalOnboarding,
             )
@@ -2983,7 +2983,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
         return const _AccessState(
           title: 'No opportunities yet',
           message:
-              'Approved opportunities will appear here after Affinity completes its evaluation and privacy review.',
+              'Approved opportunities will appear here after Pact completes its evaluation and privacy review.',
         );
       }
       final query = _dealQuery.trim().toLowerCase();
@@ -3039,7 +3039,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
           const SiteText(
             contentKey: 'copy.member_deal_marketplace_page.28',
             literal: true,
-            'Current-month opportunities and highly viewed listings, prepared anonymously by Affinity.',
+            'Current-month opportunities and highly viewed listings, prepared anonymously by Pact.',
             style: TextStyle(color: _muted),
           ),
           const SizedBox(height: 16),
@@ -3794,7 +3794,7 @@ class _DealPost extends StatelessWidget {
                       SiteText(
                         contentKey: 'copy.member_deal_marketplace_page.m59',
                         literal: true,
-                        'Identity protected · Affinity reviewed',
+                        'Identity protected · Pact reviewed',
                         style: TextStyle(color: _muted, fontSize: 12),
                       ),
                     ],
@@ -4107,7 +4107,7 @@ class _PitchDialogState extends State<_PitchDialog> {
               title: const SiteText(
                 contentKey: 'copy.member_deal_marketplace_page.39',
                 literal: true,
-                'I will not ask Affinity to reveal the buyer. The buyer decides whether to share contact details.',
+                'I will not ask Pact to reveal the buyer. The buyer decides whether to share contact details.',
                 style: TextStyle(fontSize: 12, height: 1.4),
               ),
               controlAffinity: ListTileControlAffinity.leading,
@@ -4336,7 +4336,7 @@ class _MatchSettingsDialogState extends State<_MatchSettingsDialog> {
             const SiteText(
               contentKey: 'copy.member_deal_marketplace_page.45',
               literal: true,
-              'Affinity uses these preferences to rank and filter anonymous opportunities. They are never shown to buyers.',
+              'Pact uses these preferences to rank and filter anonymous opportunities. They are never shown to buyers.',
               style: TextStyle(color: _muted, height: 1.45),
             ),
             const SizedBox(height: 18),
@@ -4378,7 +4378,7 @@ class _MatchSettingsDialogState extends State<_MatchSettingsDialog> {
               templateValues: {'value1': '${minimumScore.round()}'},
               contentKey: 'copy.member_deal_marketplace_page.m75',
               literal: false,
-              "Minimum Affinity score · {{value1}}",
+              "Minimum Pact score · {{value1}}",
               style: const TextStyle(fontWeight: FontWeight.w700),
             ),
             Slider(
@@ -5554,7 +5554,7 @@ class _AnonymousDealDialogState extends State<_AnonymousDealDialog> {
     );
     _summary = TextEditingController(
       text:
-          'An established $industry business in $region is available for acquisition. Affinity is preparing this opportunity for private member review and further diligence.',
+          'An established $industry business in $region is available for acquisition. Pact is preparing this opportunity for private member review and further diligence.',
     );
   }
 
@@ -5717,7 +5717,7 @@ class _AccessState extends StatelessWidget {
 
 String _friendlyError(Object error) {
   final text = error.toString().replaceFirst('Exception: ', '');
-  if (text.contains('verified Affinity member') ||
+  if (text.contains('verified Pact member') ||
       text.contains('Verified member access required')) {
     return 'A verified, active professional membership is required to browse and pitch opportunities.';
   }

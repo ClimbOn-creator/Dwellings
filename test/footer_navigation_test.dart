@@ -46,7 +46,7 @@ void main() {
     expect(find.text('Allow usage counts'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
-  testWidgets('only the four Affinity links open dedicated pages', (
+  testWidgets('only the four Pact links open dedicated pages', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(1440, 1200);
@@ -137,7 +137,7 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.text('Company email coming soon'), findsOneWidget);
-      expect(find.text('Email Affinity'), findsNothing);
+      expect(find.text('Email Pact'), findsNothing);
       await tester.drag(
         find.byType(CustomScrollView).first,
         const Offset(0, 6000),

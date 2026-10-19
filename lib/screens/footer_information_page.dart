@@ -440,7 +440,7 @@ class _FooterInformationPageState extends State<FooterInformationPage> {
                 icon: const Icon(Icons.mail_outline, size: 18),
                 label: _copy(
                   'email.button',
-                  'Email Affinity',
+                  'Email Pact',
                   color: Colors.white,
                   size: 14,
                 ),

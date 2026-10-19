@@ -105,7 +105,7 @@ class _CompanyDataPageState extends State<CompanyDataPage> {
           SizedBox(width: 16),
         ],
         title: const Text(
-          'AFFINITY / DATA',
+          'PACT / DATA',
           style: TextStyle(
             fontSize: 14,
             letterSpacing: 2,

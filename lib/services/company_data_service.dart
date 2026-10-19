@@ -22,7 +22,7 @@ class CompanyDataReport {
 
   String toCsv() {
     final lines = <List<Object?>>[
-      ['Affinity company data', data['generated_at']],
+      ['Pact company data', data['generated_at']],
       ['Selected period (days)', data['days']],
       ['Section', 'Label', 'Count', 'Database bytes'],
       for (final entry in totals.entries)
@@ -106,7 +106,7 @@ class CompanyDataService {
   static Future<void> export(CompanyDataReport report) async {
     await FilePicker.platform.saveFile(
       dialogTitle: 'Save company data summary',
-      fileName: 'affinity-company-data.csv',
+      fileName: 'pact-company-data.csv',
       bytes: Uint8List.fromList(utf8.encode(report.toCsv())),
     );
   }

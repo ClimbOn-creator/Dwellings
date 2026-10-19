@@ -580,7 +580,7 @@ class _PersonalizedConsultingPageState
             const SizedBox(height: 25),
             _copy(
               'copy.assistant_workspace_page.m14',
-              'Affinity was created around a simple belief: buyers make stronger choices when their personal goals, financial readiness, and deal criteria are examined together. The founder’s work combines product development, transparent financial modelling, and buyer-first decision systems to turn an intimidating acquisition into a series of clear, defensible choices.',
+              'Pact was created around a simple belief: buyers make stronger choices when their personal goals, financial readiness, and deal criteria are examined together. The founder’s work combines product development, transparent financial modelling, and buyer-first decision systems to turn an intimidating acquisition into a series of clear, defensible choices.',
               size: 16,
             ),
             const SizedBox(height: 18),

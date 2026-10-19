@@ -241,7 +241,16 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               child: Row(
                 children: [
-                  const HomeBrandButton(size: 52, dark: false),
+                  AnimatedBuilder(
+                    animation: _pageScroll,
+                    builder: (context, _) => HomeBrandButton(
+                      size: 52,
+                      dark:
+                          !_pageScroll.hasClients ||
+                          _pageScroll.offset <
+                              MediaQuery.sizeOf(context).height * 2.7,
+                    ),
+                  ),
                   const Spacer(),
                   const AppNavigationMenu(
                     guidePage: 'landing',
@@ -310,7 +319,7 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
             const SizedBox(height: 28),
             _copy(
               'home.intro',
-              'Affinity helps aspiring buyers define the right target, prepare to transact, screen real opportunities, and build the professional team needed to close with confidence.',
+              'Pact helps aspiring buyers define the right target, prepare to transact, screen real opportunities, and build the professional team needed to close with confidence.',
               size: 18,
               color: const Color(0xFFD2DFD9),
             ),
@@ -452,7 +461,7 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
         if (MediaQuery.sizeOf(context).width < 760) ...[
           _copy(
             'home.intro',
-            'Affinity helps aspiring buyers define the right target, prepare to transact, screen real opportunities, and build the professional team needed to close with confidence.',
+            'Pact helps aspiring buyers define the right target, prepare to transact, screen real opportunities, and build the professional team needed to close with confidence.',
           ),
           const SizedBox(height: 36),
         ],
@@ -528,7 +537,7 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
             const SizedBox(height: 24),
             _copy(
               'home.benefits.buyer.intro',
-              'Buying a business brings a lot of moving parts. Affinity gives you a place to connect them—and a practical next step when you need one.',
+              'Buying a business brings a lot of moving parts. Pact gives you a place to connect them—and a practical next step when you need one.',
               color: const Color(0xFF56625D),
             ),
             const SizedBox(height: 30),
@@ -673,7 +682,7 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
         _copy(
           member ? 'home.member_body' : 'home.buyer_body',
           member
-              ? 'Build a credible professional presence and respond privately when an Affinity-reviewed opportunity fits your expertise.'
+              ? 'Build a credible professional presence and respond privately when an Pact-reviewed opportunity fits your expertise.'
               : 'Learn the path, define what fits your life and capital, measure your readiness, and screen opportunities against your own rules.',
           color: member ? const Color(0xFFCCDAD5) : const Color(0xFF56625D),
         ),
@@ -731,14 +740,14 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
         const SizedBox(height: 20),
         _copy(
           'home.pricing.intro',
-          'Buyer, Seller and Learning dashboards are free. Professionals can join the Member side of Affinity for \$149 CAD per month, bringing their profile, introductions and deal work together in one workspace.',
+          'Buyer, Seller and Learning dashboards are free. Professionals can join the Member side of Pact for \$149 CAD per month, bringing their profile, introductions and deal work together in one workspace.',
         ),
         const SizedBox(height: 30),
         const MembershipPlanCards(showApplyButtons: false),
         const SizedBox(height: 24),
         _copy(
           'home.pricing.terms',
-          'The monthly membership applies only to the Member side of Affinity. Buyers, sellers and learners can use their dashboards without a paid membership.',
+          'The monthly membership applies only to the Member side of Pact. Buyers, sellers and learners can use their dashboards without a paid membership.',
           size: 16,
         ),
         const SizedBox(height: 24),
@@ -767,7 +776,7 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
         const SizedBox(height: 20),
         _copy(
           'home.consulting.intro',
-          'Use Affinity to learn and organize your work, then explore personal consulting when a specific acquisition question needs a closer look. Understand the approach, see the focus areas and set up a conversation around your situation.',
+          'Use Pact to learn and organize your work, then explore personal consulting when a specific acquisition question needs a closer look. Understand the approach, see the focus areas and set up a conversation around your situation.',
         ),
         const SizedBox(height: 24),
         _button(
@@ -810,8 +819,8 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
           ),
           (
             'decision',
-            'Does Affinity make the acquisition decision for me?',
-            'You remain the decision-maker. Affinity helps organize your criteria, assumptions and next steps. Use screening results as a starting point for verification and specialist advice.',
+            'Does Pact make the acquisition decision for me?',
+            'You remain the decision-maker. Pact helps organize your criteria, assumptions and next steps. Use screening results as a starting point for verification and specialist advice.',
           ),
         ])
           ExpansionTile(
@@ -877,7 +886,7 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
             child: SiteText(
               contentKey: 'copy.acquisition_support_page.m1',
               literal: true,
-              'WHAT AFFINITY MOVES FORWARD',
+              'WHAT PACT MOVES FORWARD',
               style: TextStyle(
                 color: Color(0xFF66615B),
                 fontSize: 12,

@@ -18,7 +18,7 @@ void main() {
       'headline': 'Anonymous services acquisition',
       'industry': 'Business services',
       'region': 'British Columbia',
-      'summary': 'Affinity-approved summary',
+      'summary': 'Pact-approved summary',
       'public_details': {
         'buyer_objective': 'Acquire a recurring-revenue operator',
         'revenue_profile': r'$2M–$4M annual revenue',

@@ -27,7 +27,7 @@ const companyDatasets = <CompanyDataset>[
     'accounts',
     'Registered accounts',
     'People',
-    'Accounts registered with Affinity. Registration does not prove an active or returning user.',
+    'Accounts registered with Pact. Registration does not prove an active or returning user.',
     source: 'auth.users',
     dateField: 'created_at',
   ),

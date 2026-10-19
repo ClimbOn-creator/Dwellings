@@ -38,7 +38,7 @@ void main() {
             .getBottomRight(find.byType(InteractiveCircleFooter))
             .dy;
         final copyright = tester
-            .getBottomRight(find.textContaining('© 2026 AFFINITY'))
+            .getBottomRight(find.textContaining('© 2026 PACT'))
             .dy;
         expect(floor - copyright, inInclusiveRange(0, 48));
         expect(tester.takeException(), isNull);

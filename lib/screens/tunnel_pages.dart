@@ -355,7 +355,7 @@ class MemberMarketingPage extends StatelessWidget {
     guide: 'member-marketing',
     title: 'Make your expertise easy to find',
     intro:
-        'A practical plan for building a credible presence and attracting relevant introductions on Affinity.',
+        'A practical plan for building a credible presence and attracting relevant introductions on Pact.',
     children: [
       NovaTarget(
         id: 'member-marketing.profile',

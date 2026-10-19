@@ -524,7 +524,7 @@ class _BecomeMemberPageState extends State<BecomeMemberPage> {
                 title: const SiteText(
                   contentKey: 'copy.become_member_page.6',
                   literal: true,
-                  'I agree that Affinity may contact me about this application.',
+                  'I agree that Pact may contact me about this application.',
                   style: TextStyle(fontSize: 13),
                 ),
                 controlAffinity: ListTileControlAffinity.leading,

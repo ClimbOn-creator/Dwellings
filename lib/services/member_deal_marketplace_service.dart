@@ -26,7 +26,7 @@ class MemberDealTeamMember {
   factory MemberDealTeamMember.fromJson(Map<String, dynamic> row) =>
       MemberDealTeamMember(
         providerId: row['provider_id'] as String? ?? '',
-        name: row['name'] as String? ?? 'Affinity professional',
+        name: row['name'] as String? ?? 'Pact professional',
         company: row['company'] as String? ?? '',
         providerType: row['provider_type'] as String? ?? 'professional',
         jobTitle: row['job_title'] as String? ?? 'Professional',
@@ -109,7 +109,7 @@ class MemberDealOpportunity {
     capitalRequiredBand:
         row['capital_required_band'] as String? ?? 'To be discussed',
     affinityScore: (row['affinity_score'] as num?)?.toInt() ?? 0,
-    scoreLabel: row['score_label'] as String? ?? 'Affinity reviewed',
+    scoreLabel: row['score_label'] as String? ?? 'Pact reviewed',
     supportNeeded: List<String>.from(
       row['support_needed'] as List<dynamic>? ?? const [],
     ),
@@ -178,7 +178,7 @@ class MemberDealPitch {
     opportunityId: row['opportunity_id'] as String? ?? '',
     opportunityHeadline:
         row['opportunity_headline'] as String? ?? 'Anonymous opportunity',
-    providerName: row['provider_name'] as String? ?? 'Affinity member',
+    providerName: row['provider_name'] as String? ?? 'Pact member',
     companyName: row['company_name'] as String? ?? '',
     providerType: row['provider_type'] as String? ?? 'Professional',
     pitch: row['pitch'] as String? ?? '',

@@ -158,14 +158,14 @@ List<NovaStep> novaPageWalkthrough(String page) {
       ),
       'page:FooterInformationPage': (
         "About this page",
-        "Read this Affinity information page and follow any relevant contact or app links. The footer provides access to the other Affinity information pages.",
+        "Read this Pact information page and follow any relevant contact or app links. The footer provides access to the other Pact information pages.",
       ),
       'page:AboutPage': (
-        "About Affinity",
-        "Read about Affinity\u2019s approach and use the page\u2019s actions to explore the relevant service or app path.",
+        "About Pact",
+        "Read about Pact\u2019s approach and use the page\u2019s actions to explore the relevant service or app path.",
       ),
       'page:CapabilitiesPage': (
-        "Affinity capabilities",
+        "Pact capabilities",
         "Review the services and capabilities described here, then use the relevant page action to continue.",
       ),
       'page:PlatformHubPage': (

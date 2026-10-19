@@ -5,19 +5,19 @@ const siteCopyCatalog = <String, String>{
   'member.overview.title': 'Choose where you want to go.',
   'member.overview.workspace': 'Open my professional workspace',
   'member.overview.pricing': 'View membership pricing',
-  'member.dashboard.submitDeal': 'Submit a deal to Affinity',
+  'member.dashboard.submitDeal': 'Submit a deal to Pact',
   "home.pika.eyebrow": "A LITTLE GUIDANCE. A CLEARER PATH.",
   "home.pika.title": "Meet Pika.",
   "home.pika.heading": "Clarity, one step\nat a time.",
   "home.pika.intro":
-      "Buying, selling or just finding your feet? Pika helps you get comfortable with Affinity and understand your next step.",
+      "Buying, selling or just finding your feet? Pika helps you get comfortable with Pact and understand your next step.",
   "home.pika.benefit.walkthroughs": "Walkthroughs that stay with the page",
   "home.pika.benefit.explanations":
       "Plain-language explanations for the numbers",
   "home.pika.benefit.pace": "Guidance you can pause and revisit",
   "home.pika.action": "Meet Pika",
   "home.pika.preview.name": "Pika",
-  "home.pika.preview.status": "Your Affinity guide",
+  "home.pika.preview.status": "Your Pact guide",
   "home.pika.preview.prompt": "What would you like a hand with?",
   "home.pika.preview.action": "Show me around",
   "home.pika.question.0": "Where do I start?",
@@ -91,7 +91,7 @@ const siteCopyCatalog = <String, String>{
   'footer.page.privacy.usageSettings.action': 'Usage settings',
   'footer.page.privacy.section.5.title': 'Optional usage measurement',
   'footer.page.privacy.section.5.body':
-      'If you opt in, Affinity saves anonymous daily counts of the app areas you open while signed in. These totals contain no names, account IDs, IP addresses, full URLs, form answers, messages or documents. Your choice is stored for your account on this browser and can be changed on the Privacy page. Turning it off stops future measurement; existing anonymous totals cannot be traced back to your account. The approved owners can also view summaries of saved account and business records to operate the service.',
+      'If you opt in, Pact saves anonymous daily counts of the app areas you open while signed in. These totals contain no names, account IDs, IP addresses, full URLs, form answers, messages or documents. Your choice is stored for your account on this browser and can be changed on the Privacy page. Turning it off stops future measurement; existing anonymous totals cannot be traced back to your account. The approved owners can also view summaries of saved account and business records to operate the service.',
   'footer.page.privacy.section.5.point.0': 'Optional signed-in usage counts',
   'footer.page.privacy.section.5.point.1': 'Anonymous daily totals',
   'footer.page.privacy.section.5.point.2':
@@ -130,14 +130,14 @@ const siteCopyCatalog = <String, String>{
   'home.pricing.eyebrow': 'MEMBERSHIP & PRICING',
   'home.pricing.title': 'Free to explore. Membership for professionals.',
   'home.pricing.intro':
-      'Buyer, Seller and Learning dashboards are free. Professionals can join the Member side of Affinity for \$149 CAD per month, bringing their profile, introductions and deal work together in one workspace.',
+      'Buyer, Seller and Learning dashboards are free. Professionals can join the Member side of Pact for \$149 CAD per month, bringing their profile, introductions and deal work together in one workspace.',
   'home.pricing.terms':
-      'The monthly membership applies only to the Member side of Affinity. Buyers, sellers and learners can use their dashboards without a paid membership.',
+      'The monthly membership applies only to the Member side of Pact. Buyers, sellers and learners can use their dashboards without a paid membership.',
   'home.pricing.action': 'View membership pricing',
   'home.consulting.eyebrow': 'A CONVERSATION WHEN YOU NEED ONE',
   'home.consulting.title': 'Bring your next decision into focus.',
   'home.consulting.intro':
-      'Use Affinity to learn and organize your work, then explore personal consulting when a specific acquisition question needs a closer look. Understand the approach, see the focus areas and set up a conversation around your situation.',
+      'Use Pact to learn and organize your work, then explore personal consulting when a specific acquisition question needs a closer look. Understand the approach, see the focus areas and set up a conversation around your situation.',
   'home.consulting.action': 'Explore personal consulting',
 
   'quiz.dashboard.signInIntro':
@@ -402,7 +402,7 @@ const siteCopyCatalog = <String, String>{
   "nova.training.pebble-member-marketing-profile.title":
       "Introduce your expertise",
   "nova.training.pebble-member-pricing-apply.body":
-      "Choose Apply for membership to sign in and record your preferred workspace. You can return home through the Affinity logo to choose another side of the app.",
+      "Choose Apply for membership to sign in and record your preferred workspace. You can return home through the Pact logo to choose another side of the app.",
   "nova.training.pebble-member-pricing-apply.title": "Apply when ready",
   "nova.training.pebble-member-pricing-plans.body":
       "Compare free Buyer, Seller and Learning access with Professional membership at \$149 CAD per month. Each card lists its benefits; applying does not start a paid subscription.",
@@ -463,7 +463,7 @@ const siteCopyCatalog = <String, String>{
       'Professional membership is \$149 CAD per month. Buyer, Seller and Learning access stays free.',
   'tunnel.member-marketing.title': 'Make your expertise easy to find',
   'tunnel.member-marketing.intro':
-      'A practical plan for building a credible presence and attracting relevant introductions on Affinity.',
+      'A practical plan for building a credible presence and attracting relevant introductions on Pact.',
   'tunnel.seller-posts.title': 'My posts & analytics',
   'tunnel.seller-posts.intro':
       'Manage your business listings and follow real buyer saves. Only posts created by your account appear here.',
@@ -484,7 +484,7 @@ const siteCopyCatalog = <String, String>{
       "Choose grants, loans, community support or a funding directory, then select your region. Your search, category and region work together; clear a filter if you see no matches.",
   "nova.training.pebble-resources-providers.title": "Explore a provider",
   "nova.training.pebble-resources-providers.body":
-      "Open an organization card to see its programs. Compare eligibility, eligible costs, deadlines and application details. Affinity connects you to the provider; the provider decides eligibility.",
+      "Open an organization card to see its programs. Compare eligibility, eligible costs, deadlines and application details. Pact connects you to the provider; the provider decides eligibility.",
   "nova.training.pebble-resources-save.title": "Keep useful programs close",
   "nova.training.pebble-resources-save.body":
       "Use a card\u2019s save control to keep an organization, or save an individual program from its profile. Follow the official link to confirm current requirements before applying.",
@@ -530,7 +530,7 @@ const siteCopyCatalog = <String, String>{
       "Enter your email and password to continue with your saved deals and profile. Signing in restores the work attached to that account.",
   "nova.training.pebble-auth-create.title": "Create an account",
   "nova.training.pebble-auth-create.body":
-      "Choose the account-creation option if you are new to Affinity. Use an email you can access and follow the verification instructions shown after registration.",
+      "Choose the account-creation option if you are new to Pact. Use an email you can access and follow the verification instructions shown after registration.",
   "nova.training.pebble-auth-recover.title": "Recover access",
   "nova.training.pebble-auth-recover.body":
       "If you cannot remember your password, use password recovery with the email for your account. Follow the recovery message and then sign in again.",
@@ -565,7 +565,7 @@ const siteCopyCatalog = <String, String>{
   "nova.training.pebble-resource-provider-official.title":
       "Confirm with the provider",
   "nova.training.pebble-resource-provider-official.body":
-      "Follow the official program link for current requirements and application instructions. Affinity helps you find the connection; the organization manages the program.",
+      "Follow the official program link for current requirements and application instructions. Pact helps you find the connection; the organization manages the program.",
   'team.specialists.caption':
       'Add the specialists you need. One professional per role.',
   'team.specialists.clear': 'Show all',
@@ -698,12 +698,12 @@ const siteCopyCatalog = <String, String>{
   'nova.training.pebble-page-page:FooterInformationPage.title':
       "About this page",
   'nova.training.pebble-page-page:FooterInformationPage.body':
-      "Read this Affinity information page and follow any relevant contact or app links. The footer provides access to the other Affinity information pages.",
-  'nova.training.pebble-page-page:AboutPage.title': "About Affinity",
+      "Read this Pact information page and follow any relevant contact or app links. The footer provides access to the other Pact information pages.",
+  'nova.training.pebble-page-page:AboutPage.title': "About Pact",
   'nova.training.pebble-page-page:AboutPage.body':
-      "Read about Affinity’s approach and use the page’s actions to explore the relevant service or app path.",
+      "Read about Pact’s approach and use the page’s actions to explore the relevant service or app path.",
   'nova.training.pebble-page-page:CapabilitiesPage.title':
-      "Affinity capabilities",
+      "Pact capabilities",
   'nova.training.pebble-page-page:CapabilitiesPage.body':
       "Review the services and capabilities described here, then use the relevant page action to continue.",
   'nova.training.pebble-page-page:PlatformHubPage.title': "Choose a workspace",
@@ -1106,7 +1106,7 @@ const siteCopyCatalog = <String, String>{
       "A verified, active professional membership is required to browse and pitch opportunities.",
   '2cd5218a': "AB",
   '4475af1e': "ABOUT",
-  '2227825a': "ABOUT AFFINITY",
+  '2227825a': "ABOUT PACT",
   '5a2cabb2': "ACCEPT & SHARE MY EMAIL",
   'ea0a1cbc': "ACCOUNT",
   '3a14d027': "ACQUISITION & PHYSICAL",
@@ -1125,14 +1125,14 @@ const siteCopyCatalog = <String, String>{
   'b4ffd5ac': "ADDED!",
   '42ea40b3': "ADDRESS",
   '12a7c3f2': "ADVISER READY",
-  '24753b59': "AFFINITY",
+  '24753b59': "PACT",
   'd58c0dc2': "AGENCY",
   'f086b84b': "ALL DEALS",
   '1c4f6135': "ALL OPPORTUNITIES",
-  'c4d6ef2d': "ANONYMOUS ACQUISITION BRIEF · AFFINITY REVIEWED",
+  'c4d6ef2d': "ANONYMOUS ACQUISITION BRIEF · PACT REVIEWED",
   '92ec40dd': "ANONYMOUS BUYER",
   '5547ddaa': "ANONYMOUS BUYER CRITERIA",
-  '7a9ad2a1': "ANONYMOUS BUYER · AFFINITY REVIEWED",
+  '7a9ad2a1': "ANONYMOUS BUYER · PACT REVIEWED",
   'f35a1df3': "ANONYMOUS OPPORTUNITY",
   'dd5189d8': "APPROVE MEMBER",
   '4f5d148b': "ASKING PRICE",
@@ -1178,50 +1178,50 @@ const siteCopyCatalog = <String, String>{
   '12f5a599': "Add photos",
   'c39dba01': "Add specialties to improve recommendations",
   'a4320a1':
-      "Add the public professional details that will appear in the directory. Affinity links the profile to this signed-in account and reviews it before publication.",
+      "Add the public professional details that will appear in the directory. Pact links the profile to this signed-in account and reviews it before publication.",
   '718bc335': "Add to",
   'a9e3d936': "Add useful context for the member you are referring.",
   'a5c7cc72': "Add your background to improve recommendations",
   '828c4509': "Address or neighbourhood",
   '7c484758': "Adjacent industries with an experienced GM",
-  '281f182c': "Affinity Review Desk",
+  '281f182c': "Pact Review Desk",
   'e49d8e40':
-      "Affinity connects the place, the income, the debt, the exit and the risk in one visible system.",
+      "Pact connects the place, the income, the debt, the exit and the risk in one visible system.",
   '48ab4e47':
-      "Affinity creates drafts and plans. You approve every external action.",
-  '61d26301': "Affinity evaluation",
+      "Pact creates drafts and plans. You approve every external action.",
+  '61d26301': "Pact evaluation",
   'f950b4b':
-      "Affinity exists to bring those dimensions into one honest picture. We believe sophisticated analysis can still be understandable, that assumptions should remain visible, and that software should help people think—not simply hand them a score.",
-  'bbf5a4b7': "Affinity has not assigned professional requirements yet.",
+      "Pact exists to bring those dimensions into one honest picture. We believe sophisticated analysis can still be understandable, that assumptions should remain visible, and that software should help people think—not simply hand them a score.",
+  'bbf5a4b7': "Pact has not assigned professional requirements yet.",
   '9f9a0864':
-      "Affinity helps aspiring buyers define the right target, prepare to transact, screen real opportunities, and build the professional team needed to close with confidence.",
-  '9e38f298': "Affinity home",
+      "Pact helps aspiring buyers define the right target, prepare to transact, screen real opportunities, and build the professional team needed to close with confidence.",
+  '9e38f298': "Pact home",
   '5eb29332':
-      "Affinity is an early-stage product bringing real estate thinking, financial modelling and practical decision support into one focused team.",
+      "Pact is an early-stage product bringing real estate thinking, financial modelling and practical decision support into one focused team.",
   '375e5eec':
-      "Affinity is being shaped as a focused, multidisciplinary company. Every discipline works from the same principle: make complex property decisions clearer, more rigorous and more human.",
-  '58119bb9': "Affinity member",
+      "Pact is being shaped as a focused, multidisciplinary company. Every discipline works from the same principle: make complex property decisions clearer, more rigorous and more human.",
+  '58119bb9': "Pact member",
   '565d59ae':
-      "Affinity ranks reviewed opportunities against your services, regions, and deal-size preferences.",
+      "Pact ranks reviewed opportunities against your services, regions, and deal-size preferences.",
   'afc0ef20':
-      "Affinity receives the private assessment. Members see nothing until we create and approve an anonymous summary.",
+      "Pact receives the private assessment. Members see nothing until we create and approve an anonymous summary.",
   'a3855237':
-      "Affinity removes the company name, exact address, buyer identity, contact details, and other identifying information before members can view this brief.",
-  'd96d1dec': "Affinity review desk",
-  'f8384c66': "Affinity review is evidence-led",
+      "Pact removes the company name, exact address, buyer identity, contact details, and other identifying information before members can view this brief.",
+  'd96d1dec': "Pact review desk",
+  'f8384c66': "Pact review is evidence-led",
   'f564009d':
-      "Affinity reviews the deal before any anonymous opportunity is shown to members.",
-  '844cc9f8': "Affinity score (0–100)",
+      "Pact reviews the deal before any anonymous opportunity is shown to members.",
+  '844cc9f8': "Pact score (0–100)",
   '4e924ab4':
-      "Affinity uses these preferences to rank and filter anonymous opportunities. They are never shown to buyers.",
+      "Pact uses these preferences to rank and filter anonymous opportunities. They are never shown to buyers.",
   '9bd6c8c1':
-      "Affinity was created around a simple belief: buyers make stronger choices when their personal goals, financial readiness, and deal criteria are examined together. The founder’s work combines product development, transparent financial modelling, and buyer-first decision systems to turn an intimidating acquisition into a series of clear, defensible choices.",
+      "Pact was created around a simple belief: buyers make stronger choices when their personal goals, financial readiness, and deal criteria are examined together. The founder’s work combines product development, transparent financial modelling, and buyer-first decision systems to turn an intimidating acquisition into a series of clear, defensible choices.",
   'bef7ae94':
-      "Affinity will create a guided acquisition plan. Nothing is published to members automatically.",
+      "Pact will create a guided acquisition plan. Nothing is published to members automatically.",
   '18b61bf8':
-      "Affinity will verify your profile before it appears in the directory or can pitch opportunities. We will notify you when access changes.",
+      "Pact will verify your profile before it appears in the directory or can pitch opportunities. We will notify you when access changes.",
   '590b0b75':
-      "Affinity writes and approves the summary, price band, support needs, and score label before publication.",
+      "Pact writes and approves the summary, price band, support needs, and score label before publication.",
   '487e4e44': "Affordability · neighbourhood · ownership cost",
   'a1988a33':
       "After debt payments, maintenance investment and a reasonable owner salary, the business produces negative annual cash flow.",
@@ -1234,7 +1234,7 @@ const siteCopyCatalog = <String, String>{
   'f72d7f7': "Amortization (years)",
   'ba3cc531': "An introductory lender conversation",
   '139684d3': "Analysis saved on this device.",
-  '207fdb07': "Analysis saved to your Affinity account.",
+  '207fdb07': "Analysis saved to your Pact account.",
   '12befffe': "Annual base rent / income",
   '1dbf7caf': "Annual cash flow",
   '794f2f8': "Annual cash flow (CAD)",
@@ -1267,7 +1267,7 @@ const siteCopyCatalog = <String, String>{
   'fea8f3e5':
       "Approved deal-team professionals can view the financial summary.",
   'add24509':
-      "Approved opportunities will appear here after Affinity completes its evaluation and privacy review.",
+      "Approved opportunities will appear here after Pact completes its evaluation and privacy review.",
   'aec283ae': "Approximate budget",
   '1cb2868e': "Approximate deal size",
   '73690b65': "Archive",
@@ -1286,7 +1286,7 @@ const siteCopyCatalog = <String, String>{
   'c8b50998':
       "Assessment land and building values were not entered; the valuation cross-check is incomplete.",
   '40726d1d':
-      "Assessment values are dated tax values—not appraisals. Affinity uses them only as a discrepancy and due-diligence signal.",
+      "Assessment values are dated tax values—not appraisals. Pact uses them only as a discrepancy and due-diligence signal.",
   '696b1684': "Assessment year",
   '485934eb': "Asset class",
   '804f3ace': "Asset purchase",
@@ -1353,7 +1353,7 @@ const siteCopyCatalog = <String, String>{
   '42a73d75':
       "Build a clear, consented brief so the professional understands your goal before they contact you.",
   'c16a483a':
-      "Build a credible professional presence and respond privately when an Affinity-reviewed opportunity fits your expertise.",
+      "Build a credible professional presence and respond privately when an Pact-reviewed opportunity fits your expertise.",
   '9edf7289':
       "Build a listing with photos, financials and the details buyers need.",
   'f190843f':
@@ -1570,14 +1570,14 @@ const siteCopyCatalog = <String, String>{
   '8ee1bd9e': "Create a deal to begin the guided plan.",
   '50dc6622': "Create account",
   'e5ea6884': "Create the private workspace",
-  'cab3cc13': "Create your Affinity account.",
+  'cab3cc13': "Create your Pact account.",
   '84bef9e2': "Create your professional profile",
   'e1e26093': "Credential verification",
   '9515063a': "Credit & renewal stress",
   '93a53175': "Current deals",
   'df6e8cfc': "Current step",
   'fd51748d':
-      "Current-month opportunities and highly viewed listings, prepared anonymously by Affinity.",
+      "Current-month opportunities and highly viewed listings, prepared anonymously by Pact.",
   '6510f1b0': "Customer concentration appears reasonably diversified.",
   '9edabfd5': "Customer concentration schedule",
   'ea9276b6': "Cybersecurity diligence",
@@ -1745,7 +1745,7 @@ const siteCopyCatalog = <String, String>{
       "Every input flows into an auditable set of returns, coverage, affordability and risk metrics—without hiding the math.",
   '9b1e2279': "Every property.\nOne working team.",
   'cbfcd043':
-      "Every submitted deal needs a short paragraph explaining the business, what interests you, and what you are trying to accomplish. This remains private until Affinity creates the anonymous member brief.",
+      "Every submitted deal needs a short paragraph explaining the business, what interests you, and what you are trying to accomplish. This remains private until Pact creates the anonymous member brief.",
   '131f8001': "Everything in Professional plus clearly disclosed promotion.",
   '6ac98a0e': "Everything that can change the deal.",
   '7440e798': "Evidence and risk",
@@ -1778,7 +1778,7 @@ const siteCopyCatalog = <String, String>{
   'c25fd118': "FOR PROFESSIONAL MEMBERS",
   '3b411d94': "FOUNDER",
   'f2f2b964':
-      "FOUNDING MEMBER BETA · No payment today. Your professional tier is activated only after Affinity verifies your profile. Future paid billing will require your separate approval.",
+      "FOUNDING MEMBER BETA · No payment today. Your professional tier is activated only after Pact verifies your profile. Future paid billing will require your separate approval.",
   'b32bc62': "FOUNDING PROFESSIONAL NETWORK",
   'c24bfae0': "FROM LISTING TO DECISION",
   '82fa0d53': "Fair",
@@ -1855,7 +1855,7 @@ const siteCopyCatalog = <String, String>{
   'c43a0b95': "HOUSEHOLD DTI",
   '1e8ff6ad': "Harbour Commercial Cleaning",
   'd931ce76': "Healthcare",
-  'b07d3d51': "Helps Affinity identify relevant lenders and capital partners.",
+  'b07d3d51': "Helps Pact identify relevant lenders and capital partners.",
   '5fd26ad0': "Hide introductions",
   'fca48948': "High-risk without a lower price or stronger evidence",
   '3ac5e531': "Holding period",
@@ -1871,10 +1871,10 @@ const siteCopyCatalog = <String, String>{
   '5178fbf5': "I DON’T KNOW YET",
   '38c38b9c': "I PROVIDE PROFESSIONAL SERVICES",
   '54a5a5be': "I WANT TO BUY A BUSINESS",
-  'd729d14d': "I agree that Affinity may contact me about this application.",
+  'd729d14d': "I agree that Pact may contact me about this application.",
   'c305f5d5': "I am a…",
   '2cb275c8':
-      "I confirm this information is accurate and Affinity may verify my professional standing.",
+      "I confirm this information is accurate and Pact may verify my professional standing.",
   '325f268d':
       "I confirm this information is accurate and that I hold any licence required for the services I offer.",
   '450b3c17':
@@ -1886,7 +1886,7 @@ const siteCopyCatalog = <String, String>{
   '64ec3297':
       "I want to understand you before I recommend anything. What outcome would make this acquisition successful three years after close?",
   '2aef524e':
-      "I will not ask Affinity to reveal the buyer. The buyer decides whether to share contact details.",
+      "I will not ask Pact to reveal the buyer. The buyer decides whether to share contact details.",
   'e97a7e17': "I would like help comparing acquisition financing options.",
   '877dd16f': "I would like help comparing mortgage or financing options.",
   '3e285859':
@@ -1904,7 +1904,7 @@ const siteCopyCatalog = <String, String>{
   '6f55708c': "INVESTMENT",
   '6b32fa0e': "INVESTMENT SCORE",
   'c2e187f0': "IRR",
-  'd350ec0d': "Identity protected · Affinity reviewed",
+  'd350ec0d': "Identity protected · Pact reviewed",
   'f751e0c0': "Illustrative all-cash purchase; before tax and financing.",
   '7b667573':
       "Illustrative businesses · CAD · Figures are examples, not live listings.",
@@ -1931,7 +1931,7 @@ const siteCopyCatalog = <String, String>{
   '716ff5b': "Interest rate",
   '5fa1b699': "Interest rate (%)",
   '8768af0d': "Interest-only period",
-  'd1abe910': "Interested in helping shape Affinity?",
+  'd1abe910': "Interested in helping shape Pact?",
   'd2ed0f2e': "Introduction accepted. Your contact details are now shared.",
   '1b226fe3': "Introduction passed.",
   '32dbf4de': "Introductions",
@@ -1942,7 +1942,7 @@ const siteCopyCatalog = <String, String>{
   'd2d3530c': "Investor with manager",
   'df290e0a': "I’m not sure yet",
   '84cd0b0c':
-      "I’m your Affinity acquisition strategist. I remember this workspace across visits. Before I recommend anything, what does a successful acquisition need to change in your life or business?",
+      "I’m your Pact acquisition strategist. I remember this workspace across visits. Before I recommend anything, what does a successful acquisition need to change in your life or business?",
   '393f081b': "Job title or specialty",
   '6a0474d9': "June 2026",
   '601a7054': "Just researching",
@@ -2038,7 +2038,7 @@ const siteCopyCatalog = <String, String>{
   '5404bf59': "MONTHLY CARRY",
   'bdc70a6b': "MONTHLY CASH FLOW",
   '573c0ec3': "MONTHLY COST",
-  'd5b88018': "MY AFFINITY PROFILE",
+  'd5b88018': "MY PACT PROFILE",
   '742dc4bb': "MY DEAL RESPONSES",
   '977cf02f': "Make an anonymous deal",
   '11249030': "Make anonymous deal",
@@ -2177,7 +2177,7 @@ const siteCopyCatalog = <String, String>{
   'eb5aabac': "Not supplied",
   'ffec2ca8': "Nothing material identified from the information entered.",
   'd363115b':
-      "Nothing reaches the Member Studio until you submit it and Affinity approves an anonymous brief.",
+      "Nothing reaches the Member Studio until you submit it and Pact approves an anonymous brief.",
   'da5f2bc1': "Nothing was sent because this is an example profile.",
   '50102b9f': "Numbers meet place",
   '80e4b050': "ON",
@@ -2185,7 +2185,7 @@ const siteCopyCatalog = <String, String>{
   'e72afa21': "ONE PROPERTY / THREE FUTURES",
   'ab5f160a': "ONE PROPERTY.",
   '90902241': "ONLY YOUR PITCH IS SHARED",
-  'e47079fb': "OPEN AFFINITY",
+  'e47079fb': "OPEN PACT",
   '9b000414': "OPEN FULL DEAL SCREEN",
   '374189df': "OPEN FULL PROFILE",
   '27416791': "OPEN INBOX",
@@ -2218,7 +2218,7 @@ const siteCopyCatalog = <String, String>{
   '320305dd':
       "Open a verified member profile or choose a professional from a deal team, then select Message.",
   'b913b368':
-      "Open an Affinity-reviewed deal and make one concise, relevant introduction. The buyer remains anonymous unless they choose to connect.",
+      "Open an Pact-reviewed deal and make one concise, relevant introduction. The buyer remains anonymous unless they choose to connect.",
   '38150732':
       "Open an opportunity and save it from the introduction panel. It will stay organized here while you decide whether to pitch.",
   '36cae65b': "Open interaction panel",
@@ -2364,7 +2364,7 @@ const siteCopyCatalog = <String, String>{
   'a0d030d5': "Primary licence province or territory",
   'ebfa87e7': "Privacy",
   '25e544d7': "Privacy preview",
-  'bf47a3bd': "Private Affinity Review Desk",
+  'bf47a3bd': "Private Pact Review Desk",
   'd9ddfe1f': "Private audit trail",
   '73e889c5': "Private deal name",
   '90dc9f3d': "Private document uploaded later",
@@ -2470,7 +2470,7 @@ const siteCopyCatalog = <String, String>{
   '7e9ff507': "Recommendations",
   '6efbc890': "Recommended for you",
   '3d94181b':
-      "Record the decision context. Affinity will turn this into tasks, evidence requests, and professional needs.",
+      "Record the decision context. Pact will turn this into tasks, evidence requests, and professional needs.",
   'f60de35e':
       "Recurring equipment and technology investment required to sustain earnings.",
   '716421b8': "Recurring or repeat revenue",
@@ -2479,7 +2479,7 @@ const siteCopyCatalog = <String, String>{
   '649a00a3': "Refer a member to this deal",
   '195742ed': "Refer member",
   '7c9e3af': "Refer to selected deal",
-  '45759bad': "Referrals become available on live Affinity-reviewed deals.",
+  '45759bad': "Referrals become available on live Pact-reviewed deals.",
   '7f4ba950': "Refine acquisition Blueprint",
   '815aad4': "Refresh",
   '132c7e9f': "Refresh bulletin board",
@@ -2647,7 +2647,7 @@ const siteCopyCatalog = <String, String>{
   'c603f690': "Seller compensation in expenses",
   'e7b4d1b8': "Seller contact page URL",
   'fc60fc5': "Selling costs",
-  '4e8912d': "Send a deal to Affinity",
+  '4e8912d': "Send a deal to Pact",
   '98fc87ec': "Send private brief",
   '4a783e3a': "Send request",
   '967aa5dd': "Sending…",
@@ -2658,7 +2658,7 @@ const siteCopyCatalog = <String, String>{
   'a557d6fb': "Set the objective",
   '20d0219':
       "Shapes the residential, commercial and development frameworks behind every result.",
-  'f07e1c9e': "Share Affinity evaluation",
+  'f07e1c9e': "Share Pact evaluation",
   '18d9e622':
       "Share a preferred time and the decision you want to work through. The founder will confirm the appointment by email.",
   'e6ef63a2': "Share financial model",
@@ -2678,7 +2678,7 @@ const siteCopyCatalog = <String, String>{
   '871fc11c': "Sign in & save to my account",
   'a1f3c6fe': "Sign in required.",
   '3b04861':
-      "Sign in to open this area. Recommendations, saved deals, buyer responses, and professional-profile information are tied only to your Affinity account.",
+      "Sign in to open this area. Recommendations, saved deals, buyer responses, and professional-profile information are tied only to your Pact account.",
   '190e153':
       "Sign in to restore your calculator, saved analyses and selected team.",
   '25a7ac9': "Sign in to save your quiz.",
@@ -2686,7 +2686,7 @@ const siteCopyCatalog = <String, String>{
   'ca454dfe': "Sign in with a verified member profile to send messages.",
   '8e2bd053':
       "Sign in with a verified professional profile to browse approved opportunities. Buyer identities remain private.",
-  'a16ea4ce': "Sign in with the account that will own Affinity administration.",
+  'a16ea4ce': "Sign in with the account that will own Pact administration.",
   '8b4f3c70': "Sign out",
   'c8c0391c': "Signed-in account",
   '4ef5083': "Signed-in member",
@@ -2721,9 +2721,9 @@ const siteCopyCatalog = <String, String>{
   '5c438676': "Stress the assumptions",
   '4ee2162f':
       "Structured tools for your Blueprint, deals, calendar, and member workspace.",
-  '5c0f41af': "Submit a deal to Affinity",
+  '5c0f41af': "Submit a deal to Pact",
   '7c5dcc7b':
-      "Submitted for Affinity review. It remains private until approved.",
+      "Submitted for Pact review. It remains private until approved.",
   '44ffe077': "Summary access",
   '5a49d071': "Summit Property Services",
   'd3b29385': "Supply pressure",
@@ -2826,7 +2826,7 @@ const siteCopyCatalog = <String, String>{
   '47f9750f': "This is your profile. Choose another member to message.",
   '66670d39': "This listing is unavailable.",
   '241aad38':
-      "This signed-in account has not been added to the Affinity administrator allow-list.",
+      "This signed-in account has not been added to the Pact administrator allow-list.",
   '68f64595': "Three years of financial statements",
   '35d08662': "Three years of revenue and earnings history",
   '859719bc': "Time-weighted return",
@@ -2932,7 +2932,7 @@ const siteCopyCatalog = <String, String>{
   'e5161230': "Victoria Real Estate Board",
   '6c47f8a1': "Visit website",
   '92768b10': "WATCHLIST",
-  '8b07dee': "WHAT AFFINITY MOVES FORWARD",
+  '8b07dee': "WHAT PACT MOVES FORWARD",
   '5776eeb4': "WHAT NEEDS ATTENTION",
   'f7bb789f': "WHAT THE PROFESSIONAL RECEIVES",
   'd225db29': "WHAT WE BELIEVE",
@@ -2970,7 +2970,7 @@ const siteCopyCatalog = <String, String>{
   '98a18537': "What you know",
   '838d08e': "What you know today",
   '4889d0ea':
-      "When a verified Affinity member responds to an approved anonymous opportunity, their short pitch will appear here.",
+      "When a verified Pact member responds to an approved anonymous opportunity, their short pitch will appear here.",
   'e6a1e79e':
       "When a verified member responds to your published deal, their short pitch and contact details appear here.",
   'ebd1171b': "When are you looking to buy?",
@@ -3005,9 +3005,9 @@ const siteCopyCatalog = <String, String>{
   '89e82485': "You cannot message yourself",
   '4f735380': "You control the boundary",
   '73ebea2f': "You will be asked to sign in before choosing a time.",
-  '9a369370': "Your Affinity updates",
+  '9a369370': "Your Pact updates",
   'f328bad2':
-      "Your Deal Screen and Pipeline create the private source record Affinity reviews. Nothing is published automatically.",
+      "Your Deal Screen and Pipeline create the private source record Pact reviews. Nothing is published automatically.",
   '4d3d8e22': "Your account name and email are included automatically.",
   'c4b8d504': "Your acquisition plan",
   '8dcdc84a': "Your acquisition workspace.",
@@ -3537,7 +3537,7 @@ const siteCopyCatalog = <String, String>{
   '65f8f714': "vancouver",
   '5c58c6bf': "vaughan",
   'a286b8c5': "verified",
-  '981f68fb': "verified Affinity member",
+  '981f68fb': "verified Pact member",
   'ea04284': "verifiedAddBacks",
   '4671ae97': "version",
   'a702f4d7': "viability_score",
@@ -3561,8 +3561,8 @@ const siteCopyCatalog = <String, String>{
   '9077782c': "yearBuilt",
   '2166e5bd': "years",
   '43ebd1d5': "your signed-in account",
-  'ffaf7f62': "© 2026 AFFINITY",
-  'baba82c4': "© 2026 AFFINITY · BUSINESS ACQUISITION, MADE NAVIGABLE",
+  'ffaf7f62': "© 2026 PACT",
+  'baba82c4': "© 2026 PACT · BUSINESS ACQUISITION, MADE NAVIGABLE",
 };
 final siteCopyIdsByDefault = <String, String>{
   for (final entry in siteCopyCatalog.entries) entry.value: entry.key,

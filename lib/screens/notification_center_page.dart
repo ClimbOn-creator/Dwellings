@@ -106,7 +106,7 @@ class _NotificationCenterPageState extends State<NotificationCenterPage> {
                     SiteText(
                       contentKey: 'copy.notification_center_page.m2',
                       literal: true,
-                      'Your Affinity updates',
+                      'Your Pact updates',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 48,

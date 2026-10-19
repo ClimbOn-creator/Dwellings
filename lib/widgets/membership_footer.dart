@@ -42,7 +42,7 @@ class MembershipFooter extends StatelessWidget {
           items: [FooterTopic.memberStudio, FooterTopic.consulting],
         ),
       _FooterColumn(
-        title: 'AFFINITY',
+        title: 'PACT',
         items: [
           FooterTopic.approach,
           FooterTopic.privacy,
@@ -92,7 +92,7 @@ class MembershipFooter extends StatelessWidget {
                 child: SiteText(
                   contentKey: 'copy.membership_footer.m1',
                   literal: true,
-                  '© 2026 AFFINITY · BUSINESS ACQUISITION, MADE NAVIGABLE',
+                  '© 2026 PACT · BUSINESS ACQUISITION, MADE NAVIGABLE',
                   style: TextStyle(
                     color: Color(0xFF68756B),
                     fontSize: 9,

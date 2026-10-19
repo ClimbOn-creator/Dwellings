@@ -107,7 +107,7 @@ class _ContentStudioPageState extends State<ContentStudioPage> {
             ),
             const SizedBox(height: 10),
             const Text(
-              'Only the two approved Affinity editors can change published site copy.',
+              'Only the two approved Pact editors can change published site copy.',
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 22),

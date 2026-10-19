@@ -793,7 +793,7 @@ class _ProfilePageState extends State<ProfilePage> {
   );
 
   String _publicIdentity(AccountProfile? profile) {
-    if (profile == null) return 'Affinity member';
+    if (profile == null) return 'Pact member';
     final parts = [
       profile.jobTitle,
       profile.companyName,

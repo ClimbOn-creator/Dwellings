@@ -105,7 +105,7 @@ void main() {
           body: SiteImage(
             contentKey: 'image.test.photo',
             original: Image.asset(
-              'assets/brand/affinity-logo.png',
+              'assets/brand/pact-logo-dark.png',
               width: 150,
               height: 80,
             ),
@@ -143,7 +143,7 @@ void main() {
               padding: const EdgeInsets.all(60),
               decoration: const BoxDecoration(
                 image: DecorationImage(
-                  image: AssetImage('assets/brand/affinity-logo.png'),
+                  image: AssetImage('assets/brand/pact-logo-dark.png'),
                 ),
               ),
               child: const SiteText(

@@ -802,7 +802,7 @@ class _ResourceProviderPageState extends State<ResourceProviderPage> {
                     ResourceProgramTile(program: p, selection: selection),
                   const SizedBox(height: 20),
                   const Text(
-                    'Check current intake, eligibility and permitted costs on the official website. Saving is a bookmark, not an application or funding approval. Directory profile compiled by Affinity; no endorsement implied.',
+                    'Check current intake, eligibility and permitted costs on the official website. Saving is a bookmark, not an application or funding approval. Directory profile compiled by Pact; no endorsement implied.',
                     style: TextStyle(
                       fontSize: 12,
                       height: 1.6,

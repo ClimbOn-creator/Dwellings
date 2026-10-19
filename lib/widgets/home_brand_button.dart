@@ -32,7 +32,7 @@ class HomeBrandButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Semantics(
       button: true,
-      label: 'Affinity home',
+      label: 'Pact home',
       child: InkWell(
         onTap: () => open(context),
         borderRadius: BorderRadius.circular(14),

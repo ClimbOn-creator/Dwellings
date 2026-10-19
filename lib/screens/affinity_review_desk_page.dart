@@ -159,7 +159,7 @@ class _AffinityReviewDeskPageState extends State<AffinityReviewDeskPage> {
                   const SiteText(
                     contentKey: 'copy.affinity_review_desk_page.1',
                     literal: true,
-                    'Private Affinity Review Desk',
+                    'Private Pact Review Desk',
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 30, fontWeight: FontWeight.w800),
                   ),
@@ -168,8 +168,8 @@ class _AffinityReviewDeskPageState extends State<AffinityReviewDeskPage> {
                     contentKey: 'copy.affinity_review_desk_page.m1',
                     literal: false,
                     BackendService.user == null
-                        ? 'Sign in with the account that will own Affinity administration.'
-                        : 'This signed-in account has not been added to the Affinity administrator allow-list.',
+                        ? 'Sign in with the account that will own Pact administration.'
+                        : 'This signed-in account has not been added to the Pact administrator allow-list.',
                     textAlign: TextAlign.center,
                     style: const TextStyle(color: _muted, height: 1.5),
                   ),
@@ -220,7 +220,7 @@ class _AffinityReviewDeskPageState extends State<AffinityReviewDeskPage> {
             SiteText(
               contentKey: 'copy.affinity_review_desk_page.m4',
               literal: true,
-              'Affinity Review Desk',
+              'Pact Review Desk',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 48,
@@ -902,7 +902,7 @@ class _ReviewEditorState extends State<_ReviewEditor> {
                     keyboardType: TextInputType.number,
                     decoration: const InputDecoration(
                       label: SiteText(
-                        'Affinity score (0–100)',
+                        'Pact score (0–100)',
                         contentKey: 'copy.affinity_review_desk_page.field7',
                         literal: true,
                       ),

@@ -1521,7 +1521,7 @@ class _ClosingSection extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 34),
-                    _PillButton(label: 'OPEN AFFINITY', onTap: onOpen),
+                    _PillButton(label: 'OPEN PACT', onTap: onOpen),
                   ],
                 ),
               ),
@@ -1532,7 +1532,7 @@ class _ClosingSection extends StatelessWidget {
               child: SiteText(
                 contentKey: 'copy.landing_screen.m28',
                 literal: true,
-                'AFFINITY',
+                'PACT',
                 style: TextStyle(
                   color: Colors.white70,
                   fontSize: 10,

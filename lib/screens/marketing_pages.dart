@@ -784,7 +784,7 @@ class AboutPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) => _MarketingPage(
     active: MarketingDestination.about,
-    eyebrow: 'ABOUT AFFINITY',
+    eyebrow: 'ABOUT PACT',
     title: 'Property decisions should not require blind faith.',
     body:
         'We are building a clearer way to understand the financial and personal consequences of buying real estate.',
@@ -830,7 +830,7 @@ class _Manifesto extends StatelessWidget {
             final copy = const SiteText(
               contentKey: 'copy.marketing_pages.4',
               literal: true,
-              'Affinity exists to bring those dimensions into one honest picture. We believe sophisticated analysis can still be understandable, that assumptions should remain visible, and that software should help people think—not simply hand them a score.',
+              'Pact exists to bring those dimensions into one honest picture. We believe sophisticated analysis can still be understandable, that assumptions should remain visible, and that software should help people think—not simply hand them a score.',
               style: TextStyle(
                 color: Color(0xFF666674),
                 fontSize: 16,
@@ -1026,14 +1026,14 @@ class TeamPage extends StatelessWidget {
     eyebrow: 'TEAM',
     title: 'Built at the intersection of property and technology.',
     body:
-        'Affinity is an early-stage product bringing real estate thinking, financial modelling and practical decision support into one focused team.',
+        'Pact is an early-stage product bringing real estate thinking, financial modelling and practical decision support into one focused team.',
     heroAsset: 'assets/images/commercial-atrium.jpg',
     child: Column(
       children: [
         const _TeamGrid(),
         const _TeamNote(),
         _PageCta(
-          title: 'Interested in helping shape Affinity?',
+          title: 'Interested in helping shape Pact?',
           button: 'SEE THE PRODUCT',
           onTap: () => openUnderwriting(context),
         ),
@@ -1223,7 +1223,7 @@ class _TeamNote extends StatelessWidget {
             SiteText(
               contentKey: 'copy.marketing_pages.m23',
               literal: true,
-              'Affinity is being shaped as a focused, multidisciplinary company. Every discipline works from the same principle: make complex property decisions clearer, more rigorous and more human.',
+              'Pact is being shaped as a focused, multidisciplinary company. Every discipline works from the same principle: make complex property decisions clearer, more rigorous and more human.',
               textAlign: TextAlign.center,
               style: TextStyle(color: _muted, fontSize: 15, height: 1.65),
             ),

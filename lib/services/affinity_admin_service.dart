@@ -323,7 +323,7 @@ class AffinityAdminService {
 
   static void _requireUser() {
     if (!BackendService.configured || BackendService.user == null) {
-      throw StateError('Sign in with an Affinity administrator account.');
+      throw StateError('Sign in with an Pact administrator account.');
     }
   }
 }

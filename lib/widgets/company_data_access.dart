@@ -56,7 +56,7 @@ Future<void> showUsagePrivacy(BuildContext context) => showDialog<void>(
     title: const Text('Optional usage measurement'),
     content: const SingleChildScrollView(
       child: Text(
-        'Help improve Affinity by sharing anonymous daily counts of the app areas you open while signed in. No names, IP addresses, full URLs, form answers, messages or documents are included. Your choice is saved for this account on this browser. You can change it here any time. Turning this off stops future measurement; existing anonymous totals cannot be linked back to you. Saved account and business records are separate.',
+        'Help improve Pact by sharing anonymous daily counts of the app areas you open while signed in. No names, IP addresses, full URLs, form answers, messages or documents are included. Your choice is saved for this account on this browser. You can change it here any time. Turning this off stops future measurement; existing anonymous totals cannot be linked back to you. Saved account and business records are separate.',
       ),
     ),
     actions: [
@@ -110,7 +110,7 @@ class UsagePrivacyHost extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Text(
-                              'Help improve Affinity?',
+                              'Help improve Pact?',
                               style: TextStyle(fontWeight: FontWeight.w700),
                             ),
                             const SizedBox(height: 8),

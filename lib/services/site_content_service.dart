@@ -14,7 +14,7 @@ class SiteContentService {
       'home.title':
           'Don’t just find a business.\nKnow what you’re buying into.',
       'home.intro':
-          'Affinity helps aspiring buyers define the right target, prepare to transact, screen real opportunities, and build the professional team needed to close with confidence.',
+          'Pact helps aspiring buyers define the right target, prepare to transact, screen real opportunities, and build the professional team needed to close with confidence.',
       'home.goal':
           'A clearer path from “I want to buy a business” to “this is the right business for me.”',
       'home.goal_body':
@@ -24,7 +24,7 @@ class SiteContentService {
           'Learn the path, define what fits your life and capital, measure your readiness, and screen opportunities against your own rules.',
       'home.member_title': 'Be visible when buyers need you.',
       'home.member_body':
-          'Build a credible professional presence and respond privately when an Affinity-reviewed opportunity fits your expertise.',
+          'Build a credible professional presence and respond privately when an Pact-reviewed opportunity fits your expertise.',
     },
     'Step 1 · Blueprint': {
       'blueprint.title': 'Acquisition Blueprint',
@@ -75,12 +75,12 @@ class SiteContentService {
           'Add a deal when you have enough information to name it. You can keep early details private and incomplete.',
     },
     'Member Studio': {
-      'studio.eyebrow': 'AFFINITY PROFESSIONAL NETWORK',
+      'studio.eyebrow': 'PACT PROFESSIONAL NETWORK',
       'studio.title': 'Opportunity meets expertise.',
       'studio.intro':
-          'A private professional network where verified specialists discover Affinity-reviewed acquisitions, understand the need, and make a concise confidential pitch.',
+          'A private professional network where verified specialists discover Pact-reviewed acquisitions, understand the need, and make a concise confidential pitch.',
       'studio.privacy':
-          'Members see only an Affinity-written opportunity brief. Buyer names, exact addresses, documents, raw assessments, and contact details remain private until the buyer accepts a pitch.',
+          'Members see only an Pact-written opportunity brief. Buyer names, exact addresses, documents, raw assessments, and contact details remain private until the buyer accepts a pitch.',
       'studio.opportunities_title': 'Reviewed opportunities',
       'studio.professionals_title': 'Verified professionals',
       'studio.professionals_intro':
@@ -93,7 +93,7 @@ class SiteContentService {
       'consulting.heading':
           'Acquisition decisions deserve more than a spreadsheet.',
       'consulting.body':
-          'Affinity brings personal goals, financial readiness, and deal criteria into one candid decision process. Sessions sharpen a mandate, identify readiness gaps, challenge a live opportunity, or organize the next phase of diligence.',
+          'Pact brings personal goals, financial readiness, and deal criteria into one candid decision process. Sessions sharpen a mandate, identify readiness gaps, challenge a live opportunity, or organize the next phase of diligence.',
     },
   };
 
@@ -179,7 +179,7 @@ class SiteContentService {
     required String? expected,
   }) async {
     if (!BackendService.configured || BackendService.user == null) {
-      throw StateError('Sign in with an Affinity content editor account.');
+      throw StateError('Sign in with an Pact content editor account.');
     }
     await Supabase.instance.client.rpc(
       'save_site_content_v2',

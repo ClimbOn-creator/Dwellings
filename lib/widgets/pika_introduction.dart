@@ -101,7 +101,7 @@ class _PikaIntroductionState extends State<PikaIntroduction> {
       const SizedBox(height: 28),
       _copy(
         'intro',
-        'Buying, selling or just finding your feet? Pika helps you get comfortable with Affinity and understand your next step.',
+        'Buying, selling or just finding your feet? Pika helps you get comfortable with Pact and understand your next step.',
         color: _muted,
         size: 17,
       ),
@@ -170,7 +170,7 @@ class _PikaIntroductionState extends State<PikaIntroduction> {
                   ),
                   _copy(
                     'preview.status',
-                    'Your Affinity guide',
+                    'Your Pact guide',
                     color: _lime,
                     size: 12,
                   ),

@@ -66,7 +66,7 @@ class SiteFooter extends StatelessWidget {
                   child: SiteText(
                     contentKey: 'copy.site_footer.m1',
                     literal: true,
-                    '© 2026 AFFINITY',
+                    '© 2026 PACT',
                     style: TextStyle(
                       color: Color(0xFF777787),
                       fontSize: 9,

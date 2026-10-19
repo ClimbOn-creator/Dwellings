@@ -39,7 +39,7 @@ class MemberConversationSummary {
       MemberConversationSummary(
         id: row['conversation_id'] as String,
         otherProviderId: row['other_provider_id'] as String,
-        name: row['other_name'] as String? ?? 'Affinity member',
+        name: row['other_name'] as String? ?? 'Pact member',
         company: row['other_company'] as String? ?? '',
         jobTitle: row['other_job_title'] as String? ?? 'Professional member',
         providerType: row['other_provider_type'] as String? ?? 'professional',
@@ -78,7 +78,7 @@ class MemberChatMessage {
       MemberChatMessage(
         id: row['id'] as String,
         senderProviderId: row['sender_provider_id'] as String? ?? '',
-        senderName: row['sender_name'] as String? ?? 'Affinity member',
+        senderName: row['sender_name'] as String? ?? 'Pact member',
         body: row['body'] as String? ?? '',
         createdAt:
             DateTime.tryParse(row['created_at'] as String? ?? '') ??

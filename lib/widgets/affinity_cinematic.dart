@@ -344,7 +344,7 @@ class AffinityEntryChoices extends StatelessWidget {
         constraints: const BoxConstraints(maxWidth: 900),
         child: const SiteCopyText(
           'home.intro',
-          'Affinity helps aspiring buyers define the right target, prepare to transact, screen real opportunities, and build the professional team needed to close with confidence.',
+          'Pact helps aspiring buyers define the right target, prepare to transact, screen real opportunities, and build the professional team needed to close with confidence.',
           style: TextStyle(color: Color(0xFFE2E5E3), fontSize: 18, height: 1.5),
         ),
       ),
@@ -652,7 +652,7 @@ class AffinityCinemaChapters extends StatelessWidget {
                 right: 24,
                 child: const SiteCopyText(
                   'copy.acquisition_support_page.m1',
-                  'WHAT AFFINITY MOVES FORWARD',
+                  'WHAT PACT MOVES FORWARD',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 12,

@@ -231,7 +231,7 @@ class _ProfessionalOnboardingPageState
         SiteText(
           contentKey: 'copy.professional_onboarding_page.m7',
           literal: true,
-          'Affinity will verify your profile before it appears in the directory or can pitch opportunities. We will notify you when access changes.',
+          'Pact will verify your profile before it appears in the directory or can pitch opportunities. We will notify you when access changes.',
           textAlign: TextAlign.center,
           style: TextStyle(color: _muted, height: 1.5),
         ),
@@ -434,7 +434,7 @@ class _ProfessionalOnboardingPageState
           title: const SiteText(
             contentKey: 'copy.professional_onboarding_page.4',
             literal: true,
-            'I confirm this information is accurate and Affinity may verify my professional standing.',
+            'I confirm this information is accurate and Pact may verify my professional standing.',
             style: TextStyle(fontSize: 13, height: 1.4),
           ),
         ),
@@ -446,7 +446,7 @@ class _ProfessionalOnboardingPageState
           child: const SiteText(
             contentKey: 'copy.professional_onboarding_page.5',
             literal: true,
-            'FOUNDING MEMBER BETA · No payment today. Your professional tier is activated only after Affinity verifies your profile. Future paid billing will require your separate approval.',
+            'FOUNDING MEMBER BETA · No payment today. Your professional tier is activated only after Pact verifies your profile. Future paid billing will require your separate approval.',
             style: TextStyle(
               color: _green,
               fontSize: 11,

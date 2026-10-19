@@ -27,7 +27,7 @@ class AffinityNotification {
   factory AffinityNotification.fromJson(Map<String, dynamic> row) =>
       AffinityNotification(
         id: row['id'] as String,
-        title: row['title'] as String? ?? 'Affinity update',
+        title: row['title'] as String? ?? 'Pact update',
         message: row['message'] as String? ?? '',
         actionModule: row['action_module'] as String? ?? 'member-studio',
         createdAt:

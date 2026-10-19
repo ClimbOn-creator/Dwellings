@@ -8,7 +8,7 @@ const dealIntakeFields = [
   DealIntakeField(
     'source_name',
     'Where did you find this deal?',
-    'Affinity, another listing site, a broker, or directly from the owner',
+    'Pact, another listing site, a broker, or directly from the owner',
     0,
   ),
   DealIntakeField(

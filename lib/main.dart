@@ -75,7 +75,7 @@ class AffinityApp extends StatelessWidget {
         ),
       ),
       debugShowCheckedModeBanner: false,
-      title: 'Affinity',
+      title: 'Pact',
       theme: AffinityButtonGradients.apply(
         base.copyWith(
           pageTransitionsTheme: const PageTransitionsTheme(

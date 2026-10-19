@@ -193,7 +193,7 @@ class BusinessSaleBulletinService {
           region: x.$4,
           askingPriceBand: x.$5,
           summary: x.$9,
-          sourceLabel: 'Affinity fictional example — no seller',
+          sourceLabel: 'Pact fictional example — no seller',
           sourceUrl: '',
           postedAt: DateTime.utc(2026, 9, 11),
           canConvert: false,

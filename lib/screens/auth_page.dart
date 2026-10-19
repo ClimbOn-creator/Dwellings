@@ -186,7 +186,7 @@ class _AuthPageState extends State<AuthPage> {
                       contentKey: 'copy.auth_page.m1',
                       literal: false,
                       _creating
-                          ? 'Create your Affinity account.'
+                          ? 'Create your Pact account.'
                           : 'Welcome back.',
                       style: const TextStyle(
                         color: _ink,

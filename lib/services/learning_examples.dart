@@ -34,7 +34,7 @@ class LearningExamples {
       LearningPost(
         id: 'learning-example-$i',
         authorId: 'example',
-        author: 'Affinity examples',
+        author: 'Pact examples',
         title: titles[i],
         body: bodies[i],
         topic: topics[i],
@@ -67,7 +67,7 @@ class LearningExamples {
         id: '${post.id}-reply',
         postId: post.id,
         authorId: 'example-host',
-        author: 'Affinity (example)',
+        author: 'Pact (example)',
         body:
             'Yes—this session walks through a practical example and leaves time for questions.',
         createdAt: now.subtract(const Duration(hours: 2)),
@@ -102,7 +102,7 @@ class LearningExamples {
           hostId: 'example',
           title: titles[i],
           description: bodies[i],
-          organization: 'Affinity examples',
+          organization: 'Pact examples',
           startsAt: DateTime.utc(
             today.year,
             today.month,
