@@ -7,7 +7,7 @@ import 'nova_walkthrough.dart';
 class NovaTrainingController extends ChangeNotifier {
   NovaTrainingController({NovaTrainingService? service})
     : service = service ?? NovaTrainingService();
-  static final instance = NovaTrainingController();
+  static final instance = NovaTrainingController().._currentPage = 'landing';
   final NovaTrainingService service;
   bool active = false, hosted = false, saving = false;
   String role = 'buyer';

@@ -4,7 +4,6 @@ import '../services/app_tunnel.dart';
 import '../widgets/affinity_cinematic.dart';
 import '../widgets/app_navigation_menu.dart';
 import '../widgets/dashboard_header.dart';
-import '../widgets/pika_introduction.dart';
 import '../widgets/site_copy_text.dart';
 import '../widgets/site_image.dart';
 import 'deal_rooms_page.dart';
@@ -117,7 +116,6 @@ class MemberOverviewPage extends StatelessWidget {
               ),
             ],
           ),
-          const PikaIntroduction(),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
             child: Center(

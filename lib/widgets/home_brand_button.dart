@@ -19,6 +19,7 @@ class HomeBrandButton extends StatelessWidget {
   final bool dark;
 
   static void open(BuildContext context) {
+    NovaTrainingController.instance.currentPage = 'landing';
     NovaTrainingController.instance.pause();
     CalculatorHelpController.instance.close();
     AppTunnelController.select(AppTunnel.landing);

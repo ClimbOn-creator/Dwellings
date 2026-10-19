@@ -6,7 +6,6 @@ import '../services/app_tunnel.dart';
 import '../widgets/app_navigation_menu.dart';
 import '../widgets/home_brand_button.dart';
 import '../widgets/learning_media_player.dart';
-import '../widgets/pika_introduction.dart';
 import '../widgets/site_copy_text.dart';
 import '../widgets/site_image.dart';
 import '../widgets/site_parallax_image.dart';
@@ -491,7 +490,6 @@ class _DashboardShowcasePageState extends State<DashboardShowcasePage> {
             color: _paper,
             key: _tours,
           ),
-          const PikaIntroduction(),
           _section(
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,

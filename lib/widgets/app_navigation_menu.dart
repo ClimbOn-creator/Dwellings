@@ -15,6 +15,7 @@ import 'nova_page_resolver.dart';
 import 'nova_character.dart';
 import 'calculator_help_sidebar.dart';
 import '../services/nova_training_controller.dart';
+import '../services/pika_visibility.dart';
 import '../screens/buyer_resources_page.dart';
 import '../screens/seller_dashboard_page.dart';
 import '../screens/deal_rooms_page.dart';
@@ -248,6 +249,7 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
         ? 2
         : 1,
     onDashboard: () {
+      NovaTrainingController.instance.currentPage = 'dashboards';
       AppTunnelController.select(AppTunnel.landing);
       Navigator.of(context).push(
         MaterialPageRoute<void>(
@@ -257,13 +259,16 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
       );
     },
     onHome: () => HomeBrandButton.open(context),
-    onAbout: () => Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        settings: const RouteSettings(name: 'about-us'),
-        builder: (_) =>
-            const FooterInformationPage(topic: FooterTopic.approach),
-      ),
-    ),
+    onAbout: () {
+      NovaTrainingController.instance.currentPage = 'about-us';
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          settings: const RouteSettings(name: 'about-us'),
+          builder: (_) =>
+              const FooterInformationPage(topic: FooterTopic.approach),
+        ),
+      );
+    },
     dashboards: [
       for (final (destination, icon, description) in const [
         (
@@ -390,7 +395,7 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
                 : organizerWidth(MediaQuery.sizeOf(context).width),
           ),
           const SizedBox(width: 8),
-          if (!compact && _guidePage() != 'landing')
+          if (!compact && pikaAllowedOnPage(_guidePage()))
             ListenableBuilder(
               listenable: NovaTrainingController.instance,
               builder: (context, _) =>

@@ -10,3 +10,8 @@ The owners explicitly require that published text and uploaded pictures survive 
 - Preserve the editor RPC's concurrency checks and failure behavior. Failed/network-interrupted saves must not replace the last confirmed published value. Authentication changes must revoke the edit UI immediately.
 - Keep private messages, account data and calculated live values out of the public copy store. Editable sentences use live-value placeholders.
 - Before completing future changes involving these components, run `flutter test --no-pub`; run `test/site_editor_persistence_test.dart` with the mock Supabase defines documented in README. Confirm that changing a bundled text/image fallback under the same permanent key still displays the previously published override.
+
+## Pika / Pebble placement
+
+- Pika/Pebble belongs only inside the individual Buyer, Seller, Member and Learning workspaces and their working tools. Never add the character, floating dock, header help button, automatic walkthrough or introduction section to Home, About us, the public Dashboard showcase or the public Member overview.
+- Navigating back to a public page must hide and stop an active walkthrough without blocking that page. Keep the assistant available when returning to an individual workspace. Use the shared `pikaAllowedOnPage` policy rather than separate page-specific exceptions.

@@ -72,7 +72,7 @@ void main() {
           expect(logo.right, lessThan(bar.left));
         }
         expect(find.byType(MembershipFooter), findsNothing);
-        expect(find.byType(PikaIntroduction), findsOneWidget);
+        expect(find.byType(PikaIntroduction), findsNothing);
         expect(
           find.text('Big decisions.\nA clearer way forward.'),
           findsOneWidget,

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../services/backend_service.dart';
 import '../services/deal_room_service.dart';
 import '../services/nova_training_controller.dart';
+import '../services/pika_visibility.dart';
 import '../services/nova_walkthrough.dart';
 import '../models/platform_side.dart';
 import '../screens/deal_rooms_page.dart';
@@ -78,14 +79,19 @@ class _NovaTrainingHostState extends State<NovaTrainingHost>
         !widget.autoStart ||
         _controller.active)
       return;
-    if (_controller.currentPage != 'landing' &&
-        _controller.currentPage != 'dashboards' &&
+    if (pikaAllowedOnPage(_controller.currentPage) &&
         !_controller.service.progress.completed) {
       _controller.startPage(_controller.currentPage, automatic: true);
     }
   }
 
   void _changed() {
+    if (!pikaAllowedOnPage(_controller.currentPage) &&
+        _controller.active &&
+        !_controller.saving) {
+      _controller.pause();
+      return;
+    }
     if (!_controller.active) {
       _locateRetry?.cancel();
       _locateRetry = null;
@@ -217,92 +223,91 @@ class _NovaTrainingHostState extends State<NovaTrainingHost>
   }
 
   @override
-  Widget build(BuildContext context) => Stack(
-    key: _canvas,
-    children: [
-      ExcludeFocus(
-        excluding: _controller.active,
-        child: AbsorbPointer(
-          absorbing: _controller.active,
-          child: widget.child,
+  Widget build(BuildContext context) {
+    final allowed = pikaAllowedOnPage(_controller.currentPage);
+    final active = allowed && _controller.active;
+    return Stack(
+      key: _canvas,
+      children: [
+        ExcludeFocus(
+          excluding: active,
+          child: AbsorbPointer(absorbing: active, child: widget.child),
         ),
-      ),
-      if (!_controller.active &&
-          _controller.docked &&
-          _controller.currentPage != 'landing')
-        Positioned(
-          left: 12 + MediaQuery.paddingOf(context).left,
-          bottom: 12 + MediaQuery.paddingOf(context).bottom,
-          child: Material(
-            color: const Color(0xFFF7F5F0),
-            elevation: 3,
-            borderRadius: BorderRadius.circular(28),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  key: const Key('pebble_floating_help'),
-                  onPressed: () =>
-                      _controller.startPage(_controller.currentPage),
-                  icon: Semantics(
-                    label: 'Pika · guide to this page',
-                    child: const NovaCharacter(size: 42),
-                  ),
-                ),
-                IconButton(
-                  key: const Key('pebble_dismiss_dock'),
-                  onPressed: _controller.dismissDock,
-                  icon: Semantics(
-                    label: 'Move Pika to the header',
-                    child: const Icon(Icons.close, size: 16),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      if (_controller.active) ...[
-        Positioned.fill(
-          child: ExcludeSemantics(
-            child: CustomPaint(painter: _Spotlight(_highlight)),
-          ),
-        ),
-        Positioned.fill(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final size = constraints.biggest;
-              final width = math.min(470.0, size.width - 24);
-              final height = math.min(
-                _controller.step.id == 'welcome' ? 400.0 : 310.0,
-                size.height - MediaQuery.paddingOf(context).vertical - 28,
-              );
-              final position = novaGuidePosition(
-                size,
-                Size(width, height),
-                _highlight,
-                MediaQuery.paddingOf(context),
-              );
-              return Stack(
+        if (allowed && !active && _controller.docked)
+          Positioned(
+            left: 12 + MediaQuery.paddingOf(context).left,
+            bottom: 12 + MediaQuery.paddingOf(context).bottom,
+            child: Material(
+              color: const Color(0xFFF7F5F0),
+              elevation: 3,
+              borderRadius: BorderRadius.circular(28),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  AnimatedPositioned(
-                    duration: MediaQuery.disableAnimationsOf(context)
-                        ? Duration.zero
-                        : const Duration(milliseconds: 480),
-                    curve: Curves.easeInOutCubic,
-                    left: position.dx,
-                    top: position.dy,
-                    width: width,
-                    height: height,
-                    child: NovaTourCard(controller: _controller),
+                  IconButton(
+                    key: const Key('pebble_floating_help'),
+                    onPressed: () =>
+                        _controller.startPage(_controller.currentPage),
+                    icon: Semantics(
+                      label: 'Pika · guide to this page',
+                      child: const NovaCharacter(size: 42),
+                    ),
+                  ),
+                  IconButton(
+                    key: const Key('pebble_dismiss_dock'),
+                    onPressed: _controller.dismissDock,
+                    icon: Semantics(
+                      label: 'Move Pika to the header',
+                      child: const Icon(Icons.close, size: 16),
+                    ),
                   ),
                 ],
-              );
-            },
+              ),
+            ),
           ),
-        ),
+        if (active) ...[
+          Positioned.fill(
+            child: ExcludeSemantics(
+              child: CustomPaint(painter: _Spotlight(_highlight)),
+            ),
+          ),
+          Positioned.fill(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final size = constraints.biggest;
+                final width = math.min(470.0, size.width - 24);
+                final height = math.min(
+                  _controller.step.id == 'welcome' ? 400.0 : 310.0,
+                  size.height - MediaQuery.paddingOf(context).vertical - 28,
+                );
+                final position = novaGuidePosition(
+                  size,
+                  Size(width, height),
+                  _highlight,
+                  MediaQuery.paddingOf(context),
+                );
+                return Stack(
+                  children: [
+                    AnimatedPositioned(
+                      duration: MediaQuery.disableAnimationsOf(context)
+                          ? Duration.zero
+                          : const Duration(milliseconds: 480),
+                      curve: Curves.easeInOutCubic,
+                      left: position.dx,
+                      top: position.dy,
+                      width: width,
+                      height: height,
+                      child: NovaTourCard(controller: _controller),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ],
       ],
-    ],
-  );
+    );
+  }
 }
 
 /// Place Pika beside the target, choosing the available region with the least
