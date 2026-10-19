@@ -876,7 +876,7 @@ class _BecomeMemberPageState extends State<BecomeMemberPage> {
             FilledButton.icon(
               onPressed: () => Navigator.of(context).push(
                 MaterialPageRoute<void>(
-                  builder: (_) => const MemberDealMarketplacePage(
+                  builder: (_) => const MemberDashboardPage(
                     initialView: MemberDashboardView.profile,
                   ),
                 ),

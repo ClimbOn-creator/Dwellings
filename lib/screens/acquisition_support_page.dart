@@ -61,7 +61,7 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
     AppTunnelController.select(
       page is SellerDashboardPage
           ? AppTunnel.seller
-          : page is MemberDealMarketplacePage || page is MemberPricingPage
+          : page is MemberDashboardPage || page is MemberPricingPage
           ? AppTunnel.member
           : AppTunnel.buyer,
     );
@@ -175,7 +175,7 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
                             initialSide: PlatformSide.business,
                           ),
                         ),
-                        onMember: () => _open(const MemberPricingPage()),
+                        onMember: () => _open(const MemberDashboardPage()),
                         onLearn: () => startLearning(context),
                         onSeller: () => _open(const SellerDashboardPage()),
                       ),
@@ -213,7 +213,7 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
                   onBuyer: () => _open(
                     const DealRoomsPage(initialSide: PlatformSide.business),
                   ),
-                  onMember: () => _open(const MemberPricingPage()),
+                  onMember: () => _open(const MemberDashboardPage()),
                   onLearn: () => startLearning(context),
                   onSeller: () => _open(const SellerDashboardPage()),
                 ),
@@ -708,7 +708,7 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
         const SizedBox(height: 20),
         TextButton.icon(
           onPressed: () => member
-              ? _open(const MemberPricingPage())
+              ? _open(const MemberDashboardPage())
               : startBuyerLearning(context),
           iconAlignment: IconAlignment.end,
           icon: const Icon(Icons.arrow_outward),

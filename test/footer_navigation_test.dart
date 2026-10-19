@@ -1,4 +1,3 @@
-import 'package:dwelling_iq/screens/member_overview_page.dart';
 import 'package:dwelling_iq/screens/tunnel_pages.dart';
 import 'package:dwelling_iq/services/app_tunnel.dart';
 import 'package:flutter/material.dart';
@@ -46,9 +45,7 @@ void main() {
     expect(find.text('Allow usage counts'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
-  testWidgets('only the four Pact links open dedicated pages', (
-    tester,
-  ) async {
+  testWidgets('only the four Pact links open dedicated pages', (tester) async {
     tester.view.physicalSize = const Size(1440, 1200);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -219,17 +216,16 @@ void main() {
       );
       expect(
         footerToolDestination(FooterTopic.directory),
-        isA<MemberDealMarketplacePage>(),
+        isA<MemberDashboardPage>(),
       );
       expect(
-        (footerToolDestination(FooterTopic.buyerLeads)
-                as MemberDealMarketplacePage)
+        (footerToolDestination(FooterTopic.buyerLeads) as MemberDashboardPage)
             .initialView,
         MemberDashboardView.opportunities,
       );
       expect(
         footerDestination(FooterTopic.memberStudio),
-        isA<MemberOverviewPage>(),
+        isA<MemberDashboardPage>(),
       );
       expect(footerDestination(FooterTopic.pipeline), isA<DealRoomsPage>());
       for (final topic in FooterTopic.values) {

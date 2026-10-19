@@ -1,4 +1,3 @@
-import '../screens/member_overview_page.dart';
 import 'navigation_organizer.dart';
 import '../models/footer_page_content.dart';
 import '../screens/footer_information_page.dart';
@@ -179,7 +178,7 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
     AppNavigationDestination.sellerPosts => const SellerPostsPage(),
     AppNavigationDestination.memberPricing => const MemberPricingPage(),
     AppNavigationDestination.memberMarketing => const MemberMarketingPage(),
-    AppNavigationDestination.memberStudio => const MemberOverviewPage(),
+    AppNavigationDestination.memberStudio => const MemberDashboardPage(),
     AppNavigationDestination.profile =>
       BackendService.user == null
           ? AuthPage(
@@ -191,9 +190,7 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
   };
 
   Widget _profilePage() => AppTunnelController.current.value == AppTunnel.member
-      ? const MemberDealMarketplacePage(
-          initialView: MemberDashboardView.profile,
-        )
+      ? const MemberDashboardPage(initialView: MemberDashboardView.profile)
       : const ProfilePage();
 
   void _open(BuildContext context, AppNavigationDestination destination) {

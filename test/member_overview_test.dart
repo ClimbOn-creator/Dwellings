@@ -6,7 +6,8 @@ import 'package:dwelling_iq/screens/member_overview_page.dart';
 import 'package:dwelling_iq/screens/acquisition_support_page.dart';
 import 'package:dwelling_iq/widgets/pika_introduction.dart';
 import 'package:dwelling_iq/widgets/affinity_cinematic.dart';
-import 'package:dwelling_iq/widgets/app_navigation_menu.dart';
+import 'package:dwelling_iq/screens/member_deal_marketplace_page.dart';
+import 'package:dwelling_iq/screens/auth_page.dart';
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
@@ -43,7 +44,8 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('navigation-memberStudio')));
       await tester.pumpAndSettle();
-      expect(find.byType(MemberOverviewPage), findsOneWidget);
+      expect(find.byType(MemberDashboardPage), findsOneWidget);
+      expect(find.byType(AuthPage), findsOneWidget);
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox.shrink());
     },

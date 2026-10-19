@@ -603,7 +603,7 @@ Widget novaTrainingPage(NovaStep step) {
               orElse: () => SellerDashboardView.overview,
             ),
     ),
-    'member' => MemberDealMarketplacePage(
+    'member' => MemberDashboardPage(
       initialView: MemberDashboardView.values.firstWhere(
         (v) => v.name == view,
         orElse: () => MemberDashboardView.home,

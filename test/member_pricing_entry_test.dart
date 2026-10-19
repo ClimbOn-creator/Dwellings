@@ -1,4 +1,5 @@
 import 'package:dwelling_iq/screens/member_overview_page.dart';
+import 'package:dwelling_iq/screens/auth_page.dart';
 import 'package:dwelling_iq/screens/footer_information_page.dart';
 import 'package:dwelling_iq/models/footer_page_content.dart';
 import 'package:dwelling_iq/screens/become_member_page.dart';
@@ -55,12 +56,12 @@ void main() {
       await tester.pumpWidget(const SizedBox.shrink());
     },
   );
-  test('Member footer opens the overview from every app area', () {
+  test('Member footer opens the sign-in entry from every app area', () {
     for (final role in AppTunnel.values) {
       AppTunnelController.select(role);
       expect(
         footerDestination(FooterTopic.memberStudio),
-        isA<MemberOverviewPage>(),
+        isA<MemberDashboardPage>(),
       );
       expect(AppTunnelController.current.value, AppTunnel.member);
     }
@@ -105,7 +106,7 @@ void main() {
   }
   for (final width in [390.0, 1440.0]) {
     testWidgets(
-      'Member overview professional entry keeps pricing before the workspace at $width',
+      'Member overview professional entry opens sign-in without pricing at $width',
       (tester) async {
         tester.view.physicalSize = Size(width, 1000);
         tester.view.devicePixelRatio = 1;
@@ -117,17 +118,10 @@ void main() {
         await tester.ensureVisible(button);
         await tester.tap(button);
         await tester.pumpAndSettle();
-        expect(find.byType(MemberPricingPage), findsOneWidget);
+        expect(find.byType(MemberDashboardPage), findsOneWidget);
+        expect(find.byType(AuthPage), findsOneWidget);
+        expect(find.byType(MemberPricingPage), findsNothing);
         expect(find.byType(MemberDealMarketplacePage), findsNothing);
-        expect(find.text(r'$149 CAD / month'), findsOneWidget);
-        expect(find.text('Buyer, Seller & Learning'), findsOneWidget);
-        expect(find.text('Free member'), findsNothing);
-        expect(find.text('Featured'), findsNothing);
-        final next = find.byKey(const Key('member-pricing-continue'));
-        await tester.ensureVisible(next);
-        await tester.tap(next);
-        await tester.pumpAndSettle();
-        expect(find.byType(MemberDealMarketplacePage), findsOneWidget);
         expect(AppTunnelController.current.value, AppTunnel.member);
         expect(tester.takeException(), isNull);
         await tester.pumpWidget(const SizedBox.shrink());

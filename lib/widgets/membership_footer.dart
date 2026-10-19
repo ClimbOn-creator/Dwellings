@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 
 import '../models/footer_page_content.dart';
 import '../screens/footer_information_page.dart';
-import 'auth_button.dart';
 import 'brand_logo.dart';
 import 'home_brand_button.dart';
 import '../services/app_tunnel.dart';
@@ -84,8 +83,6 @@ class MembershipFooter extends StatelessWidget {
               ],
             ),
           const SizedBox(height: 46),
-          const Divider(color: Color(0xFFDCE4DA)),
-          const SizedBox(height: 18),
           const Row(
             children: [
               Expanded(
@@ -100,7 +97,6 @@ class MembershipFooter extends StatelessWidget {
                   ),
                 ),
               ),
-              AuthButton(dark: false),
             ],
           ),
         ],

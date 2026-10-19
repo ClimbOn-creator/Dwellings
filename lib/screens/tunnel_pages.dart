@@ -334,9 +334,7 @@ class MemberPricingPage extends StatelessWidget {
       FilledButton.icon(
         key: const Key('member-pricing-continue'),
         onPressed: () => Navigator.of(context).pushReplacement(
-          MaterialPageRoute<void>(
-            builder: (_) => const MemberDealMarketplacePage(),
-          ),
+          MaterialPageRoute<void>(builder: (_) => const MemberDashboardPage()),
         ),
         icon: const Icon(Icons.dashboard_outlined),
         label: const SiteCopyText(
@@ -366,7 +364,7 @@ class MemberMarketingPage extends StatelessWidget {
           action: FilledButton.icon(
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute<void>(
-                builder: (_) => const MemberDealMarketplacePage(
+                builder: (_) => const MemberDashboardPage(
                   initialView: MemberDashboardView.profile,
                 ),
               ),

@@ -8,6 +8,7 @@ import '../widgets/pika_introduction.dart';
 import '../widgets/site_copy_text.dart';
 import '../widgets/site_image.dart';
 import 'deal_rooms_page.dart';
+import 'member_deal_marketplace_page.dart';
 import 'learning_dashboard_page.dart';
 import 'seller_dashboard_page.dart';
 import 'tunnel_pages.dart';
@@ -98,7 +99,7 @@ class MemberOverviewPage extends StatelessWidget {
                       onMember: () => _open(
                         context,
                         AppTunnel.member,
-                        const MemberPricingPage(),
+                        const MemberDashboardPage(),
                       ),
                       onSeller: () => _open(
                         context,
@@ -129,7 +130,7 @@ class MemberOverviewPage extends StatelessWidget {
                     onPressed: () => _open(
                       context,
                       AppTunnel.member,
-                      const MemberPricingPage(),
+                      const MemberDashboardPage(),
                     ),
                     icon: const Icon(Icons.dashboard_outlined),
                     label: const SiteCopyText(

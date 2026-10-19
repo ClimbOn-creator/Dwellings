@@ -1,5 +1,3 @@
-import 'member_overview_page.dart';
-import 'tunnel_pages.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/footer_page_content.dart';
@@ -51,11 +49,11 @@ Widget footerToolDestination(FooterTopic topic) => switch (topic) {
   FooterTopic.pipeline || FooterTopic.approach => const DealRoomsPage(
     initialSide: PlatformSide.business,
   ),
-  FooterTopic.memberStudio => const MemberOverviewPage(),
-  FooterTopic.directory => const MemberDealMarketplacePage(
+  FooterTopic.memberStudio => const MemberDashboardPage(),
+  FooterTopic.directory => const MemberDashboardPage(
     initialView: MemberDashboardView.professionals,
   ),
-  FooterTopic.buyerLeads => const MemberDealMarketplacePage(
+  FooterTopic.buyerLeads => const MemberDashboardPage(
     initialView: MemberDashboardView.opportunities,
   ),
   FooterTopic.consulting ||
@@ -467,7 +465,7 @@ class _FooterInformationPageState extends State<FooterInformationPage> {
               icon: const Icon(Icons.people_outline, size: 18),
               onPressed: () => Navigator.of(context).push(
                 MaterialPageRoute<void>(
-                  builder: (_) => const MemberDealMarketplacePage(
+                  builder: (_) => const MemberDashboardPage(
                     initialView: MemberDashboardView.professionals,
                   ),
                 ),

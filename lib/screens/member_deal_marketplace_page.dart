@@ -8,6 +8,7 @@ import '../widgets/marketplace_motion.dart';
 import '../widgets/site_parallax_image.dart';
 import '../widgets/site_text.dart';
 import 'dart:async';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -54,6 +55,32 @@ enum MemberDashboardView {
 }
 
 enum _InteractionMode { inbox, chat, deal }
+
+/// Member access requires an account, with no billing step during the open period.
+/// Auth changes replace the workspace immediately so sign-out clears its state.
+class MemberDashboardPage extends StatelessWidget {
+  const MemberDashboardPage({
+    super.key,
+    this.initialView = MemberDashboardView.home,
+    this.initialChatProvider,
+  });
+  final MemberDashboardView initialView;
+  final MarketplaceProvider? initialChatProvider;
+
+  @override
+  Widget build(BuildContext context) => StreamBuilder<AuthState>(
+    stream: BackendService.authChanges,
+    builder: (context, snapshot) {
+      final user = BackendService.user;
+      if (user == null) return AuthPage(onAuthenticated: () {});
+      return MemberDealMarketplacePage(
+        key: ValueKey(user.id),
+        initialView: initialView,
+        initialChatProvider: initialChatProvider,
+      );
+    },
+  );
+}
 
 class MemberDealMarketplacePage extends StatefulWidget {
   const MemberDealMarketplacePage({

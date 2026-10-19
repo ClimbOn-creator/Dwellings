@@ -1,4 +1,3 @@
-import 'screens/member_overview_page.dart';
 import 'widgets/affinity_button_gradients.dart';
 import 'screens/company_data_page.dart';
 import 'services/usage_analytics_service.dart';
@@ -176,7 +175,7 @@ class AffinityApp extends StatelessWidget {
         initialView: SellerDashboardView.plan,
         learning: true,
       ),
-      'member-onboarding' => const MemberDealMarketplacePage(
+      'member-onboarding' => const MemberDashboardPage(
         initialView: MemberDashboardView.profile,
       ),
       'buyer-dashboard' => const DealRoomsPage(
@@ -190,7 +189,7 @@ class AffinityApp extends StatelessWidget {
       ),
       'bulletin-board' ||
       'businesses-for-sale' => const BusinessSaleBulletinPage(),
-      'member-studio' || 'member-dashboard' => const MemberOverviewPage(),
+      'member-studio' || 'member-dashboard' => const MemberDashboardPage(),
       'personal-consulting' => const PersonalizedConsultingPage(),
       'owner-data' => const CompanyDataPage(),
       'content-studio' => const ContentStudioPage(),

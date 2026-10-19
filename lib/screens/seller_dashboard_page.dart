@@ -272,7 +272,7 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
           provider: provider,
           messageDestinationBuilder: provider.isExample
               ? null
-              : (_) => MemberDealMarketplacePage(initialChatProvider: provider),
+              : (_) => MemberDashboardPage(initialChatProvider: provider),
         ),
       ),
     );

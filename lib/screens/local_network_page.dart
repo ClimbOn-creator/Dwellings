@@ -782,7 +782,7 @@ class _ProviderRowState extends State<_ProviderRow> {
                           builder: (_) => MemberProfilePage(
                             provider: provider,
                             messageDestinationBuilder: (_) =>
-                                MemberDealMarketplacePage(
+                                MemberDashboardPage(
                                   initialChatProvider: provider,
                                 ),
                           ),

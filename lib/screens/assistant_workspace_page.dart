@@ -1098,7 +1098,7 @@ class MemberStudioPage extends StatelessWidget {
   const MemberStudioPage({super.key});
 
   @override
-  Widget build(BuildContext context) => const MemberDealMarketplacePage();
+  Widget build(BuildContext context) => const MemberDashboardPage();
 }
 
 class _Page extends StatelessWidget {

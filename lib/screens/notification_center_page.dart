@@ -48,8 +48,8 @@ class _NotificationCenterPageState extends State<NotificationCenterPage> {
             : const BusinessSaleBulletinPage(),
       _ =>
         AppTunnelController.current.value == AppTunnel.member
-            ? const MemberDealMarketplacePage()
-            : const MemberDealMarketplacePage(
+            ? const MemberDashboardPage()
+            : const MemberDashboardPage(
                 initialView: MemberDashboardView.dealResponses,
               ),
     };
