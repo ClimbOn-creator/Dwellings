@@ -15,3 +15,7 @@ The owners explicitly require that published text and uploaded pictures survive 
 
 - Pika/Pebble belongs only inside the individual Buyer, Seller, Member and Learning workspaces and their working tools. Never add the character, floating dock, header help button, automatic walkthrough or introduction section to Home, About us, the public Dashboard showcase or the public Member overview.
 - Navigating back to a public page must hide and stop an active walkthrough without blocking that page. Keep the assistant available when returning to an individual workspace. Use the shared `pikaAllowedOnPage` policy rather than separate page-specific exceptions.
+
+## Public marketing media
+
+- Do not reintroduce the stock group-meeting video `pact-collaboration.mp4` or its people poster on public pages. The owner removed those banners; any replacement banner media should contain no people.

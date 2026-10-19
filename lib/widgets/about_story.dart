@@ -169,23 +169,6 @@ class AboutStory extends StatelessWidget {
             narrow ? 340 : 480,
           ),
         ),
-        MarketingFilm(
-          controller: controller,
-          contentKey: 'image.about.collaboration',
-          imageAsset: 'assets/images/pact-collaboration.jpg',
-          videoAsset: 'assets/product_tours/pact-collaboration.mp4',
-          height: narrow ? 360 : 500,
-          child: Container(
-            color: const Color(0x66072539),
-            alignment: Alignment.bottomLeft,
-            padding: EdgeInsets.fromLTRB(narrow ? 24 : 64, 24, 24, 90),
-            child: SiteCopyText(
-              'marketing.media.collaboration.title',
-              marketingMotionCopy['marketing.media.collaboration.title']!,
-              style: TextStyle(color: Colors.white, fontSize: narrow ? 42 : 72),
-            ),
-          ),
-        ),
         _panel(
           LayoutBuilder(
             builder: (context, box) {

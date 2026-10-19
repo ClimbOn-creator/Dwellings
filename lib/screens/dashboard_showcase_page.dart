@@ -355,7 +355,7 @@ class _DashboardShowcasePageState extends State<DashboardShowcasePage> {
                           asset: [
                             'assets/images/pact-workshop.jpg',
                             'assets/images/affinity-reflection-facade.jpg',
-                            'assets/images/pact-collaboration.jpg',
+                            'assets/images/commercial-atrium.jpg',
                             'assets/images/affinity-consulting.jpg',
                           ][i],
                           maxTravel: 100,
@@ -410,38 +410,6 @@ class _DashboardShowcasePageState extends State<DashboardShowcasePage> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _hero(),
-          MarketingFilm(
-            controller: _scroll,
-            contentKey: 'image.showcase.collaboration',
-            imageAsset: 'assets/images/pact-collaboration.jpg',
-            videoAsset: 'assets/product_tours/pact-collaboration.mp4',
-            height: narrow ? 460 : 560,
-            child: Container(
-              color: const Color(0x66072539),
-              alignment: Alignment.bottomLeft,
-              padding: EdgeInsets.fromLTRB(narrow ? 24 : 64, 24, 24, 90),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SiteCopyText(
-                    'marketing.media.collaboration.title',
-                    marketingMotionCopy['marketing.media.collaboration.title']!,
-                    style: TextStyle(
-                      fontSize: narrow ? 44 : 78,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  SiteCopyText(
-                    'marketing.media.collaboration.body',
-                    marketingMotionCopy['marketing.media.collaboration.body']!,
-                    style: const TextStyle(fontSize: 18, color: Colors.white),
-                  ),
-                ],
-              ),
-            ),
-          ),
           _workspaces(),
           _section(
             Column(
