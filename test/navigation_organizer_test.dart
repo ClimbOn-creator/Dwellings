@@ -36,6 +36,10 @@ void main() {
         expect(photo.height, 1000);
         expect(find.text('Home'), findsOneWidget);
         expect(find.text('Dashboard'), findsOneWidget);
+        expect(
+          tester.getSize(find.text('Dashboard')).height,
+          lessThan(width < 700 ? 20 : 26),
+        );
         expect(find.text('About us'), findsOneWidget);
         expect(find.byType(AppNavigationPill), findsNothing);
         await tester.tap(find.byKey(const Key('dashboard-menu-toggle')));

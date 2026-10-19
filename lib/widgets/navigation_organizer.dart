@@ -136,23 +136,31 @@ class NavigationOrganizerState extends State<NavigationOrganizer> {
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
                                       Flexible(
-                                        child: SiteCopyText(
-                                          [
-                                            'navigation.home',
-                                            'navigation.organizer.dashboard',
-                                            'navigation.organizer.about',
-                                          ][i],
-                                          ['Home', 'Dashboard', 'About us'][i],
-                                          style: TextStyle(
-                                            fontSize: width < 210
-                                                ? 9
-                                                : width < 280
-                                                ? 11
-                                                : 14,
-                                            fontWeight: FontWeight.w600,
-                                            color: widget.activeTab == i
-                                                ? const Color(0xFFBDD89D)
-                                                : const Color(0xFF172817),
+                                        child: FittedBox(
+                                          fit: BoxFit.scaleDown,
+                                          child: SiteCopyText(
+                                            [
+                                              'navigation.home',
+                                              'navigation.organizer.dashboard',
+                                              'navigation.organizer.about',
+                                            ][i],
+                                            [
+                                              'Home',
+                                              'Dashboard',
+                                              'About us',
+                                            ][i],
+                                            maxLines: 1,
+                                            style: TextStyle(
+                                              fontSize: width < 210
+                                                  ? 9
+                                                  : width < 280
+                                                  ? 11
+                                                  : 14,
+                                              fontWeight: FontWeight.w600,
+                                              color: widget.activeTab == i
+                                                  ? const Color(0xFFBDD89D)
+                                                  : const Color(0xFF172817),
+                                            ),
                                           ),
                                         ),
                                       ),
