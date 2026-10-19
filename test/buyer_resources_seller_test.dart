@@ -95,7 +95,12 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
       await tester.pumpWidget(const MaterialApp(home: SellerDashboardPage()));
       await tester.pumpAndSettle();
-      expect(find.textContaining('Good '), findsOneWidget);
+      expect(
+        find.textContaining(
+          RegExp(r'Good (morning|afternoon|evening)|Working late'),
+        ),
+        findsOneWidget,
+      );
       expect(find.byKey(const Key('seller_business_name')), findsNothing);
       await tester.ensureVisible(find.byKey(const Key('seller_tab_plan')));
       await tester.tap(find.byKey(const Key('seller_tab_plan')));

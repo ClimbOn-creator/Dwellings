@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../models/about_story_content.dart';
 import 'site_copy_text.dart';
 import 'site_parallax_image.dart';
-import 'learning_media_player.dart';
 import 'marketing_motion.dart';
 
 const _ink = Color(0xFF173A27);
@@ -48,42 +47,6 @@ class AboutStory extends StatelessWidget {
         scrollFactor: .42,
         child: SizedBox(height: height, width: double.infinity, child: child),
       );
-  void _film(BuildContext context) => showDialog<void>(
-    context: context,
-    builder: (context) => Dialog(
-      insetPadding: const EdgeInsets.all(16),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 1100),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Align(
-                alignment: Alignment.centerRight,
-                child: IconButton(
-                  tooltip: aboutStoryCopy['about.story.film.close'],
-                  onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.close),
-                ),
-              ),
-              Flexible(
-                child: AspectRatio(
-                  aspectRatio: 16 / 9,
-                  child: const LearningMediaPlayer(
-                    url: 'assets/assets/product_tours/pact-river.mp4',
-                    poster: 'assets/assets/images/pact-watershed.jpg',
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              _text('film.credit', size: 12),
-            ],
-          ),
-        ),
-      ),
-    ),
-  );
   @override
   Widget build(BuildContext context) {
     final narrow = MediaQuery.sizeOf(context).width < 800;
@@ -136,6 +99,7 @@ class AboutStory extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         MarketingFilm(
+          key: const Key('about-river-film'),
           controller: controller,
           contentKey: 'image.about.watershed',
           imageAsset: 'assets/images/pact-watershed.jpg',
@@ -163,15 +127,8 @@ class AboutStory extends StatelessWidget {
                 const SizedBox(height: 20),
                 _text(
                   'film.title',
-                  size: narrow ? 44 : 78,
+                  size: narrow ? 40 : 66,
                   color: Colors.white,
-                ),
-                const SizedBox(height: 28),
-                FilledButton.icon(
-                  key: const Key('about-river-film'),
-                  onPressed: () => _film(context),
-                  icon: const Icon(Icons.play_circle_outline),
-                  label: _text('film.action', color: Colors.white),
                 ),
               ],
             ),
@@ -239,16 +196,16 @@ class AboutStory extends StatelessWidget {
                   const SizedBox(height: 24),
                   _text(
                     'pledge.amount',
-                    size: narrow ? 100 : 150,
+                    size: narrow ? 86 : 120,
                     color: const Color(0xFF8DE3F0),
                   ),
                   _text(
                     'pledge.title',
-                    size: narrow ? 36 : 48,
+                    size: narrow ? 30 : 38,
                     color: Colors.white,
                   ),
                   const SizedBox(height: 26),
-                  _text('pledge.body', size: 18, color: Colors.white),
+                  _text('pledge.body', size: 16, color: Colors.white),
                   const SizedBox(height: 24),
                   _text(
                     'pledge.note',
@@ -265,7 +222,7 @@ class AboutStory extends StatelessWidget {
                     child: _photo(
                       'image.about.river',
                       'assets/images/pact-river.jpg',
-                      narrow ? 420 : 640,
+                      narrow ? 560 : 820,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -280,9 +237,9 @@ class AboutStory extends StatelessWidget {
                   ? Column(children: [words, const SizedBox(height: 40), photo])
                   : Row(
                       children: [
-                        Expanded(child: words),
-                        const SizedBox(width: 90),
-                        Expanded(child: photo),
+                        Expanded(flex: 4, child: words),
+                        const SizedBox(width: 48),
+                        Expanded(flex: 7, child: photo),
                       ],
                     );
             },

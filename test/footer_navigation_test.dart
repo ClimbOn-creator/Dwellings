@@ -18,7 +18,7 @@ void main() {
   });
   for (final width in [390.0, 1440.0]) {
     testWidgets(
-      'About story shows the pledge, film and three editable team slots at $width',
+      'About story shows the background film, pledge and editable team slots at $width',
       (tester) async {
         tester.view.physicalSize = Size(width, 1000);
         tester.view.devicePixelRatio = 1;
@@ -38,15 +38,8 @@ void main() {
         );
         await Scrollable.ensureVisible(tester.element(film), alignment: .4);
         await tester.pumpAndSettle();
-        await tester.tap(film);
-        await tester.pumpAndSettle();
-        expect(find.byType(Dialog), findsOneWidget);
-        expect(
-          find.text('Vancouver Island · Film by Sergey Guk / Pexels'),
-          findsOneWidget,
-        );
-        await tester.tap(find.byTooltip('Close film'));
-        await tester.pumpAndSettle();
+        expect(find.text('Watch the river film'), findsNothing);
+        expect(find.byType(Dialog), findsNothing);
         for (final text in [
           'Of our profits. For water conservation.',
           'Moose',

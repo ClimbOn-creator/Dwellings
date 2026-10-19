@@ -163,13 +163,6 @@ class _FooterInformationPageState extends State<FooterInformationPage> {
     final heading = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (widget.topic == FooterTopic.approach) ...[
-          const Align(
-            alignment: Alignment.centerRight,
-            child: MarketingMotionToggle(),
-          ),
-          const SizedBox(height: 24),
-        ],
         _copy(
           'group',
           page.group,

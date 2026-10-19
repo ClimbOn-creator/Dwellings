@@ -227,11 +227,6 @@ class _DashboardShowcasePageState extends State<DashboardShowcasePage> {
     Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Align(
-          alignment: Alignment.centerRight,
-          child: MarketingMotionToggle(),
-        ),
-        const SizedBox(height: 20),
         _copy('hero.eyebrow', size: 11, weight: FontWeight.w700),
         const SizedBox(height: 34),
         _copy('hero.title', size: narrow ? 49 : 88, weight: FontWeight.w500),

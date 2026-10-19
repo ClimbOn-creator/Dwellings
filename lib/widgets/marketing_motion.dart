@@ -1,8 +1,6 @@
 export '../models/marketing_motion_content.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../services/site_content_service.dart';
-import 'site_copy_text.dart';
 import 'site_parallax_image.dart';
 import 'ambient_video.dart';
 
@@ -23,6 +21,7 @@ class _MarketingRevealState extends State<MarketingReveal>
     with SingleTickerProviderStateMixin {
   late final AnimationController _animation = AnimationController(
     vsync: this,
+    animationBehavior: AnimationBehavior.preserve,
     duration: const Duration(milliseconds: 950),
   );
   bool _visible = false, _scheduled = false;
@@ -103,7 +102,8 @@ class _MarketingRevealState extends State<MarketingReveal>
   );
 }
 
-class MarketingFilm extends StatefulWidget {
+/// Decorative video runs automatically behind the page content, without controls.
+class MarketingFilm extends StatelessWidget {
   const MarketingFilm({
     super.key,
     required this.controller,
@@ -118,130 +118,32 @@ class MarketingFilm extends StatefulWidget {
   final double height;
   final Widget? child;
   @override
-  State<MarketingFilm> createState() => _MarketingFilmState();
-}
-
-class _MarketingFilmState extends State<MarketingFilm> {
-  bool _paused = false;
-  @override
   Widget build(BuildContext context) => SizedBox(
-    height: widget.height,
-    child: Stack(
-      children: [
-        Positioned.fill(
-          child: SiteParallaxImage(
-            controller: widget.controller,
-            contentKey: widget.contentKey,
-            asset: widget.imageAsset,
-            maxTravel: 130,
-            scrollFactor: .42,
-            movingBackground: AmbientVideo(
-              url: 'assets/${widget.videoAsset}',
-              poster: 'assets/${widget.imageAsset}',
-              paused: _paused,
-            ),
-            child: SizedBox.expand(child: widget.child),
-          ),
-        ),
-        ValueListenableBuilder<int>(
-          valueListenable: SiteContentService.revision,
-          builder: (context, _, _) => ValueListenableBuilder<bool>(
-            valueListenable: SiteContentService.editing,
-            builder: (context, editing, _) =>
-                editing ||
-                    MediaQuery.disableAnimationsOf(context) ||
-                    SiteContentService.published(widget.contentKey) != null
-                ? const SizedBox.shrink()
-                : Positioned(
-                    bottom: 18,
-                    right: 18,
-                    child: FilledButton.icon(
-                      onPressed: () => setState(() => _paused = !_paused),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xDD142916),
-                        foregroundColor: Colors.white,
-                      ),
-                      icon: Icon(
-                        _paused ? Icons.play_arrow : Icons.pause,
-                        size: 18,
-                      ),
-                      label: SiteCopyText(
-                        _paused
-                            ? 'marketing.motion.play'
-                            : 'marketing.motion.pause',
-                        _paused ? 'Play motion' : 'Pause motion',
-                      ),
-                    ),
-                  ),
-          ),
-        ),
-      ],
+    height: height,
+    child: SiteParallaxImage(
+      controller: controller,
+      contentKey: contentKey,
+      asset: imageAsset,
+      maxTravel: 160,
+      scrollFactor: .5,
+      movingBackground: AmbientVideo(
+        url: 'assets/$videoAsset',
+        poster: 'assets/$imageAsset',
+        paused: false,
+      ),
+      child: SizedBox.expand(child: child),
     ),
   );
 }
 
-/// An explicit per-device choice can enable motion even with reduced-motion OS settings.
-final marketingMotionPreference = ValueNotifier<bool?>(null);
-
-class MarketingMotionScope extends StatefulWidget {
+/// Public marketing pages always animate, as explicitly requested by the owner.
+/// This local scope does not alter motion settings on the working dashboards.
+class MarketingMotionScope extends StatelessWidget {
   const MarketingMotionScope({super.key, required this.child});
   final Widget child;
   @override
-  State<MarketingMotionScope> createState() => _MarketingMotionScopeState();
-}
-
-class _MarketingMotionScopeState extends State<MarketingMotionScope> {
-  @override
-  void initState() {
-    super.initState();
-    if (marketingMotionPreference.value == null) {
-      SharedPreferences.getInstance().then((prefs) {
-        if (mounted && marketingMotionPreference.value == null) {
-          marketingMotionPreference.value = prefs.getBool(
-            'pact.marketingMotion',
-          );
-        }
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) => ValueListenableBuilder<bool?>(
-    valueListenable: marketingMotionPreference,
-    builder: (context, enabled, child) => MediaQuery(
-      data: MediaQuery.of(context).copyWith(
-        disableAnimations: enabled == null
-            ? MediaQuery.disableAnimationsOf(context)
-            : !enabled,
-      ),
-      child: child!,
-    ),
-    child: widget.child,
+  Widget build(BuildContext context) => MediaQuery(
+    data: MediaQuery.of(context).copyWith(disableAnimations: false),
+    child: child,
   );
-}
-
-class MarketingMotionToggle extends StatelessWidget {
-  const MarketingMotionToggle({super.key});
-  @override
-  Widget build(BuildContext context) {
-    final enabled = !MediaQuery.disableAnimationsOf(context);
-    return OutlinedButton.icon(
-      key: const Key('marketing-page-motion'),
-      onPressed: () async {
-        marketingMotionPreference.value = !enabled;
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setBool('pact.marketingMotion', !enabled);
-      },
-      icon: Icon(
-        enabled ? Icons.pause_circle_outline : Icons.play_circle_outline,
-        size: 18,
-      ),
-      label: SiteCopyText(
-        enabled
-            ? 'marketing.motion.page.pause'
-            : 'marketing.motion.page.enable',
-        enabled ? 'Pause page motion' : 'Enable page motion',
-      ),
-    );
-  }
 }

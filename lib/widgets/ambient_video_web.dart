@@ -3,7 +3,7 @@ import 'dart:ui_web' as ui;
 import 'package:flutter/material.dart';
 import 'package:web/web.dart' as web;
 
-/// Silent decorative footage plays only when visible and the user allows it.
+/// Silent looping background footage plays automatically while visible.
 class AmbientVideo extends StatefulWidget {
   const AmbientVideo({
     super.key,
@@ -41,11 +41,16 @@ class _AmbientVideoState extends State<AmbientVideo> {
       final video = web.HTMLVideoElement()
         ..src = widget.url
         ..poster = widget.poster
+        ..autoplay = true
         ..muted = true
         ..loop = true
         ..playsInline = true
         ..controls = false
-        ..preload = 'metadata';
+        ..preload = 'auto';
+      video.setAttribute('muted', '');
+      video.setAttribute('autoplay', '');
+      video.setAttribute('loop', '');
+      video.setAttribute('playsinline', '');
       video.setAttribute('aria-hidden', 'true');
       video.tabIndex = -1;
       video.style.width = '100%';

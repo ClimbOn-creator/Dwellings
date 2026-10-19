@@ -9,48 +9,71 @@ void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
   tearDown(() {
     SiteContentService.editing.value = false;
-    marketingMotionPreference.value = null;
   });
   testWidgets(
-    'page motion can explicitly override reduced motion and remembers the choice',
+    'marketing motion starts on with reduced motion and a previously disabled preference',
     (tester) async {
-      Widget page() => MaterialApp(
-        home: MediaQuery(
-          data: const MediaQueryData(disableAnimations: true),
-          child: MarketingMotionScope(
-            child: Scaffold(
-              body: Builder(
-                builder: (context) => Column(
-                  children: [
-                    const MarketingMotionToggle(),
-                    Text(
-                      MediaQuery.disableAnimationsOf(context)
-                          ? 'Still page'
-                          : 'Moving page',
-                    ),
-                  ],
+      SharedPreferences.setMockInitialValues({'pact.marketingMotion': false});
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MediaQuery(
+            data: const MediaQueryData(disableAnimations: true),
+            child: MarketingMotionScope(
+              child: Builder(
+                builder: (context) => Text(
+                  MediaQuery.disableAnimationsOf(context)
+                      ? 'Still page'
+                      : 'Moving page',
                 ),
               ),
             ),
           ),
         ),
       );
-      await tester.pumpWidget(page());
-      await tester.pumpAndSettle();
-      expect(find.text('Still page'), findsOneWidget);
-      await tester.tap(find.text('Enable page motion'));
       await tester.pumpAndSettle();
       expect(find.text('Moving page'), findsOneWidget);
-      expect(
-        (await SharedPreferences.getInstance()).getBool('pact.marketingMotion'),
-        isTrue,
+      expect(find.text('Enable page motion'), findsNothing);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
+  testWidgets(
+    'entrance keeps its full duration even when the system requests reduced motion',
+    (tester) async {
+      tester.platformDispatcher.accessibilityFeaturesTestValue =
+          const FakeAccessibilityFeatures(disableAnimations: true);
+      addTearDown(
+        tester.platformDispatcher.clearAccessibilityFeaturesTestValue,
       );
-      await tester.pumpWidget(const SizedBox.shrink());
-      marketingMotionPreference.value = null;
-      await tester.pumpWidget(page());
+      final scroll = ScrollController();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MarketingMotionScope(
+            child: Scaffold(
+              body: SingleChildScrollView(
+                controller: scroll,
+                child: MarketingReveal(
+                  controller: scroll,
+                  child: const SizedBox(
+                    height: 300,
+                    child: Text('Full animation'),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      final fade = find.descendant(
+        of: find.byType(MarketingReveal),
+        matching: find.byType(Opacity),
+      );
+      expect(tester.widget<Opacity>(fade).opacity, inExclusiveRange(0, 1));
       await tester.pumpAndSettle();
-      expect(find.text('Moving page'), findsOneWidget);
+      expect(tester.widget<Opacity>(fade).opacity, 1);
       await tester.pumpWidget(const SizedBox.shrink());
+      scroll.dispose();
     },
   );
   testWidgets(
@@ -102,7 +125,7 @@ void main() {
     },
   );
   testWidgets(
-    'ambient footage has working pause and respects editing and reduced motion',
+    'background footage starts automatically without controls and pauses for editing',
     (tester) async {
       final scroll = ScrollController();
       Widget page({bool reduced = false}) => MaterialApp(
@@ -125,18 +148,8 @@ void main() {
         tester.widget<AmbientVideo>(find.byType(AmbientVideo)).paused,
         isFalse,
       );
-      await tester.tap(find.text('Pause motion'));
-      await tester.pumpAndSettle();
-      expect(
-        tester.widget<AmbientVideo>(find.byType(AmbientVideo)).paused,
-        isTrue,
-      );
-      await tester.tap(find.text('Play motion'));
-      await tester.pumpAndSettle();
-      expect(
-        tester.widget<AmbientVideo>(find.byType(AmbientVideo)).paused,
-        isFalse,
-      );
+      expect(find.text('Pause motion'), findsNothing);
+      expect(find.text('Play motion'), findsNothing);
       SiteContentService.editing.value = true;
       await tester.pumpAndSettle();
       expect(find.byType(AmbientVideo), findsNothing);
