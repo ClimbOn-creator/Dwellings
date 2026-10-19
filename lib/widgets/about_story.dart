@@ -98,42 +98,6 @@ class AboutStory extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        MarketingFilm(
-          key: const Key('about-river-film'),
-          controller: controller,
-          contentKey: 'image.about.watershed',
-          imageAsset: 'assets/images/pact-watershed.jpg',
-          videoAsset: 'assets/product_tours/pact-river.mp4',
-          height: narrow ? 480 : 660,
-          child: Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [Color(0x10000000), Color(0xB8002019)],
-              ),
-            ),
-            padding: EdgeInsets.fromLTRB(
-              narrow ? 24 : 64,
-              64,
-              narrow ? 24 : 64,
-              90,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                _text('film.label', size: 12, color: Colors.white),
-                const SizedBox(height: 20),
-                _text(
-                  'film.title',
-                  size: narrow ? 40 : 66,
-                  color: Colors.white,
-                ),
-              ],
-            ),
-          ),
-        ),
         _panel(
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -231,6 +195,59 @@ class AboutStory extends StatelessWidget {
           narrow,
         ),
       ],
+    );
+  }
+}
+
+/// The opening river keeps its existing editable background and copy identities.
+class AboutRiverFilm extends StatelessWidget {
+  const AboutRiverFilm({
+    super.key,
+    required this.controller,
+    required this.height,
+  });
+  final ScrollController controller;
+  final double height;
+  Widget _text(String id, {double size = 16, Color color = _ink}) =>
+      SiteCopyText(
+        'about.story.$id',
+        aboutStoryCopy['about.story.$id']!,
+        style: TextStyle(fontSize: size, height: 1.08, color: color),
+      );
+  @override
+  Widget build(BuildContext context) {
+    final narrow = MediaQuery.sizeOf(context).width < 800;
+    return MarketingFilm(
+      key: const Key('about-river-film'),
+      controller: controller,
+      contentKey: 'image.about.watershed',
+      imageAsset: 'assets/images/pact-watershed.jpg',
+      videoAsset: 'assets/product_tours/pact-river.mp4',
+      height: height,
+      child: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0x10000000), Color(0xB8002019)],
+          ),
+        ),
+        padding: EdgeInsets.fromLTRB(
+          narrow ? 24 : 64,
+          64,
+          narrow ? 24 : 64,
+          90,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            _text('film.label', size: 12, color: Colors.white),
+            const SizedBox(height: 20),
+            _text('film.title', size: narrow ? 40 : 66, color: Colors.white),
+          ],
+        ),
+      ),
     );
   }
 }

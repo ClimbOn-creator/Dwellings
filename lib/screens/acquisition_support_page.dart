@@ -1,3 +1,4 @@
+import '../widgets/partner_emblem_carousel.dart';
 import 'tunnel_pages.dart';
 import 'assistant_workspace_page.dart';
 import 'member_deal_marketplace_page.dart';
@@ -219,7 +220,9 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
                 ),
               ),
             ),
-            _reveal(_goalStatement()),
+            SliverToBoxAdapter(
+              child: PartnerEmblemCarousel(controller: _pageScroll),
+            ),
             const SliverToBoxAdapter(child: AffinityTimedChapters()),
             _reveal(_buyerBenefits()),
             _reveal(_audiences()),
@@ -452,43 +455,6 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
     ),
     color: _forest,
     vertical: 56,
-  );
-
-  Widget _goalStatement() => _section(
-    Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (MediaQuery.sizeOf(context).width < 760) ...[
-          _copy(
-            'home.intro',
-            'Pact helps aspiring buyers define the right target, prepare to transact, screen real opportunities, and build the professional team needed to close with confidence.',
-          ),
-          const SizedBox(height: 36),
-        ],
-        _label('home.perspective.eyebrow', 'AMBITION, WITH A PLAN'),
-        const SizedBox(height: 26),
-        _copy(
-          'home.goal',
-          'A clearer path from “I want to buy a business” to “this is the right business for me.”',
-          size: MediaQuery.sizeOf(context).width < 700 ? 36 : 56,
-          weight: FontWeight.w500,
-          height: 1.12,
-        ),
-        const SizedBox(height: 30),
-        Align(
-          alignment: Alignment.centerRight,
-          child: SizedBox(
-            width: 660,
-            child: _copy(
-              'home.goal_body',
-              'The goal is not more deal flow. It is better judgment: a personal acquisition Blueprint, an honest view of readiness, disciplined screening, and access to specialists when the stakes rise.',
-              color: const Color(0xFF56625D),
-              size: 20,
-            ),
-          ),
-        ),
-      ],
-    ),
   );
 
   Widget _benefit(String id, String title, String body, {bool dark = false}) =>

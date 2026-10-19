@@ -5,6 +5,14 @@ import '../models/marketing_motion_content.dart';
 // These IDs are permanent. Rewrite the fallback VALUE while retaining its ID.
 // Never regenerate or renumber this registry during a redesign.
 const siteCopyCatalog = <String, String>{
+  'home.partners.eyebrow': 'ROOM FOR GOOD COMPANY',
+  'home.partners.preview': 'Fictional partner emblems · motion preview',
+  'home.partners.name.0': 'VEYRA',
+  'home.partners.name.1': 'MORROW ARC',
+  'home.partners.name.2': 'TERNFIELD',
+  'home.partners.name.3': 'ONDA VALE',
+  'home.partners.name.4': 'KIVO WORKS',
+  'home.partners.name.5': 'ASTER & OAK',
   ...dashboardShowcaseCopy,
   ...aboutStoryCopy,
   ...marketingMotionCopy,

@@ -545,7 +545,25 @@ class _FooterInformationPageState extends State<FooterInformationPage> {
                 vertical: 20,
               ),
             ),
+            if (widget.topic == FooterTopic.approach)
+              SliverAppBar(
+                key: const Key('about-river-opening'),
+                automaticallyImplyLeading: false,
+                primary: false,
+                toolbarHeight: 0,
+                collapsedHeight: 0,
+                expandedHeight: MediaQuery.sizeOf(context).height * .86,
+                backgroundColor: _forest,
+                flexibleSpace: FlexibleSpaceBar(
+                  collapseMode: CollapseMode.pin,
+                  background: AboutRiverFilm(
+                    controller: _scroll,
+                    height: MediaQuery.sizeOf(context).height * .86,
+                  ),
+                ),
+              ),
             SliverToBoxAdapter(
+              key: const Key('information-introduction'),
               child: _bounded(
                 widget.topic == FooterTopic.approach
                     ? MarketingReveal(controller: _scroll, child: _hero(wide))

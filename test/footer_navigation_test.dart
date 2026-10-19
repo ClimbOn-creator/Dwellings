@@ -31,6 +31,28 @@ void main() {
         );
         await tester.pumpAndSettle();
         final film = find.byKey(const Key('about-river-film'));
+        final introduction = find
+            .descendant(
+              of: find.byKey(const Key('information-introduction')),
+              matching: find.byType(Material),
+            )
+            .first;
+        expect(
+          tester.getTopLeft(film).dy,
+          lessThan(tester.getTopLeft(introduction).dy),
+        );
+        final introTop = tester.getTopLeft(introduction).dy;
+        tester
+            .state<ScrollableState>(find.byType(Scrollable).first)
+            .position
+            .jumpTo(200);
+        await tester.pump();
+        expect(tester.getTopLeft(introduction).dy, closeTo(introTop - 200, 1));
+        tester
+            .state<ScrollableState>(find.byType(Scrollable).first)
+            .position
+            .jumpTo(0);
+        await tester.pump();
         await tester.scrollUntilVisible(
           film,
           400,
