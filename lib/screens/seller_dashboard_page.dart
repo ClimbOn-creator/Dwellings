@@ -1,3 +1,4 @@
+import 'pact_web_messages.dart';
 import '../widgets/dashboard_greeting.dart';
 import '../widgets/dashboard_header.dart';
 import '../widgets/calculator_help_sidebar.dart';
@@ -26,11 +27,11 @@ import '../services/marketplace_service.dart';
 import '../widgets/app_navigation_menu.dart';
 import '../widgets/dashboard_ui.dart';
 import 'auth_page.dart';
-import 'member_deal_marketplace_page.dart';
 import 'member_profile_page.dart';
 
 enum SellerDashboardView {
   overview,
+  messages,
   value,
   plan,
   dealPack,
@@ -273,7 +274,10 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
           provider: provider,
           messageDestinationBuilder: provider.isExample
               ? null
-              : (_) => MemberDashboardPage(initialChatProvider: provider),
+              : (_) => PactWebMessagesPage(
+                  providerId: provider.id,
+                  workspace: 'seller',
+                ),
         ),
       ),
     );
@@ -328,6 +332,7 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
         ),
         actions: [
           AppNavigationMenu(
+            onMessages: () => _showView(SellerDashboardView.messages),
             showPrivateUpdates: false,
             side: PlatformSide.business,
             dark: false,
@@ -360,13 +365,14 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
     (SellerDashboardView.overview, 'Home', Icons.home_outlined),
     (SellerDashboardView.value, 'Deal screen', Icons.calculate_outlined),
     (SellerDashboardView.resources, 'Resources', Icons.library_books_outlined),
+    (SellerDashboardView.messages, 'Messages', Icons.chat_bubble_outline),
     (SellerDashboardView.team, 'My team', Icons.groups_outlined),
     (SellerDashboardView.plan, 'Transaction plan', Icons.event_note_outlined),
   ];
 
   Widget _sidebar() => Container(
     width: 212,
-    color: Colors.white,
+    color: const Color(0xFF111113),
     padding: const EdgeInsets.fromLTRB(13, 24, 13, 16),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -381,7 +387,7 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
                   child: Text(
                     'WORKSPACE',
                     style: TextStyle(
-                      color: DashboardUi.muted,
+                      color: Colors.white60,
                       fontSize: 10,
                       fontWeight: FontWeight.w800,
                       letterSpacing: 1.2,
@@ -396,6 +402,7 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
                       icon,
                       _view == view,
                       () => _showView(view),
+                      dark: true,
                     ),
                   ),
                   if (view == SellerDashboardView.overview)
@@ -404,6 +411,7 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
                       Icons.view_kanban_outlined,
                       _view == SellerDashboardView.overview,
                       () => _showView(SellerDashboardView.overview),
+                      dark: true,
                     ),
                 ],
               ],
@@ -419,6 +427,7 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
               builder: (_) => const TransactionRoomsPage(seller: true),
             ),
           ),
+          dark: true,
         ),
         DashboardUi.nav('Refresh', Icons.refresh_rounded, false, () {
           setState(() {
@@ -426,7 +435,7 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
               _linkedTeam = AccountService.loadTeam();
             }
           });
-        }),
+        }, dark: true),
       ],
     ),
   );
@@ -435,7 +444,9 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
     children: [
       if (compact) _navigation(),
       Expanded(
-        child: _view == SellerDashboardView.team
+        child: _view == SellerDashboardView.messages
+            ? const PactWebMessages(workspace: 'seller')
+            : _view == SellerDashboardView.team
             ? TeamWorkspace(
                 seller: true,
                 onChanged: () {
@@ -477,7 +488,9 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
                           SellerDashboardView.dealPack => _plan(),
                           SellerDashboardView.resources =>
                             const BuyerResourcesPanel(),
-                          SellerDashboardView.team => const SizedBox.shrink(),
+                          SellerDashboardView.team ||
+                          SellerDashboardView.messages =>
+                            const SizedBox.shrink(),
                           SellerDashboardView.settings => _plan(),
                         },
                         const SizedBox(height: 24),
@@ -606,6 +619,10 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
       SellerDashboardView.resources => (
         'Resources',
         'Explore government programs, grants and community support.',
+      ),
+      SellerDashboardView.messages => (
+        'Messages',
+        'Your conversations with Pact members.',
       ),
       SellerDashboardView.team => (
         'My team',
@@ -831,6 +848,7 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
       builder: (context, box) {
         final narrow = box.maxWidth < 740;
         const heading = DashboardGreeting(
+          showGreeting: false,
           summary: 'Keep every transfer moving.',
         );
         final search = NovaTarget(

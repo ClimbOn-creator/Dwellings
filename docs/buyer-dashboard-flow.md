@@ -1,0 +1,15 @@
+# Buyer deal entry and current dashboard routing
+
+Online deal entry now passes the optional target close date into the existing `deal_rooms.target_close_date` field. The production schema was checked read-only: this is already a nullable PostgreSQL `date`, with the existing UUID owner column and JSON listing metadata. No schema change or additional table is needed.
+
+`PrivateDealEntry` accepts a calendar selection or a strict YYYY-MM-DD value; blank means no target close date. Invalid dates retain the form and show an error. Saving this online entry still uses `privateOnly: true`, preserving the signed-in owner, private sharing settings, original listing URL and no automatic invitations/publication.
+
+Business deal creation from the buyer form, intake dialog and calculator now refreshes the current dashboard and returns to Home. Embedded online-entry routes replace themselves with the current buyer dashboard after a confirmed save. Opening a saved deal or using its Continue action selects that deal in the current Transaction Plan without replacing the dashboard header/sidebar with the old command centre.
+
+The public `DealRoomPage` entry is now a compatibility adapter: the owner of a business deal opening its overview/plan is routed to the current buyer dashboard with that deal selected. The old renderer is private. Explicit specialist workspaces, property workflows, adviser access and training previews retain their existing implementation so shared tools and records are not deleted. This is retirement of the obsolete buyer overview routes, not deletion of the underlying deal data or every shared legacy tool.
+
+Messages is fixed to light appearance, with the theme control removed. Selected conversation rows use a pale pink background with dark pink text; other messaging controls also use pink rather than the former blue. The vertical sent-message colour progression and read receipts are retained. The main dashboard navigation remains black.
+
+Validation includes configured mock-backend checks for date round-tripping, missing dates, private ownership/no invitations, returning to the current dashboard after save, opening the saved deal in its planner, and compatibility navigation. Form tests cover strict invalid-date handling, retained failed input, single-save behavior, and phone/desktop layout. Existing published-copy and image slots are preserved; the new close-date label has its own permanent content key.
+
+Final validation: 319 full-suite tests pass with 18 existing skips. All 14 configured messaging/profile, private-deal persistence/integration and saved-content checks pass, including the updated light/pink visual baseline without regeneration. Published as `5a69d88e.dwelling-iq-app.pages.dev` on the existing production alias. The live JavaScript hash matches the tested release; health, PHP-path rejection and protected-file authentication checks retain the expected statuses. Browser QA confirms the live optional-date form and fixed-light Messages UI. No production test deal was created, and no existing deal was deleted.

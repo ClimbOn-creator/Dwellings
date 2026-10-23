@@ -5,6 +5,22 @@ import 'package:flutter/material.dart';
 import '../services/backend_service.dart';
 import '../services/site_content_service.dart';
 
+/// Private workspaces can hide the public-copy editor without changing saved
+/// copy, editing preferences or authorization. Tokens support overlapping routes.
+class SiteEditorOverlayGate {
+  static final _owners = <Object>{};
+  static final hidden = ValueNotifier<bool>(false);
+  static void hide(Object owner) {
+    _owners.add(owner);
+    hidden.value = _owners.isNotEmpty;
+  }
+
+  static void restore(Object owner) {
+    _owners.remove(owner);
+    hidden.value = _owners.isNotEmpty;
+  }
+}
+
 /// Kept outside routes so editor mode follows every page and modal.
 class SiteEditorShell extends StatefulWidget {
   const SiteEditorShell({super.key, required this.child});
@@ -52,44 +68,49 @@ class _SiteEditorShellState extends State<SiteEditorShell> {
   }
 
   @override
-  Widget build(BuildContext context) => Stack(
-    children: [
-      Positioned.fill(child: widget.child),
-      if (_allowed)
-        Positioned(
-          bottom: MediaQuery.viewPaddingOf(context).bottom + 12,
-          right: 12,
-          child: Material(
-            elevation: 8,
-            borderRadius: BorderRadius.circular(24),
-            child: ValueListenableBuilder<bool>(
-              valueListenable: SiteContentService.editing,
-              builder: (context, editing, _) => Padding(
-                padding: const EdgeInsets.all(6),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    FilledButton.icon(
-                      onPressed: () =>
-                          SiteContentService.editing.value = !editing,
-                      icon: Icon(editing ? Icons.check : Icons.edit_outlined),
-                      label: Text(editing ? 'Done editing' : 'Edit this page'),
-                    ),
-                    if (editing)
-                      const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 8),
-                        child: Icon(
-                          Icons.touch_app_outlined,
-                          semanticLabel: 'Click text or a picture, then Edit',
+  Widget build(BuildContext context) => ValueListenableBuilder<bool>(
+    valueListenable: SiteEditorOverlayGate.hidden,
+    builder: (context, hidden, _) => Stack(
+      children: [
+        Positioned.fill(child: widget.child),
+        if (_allowed && !hidden)
+          Positioned(
+            bottom: MediaQuery.viewPaddingOf(context).bottom + 12,
+            right: 12,
+            child: Material(
+              elevation: 8,
+              borderRadius: BorderRadius.circular(24),
+              child: ValueListenableBuilder<bool>(
+                valueListenable: SiteContentService.editing,
+                builder: (context, editing, _) => Padding(
+                  padding: const EdgeInsets.all(6),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      FilledButton.icon(
+                        onPressed: () =>
+                            SiteContentService.editing.value = !editing,
+                        icon: Icon(editing ? Icons.check : Icons.edit_outlined),
+                        label: Text(
+                          editing ? 'Done editing' : 'Edit this page',
                         ),
                       ),
-                  ],
+                      if (editing)
+                        const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 8),
+                          child: Icon(
+                            Icons.touch_app_outlined,
+                            semanticLabel: 'Click text or a picture, then Edit',
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-    ],
+      ],
+    ),
   );
 }
 

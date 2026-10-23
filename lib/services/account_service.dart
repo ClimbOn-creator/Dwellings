@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'backend_service.dart';
@@ -75,6 +73,8 @@ class AccountProfile {
     required this.employmentType,
     required this.photoUrl,
     required this.bio,
+    this.coverUrl = '',
+    this.updatedAt,
   });
 
   final String id;
@@ -86,6 +86,8 @@ class AccountProfile {
   final String employmentType;
   final String photoUrl;
   final String bio;
+  final String coverUrl;
+  final String? updatedAt;
 
   factory AccountProfile.fromJson(Map<String, dynamic> row) => AccountProfile(
     id: row['id'] as String,
@@ -98,6 +100,8 @@ class AccountProfile {
     employmentType: row['employment_type'] as String? ?? '',
     photoUrl: row['profile_photo_url'] as String? ?? '',
     bio: row['bio'] as String? ?? '',
+    coverUrl: row['profile_cover_url'] as String? ?? '',
+    updatedAt: row['updated_at'] as String?,
   );
 }
 
@@ -356,47 +360,22 @@ class AccountService {
     required String companyName,
     required String employmentType,
     required String bio,
+    String? expectedUpdatedAt,
   }) async {
-    final user = BackendService.user;
-    if (user == null) throw StateError('Sign in required.');
-    await _client
-        .from('profiles')
-        .update({
+    if (BackendService.user == null) throw StateError('Sign in required.');
+    await _client.rpc(
+      'pact_save_profile',
+      params: {
+        'payload': {
           'full_name': fullName.trim(),
-          'display_name': fullName.trim(),
           'job_title': jobTitle.trim(),
           'company_name': companyName.trim(),
-          'employment_type': employmentType.isEmpty ? null : employmentType,
+          'employment_type': employmentType,
           'bio': bio.trim(),
-          'updated_at': DateTime.now().toIso8601String(),
-        })
-        .eq('id', user.id);
-  }
-
-  static Future<String> uploadProfilePhoto(
-    Uint8List bytes,
-    String extension,
-  ) async {
-    final user = BackendService.user;
-    if (user == null) throw StateError('Sign in required.');
-    final safeExtension =
-        ['jpg', 'jpeg', 'png', 'webp'].contains(extension.toLowerCase())
-        ? extension.toLowerCase()
-        : 'jpg';
-    final path = '${user.id}/profile.$safeExtension';
-    await _client.storage
-        .from('profile-photos')
-        .uploadBinary(
-          path,
-          bytes,
-          fileOptions: const FileOptions(upsert: true),
-        );
-    final url = _client.storage.from('profile-photos').getPublicUrl(path);
-    await _client
-        .from('profiles')
-        .update({'profile_photo_url': url})
-        .eq('id', user.id);
-    return '$url?v=${DateTime.now().millisecondsSinceEpoch}';
+        },
+        'expected_updated_at': expectedUpdatedAt,
+      },
+    );
   }
 
   static Future<DashboardStats> loadStats() async {

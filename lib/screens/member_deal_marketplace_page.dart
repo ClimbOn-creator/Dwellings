@@ -1,6 +1,6 @@
+import 'pact_web_messages.dart';
 import '../widgets/dashboard_greeting.dart';
 import '../widgets/dashboard_header.dart';
-import '../services/app_tunnel.dart';
 import '../widgets/nova_target.dart';
 import '../widgets/nova_panel.dart';
 import '../services/nova_service.dart';
@@ -21,7 +21,6 @@ import '../services/account_service.dart';
 import '../services/backend_service.dart';
 import '../services/affinity_admin_service.dart';
 import '../services/business_sale_bulletin_service.dart';
-import '../services/deal_room_service.dart';
 import '../services/marketplace_service.dart';
 import '../services/member_deal_marketplace_service.dart';
 import '../services/member_network_service.dart';
@@ -34,7 +33,6 @@ import '../widgets/site_copy_text.dart';
 import '../widgets/dashboard_ui.dart';
 import 'auth_page.dart';
 import 'bulletin_listing_pages.dart';
-import 'deal_rooms_page.dart';
 import 'member_profile_page.dart';
 import 'professional_onboarding_page.dart';
 
@@ -46,6 +44,7 @@ const _muted = Color(0xFF68635D);
 
 enum MemberDashboardView {
   home,
+  messages,
   opportunities,
   recommendations,
   opportunityDetail,
@@ -132,16 +131,12 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
   @override
   void initState() {
     super.initState();
-    _view = widget.initialView;
+    _view = widget.initialChatProvider != null
+        ? MemberDashboardView.messages
+        : widget.initialView;
     _reload();
     _loadSavedOpportunities();
     _replyEmail.text = BackendService.user?.email ?? '';
-    final initialChatProvider = widget.initialChatProvider;
-    if (MemberNetworkService.messagingEnabled && initialChatProvider != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _startMemberChat(initialChatProvider);
-      });
-    }
     if (MemberNetworkService.messagingEnabled)
       _messageRefreshTimer = Timer.periodic(const Duration(seconds: 15), (_) {
         if (mounted && BackendService.user != null) {
@@ -266,164 +261,6 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
     }
   }
 
-  Future<void> _submitDeal() async {
-    if (!await _ensureSignedIn() || !mounted) return;
-    try {
-      final rooms = (await DealRoomService.loadRooms())
-          .where((room) => room.isBusiness && room.status != 'archived')
-          .toList();
-      if (!mounted) return;
-      if (rooms.isEmpty) {
-        final open = await showDialog<bool>(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const SiteText(
-              contentKey: 'copy.member_deal_marketplace_page.1',
-              literal: true,
-              'Complete a deal assessment first',
-            ),
-            content: const SiteText(
-              contentKey: 'copy.member_deal_marketplace_page.2',
-              literal: true,
-              'Your Deal Screen and Pipeline create the private source record Pact reviews. Nothing is published automatically.',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const SiteText(
-                  contentKey: 'copy.member_deal_marketplace_page.3',
-                  literal: true,
-                  'NOT NOW',
-                ),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: const SiteText(
-                  contentKey: 'copy.member_deal_marketplace_page.4',
-                  literal: true,
-                  'OPEN PIPELINE',
-                ),
-              ),
-            ],
-          ),
-        );
-        if (open == true && mounted) {
-          await Navigator.of(context).push(
-            MaterialPageRoute<void>(
-              builder: (_) =>
-                  AppTunnelController.current.value == AppTunnel.buyer
-                  ? const DealRoomsPage(initialSide: PlatformSide.business)
-                  : const MemberDealMarketplacePage(
-                      initialView: MemberDashboardView.profile,
-                    ),
-            ),
-          );
-        }
-        return;
-      }
-      final selected = await showModalBottomSheet<DealRoom>(
-        context: context,
-        showDragHandle: true,
-        builder: (context) => SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(22, 4, 22, 28),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SiteText(
-                  contentKey: 'copy.member_deal_marketplace_page.5',
-                  literal: true,
-                  'Send a deal to Pact',
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
-                ),
-                const SizedBox(height: 8),
-                const SiteText(
-                  contentKey: 'copy.member_deal_marketplace_page.6',
-                  literal: true,
-                  'Pact receives the private assessment. Members see nothing until we create and approve an anonymous summary.',
-                  style: TextStyle(color: _muted, height: 1.45),
-                ),
-                const SizedBox(height: 18),
-                for (final room in rooms)
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: SiteText(
-                      contentKey: 'copy.member_deal_marketplace_page.m1',
-                      literal: false,
-                      room.title,
-                    ),
-                    subtitle: SiteText(
-                      contentKey: 'copy.member_deal_marketplace_page.m2',
-                      literal: false,
-                      '${room.city.isEmpty ? 'Location private' : room.city} · ${room.currentStage}',
-                    ),
-                    trailing: const Icon(Icons.arrow_forward),
-                    onTap: () => Navigator.pop(context, room),
-                  ),
-              ],
-            ),
-          ),
-        ),
-      );
-      if (selected == null) return;
-      final details =
-          selected.propertySnapshot['deal_details'] as String? ?? '';
-      if (details.trim().length < 40) {
-        if (!mounted) return;
-        final edit = await showDialog<bool>(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const SiteText(
-              contentKey: 'copy.member_deal_marketplace_page.7',
-              literal: true,
-              'Add a short deal description',
-            ),
-            content: const SiteText(
-              contentKey: 'copy.member_deal_marketplace_page.8',
-              literal: true,
-              'Every submitted deal needs a short paragraph explaining the business, what interests you, and what you are trying to accomplish. This remains private until Pact creates the anonymous member brief.',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const SiteText(
-                  contentKey: 'copy.member_deal_marketplace_page.9',
-                  literal: true,
-                  'NOT NOW',
-                ),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: const SiteText(
-                  contentKey: 'copy.member_deal_marketplace_page.10',
-                  literal: true,
-                  'EDIT DEAL',
-                ),
-              ),
-            ],
-          ),
-        );
-        if (edit == true && mounted) {
-          await Navigator.of(context).push(
-            MaterialPageRoute<void>(
-              builder: (_) => DealRoomPage(room: selected),
-            ),
-          );
-        }
-        return;
-      }
-      await MemberDealMarketplaceService.submitForReview(selected.id);
-      if (mounted) {
-        _message(
-          'Submitted for Pact review. It remains private until approved.',
-        );
-      }
-    } catch (error) {
-      if (mounted) _message(_friendlyError(error));
-    }
-  }
-
   Future<void> _openMatchSettings() async {
     if (!await _ensureSignedIn() || !mounted) return;
     try {
@@ -463,12 +300,6 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
         contentKey: 'copy.member_deal_marketplace_page.11',
       ),
       actions: [
-        if (MediaQuery.sizeOf(context).width >= 700)
-          IconButton(
-            onPressed: _submitDeal,
-            tooltip: 'Submit a deal to Pact',
-            icon: const Icon(Icons.add_business_outlined),
-          ),
         if (MediaQuery.sizeOf(context).width >= 620)
           IconButton(
             onPressed: _reloadAndRebuild,
@@ -476,6 +307,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
             icon: const Icon(Icons.refresh_rounded),
           ),
         AppNavigationMenu(
+          onMessages: () => _selectView(MemberDashboardView.messages),
           showPrivateUpdates: false,
           side: PlatformSide.business,
           dark: false,
@@ -505,20 +337,33 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
     child: LayoutBuilder(
       builder: (context, box) {
         final desktop = box.maxWidth >= 900;
+        if (_view == MemberDashboardView.messages) {
+          final inbox = PactWebMessages(
+            workspace: 'member',
+            initialProviderId: widget.initialChatProvider?.id,
+          );
+          return desktop
+              ? Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    SizedBox(width: 206, child: _dashboardNavigation()),
+                    const SizedBox(width: 14),
+                    Expanded(child: inbox),
+                  ],
+                )
+              : Column(
+                  children: [
+                    _viewSelector(),
+                    const SizedBox(height: 12),
+                    Expanded(child: inbox),
+                  ],
+                );
+        }
         if (!desktop) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _viewSelector(),
-              if (box.maxWidth < 700)
-                TextButton.icon(
-                  onPressed: _submitDeal,
-                  icon: const Icon(Icons.add_business_outlined),
-                  label: const SiteCopyText(
-                    'member.dashboard.submitDeal',
-                    'Submit a deal to Pact',
-                  ),
-                ),
               const SizedBox(height: 12),
               Expanded(
                 child: SingleChildScrollView(
@@ -558,7 +403,8 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
               ),
             ),
             const SizedBox(width: 14),
-            if (_view != MemberDashboardView.home &&
+            if (_view != MemberDashboardView.messages &&
+                _view != MemberDashboardView.home &&
                 _view != MemberDashboardView.dealResponses &&
                 (MemberNetworkService.messagingEnabled ||
                     _selectedOpportunity != null))
@@ -638,6 +484,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                 children: [
                   if (narrow) ...[
                     const DashboardGreeting(
+                      showGreeting: false,
                       summary:
                           'Discover opportunities and keep buyer conversations moving.',
                       emoji: '✨',
@@ -649,6 +496,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
                       children: [
                         const Expanded(
                           child: DashboardGreeting(
+                            showGreeting: false,
                             summary:
                                 'Discover opportunities and keep buyer conversations moving.',
                             emoji: '✨',
@@ -996,7 +844,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
   );
 
   Widget _dashboardNavigation() => Material(
-    color: Colors.white,
+    color: const Color(0xFF111113),
     borderRadius: BorderRadius.circular(14),
     child: Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 18),
@@ -1007,7 +855,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
             child: Text(
               'MEMBER STUDIO',
               style: TextStyle(
-                color: DashboardUi.muted,
+                color: Colors.white60,
                 fontSize: 10,
                 fontWeight: FontWeight.w800,
                 letterSpacing: 1.1,
@@ -1045,6 +893,11 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
             'Buyer inbox',
           ),
           _dashboardNavItem(
+            MemberDashboardView.messages,
+            Icons.chat_bubble_outline,
+            'Messages',
+          ),
+          _dashboardNavItem(
             MemberDashboardView.profile,
             Icons.person_outline_rounded,
             'My profile',
@@ -1058,7 +911,13 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
     MemberDashboardView view,
     IconData icon,
     String label,
-  ) => DashboardUi.nav(label, icon, _view == view, () => _selectView(view));
+  ) => DashboardUi.nav(
+    label,
+    icon,
+    _view == view,
+    () => _selectView(view),
+    dark: true,
+  );
 
   Widget _collapsedInteractionPanel() => Material(
     color: Colors.white,
@@ -1972,6 +1831,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
       _viewChip(MemberDashboardView.saved, 'SAVED'),
       _viewChip(MemberDashboardView.professionals, 'PROFESSIONALS'),
       _viewChip(MemberDashboardView.dealResponses, 'MY DEAL RESPONSES'),
+      _viewChip(MemberDashboardView.messages, 'MESSAGES'),
       _viewChip(MemberDashboardView.profile, 'PROFILE'),
     ],
   );
@@ -1995,20 +1855,33 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
     onSelected: (_) => _selectView(view),
   );
 
-  Widget _currentView() => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      if (_view != MemberDashboardView.home)
-        NovaPanel(
-          context: NovaContext(area: 'member', label: 'Member ${_view.name}'),
-          tourRole: 'member',
-          onTourNavigate: (destination) => _selectView(
-            MemberDashboardView.values.firstWhere((v) => v.name == destination),
+  Widget _currentView() => _view == MemberDashboardView.messages
+      ? SizedBox(
+          height: (MediaQuery.sizeOf(context).height - 210).clamp(440.0, 900.0),
+          child: PactWebMessages(
+            workspace: 'member',
+            initialProviderId: widget.initialChatProvider?.id,
           ),
-        ),
-      _currentViewContent(),
-    ],
-  );
+        )
+      : Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (_view != MemberDashboardView.home)
+              NovaPanel(
+                context: NovaContext(
+                  area: 'member',
+                  label: 'Member ${_view.name}',
+                ),
+                tourRole: 'member',
+                onTourNavigate: (destination) => _selectView(
+                  MemberDashboardView.values.firstWhere(
+                    (v) => v.name == destination,
+                  ),
+                ),
+              ),
+            _currentViewContent(),
+          ],
+        );
 
   Widget _currentViewContent() {
     const privateViews = <MemberDashboardView>{
@@ -2016,6 +1889,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
       MemberDashboardView.saved,
       MemberDashboardView.dealResponses,
       MemberDashboardView.profile,
+      MemberDashboardView.messages,
     };
     if (privateViews.contains(_view) && BackendService.user == null) {
       return _AccessState(
@@ -2029,6 +1903,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
       );
     }
     return switch (_view) {
+      MemberDashboardView.messages => const SizedBox.shrink(),
       MemberDashboardView.home => _memberHome(),
       MemberDashboardView.opportunities => _opportunityFeed(),
       MemberDashboardView.recommendations => _matchedOpportunities(),

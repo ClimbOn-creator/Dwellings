@@ -1,0 +1,5 @@
+{
+  "version": 1,
+  "include": ["/*"],
+  "exclude": ["/assets/*", "/canvaskit/*", "/icons/*", "/main.dart.js", "/flutter.js", "/flutter_bootstrap.js", "/flutter_service_worker.js", "/favicon.png", "/favicon.svg", "/manifest.json", "/version.json"]
+}

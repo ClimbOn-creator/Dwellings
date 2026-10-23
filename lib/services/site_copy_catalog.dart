@@ -5,6 +5,18 @@ import '../models/marketing_motion_content.dart';
 // These IDs are permanent. Rewrite the fallback VALUE while retaining its ID.
 // Never regenerate or renumber this registry during a redesign.
 const siteCopyCatalog = <String, String>{
+  'transaction.library.title': 'Transaction Room',
+  'transaction.library.kicker': 'YOUR DOCUMENT WORKSPACE',
+  'learning.room.kicker': 'YOUR DOCUMENT WORKSPACE',
+  'learning.room.title': 'Transaction Room',
+  'learning.journey.kicker': 'LEARN BY WORKING THROUGH A DEAL',
+  'learning.journey.title': 'Acquisition Journey',
+  'learning.journey.intro':
+      'Five stages. One clearer path to ownership. Learn the concepts, explore a fictional example, and practise the next decision.',
+  'professional.matching.open': 'Match professionals to a deal',
+  'professional.profile.save': 'Save professional',
+  'buyer.pipeline.entry.target_close_date.label':
+      'Target close date (optional)',
   'home.partners.eyebrow': 'ROOM FOR GOOD COMPANY',
   'home.partners.preview': 'Fictional partner emblems · motion preview',
   'home.partners.name.0': 'VEYRA',
@@ -345,11 +357,11 @@ const siteCopyCatalog = <String, String>{
   "learning.feed.publish": "Create a learning post",
   "learning.feed.empty.detail":
       "Only creator-approved contributors can publish. Explore the learning map or document guides while new lessons arrive.",
-  "learning.feed.map": "Explore the learning map",
+  "learning.feed.map": "Explore Acquisition Journey",
   "learning.feed.documents": "Document examples",
   "learning.start.title": "Start with the concepts",
   "learning.start.body":
-      "Use the interactive map to understand each stage, then explore the documents and examples. Pika can show you around this page.",
+      "Work through Acquisition Journey, then explore the Transaction Room for the documents, examples and templates used at each stage.",
   "learning.start.buy": "Buying a business",
   "learning.start.sell": "Succession or transfer",
   "learning.seminars.empty": "No sessions scheduled yet",

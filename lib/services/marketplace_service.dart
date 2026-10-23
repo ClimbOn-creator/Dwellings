@@ -142,8 +142,11 @@ class MarketplaceProvider {
     required this.jobTitle,
     required this.isExample,
     this.personalExperience = '',
+    this.professionalBackground = const {},
+    this.updatedAt,
     this.photoIndex,
     this.photoUrl = '',
+    this.coverUrl = '',
     this.email = '',
     this.phone = '',
     this.websiteUrl = '',
@@ -158,6 +161,8 @@ class MarketplaceProvider {
     this.rateVerifiedAt,
   });
 
+  final String? updatedAt;
+  final Map<String, dynamic> professionalBackground;
   final String personalExperience;
   final String id;
   final ProviderCategory category;
@@ -173,6 +178,7 @@ class MarketplaceProvider {
   final bool isExample;
   final int? photoIndex;
   final String photoUrl;
+  final String coverUrl;
   final String email;
   final String phone;
   final String websiteUrl;
@@ -582,7 +588,7 @@ class MarketplaceService {
           .select(
             'id, provider_type, display_name, company_name, description, phone, email, website_url, '
             'license_number, license_region, accepting_leads, membership_tier, verified, years_experience, review_score, review_count, job_title, specialties, service_markets, '
-            'is_example, photo_index, logo_object_key, '
+            'is_example, photo_index, logo_object_key, cover_photo_url, professional_background, updated_at, '
             'provider_regions!inner(service_regions!inner(city, region, country_code)), '
             'sponsored_placements(disclosure_label, active, starts_at, ends_at), '
             'lender_rates(interest_rate, mortgage_type, verified_at, effective_at, expires_at)',
@@ -597,7 +603,7 @@ class MarketplaceService {
             .select(
               'id, provider_type, display_name, company_name, description, phone, email, website_url, '
               'license_number, license_region, accepting_leads, membership_tier, verified, years_experience, review_score, review_count, job_title, specialties, service_markets, '
-              'is_example, photo_index, logo_object_key, '
+              'is_example, photo_index, logo_object_key, cover_photo_url, professional_background, updated_at, '
               'sponsored_placements(disclosure_label, active, starts_at, ends_at), '
               'lender_rates(interest_rate, mortgage_type, verified_at, effective_at, expires_at)',
             )
@@ -630,7 +636,7 @@ class MarketplaceService {
           .select(
             'id, provider_type, display_name, company_name, description, phone, email, website_url, '
             'license_number, license_region, accepting_leads, membership_tier, verified, years_experience, review_score, review_count, job_title, specialties, service_markets, '
-            'is_example, photo_index, logo_object_key, '
+            'is_example, photo_index, logo_object_key, cover_photo_url, professional_background, updated_at, '
             'sponsored_placements(disclosure_label, active, starts_at, ends_at), '
             'lender_rates(interest_rate, mortgage_type, verified_at, effective_at, expires_at)',
           )
@@ -649,7 +655,9 @@ class MarketplaceService {
     }
   }
 
-  static Future<MarketplaceProvider?> loadMyProfessionalProfile() async {
+  static Future<MarketplaceProvider?> loadMyProfessionalProfile({
+    bool strict = false,
+  }) async {
     final user = BackendService.user;
     if (!BackendService.configured || user == null) return null;
     try {
@@ -658,7 +666,7 @@ class MarketplaceService {
           .select(
             'id, provider_type, display_name, company_name, description, phone, email, website_url, '
             'license_number, license_region, accepting_leads, membership_tier, verified, years_experience, review_score, review_count, job_title, specialties, service_markets, '
-            'is_example, photo_index, logo_object_key, '
+            'is_example, photo_index, logo_object_key, cover_photo_url, professional_background, updated_at, '
             'sponsored_placements(disclosure_label, active, starts_at, ends_at), '
             'lender_rates(interest_rate, mortgage_type, verified_at, effective_at, expires_at)',
           )
@@ -668,8 +676,19 @@ class MarketplaceService {
       final providers = providersFromRows([row]);
       return providers.isEmpty ? null : providers.first;
     } catch (_) {
+      if (strict) rethrow;
       return null;
     }
+  }
+
+  static Future<MarketplaceProvider?> loadProvider(String id) async {
+    if (!BackendService.configured) return null;
+    final row = await Supabase.instance.client
+        .from('provider_profiles')
+        .select()
+        .eq('id', id)
+        .maybeSingle();
+    return row == null ? null : providersFromRows([row]).firstOrNull;
   }
 
   static List<MarketplaceProvider> providersFromRows(List<dynamic> rows) {
@@ -709,7 +728,11 @@ class MarketplaceService {
           name: row['display_name'] as String? ?? 'Provider',
           company: row['company_name'] as String? ?? '',
           specialty: row['description'] as String? ?? '',
+          updatedAt: row['updated_at'] as String?,
           personalExperience: row['description'] as String? ?? '',
+          professionalBackground: Map<String, dynamic>.from(
+            row['professional_background'] as Map? ?? const {},
+          ),
           verified: row['verified'] as bool? ?? false,
           sponsored: sponsorships.isNotEmpty,
           reviewScore: (row['review_score'] as num?)?.toDouble() ?? 0,
@@ -719,6 +742,7 @@ class MarketplaceService {
           isExample: row['is_example'] as bool? ?? false,
           photoIndex: row['photo_index'] as int?,
           photoUrl: row['logo_object_key'] as String? ?? '',
+          coverUrl: row['cover_photo_url'] as String? ?? '',
           email: row['email'] as String? ?? '',
           phone: row['phone'] as String? ?? '',
           websiteUrl: row['website_url'] as String? ?? '',

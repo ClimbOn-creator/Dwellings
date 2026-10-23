@@ -1,3 +1,4 @@
+import 'screens/pact_web_messages.dart';
 import 'widgets/app_display_scale.dart';
 import 'screens/dashboard_showcase_page.dart';
 import 'widgets/affinity_button_gradients.dart';
@@ -138,6 +139,8 @@ class AffinityApp extends StatelessWidget {
 
   Widget _initialPage() {
     final module = Uri.base.queryParameters['module'];
+    if (module == 'messages')
+      return PactWebMessagesPage(threadId: Uri.base.queryParameters['thread']);
     AppTunnelController.select(AppTunnelController.forModule(module));
     final footerTopic = FooterTopic.fromModule(module);
     if (footerTopic != null) return footerDestination(footerTopic);
@@ -150,13 +153,12 @@ class AffinityApp extends StatelessWidget {
       'buyer-pipeline' => const DealRoomsPage(
         initialView: BuyerDashboardView.pipeline,
       ),
-      'learning-pipeline' => const LearningDashboardPage(
-        initialView: LearningView.pipeline,
-      ),
+      'learning-transaction-room' || 'learning-pipeline' =>
+        const LearningDashboardPage(initialView: LearningView.pipeline),
       'learning-quiz' => const LearningDashboardPage(
         initialView: LearningView.quiz,
       ),
-      'learning-map' => const LearningDashboardPage(
+      'acquisition-journey' || 'learning-map' => const LearningDashboardPage(
         initialView: LearningView.map,
       ),
       'business' => const AcquisitionSupportPage(),

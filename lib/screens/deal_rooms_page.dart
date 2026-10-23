@@ -1,3 +1,4 @@
+import 'pact_web_messages.dart';
 import '../widgets/dashboard_header.dart';
 import '../widgets/nova_target.dart';
 import '../widgets/nova_panel.dart';
@@ -50,6 +51,7 @@ const _line = Color(0xFFD6D1C9);
 
 enum BuyerDashboardView {
   home,
+  messages,
   pipeline,
   dealScreen,
   transactionPlan,
@@ -64,6 +66,7 @@ class DealRoomsPage extends StatefulWidget {
     this.startIntake = false,
     this.initialIntake,
     this.initialView = BuyerDashboardView.home,
+    this.initialPlannerRoomId,
     this.trainingCalculatorMode = BuyerScreenMode.business,
     this.loadTransactionBundles,
     this.loadTeamProviders,
@@ -75,6 +78,7 @@ class DealRoomsPage extends StatefulWidget {
   final bool startIntake;
   final DealIntakeDetails? initialIntake;
   final BuyerDashboardView initialView;
+  final String? initialPlannerRoomId;
   final BuyerScreenMode trainingCalculatorMode;
   final Future<List<DealRoomBundle>> Function()? loadTransactionBundles;
   final Future<(List<MarketplaceProvider>, Set<String>)> Function()?
@@ -129,6 +133,42 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
     });
   }
 
+  void _savedToDashboard(DealRoom room) {
+    if (!mounted) return;
+    if (!room.isBusiness) {
+      Navigator.of(context)
+          .push(
+            MaterialPageRoute<void>(builder: (_) => DealRoomPage(room: room)),
+          )
+          .then((_) {
+            if (mounted) _refresh();
+          });
+      return;
+    }
+    if (widget.embeddedPipeline) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute<void>(builder: (_) => const DealRoomsPage()),
+      );
+      return;
+    }
+    _refresh();
+    setState(() {
+      _dashboardView = BuyerDashboardView.home;
+      _showArchived = false;
+      _lastRoomId = room.id;
+    });
+    final owner = BackendService.user?.id;
+    if (owner != null) {
+      SharedPreferences.getInstance().then(
+        (prefs) =>
+            prefs.setString('affinity.command.last_room.$owner', room.id),
+      );
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Deal added to your dashboard.')),
+    );
+  }
+
   void _openCommandPlan(DealRoom room) {
     final userId = BackendService.user?.id ?? 'guest';
     SharedPreferences.getInstance().then(
@@ -148,6 +188,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
     _side = widget.initialSide;
     _pendingIntake = widget.initialIntake;
     _dashboardView = widget.initialView;
+    _plannerRoomId = widget.initialPlannerRoomId;
     _rooms = _loadDashboardRooms();
     _loadCommandContext();
     _buyerBroadcast = _loadBuyerBroadcast();
@@ -275,12 +316,14 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
       );
       if (!mounted) return;
       _pendingIntake = null;
-      await Navigator.of(
-        context,
-      ).push(MaterialPageRoute<void>(builder: (_) => DealRoomPage(room: room)));
-      final foundation = await AcquisitionFoundation.load();
-      await foundation.saveForAccount('pipeline');
-      _refresh();
+      _savedToDashboard(room);
+      try {
+        final foundation = await AcquisitionFoundation.load();
+        await foundation.saveForAccount('pipeline');
+      } catch (_) {
+        // The deal has already been saved; an onboarding refresh must not
+        // report a failed creation and encourage a duplicate retry.
+      }
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -313,10 +356,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
     try {
       final room = await DealRoomService.createFromLatestAnalysis();
       if (!mounted) return;
-      await Navigator.of(
-        context,
-      ).push(MaterialPageRoute<void>(builder: (_) => DealRoomPage(room: room)));
-      _refresh();
+      _savedToDashboard(room);
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -357,6 +397,9 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                 actions: [
                   const SizedBox(width: 8),
                   AppNavigationMenu(
+                    onMessages: () => setState(
+                      () => _dashboardView = BuyerDashboardView.messages,
+                    ),
                     side: PlatformSide.business,
                     dark: false,
                     guidePage: 'buyer/${_dashboardView.name}',
@@ -380,48 +423,53 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
   }
 
   Widget _dashboardBody() {
+    if (_dashboardView == BuyerDashboardView.messages) {
+      return _buyerWorkspace(const PactWebMessages(workspace: 'buyer'));
+    }
     if (widget.embeddedPipeline) return _privateDealPipeline();
     if (_dashboardView == BuyerDashboardView.pipeline) {
       return _buyerWorkspace(_privateDealPipeline());
     }
-    return FutureBuilder<List<DealRoom>>(
-      future: _rooms,
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const SiteCopyText(
-                    'buyer.load.error',
-                    'Could not load your saved deals. Please try again.',
-                  ),
-                  const SizedBox(height: 12),
-                  OutlinedButton(
-                    onPressed: _refresh,
-                    child: const SiteCopyText('buyer.load.retry', 'Retry'),
-                  ),
-                ],
+    return _buyerWorkspace(
+      FutureBuilder<List<DealRoom>>(
+        future: _rooms,
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const SiteCopyText(
+                      'buyer.load.error',
+                      'Could not load your saved deals. Please try again.',
+                    ),
+                    const SizedBox(height: 12),
+                    OutlinedButton(
+                      onPressed: _refresh,
+                      child: const SiteCopyText('buyer.load.retry', 'Retry'),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          );
-        }
-        if (!snapshot.hasData) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        final allRooms = snapshot.data!
-            .where((room) => room.isBusiness)
-            .toList();
-        return _buyerWorkspace(switch (_dashboardView) {
-          BuyerDashboardView.dealScreen => _dashboardDealScreen(),
-          BuyerDashboardView.transactionPlan => _transactionPlanner(),
-          BuyerDashboardView.resources => _resourcesPage(),
-          BuyerDashboardView.team => _buyerTeamPage(),
-          _ => _buyerDashboardLive(allRooms),
-        });
-      },
+            );
+          }
+          if (!snapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          final allRooms = snapshot.data!
+              .where((room) => room.isBusiness)
+              .toList();
+          return (switch (_dashboardView) {
+            BuyerDashboardView.dealScreen => _dashboardDealScreen(),
+            BuyerDashboardView.transactionPlan => _transactionPlanner(),
+            BuyerDashboardView.resources => _resourcesPage(),
+            BuyerDashboardView.team => _buyerTeamPage(),
+            _ => _buyerDashboardLive(allRooms),
+          });
+        },
+      ),
     );
   }
 
@@ -455,10 +503,11 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
           location: details.location,
           purchasePrice: details.purchasePrice,
           goals: details.goals,
+          targetCloseDate: details.targetCloseDate,
           profileSnapshot: details.profileSnapshot,
           privateOnly: true,
         );
-        if (mounted) _refresh();
+        if (mounted) _savedToDashboard(room);
         return room;
       },
       onHome: () {
@@ -470,19 +519,14 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
           setState(() => _dashboardView = BuyerDashboardView.home);
         }
       },
-      onOpen: (room) async {
-        await Navigator.of(context).push(
-          MaterialPageRoute<void>(builder: (_) => DealRoomPage(room: room)),
-        );
-        if (mounted) _refresh();
-      },
+      onOpen: _openCommandPlan,
     ),
   );
 
   Widget _buyerSidebar() => Container(
     width: 212,
     height: double.infinity,
-    color: Colors.white,
+    color: const Color(0xFF111113),
     padding: const EdgeInsets.fromLTRB(13, 24, 13, 16),
     child: SingleChildScrollView(
       child: Column(
@@ -493,7 +537,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
             child: Text(
               'WORKSPACE',
               style: TextStyle(
-                color: DashboardUi.muted,
+                color: Colors.white60,
                 fontSize: 10,
                 fontWeight: FontWeight.w800,
                 letterSpacing: 1.2,
@@ -508,6 +552,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
               _dashboardView = BuyerDashboardView.home;
               _showArchived = false;
             }),
+            dark: true,
           ),
           DashboardUi.nav(
             'Pipeline',
@@ -517,6 +562,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
               _dashboardView = BuyerDashboardView.pipeline;
               _showArchived = false;
             }),
+            dark: true,
           ),
           DashboardUi.nav(
             'Deal screen',
@@ -524,12 +570,21 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
             _dashboardView == BuyerDashboardView.dealScreen,
             () =>
                 setState(() => _dashboardView = BuyerDashboardView.dealScreen),
+            dark: true,
           ),
           DashboardUi.nav(
             'Resources',
             Icons.library_books_outlined,
             _dashboardView == BuyerDashboardView.resources,
             () => setState(() => _dashboardView = BuyerDashboardView.resources),
+            dark: true,
+          ),
+          DashboardUi.nav(
+            'Messages',
+            Icons.chat_bubble_outline,
+            _dashboardView == BuyerDashboardView.messages,
+            () => setState(() => _dashboardView = BuyerDashboardView.messages),
+            dark: true,
           ),
           DashboardUi.nav(
             'My team',
@@ -538,6 +593,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
             () => setState(() {
               _dashboardView = BuyerDashboardView.team;
             }),
+            dark: true,
           ),
           DashboardUi.nav(
             'Transaction plan',
@@ -547,9 +603,16 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
               _dashboardView = BuyerDashboardView.transactionPlan;
               _plannerBundles ??= _loadPlannerBundles();
             }),
+            dark: true,
           ),
           const SizedBox(height: 16),
-          DashboardUi.nav('Refresh', Icons.refresh_rounded, false, _refresh),
+          DashboardUi.nav(
+            'Refresh',
+            Icons.refresh_rounded,
+            false,
+            _refresh,
+            dark: true,
+          ),
         ],
       ),
     ),
@@ -653,7 +716,11 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
             ],
             if (!pipelineOnly) ...[
               if (narrow) ...[
-                BuyerGreeting(greeting: greeting, summary: summary),
+                BuyerGreeting(
+                  greeting: greeting,
+                  summary: summary,
+                  showGreeting: false,
+                ),
                 const SizedBox(height: 17),
                 _buyerSearch(),
               ] else
@@ -661,6 +728,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                   children: [
                     Expanded(
                       child: BuyerGreeting(
+                        showGreeting: false,
                         greeting: greeting,
                         summary: summary,
                       ),
@@ -1882,11 +1950,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
         result: result,
       );
       if (!mounted) return;
-      await Navigator.of(
-        context,
-      ).push(MaterialPageRoute<void>(builder: (_) => DealRoomPage(room: room)));
-      _refresh();
-      if (mounted) setState(() => _dashboardView = BuyerDashboardView.home);
+      _savedToDashboard(room);
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -2549,10 +2613,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
     );
     if (!mounted) return;
     setState(() => _lastRoomId = room.id);
-    await Navigator.of(
-      context,
-    ).push(MaterialPageRoute<void>(builder: (_) => DealRoomPage(room: room)));
-    if (mounted) _refresh();
+    _openCommandPlan(room);
   }
 
   Widget _dashboardEmpty() => Container(
@@ -2977,12 +3038,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
   );
 
   Widget _roomCard(DealRoom room) => InkWell(
-    onTap: () async {
-      await Navigator.of(
-        context,
-      ).push(MaterialPageRoute<void>(builder: (_) => DealRoomPage(room: room)));
-      _refresh();
-    },
+    onTap: () => _openCommandPlan(room),
     child: Container(
       width: double.infinity,
       margin: EdgeInsets.zero,
@@ -4050,7 +4106,7 @@ class _TaskDialogState extends State<_TaskDialog> {
   );
 }
 
-class DealRoomPage extends StatefulWidget {
+class DealRoomPage extends StatelessWidget {
   const DealRoomPage({
     super.key,
     required this.room,
@@ -4062,9 +4118,43 @@ class DealRoomPage extends StatefulWidget {
   final String initialWorkspace;
   final bool trainingPreview;
   final Future<DealRoomBundle> Function()? loadBundle;
+  @override
+  Widget build(BuildContext context) {
+    if (room.isBusiness &&
+        {'overview', 'plan'}.contains(initialWorkspace) &&
+        !trainingPreview &&
+        BackendService.user?.id == room.userId) {
+      return DealRoomsPage(
+        initialView: BuyerDashboardView.transactionPlan,
+        initialPlannerRoomId: room.id,
+        loadTransactionBundles: loadBundle == null
+            ? null
+            : () async => [await loadBundle!()],
+      );
+    }
+    return _LegacyDealRoomPage(
+      room: room,
+      initialWorkspace: initialWorkspace,
+      trainingPreview: trainingPreview,
+      loadBundle: loadBundle,
+    );
+  }
+}
+
+class _LegacyDealRoomPage extends StatefulWidget {
+  const _LegacyDealRoomPage({
+    required this.room,
+    this.initialWorkspace = 'overview',
+    this.trainingPreview = false,
+    this.loadBundle,
+  });
+  final DealRoom room;
+  final String initialWorkspace;
+  final bool trainingPreview;
+  final Future<DealRoomBundle> Function()? loadBundle;
 
   @override
-  State<DealRoomPage> createState() => _DealRoomPageState();
+  State<_LegacyDealRoomPage> createState() => _DealRoomPageState();
 }
 
 enum _DealWorkspaceView {
@@ -4079,7 +4169,7 @@ enum _DealWorkspaceView {
   privacy,
 }
 
-class _DealRoomPageState extends State<DealRoomPage> {
+class _DealRoomPageState extends State<_LegacyDealRoomPage> {
   late DealRoom _room;
   late Future<DealRoomBundle> _bundle;
   final _note = TextEditingController();

@@ -1,7 +1,6 @@
 import '../services/app_tunnel.dart';
 import 'learning_dashboard_page.dart';
 import 'seller_dashboard_page.dart';
-import 'member_deal_marketplace_page.dart';
 import '../widgets/nova_target.dart';
 import '../widgets/nova_training_status.dart';
 import 'buyer_resources_page.dart';
@@ -9,14 +8,12 @@ import '../widgets/site_copy_text.dart';
 import '../widgets/flowing_color_banner.dart';
 import '../widgets/personal_motion.dart';
 import '../widgets/marketplace_motion.dart';
-import '../widgets/site_parallax_image.dart';
 import '../widgets/site_text.dart';
-import '../widgets/site_image.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:intl/intl.dart';
+import '../services/pact_profile_service.dart';
+import '../widgets/pact_profile_panel.dart';
 
 import '../models/platform_side.dart';
 import '../services/account_service.dart';
@@ -35,7 +32,6 @@ import 'member_profile_page.dart';
 import 'acquisition_support_page.dart';
 
 const _ink = Color(0xFF171717);
-const _paper = Color(0xFFF4F1EB);
 const _purple = Color(0xFF252525);
 const _lilac = Color(0xFF9B9B98);
 
@@ -58,6 +54,8 @@ class _ProfilePageState extends State<ProfilePage> {
   bool _loading = true;
   bool _saving = false;
   Timer? _refreshTimer;
+  StreamSubscription<dynamic>? _accountChanges;
+  String? _editRevision;
   final _name = TextEditingController();
   final _job = TextEditingController();
   final _company = TextEditingController();
@@ -69,6 +67,17 @@ class _ProfilePageState extends State<ProfilePage> {
     super.initState();
     _load();
     _loadAcquisition();
+    _accountChanges = BackendService.authChanges?.listen((_) {
+      if (mounted && BackendService.user?.id != _profile?.id) {
+        setState(() {
+          _profile = null;
+          _stats = null;
+          _team = [];
+          _deals = [];
+        });
+        _load();
+      }
+    });
     _refreshTimer = Timer.periodic(
       const Duration(seconds: 20),
       (_) => _refreshActivity(),
@@ -87,6 +96,7 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void dispose() {
     _refreshTimer?.cancel();
+    _accountChanges?.cancel();
     _name.dispose();
     _job.dispose();
     _company.dispose();
@@ -95,26 +105,43 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _refreshActivity() async {
-    if (BackendService.user == null) return;
+    final actor = BackendService.user?.id;
+    if (actor == null) return;
     try {
       final values = await Future.wait([
         AccountService.loadStats(),
         AccountService.loadTeam(),
         DealRoomService.loadRooms(),
+        AccountService.loadProfile(),
       ]);
-      if (!mounted) return;
+      if (!mounted || BackendService.user?.id != actor) return;
+      final latest = values[3] as AccountProfile?;
+      final dirty =
+          _name.text != (_profile?.fullName ?? '') ||
+          _job.text != (_profile?.jobTitle ?? '') ||
+          _company.text != (_profile?.companyName ?? '') ||
+          _bio.text != (_profile?.bio ?? '');
       setState(() {
         _stats = values[0] as DashboardStats;
         _team = values[1] as List<MarketplaceProvider>;
         _deals = values[2] as List<DealRoom>;
+        _profile = latest;
+        if (!dirty && latest != null) {
+          _name.text = latest.fullName;
+          _job.text = latest.jobTitle;
+          _company.text = latest.companyName;
+          _bio.text = latest.bio;
+          _editRevision = latest.updatedAt;
+        }
       });
     } catch (_) {
-      // Keep the existing dashboard visible and try again on the next refresh.
+      /* Keep the last confirmed dashboard through connection loss. */
     }
   }
 
   Future<void> _load() async {
-    if (BackendService.user == null) {
+    final actor = BackendService.user?.id;
+    if (actor == null) {
       if (mounted) setState(() => _loading = false);
       return;
     }
@@ -126,9 +153,10 @@ class _ProfilePageState extends State<ProfilePage> {
         DealRoomService.loadRooms(),
       ]);
       final profile = values[0] as AccountProfile?;
-      if (!mounted) return;
+      if (!mounted || BackendService.user?.id != actor) return;
       setState(() {
         _profile = profile;
+        _editRevision = profile?.updatedAt;
         _stats = values[1] as DashboardStats;
         _team = values[2] as List<MarketplaceProvider>;
         _deals = values[3] as List<DealRoom>;
@@ -167,6 +195,7 @@ class _ProfilePageState extends State<ProfilePage> {
         companyName: _company.text,
         employmentType: _employment,
         bio: _bio.text,
+        expectedUpdatedAt: _editRevision,
       );
       await _load();
       if (mounted) {
@@ -180,41 +209,48 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         );
       }
+    } catch (_) {
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Could not save. Your profile may have changed on another device. Reopen the full editor to load the latest version.',
+            ),
+          ),
+        );
     } finally {
       if (mounted) setState(() => _saving = false);
     }
   }
 
-  Future<void> _photo() async {
-    final file = await ImagePicker().pickImage(
-      source: ImageSource.gallery,
-      maxWidth: 1200,
-      imageQuality: 88,
+  Future<void> _editProfile() async {
+    final profile = await AccountService.loadProfile();
+    final professional = await MarketplaceService.loadMyProfessionalProfile();
+    if (!mounted || profile == null) return;
+    final saved = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) =>
+            PactProfileEditorPage(profile: profile, professional: professional),
+      ),
     );
-    if (file == null) return;
+    if (saved == true) await _load();
+  }
+
+  Future<void> _photo({bool cover = false}) async {
+    if (_saving) return;
     setState(() => _saving = true);
     try {
-      final extension = file.name.contains('.')
-          ? file.name.split('.').last
-          : 'jpg';
-      await AccountService.uploadProfilePhoto(
-        await file.readAsBytes(),
-        extension,
-      );
-      await _load();
-    } catch (error) {
-      if (mounted) {
+      if (await PactProfileService.pickImage(cover ? 'cover' : 'avatar'))
+        await _load();
+    } catch (_) {
+      if (mounted)
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: SiteText(
-              templateValues: {'value1': '${error}'},
-              contentKey: 'copy.profile_page.m3',
-              literal: false,
-              "Could not upload photo: {{value1}}",
+          const SnackBar(
+            content: Text(
+              'Could not save this image. Your saved photo is safe; please retry.',
             ),
           ),
         );
-      }
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -527,9 +563,30 @@ class _ProfilePageState extends State<ProfilePage> {
       SizedBox(
         height: 205,
         width: double.infinity,
-        child: EditableColorCover(
-          contentKey: 'image.profile_page.mbackground1',
-          original: const FlowingColorBanner(),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            if (profile?.coverUrl.isNotEmpty == true)
+              Image.network(
+                profile!.coverUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (_, _, _) => const FlowingColorBanner(),
+              )
+            else
+              EditableColorCover(
+                contentKey: 'image.profile_page.mbackground1',
+                original: const FlowingColorBanner(),
+              ),
+            Positioned(
+              right: 20,
+              bottom: 16,
+              child: IconButton.filledTonal(
+                onPressed: _saving ? null : () => _photo(cover: true),
+                tooltip: 'Change cover photo',
+                icon: const Icon(Icons.camera_alt_outlined),
+              ),
+            ),
+          ],
         ),
       ),
       Center(
@@ -559,7 +616,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           right: 8,
                           bottom: 8,
                           child: IconButton.filled(
-                            onPressed: _photo,
+                            onPressed: _saving ? null : _photo,
                             tooltip: 'Upload profile photo',
                             icon: const Icon(
                               Icons.camera_alt_outlined,
@@ -598,7 +655,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                     const SizedBox(height: 18),
                     FilledButton(
-                      onPressed: () => _jumpTo(_detailsAnchor),
+                      onPressed: _editProfile,
                       child: const SiteCopyText(
                         'profile.portfolio.edit',
                         'Edit profile',
@@ -644,7 +701,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           ),
                         ),
                         TextButton(
-                          onPressed: () => _jumpTo(_detailsAnchor),
+                          onPressed: _editProfile,
                           child: const SiteCopyText(
                             'profile.portfolio.about',
                             'About & details',
@@ -826,6 +883,16 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
       ),
       children: [
+        const Text(
+          'For professional accounts, identity details also appear on your public professional profile.',
+        ),
+        const SizedBox(height: 12),
+        OutlinedButton.icon(
+          onPressed: _saving ? null : _editProfile,
+          icon: const Icon(Icons.tune),
+          label: const Text('Edit full profile and specialties'),
+        ),
+        const SizedBox(height: 16),
         TextField(
           controller: _name,
           decoration: const InputDecoration(

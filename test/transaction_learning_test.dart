@@ -196,15 +196,13 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     await tester.pumpWidget(const MaterialApp(home: TransactionLearningPage()));
     await tester.pumpAndSettle();
-    await tester.drag(find.byType(CustomScrollView), const Offset(0, -650));
-    await tester.pumpAndSettle();
     expect(
       find.text('Use the right document at the right moment.'),
       findsOneWidget,
     );
     await tester.drag(find.byType(CustomScrollView), const Offset(0, -650));
     await tester.pumpAndSettle();
-    expect(find.text('Deal brief & buyer criteria'), findsOneWidget);
+    expect(find.text('Deal brief & buyer criteria'), findsWidgets);
     expect(tester.takeException(), isNull);
   });
 }

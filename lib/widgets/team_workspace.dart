@@ -1,4 +1,5 @@
 import 'site_copy_text.dart';
+import '../screens/pact_professional_matches.dart';
 import 'nova_target.dart';
 import 'package:flutter/material.dart';
 import '../services/backend_service.dart';
@@ -200,6 +201,21 @@ class _TeamWorkspaceState extends State<TeamWorkspace> {
                       style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Center(
+                    child: OutlinedButton.icon(
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => const PactProfessionalMatchesPage(),
+                        ),
+                      ),
+                      icon: const Icon(Icons.manage_search),
+                      label: const SiteCopyText(
+                        'professional.matching.open',
+                        'Match professionals to a deal',
                       ),
                     ),
                   ),

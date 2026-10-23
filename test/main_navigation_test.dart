@@ -88,7 +88,8 @@ void main() {
         await tester.tap(find.text('Transaction Room'));
         await tester.pumpAndSettle();
         expect(find.byType(TransactionLearningPage), findsOneWidget);
-        expect(find.text('The deal,\nmade clear.'), findsOneWidget);
+        expect(find.text('Transaction Room'), findsWidgets);
+        expect(find.text('11 document guides'), findsOneWidget);
         expect(find.text('Your pipeline'), findsNothing);
         expect(tester.takeException(), isNull);
       },

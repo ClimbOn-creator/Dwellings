@@ -13,6 +13,8 @@ class AppTunnelController {
     'learning-seminars' ||
     'learning-pipeline' ||
     'learning-quiz' ||
+    'learning-transaction-room' ||
+    'acquisition-journey' ||
     'learning-map' => AppTunnel.learning,
     'buyer-pipeline' ||
     'buyer-dashboard' ||

@@ -1,3 +1,4 @@
+import 'pact_web_messages.dart';
 import '../widgets/site_text.dart';
 import '../widgets/site_image.dart';
 import 'package:flutter/material.dart';
@@ -16,7 +17,6 @@ import '../widgets/topo_background.dart';
 import 'auth_page.dart';
 import 'business_acquisition_page.dart';
 import 'home_screen.dart';
-import 'member_deal_marketplace_page.dart';
 import 'member_profile_page.dart';
 
 const _ink = brandInk;
@@ -782,8 +782,9 @@ class _ProviderRowState extends State<_ProviderRow> {
                           builder: (_) => MemberProfilePage(
                             provider: provider,
                             messageDestinationBuilder: (_) =>
-                                MemberDashboardPage(
-                                  initialChatProvider: provider,
+                                PactWebMessagesPage(
+                                  providerId: provider.id,
+                                  workspace: 'buyer',
                                 ),
                           ),
                         ),

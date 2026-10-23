@@ -1,4 +1,7 @@
 import 'dart:convert';
+import 'package:dwelling_iq/services/marketplace_service.dart';
+import 'package:flutter/material.dart';
+import 'package:dwelling_iq/screens/deal_rooms_page.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -83,6 +86,7 @@ void main() {
         location: 'Victoria, BC',
         purchasePrice: 800000,
         goals: '',
+        targetCloseDate: DateTime(2030, 6, 15),
         profileSnapshot: {
           'source_url': 'https://example.com/business/123',
           'deal_details': 'Seller-provided listing details',
@@ -91,6 +95,8 @@ void main() {
         privateOnly: true,
       );
       expect(room.userId, id);
+      expect(inserted!['target_close_date'], '2030-06-15');
+      expect(room.targetCloseDate, DateTime(2030, 6, 15));
       expect(
         room.propertySnapshot['source_url'],
         'https://example.com/business/123',
@@ -120,5 +126,95 @@ void main() {
       expect(tasks.every((t) => t['deal_room_id'] == room.id), isTrue);
     },
     skip: !BackendService.configured,
+  );
+  test('closing date can be omitted without inventing a deadline', () async {
+    if (!BackendService.configured) return;
+    final room = await DealRoomService.createManualRoom(
+      title: 'No date fixture',
+      dealKind: 'business',
+      location: '',
+      purchasePrice: 0,
+      goals: '',
+      privateOnly: true,
+    );
+    expect(inserted!['target_close_date'], isNull);
+    expect(room.targetCloseDate, isNull);
+  });
+  testWidgets(
+    'online deal save returns to the current dashboard and opens its planner',
+    (tester) async {
+      if (!BackendService.configured) return;
+      inserted = null;
+      tester.view.physicalSize = const Size(1440, 1000);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      Future<List<DealRoomBundle>> bundles() async => inserted == null
+          ? []
+          : [
+              DealRoomBundle(
+                room: DealRoom.fromJson({
+                  ...inserted!,
+                  'id': 'private-room',
+                  'updated_at': '2026-10-22T00:00:00Z',
+                }),
+                tasks: [],
+                notes: [],
+                members: [],
+                documents: [],
+                documentEvents: [],
+              ),
+            ];
+      await tester.pumpWidget(
+        MaterialApp(
+          home: DealRoomsPage(
+            initialView: BuyerDashboardView.pipeline,
+            loadTransactionBundles: bundles,
+            loadTeamProviders: () async =>
+                (<MarketplaceProvider>[], <String>{}),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const ValueKey('private-deal-title')),
+        'Online fixture deal',
+      );
+      final close = find.byKey(
+        const ValueKey('private-deal-target_close_date'),
+      );
+      await tester.ensureVisible(close);
+      await tester.enterText(close, '2030-06-15');
+      final save = find.text('Save private deal');
+      await tester.ensureVisible(save);
+      await tester.tap(save);
+      await tester.pumpAndSettle();
+      expect(inserted!['target_close_date'], '2030-06-15');
+      expect(find.text('Buyer dash'), findsOneWidget);
+      expect(find.text('Your pipeline'), findsOneWidget);
+      expect(find.text('Online fixture deal'), findsWidgets);
+      expect(find.byType(DealRoomPage), findsNothing);
+      await tester.tap(find.text('Online fixture deal').first);
+      await tester.pumpAndSettle();
+      expect(find.text('Transaction plan 📅'), findsOneWidget);
+      expect(find.text('Buyer dash'), findsOneWidget);
+      expect(find.byType(DealRoomPage), findsNothing);
+      final savedBundle = (await bundles()).single;
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpWidget(
+        MaterialApp(
+          home: DealRoomPage(
+            room: savedBundle.room,
+            loadBundle: () async => savedBundle,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Buyer dash'), findsOneWidget);
+      expect(find.text('Transaction plan 📅'), findsOneWidget);
+      expect(find.text('DEAL COMMAND CENTRE'), findsNothing);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
   );
 }

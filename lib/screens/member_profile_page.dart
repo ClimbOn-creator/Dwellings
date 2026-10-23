@@ -1,19 +1,21 @@
+import 'pact_web_messages.dart';
+import '../services/app_tunnel.dart';
+import 'dart:async';
 import '../widgets/site_text.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../services/backend_service.dart';
-import '../services/member_network_service.dart';
 import '../services/marketplace_service.dart';
 import '../widgets/home_brand_button.dart';
-import '../widgets/profile_photo.dart';
 import '../widgets/app_navigation_menu.dart';
-import '../widgets/topo_background.dart';
+import '../widgets/pact_professional_profile.dart';
+import '../widgets/pact_mobile_surface.dart';
 import 'auth_page.dart';
 
 const _ink = Color(0xFF050510);
-const _paper = Color(0xFFF5F5F7);
-const _purple = Color(0xFF252525);
+const _paper = Color(0xFFF6F4FC);
+const _purple = Color(0xFF6255DC);
 
 class MemberProfilePage extends StatefulWidget {
   const MemberProfilePage({
@@ -38,11 +40,31 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
   bool _changingTeam = false;
   late Future<List<ProviderReview>> _reviews;
 
-  MarketplaceProvider get provider => widget.provider;
-  bool get _canMessage =>
-      MemberNetworkService.messagingEnabled &&
-      !provider.isExample &&
-      (widget.onMessage != null || widget.messageDestinationBuilder != null);
+  MarketplaceProvider? _liveProvider;
+  Timer? _profileTimer;
+  MarketplaceProvider get provider => _liveProvider ?? widget.provider;
+
+  Future<void> _refreshProfile() async {
+    if (widget.provider.isExample) return;
+    try {
+      final latest = await MarketplaceService.loadProvider(widget.provider.id);
+      if (mounted && latest != null)
+        setState(() {
+          _liveProvider = latest;
+          _reviews = MarketplaceService.loadReviews(latest.id);
+        });
+    } catch (_) {
+      /* Keep confirmed profile data through connection loss. */
+    }
+  }
+
+  @override
+  void dispose() {
+    _profileTimer?.cancel();
+    super.dispose();
+  }
+
+  bool get _canMessage => !provider.isExample && provider.verified;
 
   @override
   void initState() {
@@ -52,6 +74,11 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
       example: provider.isExample,
     );
     _syncTeam();
+    _refreshProfile();
+    _profileTimer = Timer.periodic(
+      const Duration(seconds: 20),
+      (_) => _refreshProfile(),
+    );
   }
 
   Future<void> _syncTeam() async {
@@ -270,15 +297,31 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
       );
       return;
     }
-    final destinationBuilder = widget.messageDestinationBuilder;
+    final destinationBuilder =
+        widget.messageDestinationBuilder ??
+        (widget.onMessage == null
+            ? (_) => PactWebMessagesPage(
+                providerId: provider.id,
+                workspace: AppTunnelController.current.value.name,
+              )
+            : null);
     if (destinationBuilder != null) {
       await Navigator.of(
         context,
       ).push(MaterialPageRoute<void>(builder: destinationBuilder));
       return;
     }
-    await widget.onMessage!();
-    if (mounted) Navigator.pop(context);
+    try {
+      await widget.onMessage!();
+      if (mounted) Navigator.pop(context);
+    } catch (_) {
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not open this conversation. Please retry.'),
+          ),
+        );
+    }
   }
 
   Future<void> _referMember() async {
@@ -302,6 +345,7 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (provider.isExample) _exampleBanner(),
+                    if (provider.sponsored) _badge('SPONSORED'),
                     LayoutBuilder(
                       builder: (context, constraints) {
                         final desktop = constraints.maxWidth >= 780;
@@ -327,6 +371,7 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
                     ),
                     const SizedBox(height: 38),
                     _experienceCard(),
+                    PactProfessionalExperience(provider: provider),
                     const SizedBox(height: 30),
                     _reviewsSection(),
                   ],
@@ -339,142 +384,87 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
     ),
   );
 
-  Widget _hero() => TopoBackground(
-    child: Padding(
-      padding: const EdgeInsets.fromLTRB(26, 22, 26, 58),
-      child: SafeArea(
-        bottom: false,
+  Widget _hero() => Container(
+    decoration: const BoxDecoration(gradient: pactSurfaceGradient),
+    child: SafeArea(
+      bottom: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(22, 16, 22, 0),
         child: Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 1120),
+            constraints: const BoxConstraints(maxWidth: 1080),
             child: Column(
               children: [
                 Row(
                   children: [
-                    Expanded(
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: const HomeBrandButton(size: 46),
-                        ),
-                      ),
+                    const HomeBrandButton(size: 36, dark: false),
+                    const Spacer(),
+                    AppNavigationMenu(
+                      side: provider.category.side,
+                      dark: false,
                     ),
-                    AppNavigationMenu(side: provider.category.side),
                   ],
                 ),
-                const SizedBox(height: 52),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    ProfilePhoto(
-                      size: 124,
-                      photoUrl: provider.photoUrl,
-                      exampleIndex: provider.photoIndex,
-                      borderRadius: BorderRadius.circular(30),
+                const SizedBox(height: 24),
+                PactProfessionalHeader(
+                  name: provider.name,
+                  photoUrl: provider.photoUrl,
+                  exampleIndex: provider.photoIndex,
+                  coverUrl: provider.coverUrl,
+                  nameWidget: SiteText(
+                    contentKey: 'copy.member_profile_page.m7',
+                    literal: false,
+                    provider.name,
+                    style: const TextStyle(
+                      fontSize: 30,
+                      fontWeight: FontWeight.w700,
+                      color: _ink,
                     ),
-                    const SizedBox(width: 24),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Wrap(
-                            spacing: 8,
-                            children: [
-                              if (provider.verified) _badge('VERIFIED'),
-                              if (provider.sponsored) _badge('SPONSORED'),
-                              if (provider.isExample) _badge('EXAMPLE'),
-                            ],
-                          ),
-                          const SizedBox(height: 10),
-                          SiteText(
-                            contentKey: 'copy.member_profile_page.m7',
-                            literal: false,
-                            provider.name,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 46,
-                              height: 1,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: -2,
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          SiteText(
-                            contentKey: 'copy.member_profile_page.m8',
-                            literal: false,
-                            '${provider.jobTitle} · ${provider.company}',
-                            style: const TextStyle(
-                              color: Color(0xFF9B9B98),
-                              fontSize: 15,
-                            ),
-                          ),
-                        ],
+                  ),
+                  headline: provider.jobTitle,
+                  headlineWidget: SiteText(
+                    contentKey: 'copy.member_profile_page.m8',
+                    literal: false,
+                    '${provider.jobTitle} · ${provider.company}',
+                    style: const TextStyle(fontSize: 17, height: 1.4),
+                  ),
+                  company: '',
+                  location: provider.serviceMarkets.join(' · '),
+                  tags: provider.specialties,
+                  verified: provider.verified,
+                  actions: [
+                    if (_canMessage)
+                      FilledButton.icon(
+                        onPressed: _messageMember,
+                        icon: const Icon(Icons.chat_bubble_outline),
+                        label: const SiteText(
+                          contentKey: 'copy.member_profile_page.3',
+                          literal: true,
+                          'MESSAGE',
+                        ),
                       ),
+                    OutlinedButton.icon(
+                      onPressed: _changingTeam ? null : _toggleTeam,
+                      icon: Icon(
+                        _added ? Icons.bookmark : Icons.bookmark_outline,
+                      ),
+                      label: _added
+                          ? const Text('Saved to your team')
+                          : const SiteText(
+                              contentKey: 'professional.profile.save',
+                              literal: true,
+                              'Save professional',
+                            ),
                     ),
-                    if (MediaQuery.sizeOf(context).width >= 700)
-                      Wrap(
-                        spacing: 9,
-                        runSpacing: 9,
-                        children: [
-                          if (_canMessage)
-                            OutlinedButton.icon(
-                              onPressed: _messageMember,
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: Colors.white,
-                                side: const BorderSide(color: Colors.white54),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 18,
-                                  vertical: 17,
-                                ),
-                              ),
-                              icon: const Icon(
-                                Icons.chat_bubble_outline_rounded,
-                              ),
-                              label: const SiteText(
-                                contentKey: 'copy.member_profile_page.3',
-                                literal: true,
-                                'MESSAGE',
-                              ),
-                            ),
-                          if (widget.onRefer != null)
-                            OutlinedButton.icon(
-                              onPressed: _referMember,
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: Colors.white,
-                                side: const BorderSide(color: Colors.white54),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 18,
-                                  vertical: 17,
-                                ),
-                              ),
-                              icon: const Icon(Icons.person_add_alt_1_outlined),
-                              label: const SiteText(
-                                contentKey: 'copy.member_profile_page.4',
-                                literal: true,
-                                'REFER',
-                              ),
-                            ),
-                          FilledButton.icon(
-                            onPressed: _changingTeam ? null : _toggleTeam,
-                            style: FilledButton.styleFrom(
-                              backgroundColor: _added
-                                  ? const Color(0xFF16825D)
-                                  : Colors.white,
-                              foregroundColor: _added ? Colors.white : _ink,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 22,
-                                vertical: 18,
-                              ),
-                            ),
-                            icon: Icon(_added ? Icons.check_circle : Icons.add),
-                            label: SiteText(
-                              contentKey: 'copy.member_profile_page.m9',
-                              literal: false,
-                              _added ? 'ADDED!' : 'ADD TO TEAM',
-                            ),
-                          ),
-                        ],
+                    if (widget.onRefer != null)
+                      OutlinedButton.icon(
+                        onPressed: _referMember,
+                        icon: const Icon(Icons.person_add_alt_1_outlined),
+                        label: const SiteText(
+                          contentKey: 'copy.member_profile_page.4',
+                          literal: true,
+                          'REFER',
+                        ),
                       ),
                   ],
                 ),
@@ -816,7 +806,7 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
       literal: false,
       label,
       style: const TextStyle(
-        color: Color(0xFFD8D0FF),
+        color: _purple,
         fontSize: 8,
         fontWeight: FontWeight.w900,
       ),

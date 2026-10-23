@@ -85,30 +85,32 @@ void main() {
         },
       );
     }
-    testWidgets('learning pipeline stays inside its dashboard at $width', (
-      tester,
-    ) async {
-      tester.view.physicalSize = Size(width, 1000);
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
-      await tester.pumpWidget(
-        MaterialApp(
-          home: LearningDashboardPage(
-            initialView: LearningView.pipeline,
-            loadPosts: () async => [],
-            loadSeminars: () async => [],
+    testWidgets(
+      'retired learning pipeline redirects to document room at $width',
+      (tester) async {
+        tester.view.physicalSize = Size(width, 1000);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        await tester.pumpWidget(
+          MaterialApp(
+            home: LearningDashboardPage(
+              initialView: LearningView.pipeline,
+              loadPosts: () async => [],
+              loadSeminars: () async => [],
+            ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
-      expect(find.byType(Scaffold), findsOneWidget);
-      expect(find.text('Add a deal you found online'), findsOneWidget);
-      expect(find.text('Your pipeline'), findsNothing);
-      expect(find.text('No deals here yet'), findsNothing);
-      expect(find.text('My personal team'), findsNothing);
-      expect(tester.takeException(), isNull);
-      await tester.pumpWidget(const SizedBox.shrink());
-    });
+        );
+        await tester.pumpAndSettle();
+        expect(find.byType(Scaffold), findsOneWidget);
+        expect(find.text('Transaction Room'), findsWidgets);
+        expect(find.text('Add a deal you found online'), findsNothing);
+        expect(find.text('Your pipeline'), findsNothing);
+        expect(find.text('No deals here yet'), findsNothing);
+        expect(find.text('My personal team'), findsNothing);
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(const SizedBox.shrink());
+      },
+    );
   }
 }

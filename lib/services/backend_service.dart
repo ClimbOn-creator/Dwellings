@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+import 'pact_session_storage.dart';
 import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
@@ -14,7 +16,17 @@ class BackendService {
 
   static Future<void> initialize() async {
     if (!configured) return;
-    await Supabase.initialize(url: supabaseUrl, publishableKey: supabaseKey);
+    await Supabase.initialize(
+      url: supabaseUrl,
+      publishableKey: supabaseKey,
+      authOptions: FlutterAuthClientOptions(
+        localStorage: kIsWeb
+            ? null
+            : PactSessionStorage(
+                'sb-${Uri.parse(supabaseUrl).host.split('.').first}-auth-token',
+              ),
+      ),
+    );
   }
 
   static User? get user =>
@@ -23,19 +35,29 @@ class BackendService {
   static Stream<AuthState>? get authChanges =>
       configured ? Supabase.instance.client.auth.onAuthStateChange : null;
 
+  static const mobileAuthRedirect =
+      'com.dwellingiq.dwellingiq://login-callback/';
+
+  static String get authRedirect =>
+      kIsWeb ? Uri.base.origin : mobileAuthRedirect;
+
   static Future<void> signInWithGoogle() async {
     if (!configured) throw StateError('Supabase is not configured.');
-    await Supabase.instance.client.auth.signInWithOAuth(
+    final launched = await Supabase.instance.client.auth.signInWithOAuth(
       OAuthProvider.google,
-      redirectTo: Uri.base.origin,
+      redirectTo: authRedirect,
+      authScreenLaunchMode: kIsWeb
+          ? LaunchMode.platformDefault
+          : LaunchMode.externalApplication,
     );
+    if (!launched) throw StateError('Could not open Google sign-in.');
   }
 
   static Future<void> sendMagicLink(String email) async {
     if (!configured) throw StateError('Supabase is not configured.');
     await Supabase.instance.client.auth.signInWithOtp(
       email: email,
-      emailRedirectTo: Uri.base.origin,
+      emailRedirectTo: authRedirect,
     );
   }
 

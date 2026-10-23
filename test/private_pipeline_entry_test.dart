@@ -83,7 +83,9 @@ void main() {
         );
         Future<void> save() async {
           final button = find.text('Save private deal');
+          await tester.pumpAndSettle();
           await tester.ensureVisible(button);
+          await tester.pumpAndSettle();
           await tester.tap(button);
           await tester.pumpAndSettle();
         }
@@ -104,6 +106,19 @@ void main() {
         expect(attempts, 0);
         await tester.ensureVisible(source);
         await tester.enterText(source, 'https://example.com/listing/123');
+        final close = find.byKey(
+          const ValueKey('private-deal-target_close_date'),
+        );
+        await tester.ensureVisible(close);
+        await tester.enterText(close, '2030-02-31');
+        await save();
+        expect(attempts, 0);
+        expect(
+          find.textContaining('Enter a valid target close date'),
+          findsOneWidget,
+        );
+        await tester.ensureVisible(close);
+        await tester.enterText(close, '2030-06-15');
         await save();
         expect(attempts, 1);
         expect(tester.widget<TextField>(title).controller!.text, 'Island HVAC');
@@ -133,6 +148,7 @@ void main() {
           'https://example.com/listing/123',
         );
         expect(captured!.profileSnapshot['currency'], 'CAD');
+        expect(captured!.targetCloseDate, DateTime(2030, 6, 15));
         expect(
           captured!.profileSnapshot.containsKey('annual_revenue'),
           isFalse,

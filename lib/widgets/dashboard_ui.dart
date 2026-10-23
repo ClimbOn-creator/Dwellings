@@ -95,11 +95,14 @@ class DashboardUi {
     String label,
     IconData icon,
     bool selected,
-    VoidCallback onTap,
-  ) => Padding(
+    VoidCallback onTap, {
+    bool dark = false,
+  }) => Padding(
     padding: const EdgeInsets.only(bottom: 4),
     child: Material(
-      color: selected ? const Color(0xFFE5EDFF) : Colors.transparent,
+      color: selected
+          ? (dark ? const Color(0xFF303033) : const Color(0xFFE5EDFF))
+          : Colors.transparent,
       borderRadius: BorderRadius.circular(10),
       child: InkWell(
         onTap: onTap,
@@ -108,14 +111,20 @@ class DashboardUi {
           padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 12),
           child: Row(
             children: [
-              Icon(icon, size: 19, color: selected ? blue : muted),
+              Icon(
+                icon,
+                size: 19,
+                color: dark
+                    ? (selected ? Colors.white : Colors.white60)
+                    : (selected ? blue : muted),
+              ),
               const SizedBox(width: 13),
               Flexible(
                 child: Text(
                   label,
                   style: TextStyle(
                     fontSize: 13,
-                    color: selected ? blue : ink,
+                    color: dark ? Colors.white : (selected ? blue : ink),
                     fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                   ),
                 ),

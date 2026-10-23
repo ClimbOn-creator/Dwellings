@@ -26,10 +26,8 @@ import 'package:flutter/material.dart';
 import '../models/platform_side.dart';
 import '../services/account_service.dart';
 import '../services/backend_service.dart';
-import '../services/site_content_service.dart';
 import '../screens/auth_page.dart';
 import '../screens/profile_page.dart';
-import '../screens/content_studio_page.dart';
 import '../screens/notification_center_page.dart';
 import '../services/member_beta_service.dart';
 import 'profile_photo.dart';
@@ -97,12 +95,14 @@ class AppNavigationMenu extends StatefulWidget {
     this.side = PlatformSide.business,
     this.dark = true,
     this.onSideChanged,
+    this.onMessages,
     this.guidePage,
     this.showPrivateUpdates = true,
     this.openDashboardMenu = false,
   });
 
   // Kept while older callers are migrated to the single acquisition app.
+  final VoidCallback? onMessages;
   final String? guidePage;
   final bool showPrivateUpdates;
   final bool openDashboardMenu;
@@ -150,7 +150,7 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
     AppNavigationDestination.memberMarketing => 'Marketing',
     AppNavigationDestination.learningDashboard => 'Learning dashboard',
     AppNavigationDestination.learningSeminars => 'Live seminars',
-    AppNavigationDestination.learningMap => 'Buying & selling map',
+    AppNavigationDestination.learningMap => 'Acquisition Journey',
     AppNavigationDestination.profile => 'My profile',
   };
 
@@ -165,7 +165,7 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
       initialView: LearningView.seminars,
     ),
     AppNavigationDestination.learningMap => const LearningDashboardPage(
-      initialView: LearningView.map,
+      initialView: LearningView.journey,
     ),
     AppNavigationDestination.consulting => const PersonalizedConsultingPage(),
     AppNavigationDestination.resources => const BuyerResourcesPage(),
@@ -416,26 +416,6 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
                         _showPika();
                       },
                       icon: const NovaCharacter(size: 32),
-                    )
-                  : const SizedBox.shrink(),
-            ),
-          if (!compact)
-            FutureBuilder<bool>(
-              future: SiteContentService.canEdit(),
-              builder: (context, snapshot) => snapshot.data == true
-                  ? IconButton(
-                      tooltip: 'Edit site content',
-                      onPressed: () => Navigator.of(context).push(
-                        MaterialPageRoute<void>(
-                          builder: (_) => const ContentStudioPage(),
-                        ),
-                      ),
-                      icon: Icon(
-                        Icons.edit_note_rounded,
-                        color: widget.dark
-                            ? Colors.white
-                            : const Color(0xFF161616),
-                      ),
                     )
                   : const SizedBox.shrink(),
             ),

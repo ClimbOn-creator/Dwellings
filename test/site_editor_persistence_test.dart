@@ -1,3 +1,4 @@
+import 'package:dwelling_iq/widgets/transaction_room_panel.dart';
 import 'package:dwelling_iq/widgets/site_section.dart';
 import 'package:dwelling_iq/widgets/site_image.dart';
 import 'dart:convert';
@@ -321,6 +322,27 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Saved section content'), findsOneWidget);
       expect(published['section.test.consulting.hidden'], 'false');
+    },
+    skip: !BackendService.configured,
+  );
+  testWidgets(
+    'Transaction Room retains the original owner heading ID',
+    (tester) async {
+      published['transaction.library.title'] = 'Our saved document workspace';
+      await tester.runAsync(SiteContentService.initialize);
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: SingleChildScrollView(child: TransactionRoomPanel()),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Our saved document workspace'), findsOneWidget);
+      expect(find.text('Transaction Room'), findsNothing);
+      expect(find.text('DOWNLOAD EDITABLE TEMPLATE'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
     },
     skip: !BackendService.configured,
   );

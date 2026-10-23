@@ -36,7 +36,7 @@ node_modules/
 .flutter-plugins-dependencies
 .pub-cache/
 .pub/
-/build/
+/build
 /coverage/
 
 # Symbolication related
@@ -52,3 +52,7 @@ app.*.map.json
 
 # Supabase CLI local metadata
 supabase/.temp/
+
+# Local editor settings and generated test failure images
+/.vscode/
+/test/failures/

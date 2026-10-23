@@ -99,7 +99,7 @@ void main() {
         find.textContaining(
           RegExp(r'Good (morning|afternoon|evening)|Working late'),
         ),
-        findsOneWidget,
+        findsNothing,
       );
       expect(find.byKey(const Key('seller_business_name')), findsNothing);
       await tester.ensureVisible(find.byKey(const Key('seller_tab_plan')));

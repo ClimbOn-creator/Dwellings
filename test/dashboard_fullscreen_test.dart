@@ -1,3 +1,4 @@
+import 'package:dwelling_iq/screens/pact_web_messages.dart';
 import 'package:dwelling_iq/widgets/membership_footer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -14,6 +15,55 @@ import 'package:dwelling_iq/widgets/private_deal_entry.dart';
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
   for (final width in [390.0, 700.0, 1440.0, 2560.0]) {
+    testWidgets(
+      'messaging fills the dashboard content, retaining its shell at $width',
+      (tester) async {
+        tester.view.physicalSize = Size(width, 1000);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        for (final (page, label) in <(Widget, String)>[
+          (
+            const DealRoomsPage(initialView: BuyerDashboardView.messages),
+            'Buyer dash',
+          ),
+          (
+            const SellerDashboardPage(
+              initialView: SellerDashboardView.messages,
+            ),
+            'Seller dash',
+          ),
+          (
+            const MemberDealMarketplacePage(
+              initialView: MemberDashboardView.messages,
+            ),
+            'Member dash',
+          ),
+        ]) {
+          await tester.pumpWidget(
+            MaterialApp(
+              builder: (context, child) => MediaQuery(
+                data: MediaQuery.of(context).copyWith(disableAnimations: true),
+                child: child!,
+              ),
+              home: page,
+            ),
+          );
+          await tester.pumpAndSettle();
+          expect(find.text(label), findsOneWidget);
+          final inbox = tester.getRect(find.byType(PactWebMessages));
+          expect(inbox.top, greaterThanOrEqualTo(72));
+          expect(inbox.bottom, lessThanOrEqualTo(1000));
+          if (width >= 900) {
+            expect(inbox.left, greaterThanOrEqualTo(200));
+            expect(inbox.height, greaterThan(850));
+          }
+          expect(tester.takeException(), isNull);
+          await tester.pumpWidget(const SizedBox.shrink());
+          await tester.pump();
+        }
+      },
+    );
     testWidgets('role labels stay in the top bar at $width', (tester) async {
       tester.view.physicalSize = Size(width, 1000);
       tester.view.devicePixelRatio = 1;

@@ -16,8 +16,10 @@ class DashboardGreeting extends StatefulWidget {
     super.key,
     required this.summary,
     this.emoji = '👋',
+    this.showGreeting = true,
   });
   final String summary, emoji;
+  final bool showGreeting;
   @override
   State<DashboardGreeting> createState() => _DashboardGreetingState();
 }
@@ -43,5 +45,6 @@ class _DashboardGreetingState extends State<DashboardGreeting> {
   Widget build(BuildContext context) => BuyerGreeting(
     greeting: '${dashboardSalutation(_now)} ${widget.emoji}',
     summary: widget.summary,
+    showGreeting: widget.showGreeting,
   );
 }

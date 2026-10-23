@@ -31,7 +31,7 @@ void main() {
         find.textContaining(
           RegExp(r'Good morning|Good afternoon|Good evening|Working late'),
         ),
-        findsOneWidget,
+        findsNothing,
       );
       expect(tester.takeException(), isNull);
     });
@@ -47,6 +47,10 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.text('Your opportunity board'), findsOneWidget);
+      expect(find.byTooltip('Submit a deal to Pact'), findsNothing);
+      expect(find.text('Submit a deal to Pact'), findsNothing);
+      expect(find.byTooltip('Edit site content'), findsNothing);
+      expect(find.byTooltip('Messages'), findsNothing);
       expect(tester.takeException(), isNull);
     });
   }

@@ -13,23 +13,24 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     AppTunnelController.select(AppTunnel.learning);
   });
-  testWidgets('moved Member overview learning action opens the independent workspace', (
-    tester,
-  ) async {
-    AppTunnelController.select(AppTunnel.landing);
-    await tester.pumpWidget(const MaterialApp(home: MemberOverviewPage()));
-    await tester.pump(const Duration(seconds: 1));
-    final button = find.text('I want to learn');
-    expect(button, findsOneWidget);
-    await tester.ensureVisible(button);
-    await tester.tap(button);
-    await tester.pump();
-    await tester.pump(const Duration(seconds: 1));
-    expect(find.byType(LearningDashboardPage), findsOneWidget);
-    expect(AppTunnelController.current.value, AppTunnel.learning);
-    expect(tester.takeException(), isNull);
-    await tester.pumpWidget(const SizedBox.shrink());
-  });
+  testWidgets(
+    'moved Member overview learning action opens the independent workspace',
+    (tester) async {
+      AppTunnelController.select(AppTunnel.landing);
+      await tester.pumpWidget(const MaterialApp(home: MemberOverviewPage()));
+      await tester.pump(const Duration(seconds: 1));
+      final button = find.text('I want to learn');
+      expect(button, findsOneWidget);
+      await tester.ensureVisible(button);
+      await tester.tap(button);
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
+      expect(find.byType(LearningDashboardPage), findsOneWidget);
+      expect(AppTunnelController.current.value, AppTunnel.learning);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
   test(
     'buyer and seller lessons are distinct and checks have valid answers',
     () {
@@ -81,7 +82,7 @@ void main() {
     for (final view in [
       LearningView.feed,
       LearningView.seminars,
-      LearningView.map,
+      LearningView.journey,
     ]) {
       testWidgets('$view fits $width with account gated publishing', (
         tester,
@@ -118,20 +119,20 @@ void main() {
           expect(tester.getTopLeft(find.text('LEARNING')).dy, lessThan(160));
           expect(find.text('A place to learn, at your pace'), findsNothing);
         }
-        if (view == LearningView.map) {
-          expect(find.byType(InteractiveViewer), findsOneWidget);
+        if (view == LearningView.journey) {
+          expect(find.byType(InteractiveViewer), findsNothing);
           await tester.ensureVisible(
-            find.text('Your budget, preferred business and owner role'),
+            find.byKey(const ValueKey('journey-answer-0')),
           );
-          await tester.tap(
-            find.text('Your budget, preferred business and owner role'),
-          );
-          await tester.pump();
-          expect(find.text('That’s right.'), findsOneWidget);
-          await tester.ensureVisible(find.text('Mark this stage understood'));
-          await tester.tap(find.text('Mark this stage understood'));
+          await tester.tap(find.byKey(const ValueKey('journey-answer-0')));
           await tester.pumpAndSettle();
-          expect(find.text('Understood • unmark'), findsOneWidget);
+          expect(find.text('That’s right.'), findsOneWidget);
+          await tester.ensureVisible(
+            find.byKey(const Key('journey-mark-understood')),
+          );
+          await tester.tap(find.byKey(const Key('journey-mark-understood')));
+          await tester.pumpAndSettle();
+          expect(find.text('Understood · undo'), findsOneWidget);
         }
         expect(tester.takeException(), isNull);
         await tester.pumpWidget(const SizedBox.shrink());
@@ -180,7 +181,7 @@ void main() {
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
   });
-  testWidgets('approved publishers can access composer and creator approvals', (
+  testWidgets('approved publishers see plus while contributor approvals stay removed', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -193,8 +194,10 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.text('Create a learning post'), findsOneWidget);
-    expect(find.text('Contributor approvals'), findsOneWidget);
+    expect(find.text('Create a learning post'), findsNothing);
+    expect(find.byKey(const Key('learning-create-post')), findsOneWidget);
+    expect(find.byType(FloatingActionButton), findsOneWidget);
+    expect(find.text('Contributor approvals'), findsNothing);
     await tester.pumpWidget(const SizedBox.shrink());
   });
   testWidgets(

@@ -1,7 +1,7 @@
-import '../services/site_content_service.dart';
-import '../widgets/dashboard_greeting.dart';
+import '../widgets/transaction_room_panel.dart';
+import '../widgets/acquisition_journey_panel.dart';
+import '../widgets/pact_mobile_surface.dart';
 import '../widgets/dashboard_header.dart';
-import 'deal_rooms_page.dart';
 import 'deal_comparison_page.dart';
 import 'dart:async';
 import '../widgets/canada_event_map.dart';
@@ -12,23 +12,17 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:intl/intl.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:supabase_flutter/supabase_flutter.dart'
     show RealtimeChannel, PostgresChangeEvent;
 import '../services/backend_service.dart';
-import '../services/app_tunnel.dart';
 import '../services/learning_service.dart';
-import '../models/learning_journey.dart';
-import '../models/platform_side.dart';
 import '../widgets/dashboard_ui.dart';
 import '../widgets/app_navigation_menu.dart';
 import '../widgets/learning_media_player.dart';
 import '../widgets/site_copy_text.dart';
 import '../widgets/nova_target.dart';
 import 'auth_page.dart';
-import 'deal_rooms_page.dart';
-import 'transaction_learning_page.dart';
 import 'buyer_resources_page.dart';
 import '../services/learning_area_service.dart';
 import '../services/nova_training_controller.dart';
@@ -38,6 +32,8 @@ import '../widgets/learning_comments.dart';
 enum LearningView {
   feed,
   seminars,
+  room,
+  journey,
   map,
   quiz,
   pipeline,
@@ -63,6 +59,22 @@ class LearningDashboardPage extends StatefulWidget {
 
 class _LearningDashboardPageState extends State<LearningDashboardPage> {
   late LearningView view;
+  String? roomDocument;
+  static LearningView _currentView(LearningView value) => switch (value) {
+    LearningView.map => LearningView.journey,
+    LearningView.pipeline => LearningView.room,
+    LearningView.contributors => LearningView.feed,
+    _ => value,
+  };
+  static const visibleViews = [
+    LearningView.feed,
+    LearningView.seminars,
+    LearningView.room,
+    LearningView.journey,
+    LearningView.quiz,
+    LearningView.resources,
+  ];
+
   Future<List<LearningPost>>? _feedFuture;
   Future<List<LearningSeminar>>? _seminarsFuture;
   LearningArea? area;
@@ -121,18 +133,11 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
   int eventRevision = 0;
   bool updatingEvents = false;
 
-  bool seller = false, busy = false;
-  int selected = 0;
-  int? answer;
-  Set<String> completed = {};
-  String? progressNotice;
-  List<LearningPhase> get journey =>
-      seller ? sellerLearningJourney : buyerLearningJourney;
-  LearningPhase get phase => journey[selected];
+  bool busy = false;
   @override
   void initState() {
     super.initState();
-    view = widget.initialView;
+    view = _currentView(widget.initialView);
     _loadArea();
     refresh();
     auth = BackendService.authChanges?.listen((_) {
@@ -165,9 +170,9 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
     // Polling also handles revoked hosts and rows that become invisible to RLS,
     // and keeps the map current after a dropped realtime connection.
     clock = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (mounted) _loadPermissions();
       if (mounted && view == LearningView.seminars) {
         _refreshEvents();
-        _loadPermissions();
         setState(() {});
       }
     });
@@ -211,7 +216,6 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
     _feedFuture = null;
     _seminarsFuture = null;
     _loadPermissions();
-    _progress();
     if (mounted) setState(() {});
   }
 
@@ -223,47 +227,6 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
         setState(() => permissions = p);
     } catch (_) {
       if (mounted) setState(() => permissions = const LearningPermissions());
-    }
-  }
-
-  Future<void> _progress() async {
-    final uid = BackendService.user?.id;
-    final prefs = await SharedPreferences.getInstance();
-    var values =
-        (prefs.getStringList('learning.progress.${uid ?? 'guest'}') ?? [])
-            .toSet();
-    try {
-      if (uid != null) values = await LearningService.progress();
-    } catch (_) {}
-    if (mounted && BackendService.user?.id == uid)
-      setState(() => completed = values);
-  }
-
-  Future<void> _mark() async {
-    final id = phase.id;
-    final values = {...completed};
-    if (!values.add(id)) values.remove(id);
-    final uid = BackendService.user?.id;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(
-      'learning.progress.${uid ?? 'guest'}',
-      values.toList(),
-    );
-    if (!mounted || BackendService.user?.id != uid) return;
-    setState(() {
-      completed = values;
-      progressNotice = uid == null
-          ? 'Progress saved on this device. Sign in to keep it with your account.'
-          : null;
-    });
-    try {
-      await LearningService.markConcept(id, values.contains(id));
-    } catch (_) {
-      if (mounted)
-        setState(
-          () => progressNotice =
-              'Saved on this device. Account sync failed; try again when connected.',
-        );
     }
   }
 
@@ -311,14 +274,19 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
   String get guide =>
       view == LearningView.quiz ? 'comparison' : 'learning-${view.name}';
   void show(LearningView next) {
-    setState(() => view = next);
+    setState(() => view = _currentView(next));
   }
 
   @override
   Widget build(BuildContext context) => Theme(
-    data: DashboardUi.theme(Theme.of(context)),
+    data: DashboardUi.theme(Theme.of(context)).copyWith(
+      colorScheme: const ColorScheme.light(
+        primary: learningViolet,
+        surface: Colors.white,
+      ),
+    ),
     child: Scaffold(
-      backgroundColor: DashboardUi.canvas,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         automaticallyImplyLeading: false,
         toolbarHeight: 72,
@@ -337,17 +305,32 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
           const SizedBox(width: 12),
         ],
       ),
-      body: LayoutBuilder(
-        builder: (context, box) => box.maxWidth >= 900
-            ? Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _sidebar(),
-                  const VerticalDivider(width: 1, color: DashboardUi.line),
-                  Expanded(child: _workspace(false)),
-                ],
-              )
-            : _workspace(true),
+      floatingActionButton: view == LearningView.feed && permissions.canPublish
+          ? Padding(
+              // Leave room for the owner's existing page-editor overlay.
+              padding: const EdgeInsets.only(bottom: 64),
+              child: FloatingActionButton(
+                key: const Key('learning-create-post'),
+                tooltip: 'Create a learning post',
+                onPressed: busy ? null : _compose,
+                child: const Icon(Icons.add),
+              ),
+            )
+          : null,
+      body: DecoratedBox(
+        decoration: const BoxDecoration(gradient: pactSurfaceGradient),
+        child: LayoutBuilder(
+          builder: (context, box) => box.maxWidth >= 900
+              ? Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _sidebar(),
+                    const VerticalDivider(width: 1, color: DashboardUi.line),
+                    Expanded(child: _workspace(false)),
+                  ],
+                )
+              : _workspace(true),
+        ),
       ),
     ),
   );
@@ -372,13 +355,9 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
           for (final item in const [
             (LearningView.feed, 'Learning feed', Icons.home_outlined),
             (LearningView.seminars, 'Live seminars', Icons.videocam_outlined),
-            (
-              LearningView.map,
-              'Buying & selling map',
-              Icons.account_tree_outlined,
-            ),
+            (LearningView.room, 'Transaction Room', Icons.folder_open_outlined),
+            (LearningView.journey, 'Acquisition Journey', Icons.route_outlined),
             (LearningView.quiz, 'Deal comparison quiz', Icons.compare_arrows),
-            (LearningView.pipeline, 'Pipeline', Icons.view_kanban_outlined),
             (LearningView.resources, 'Resources', Icons.public),
           ])
             DashboardUi.nav(
@@ -386,13 +365,6 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
               item.$3,
               view == item.$1,
               () => show(item.$1),
-            ),
-          if (permissions.isOwner)
-            DashboardUi.nav(
-              'Contributor approvals',
-              Icons.verified_user_outlined,
-              view == LearningView.contributors,
-              () => show(LearningView.contributors),
             ),
           const SizedBox(height: 32),
           DashboardUi.nav('Refresh', Icons.refresh, false, refresh),
@@ -404,9 +376,7 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
     scrollDirection: Axis.horizontal,
     child: Row(
       children: [
-        for (final v in LearningView.values.where(
-          (v) => v != LearningView.contributors || permissions.isOwner,
-        ))
+        for (final v in visibleViews)
           Padding(
             padding: const EdgeInsets.only(right: 8),
             child: ChoiceChip(
@@ -450,6 +420,7 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
   );
 
   Widget _standardWorkspace(bool compact) => SingleChildScrollView(
+    key: ValueKey('learning-workspace-${view.name}-${roomDocument ?? ""}'),
     padding: EdgeInsets.all(
       compact ? (view == LearningView.quiz ? 12 : 18) : 28,
     ),
@@ -470,14 +441,24 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
             switch (view) {
               LearningView.feed => _feed(),
               LearningView.seminars => const SizedBox.shrink(),
-              LearningView.map => _map(),
-              LearningView.quiz => const SizedBox.shrink(),
-              LearningView.pipeline => DealRoomsPage(
-                key: ValueKey(BackendService.user?.id),
-                embeddedPipeline: true,
+              LearningView.room => NovaTarget(
+                id: 'learning-room.documents',
+                child: TransactionRoomPanel(
+                  key: ValueKey(roomDocument),
+                  initialDocumentId: roomDocument,
+                ),
               ),
+              LearningView.journey => AcquisitionJourneyPanel(
+                onOpenDocument: (id) => setState(() {
+                  roomDocument = id;
+                  view = LearningView.room;
+                }),
+              ),
+              LearningView.map => const SizedBox.shrink(),
+              LearningView.quiz => const SizedBox.shrink(),
+              LearningView.pipeline => const SizedBox.shrink(),
               LearningView.resources => const BuyerResourcesPanel(),
-              LearningView.contributors => _contributors(),
+              LearningView.contributors => const SizedBox.shrink(),
             },
           ],
         ),
@@ -487,6 +468,8 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
   String _label(LearningView v) => switch (v) {
     LearningView.feed => 'Learning feed',
     LearningView.seminars => 'Live seminars',
+    LearningView.room => 'Transaction Room',
+    LearningView.journey => 'Acquisition Journey',
     LearningView.map => 'Buying & selling map',
     LearningView.quiz => 'Deal comparison quiz',
     LearningView.pipeline => 'Pipeline',
@@ -508,26 +491,6 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
   Widget _feed() => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      DashboardGreeting(
-        summary: SiteContentService.text(
-          'learning.greeting.summary',
-          'Make room for your next discovery.',
-        ),
-      ),
-      const SizedBox(height: 24),
-      if (permissions.canPublish)
-        Padding(
-          padding: const EdgeInsets.only(bottom: 18),
-          child: FilledButton.icon(
-            onPressed: busy ? null : _compose,
-            icon: const Icon(Icons.add),
-            label: copy(
-              'learning.feed.publish',
-              'Create a learning post',
-              color: Colors.white,
-            ),
-          ),
-        ),
       FutureBuilder<List<LearningPost>>(
         future: feed,
         builder: (context, snapshot) {
@@ -571,7 +534,7 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
                               icon: const Icon(Icons.account_tree_outlined),
                               label: copy(
                                 'learning.feed.map',
-                                'Explore the learning map',
+                                'Explore Acquisition Journey',
                               ),
                             ),
                             TextButton(
@@ -586,10 +549,20 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
                       ],
                     ),
                   ),
-                for (final p in shown) ...[
-                  _post(p),
-                  const SizedBox(height: 20),
-                ],
+                LayoutBuilder(
+                  builder: (context, box) {
+                    final columns = box.maxWidth >= 700 ? 2 : 1;
+                    final width = (box.maxWidth - (columns - 1) * 20) / columns;
+                    return Wrap(
+                      spacing: 20,
+                      runSpacing: 20,
+                      children: [
+                        for (final post in shown)
+                          SizedBox(width: width, child: _post(post)),
+                      ],
+                    );
+                  },
+                ),
                 const SizedBox(height: 24),
                 _startHere(),
               ],
@@ -599,49 +572,36 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
       ),
     ],
   );
-  Widget _startHere() => DashboardUi.panel(
+  Widget _startHere() => learningCard(
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         copy(
           'learning.start.title',
           'Start with the concepts',
-          size: 20,
+          size: 21,
           weight: FontWeight.w700,
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
         copy(
           'learning.start.body',
-          'Use the interactive map to understand each stage, then explore the documents and examples. Pika can show you around this page.',
+          'Work through Acquisition Journey, then explore the Transaction Room for the documents, examples and templates used at each stage.',
           color: DashboardUi.muted,
         ),
         const SizedBox(height: 16),
         Wrap(
           spacing: 12,
+          runSpacing: 10,
           children: [
-            TextButton.icon(
-              onPressed: () {
-                setState(() {
-                  seller = false;
-                  selected = 0;
-                  answer = null;
-                  view = LearningView.map;
-                });
-              },
-              icon: const Icon(Icons.business_center_outlined),
-              label: copy('learning.start.buy', 'Buying a business'),
+            FilledButton.icon(
+              onPressed: () => show(LearningView.journey),
+              icon: const Icon(Icons.route_outlined),
+              label: const Text('Acquisition Journey'),
             ),
-            TextButton.icon(
-              onPressed: () {
-                setState(() {
-                  seller = true;
-                  selected = 0;
-                  answer = null;
-                  view = LearningView.map;
-                });
-              },
-              icon: const Icon(Icons.handshake_outlined),
-              label: copy('learning.start.sell', 'Succession or transfer'),
+            OutlinedButton.icon(
+              onPressed: () => show(LearningView.room),
+              icon: const Icon(Icons.folder_open_outlined),
+              label: const Text('Transaction Room'),
             ),
           ],
         ),
@@ -810,10 +770,10 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
       ],
     ),
   );
-  void _documents() => Navigator.of(context).push(
-    MaterialPageRoute<void>(builder: (_) => const TransactionLearningPage()),
-  );
+  void _documents() => show(LearningView.room);
   Future<void> _compose() async {
+    await _loadPermissions();
+    if (!mounted || !permissions.canPublish) return;
     await showDialog<void>(
       context: context,
       builder: (_) => LearningPostComposer(initialArea: area),
@@ -1146,404 +1106,6 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
     );
     if (mounted) refresh();
   }
-
-  Widget _map() => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      heading(
-        'map',
-        'Buying & selling, connected',
-        'Explore a stage, learn the concepts and check your understanding. Pan or zoom the map, then choose a stage to see what happens next.',
-      ),
-      Wrap(
-        spacing: 12,
-        runSpacing: 8,
-        children: [
-          ChoiceChip(
-            label: const Text('Buying a business'),
-            selected: !seller,
-            onSelected: (_) => setState(() {
-              seller = false;
-              selected = 0;
-              answer = null;
-            }),
-          ),
-          ChoiceChip(
-            label: const Text('Succession or transfer'),
-            selected: seller,
-            onSelected: (_) => setState(() {
-              seller = true;
-              selected = 0;
-              answer = null;
-            }),
-          ),
-          Text(
-            '${journey.where((p) => completed.contains(p.id)).length} of ${journey.length} stages explored',
-            style: const TextStyle(color: DashboardUi.muted),
-          ),
-        ],
-      ),
-      const SizedBox(height: 22),
-      NovaTarget(
-        id: 'learning-map.canvas',
-        child: DashboardUi.panel(
-          padding: EdgeInsets.zero,
-          child: SizedBox(
-            height: 380,
-            child: InteractiveViewer(
-              minScale: .6,
-              maxScale: 2.4,
-              constrained: false,
-              boundaryMargin: const EdgeInsets.all(100),
-              child: SizedBox(
-                width: 1060,
-                height: 350,
-                child: Stack(
-                  children: [
-                    Positioned.fill(
-                      child: CustomPaint(painter: LearningMapLines()),
-                    ),
-                    for (var i = 0; i < journey.length; i++)
-                      Positioned(
-                        left: _node(i).dx,
-                        top: _node(i).dy,
-                        width: 205,
-                        height: 80,
-                        child: Semantics(
-                          button: true,
-                          selected: selected == i,
-                          label: journey[i].title,
-                          child: Material(
-                            color: selected == i
-                                ? DashboardUi.blue
-                                : completed.contains(journey[i].id)
-                                ? DashboardUi.paleGreen
-                                : DashboardUi.paleBlue,
-                            borderRadius: BorderRadius.circular(16),
-                            child: InkWell(
-                              key: Key('learning-map-${journey[i].id}'),
-                              onTap: () => setState(() {
-                                selected = i;
-                                answer = null;
-                              }),
-                              borderRadius: BorderRadius.circular(16),
-                              child: Padding(
-                                padding: const EdgeInsets.all(16),
-                                child: Row(
-                                  children: [
-                                    Text(
-                                      '${i + 1}',
-                                      style: TextStyle(
-                                        color: selected == i
-                                            ? Colors.white
-                                            : DashboardUi.blue,
-                                        fontWeight: FontWeight.w800,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Text(
-                                        journey[i].title,
-                                        style: TextStyle(
-                                          color: selected == i
-                                              ? Colors.white
-                                              : DashboardUi.ink,
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                      ),
-                                    ),
-                                    if (completed.contains(journey[i].id))
-                                      Icon(
-                                        Icons.check_circle,
-                                        size: 18,
-                                        color: selected == i
-                                            ? Colors.white
-                                            : Colors.green,
-                                      ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-      const SizedBox(height: 20),
-      NovaTarget(
-        id: 'learning-map.concept',
-        child: DashboardUi.panel(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              copy(
-                'learning.map.${phase.id}.title',
-                phase.title,
-                size: 24,
-                weight: FontWeight.w800,
-              ),
-              const SizedBox(height: 14),
-              copy(
-                'learning.map.${phase.id}.explanation',
-                phase.explanation,
-                size: 16,
-              ),
-              const SizedBox(height: 18),
-              copy(
-                'learning.map.why',
-                'Why it matters',
-                weight: FontWeight.w700,
-              ),
-              copy('learning.map.${phase.id}.why', phase.why),
-              const SizedBox(height: 18),
-              copy(
-                'learning.map.action',
-                'What happens next',
-                weight: FontWeight.w700,
-              ),
-              copy('learning.map.${phase.id}.action', phase.action),
-              const SizedBox(height: 18),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  for (final doc in phase.documents)
-                    ActionChip(label: Text(doc), onPressed: _documents),
-                ],
-              ),
-              const Divider(height: 40),
-              copy(
-                'learning.map.check',
-                'Check your understanding',
-                size: 19,
-                weight: FontWeight.w700,
-              ),
-              const SizedBox(height: 8),
-              copy('learning.map.${phase.id}.question', phase.question),
-              const SizedBox(height: 12),
-              for (var i = 0; i < phase.choices.length; i++)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: OutlinedButton(
-                    onPressed: () => setState(() => answer = i),
-                    style: OutlinedButton.styleFrom(
-                      alignment: Alignment.centerLeft,
-                      backgroundColor: answer == i
-                          ? DashboardUi.paleBlue
-                          : null,
-                      minimumSize: const Size(double.infinity, 48),
-                    ),
-                    child: Text(phase.choices[i]),
-                  ),
-                ),
-              if (answer != null) ...[
-                const SizedBox(height: 10),
-                Text(
-                  answer == phase.correct
-                      ? 'That’s right.'
-                      : 'Try another answer.',
-                  style: TextStyle(
-                    color: answer == phase.correct
-                        ? Colors.green
-                        : Colors.orange,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                if (answer == phase.correct)
-                  copy('learning.map.${phase.id}.feedback', phase.feedback),
-              ],
-              const SizedBox(height: 18),
-              Wrap(
-                spacing: 12,
-                runSpacing: 8,
-                children: [
-                  FilledButton.icon(
-                    onPressed:
-                        answer == phase.correct || completed.contains(phase.id)
-                        ? _mark
-                        : null,
-                    icon: Icon(
-                      completed.contains(phase.id)
-                          ? Icons.check_circle
-                          : Icons.check,
-                    ),
-                    label: Text(
-                      completed.contains(phase.id)
-                          ? 'Understood • unmark'
-                          : 'Mark this stage understood',
-                    ),
-                  ),
-                  if (selected < journey.length - 1)
-                    TextButton(
-                      onPressed: () => setState(() {
-                        selected++;
-                        answer = null;
-                      }),
-                      child: const Text('Next stage'),
-                    ),
-                ],
-              ),
-              if (progressNotice != null) ...[
-                const SizedBox(height: 12),
-                Text(
-                  progressNotice!,
-                  style: const TextStyle(color: DashboardUi.muted),
-                ),
-              ],
-            ],
-          ),
-        ),
-      ),
-      const SizedBox(height: 22),
-      copy(
-        'learning.map.notice',
-        'These guides explain the process. Your actual agreement, circumstances and advisers determine the requirements for a transaction.',
-        color: DashboardUi.muted,
-      ),
-      const SizedBox(height: 18),
-      TextButton.icon(
-        onPressed: () {
-          AppTunnelController.select(AppTunnel.buyer);
-          Navigator.of(context).push(
-            MaterialPageRoute<void>(
-              builder: (_) =>
-                  const DealRoomsPage(initialSide: PlatformSide.business),
-            ),
-          );
-        },
-        icon: const Icon(Icons.arrow_forward),
-        label: copy(
-          'learning.map.real',
-          'Ready for a real deal? Open the buyer dashboard',
-        ),
-      ),
-    ],
-  );
-  Widget _contributors() => permissions.isOwner
-      ? Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            heading(
-              'approvals',
-              'Contributor approvals',
-              'Only you can approve publishing access. People must register and verify their email before you approve them.',
-            ),
-            FilledButton.icon(
-              onPressed: () => _approveDialog(),
-              icon: const Icon(Icons.person_add_alt),
-              label: const Text('Approve a contributor'),
-            ),
-            const SizedBox(height: 20),
-            FutureBuilder<List<Map<String, dynamic>>>(
-              future: LearningService.publishers(),
-              builder: (c, s) {
-                if (s.hasError)
-                  return _error('Contributor approvals could not load.');
-                if (!s.hasData) return const CircularProgressIndicator();
-                return Column(
-                  children: [
-                    for (final p in s.data!)
-                      DashboardUi.panel(
-                        child: ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          title: Text(p['display_name']),
-                          subtitle: Text(p['email']),
-                          trailing: TextButton(
-                            onPressed: busy
-                                ? null
-                                : () => _action(
-                                    () => LearningService.approve(
-                                      p['email'],
-                                      p['display_name'],
-                                      p['active'] != true,
-                                    ),
-                                  ),
-                            child: Text(
-                              p['active'] == true
-                                  ? 'Revoke publishing'
-                                  : 'Approve publishing',
-                            ),
-                          ),
-                        ),
-                      ),
-                  ],
-                );
-              },
-            ),
-          ],
-        )
-      : _error('Creator access is required for contributor approvals.');
-  Future<void> _approveDialog() async {
-    final email = TextEditingController(), name = TextEditingController();
-    final yes = await showDialog<bool>(
-      context: context,
-      builder: (c) => AlertDialog(
-        title: const Text('Approve a learning contributor'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: email,
-              keyboardType: TextInputType.emailAddress,
-              decoration: const InputDecoration(labelText: 'Registered email'),
-            ),
-            TextField(
-              controller: name,
-              decoration: const InputDecoration(
-                labelText: 'Public contributor name',
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(c, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(c, true),
-            child: const Text('Approve publishing'),
-          ),
-        ],
-      ),
-    );
-    if (yes == true && mounted)
-      await _action(() => LearningService.approve(email.text, name.text, true));
-    email.dispose();
-    name.dispose();
-  }
-}
-
-Offset _node(int i) =>
-    Offset((28 + (i < 4 ? i : 7 - i) * 255).toDouble(), i < 4 ? 35 : 225);
-
-class LearningMapLines extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = const Color(0xFFACBCD3)
-      ..strokeWidth = 2
-      ..style = PaintingStyle.stroke;
-    for (var i = 0; i < 7; i++) {
-      final a = _node(i) + const Offset(102, 40),
-          b = _node(i + 1) + const Offset(102, 40);
-      canvas.drawLine(a, b, paint);
-    } // Screening and financing can run in parallel with diligence.
-    final a = _node(3) + const Offset(102, 40),
-        b = _node(5) + const Offset(102, 40);
-    final path = Path()
-      ..moveTo(a.dx, a.dy)
-      ..quadraticBezierTo(1060, 180, b.dx, b.dy);
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class LearningGallery extends StatefulWidget {

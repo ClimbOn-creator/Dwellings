@@ -246,15 +246,6 @@ class MemberDealMarketplaceService {
     return ranked;
   }
 
-  static Future<void> submitForReview(String dealRoomId) async {
-    _requireUser();
-    await _client.rpc(
-      'submit_deal_to_member_studio',
-      params: {'target_deal_room_id': dealRoomId},
-    );
-    await MemberBetaService.flushEmailOutbox();
-  }
-
   static Future<void> recordEngagement(
     String opportunityId,
     String eventType,

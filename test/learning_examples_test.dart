@@ -58,6 +58,21 @@ void main() {
           expect(find.text(label), findsNothing);
         }
         expect(find.byType(TextField), findsNothing);
+        expect(find.byType(FloatingActionButton), findsNothing);
+        expect(find.textContaining('Good morning'), findsNothing);
+        final first = tester.getTopLeft(
+          find.byKey(ValueKey('learning-post-${LearningExamples.posts[0].id}')),
+        );
+        final second = tester.getTopLeft(
+          find.byKey(ValueKey('learning-post-${LearningExamples.posts[1].id}')),
+        );
+        if (width >= 900) {
+          expect(second.dy, first.dy);
+          expect(second.dx, greaterThan(first.dx));
+        } else {
+          expect(second.dy, greaterThan(first.dy));
+        }
+
         expect(
           tester.getSize(find.byType(LearningExampleCover).first).height,
           greaterThanOrEqualTo(260),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../screens/deal_rooms_page.dart' show DealIntakeDetails;
 import '../services/deal_intake_fields.dart';
 import '../services/deal_room_service.dart';
@@ -24,6 +25,7 @@ class PrivateDealEntry extends StatefulWidget {
 class _PrivateDealEntryState extends State<PrivateDealEntry> {
   final _fields = {
     for (final key in [
+      'target_close_date',
       'source_url',
       'title',
       'location',
@@ -56,6 +58,20 @@ class _PrivateDealEntryState extends State<PrivateDealEntry> {
 
   Future<void> _save() async {
     if (_saving) return;
+    DateTime? targetCloseDate;
+    if (value('target_close_date').isNotEmpty) {
+      try {
+        targetCloseDate = DateFormat(
+          'yyyy-MM-dd',
+        ).parseStrict(value('target_close_date'));
+      } catch (_) {
+        setState(
+          () => _error =
+              'Enter a valid target close date as YYYY-MM-DD, or leave it blank.',
+        );
+        return;
+      }
+    }
     final error = value('title').isEmpty
         ? 'Enter a business name or a short deal title.'
         : validateDealIntake(
@@ -85,7 +101,7 @@ class _PrivateDealEntryState extends State<PrivateDealEntry> {
           purchasePrice:
               double.tryParse(value('price').replaceAll(',', '')) ?? 0,
           goals: '',
-          targetCloseDate: null,
+          targetCloseDate: targetCloseDate,
           profileSnapshot: {
             'source_name': Uri.tryParse(value('source_url'))?.host ?? '',
             'source_url': value('source_url'),
@@ -262,6 +278,49 @@ class _PrivateDealEntryState extends State<PrivateDealEntry> {
                         _field('title', 'Business name or deal title'),
                         const SizedBox(height: 20),
                         _field('location', 'City / province (optional)'),
+                        const SizedBox(height: 20),
+                        TextField(
+                          key: const ValueKey('private-deal-target_close_date'),
+                          controller: _fields['target_close_date'],
+                          enabled: !_saving,
+                          keyboardType: TextInputType.datetime,
+                          decoration: InputDecoration(
+                            label: const SiteCopyText(
+                              'buyer.pipeline.entry.target_close_date.label',
+                              'Target close date (optional)',
+                            ),
+                            hintText: 'YYYY-MM-DD',
+                            suffixIcon: IconButton(
+                              tooltip: 'Choose target close date',
+                              onPressed: _saving
+                                  ? null
+                                  : () async {
+                                      final now = DateTime.now();
+                                      final parsed = DateTime.tryParse(
+                                        value('target_close_date'),
+                                      );
+                                      final initial =
+                                          parsed != null &&
+                                              parsed.year >= 2000 &&
+                                              parsed.year <= 2100
+                                          ? parsed
+                                          : now;
+                                      final date = await showDatePicker(
+                                        context: context,
+                                        initialDate: initial,
+                                        firstDate: DateTime(2000),
+                                        lastDate: DateTime(2100, 12, 31),
+                                      );
+                                      if (mounted && date != null)
+                                        _fields['target_close_date']!.text =
+                                            DateFormat(
+                                              'yyyy-MM-dd',
+                                            ).format(date);
+                                    },
+                              icon: const Icon(Icons.calendar_today_outlined),
+                            ),
+                          ),
+                        ),
                         const SizedBox(height: 20),
                         _field(
                           'deal_details',

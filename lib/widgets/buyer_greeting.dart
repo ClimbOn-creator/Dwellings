@@ -7,8 +7,10 @@ class BuyerGreeting extends StatefulWidget {
     super.key,
     required this.greeting,
     required this.summary,
+    this.showGreeting = true,
   });
   final String greeting, summary;
+  final bool showGreeting;
   @override
   State<BuyerGreeting> createState() => _BuyerGreetingState();
 }
@@ -60,17 +62,18 @@ class _BuyerGreetingState extends State<BuyerGreeting>
     builder: (context, _) => Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _line(
-          widget.greeting,
-          Curves.easeInOut.transform((_reveal.value / .8).clamp(0, 1)),
-          const TextStyle(
-            fontSize: 27,
-            fontWeight: FontWeight.w800,
-            letterSpacing: -.8,
+        if (widget.showGreeting)
+          _line(
+            widget.greeting,
+            Curves.easeInOut.transform((_reveal.value / .8).clamp(0, 1)),
+            const TextStyle(
+              fontSize: 27,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -.8,
+            ),
+            'buyer-greeting-visible',
           ),
-          'buyer-greeting-visible',
-        ),
-        const SizedBox(height: 5),
+        if (widget.showGreeting) const SizedBox(height: 5),
         _line(
           widget.summary,
           Curves.easeInOut.transform(((_reveal.value - .2) / .8).clamp(0, 1)),

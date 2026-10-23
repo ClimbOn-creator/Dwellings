@@ -25,6 +25,28 @@ const pebbleMainPageCopy = <String, List<(String, String, String, String?)>>{
       "learning-seminars.map",
     ),
   ],
+  'learning-room': [
+    (
+      'documents',
+      'Your Transaction Room',
+      'Choose a document, read when to use it, inspect the fictional example, and download an editable template. This library is separate from the records for your actual deal.',
+      'learning-room.documents',
+    ),
+  ],
+  'learning-journey': [
+    (
+      'stages',
+      'Learn one decision at a time',
+      'Choose one of five stages. Read the explanation and fictional example, try the decision, then mark the stage understood. Your learning progress stays separate from actual transaction tasks.',
+      null,
+    ),
+    (
+      'documents',
+      'Connect learning to the documents',
+      'The documents listed at the end of each stage open inside the Transaction Room, where you can inspect an example and download its matching template.',
+      null,
+    ),
+  ],
   'learning-map': [
     (
       "journey",
