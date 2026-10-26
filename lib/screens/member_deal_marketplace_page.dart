@@ -1,3 +1,5 @@
+import '../widgets/workspace_destination.dart';
+import '../services/workspace_role_service.dart';
 import 'pact_web_messages.dart';
 import '../widgets/dashboard_greeting.dart';
 import '../widgets/dashboard_header.dart';
@@ -68,18 +70,20 @@ class MemberDashboardPage extends StatelessWidget {
   final MarketplaceProvider? initialChatProvider;
 
   @override
-  Widget build(BuildContext context) => StreamBuilder<AuthState>(
-    stream: BackendService.authChanges,
-    builder: (context, snapshot) {
-      final user = BackendService.user;
-      if (user == null) return AuthPage(onAuthenticated: () {});
-      return MemberDealMarketplacePage(
-        key: ValueKey(user.id),
-        initialView: initialView,
-        initialChatProvider: initialChatProvider,
+  Widget build(BuildContext context) =>
+      lockedWorkspaceDestination(context, WorkspaceRole.member) ??
+      StreamBuilder<AuthState>(
+        stream: BackendService.authChanges,
+        builder: (context, snapshot) {
+          final user = BackendService.user;
+          if (user == null) return AuthPage(onAuthenticated: () {});
+          return MemberDealMarketplacePage(
+            key: ValueKey(user.id),
+            initialView: initialView,
+            initialChatProvider: initialChatProvider,
+          );
+        },
       );
-    },
-  );
 }
 
 class MemberDealMarketplacePage extends StatefulWidget {
@@ -287,40 +291,42 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
   );
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    backgroundColor: DashboardUi.canvas,
-    appBar: AppBar(
-      automaticallyImplyLeading: MediaQuery.sizeOf(context).width >= 900,
-      toolbarHeight: 72,
-      backgroundColor: const Color(0xFFF7F5F0),
-      surfaceTintColor: Colors.transparent,
-      foregroundColor: _ink,
-      title: const DashboardHeader(
-        label: 'Member dash',
-        contentKey: 'copy.member_deal_marketplace_page.11',
-      ),
-      actions: [
-        if (MediaQuery.sizeOf(context).width >= 620)
-          IconButton(
-            onPressed: _reloadAndRebuild,
-            tooltip: 'Refresh studio',
-            icon: const Icon(Icons.refresh_rounded),
+  Widget build(BuildContext context) =>
+      lockedWorkspaceDestination(context, WorkspaceRole.member) ??
+      Scaffold(
+        backgroundColor: DashboardUi.canvas,
+        appBar: AppBar(
+          automaticallyImplyLeading: MediaQuery.sizeOf(context).width >= 900,
+          toolbarHeight: 72,
+          backgroundColor: const Color(0xFFF7F5F0),
+          surfaceTintColor: Colors.transparent,
+          foregroundColor: _ink,
+          title: const DashboardHeader(
+            label: 'Member dash',
+            contentKey: 'copy.member_deal_marketplace_page.11',
           ),
-        AppNavigationMenu(
-          onMessages: () => _selectView(MemberDashboardView.messages),
-          showPrivateUpdates: false,
-          side: PlatformSide.business,
-          dark: false,
-          guidePage: 'member/${_view.name}',
+          actions: [
+            if (MediaQuery.sizeOf(context).width >= 620)
+              IconButton(
+                onPressed: _reloadAndRebuild,
+                tooltip: 'Refresh studio',
+                icon: const Icon(Icons.refresh_rounded),
+              ),
+            AppNavigationMenu(
+              onMessages: () => _selectView(MemberDashboardView.messages),
+              showPrivateUpdates: false,
+              side: PlatformSide.business,
+              dark: false,
+              guidePage: 'member/${_view.name}',
+            ),
+            const SizedBox(width: 10),
+          ],
         ),
-        const SizedBox(width: 10),
-      ],
-    ),
-    body: Theme(
-      data: DashboardUi.theme(Theme.of(context)),
-      child: _workspace(),
-    ),
-  );
+        body: Theme(
+          data: DashboardUi.theme(Theme.of(context)),
+          child: _workspace(),
+        ),
+      );
 
   void _reloadAndRebuild() => setState(_reload);
 

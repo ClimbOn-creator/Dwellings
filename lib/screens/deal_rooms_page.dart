@@ -1,3 +1,5 @@
+import '../widgets/workspace_destination.dart';
+import '../services/workspace_role_service.dart';
 import 'pact_web_messages.dart';
 import '../widgets/dashboard_header.dart';
 import '../widgets/nova_target.dart';
@@ -376,6 +378,11 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final destination = lockedWorkspaceDestination(
+      context,
+      WorkspaceRole.buyer,
+    );
+    if (destination != null) return destination;
     final base = Theme.of(context);
     return Theme(
       data: DashboardUi.theme(base),

@@ -1,3 +1,5 @@
+import 'widgets/workspace_destination.dart';
+import 'widgets/workspace_role_gate.dart';
 import 'screens/pact_web_messages.dart';
 import 'widgets/app_display_scale.dart';
 import 'screens/dashboard_showcase_page.dart';
@@ -73,7 +75,9 @@ class AffinityApp extends StatelessWidget {
           navigatorKey: novaNavigatorKey,
           child: CalculatorHelpHost(
             child: UsagePrivacyHost(
-              child: SiteEditorShell(child: child ?? const SizedBox.shrink()),
+              child: WorkspaceRoleGate(
+                child: SiteEditorShell(child: child ?? const SizedBox.shrink()),
+              ),
             ),
           ),
         ),
@@ -204,7 +208,14 @@ class AffinityApp extends StatelessWidget {
       'professional-onboarding' => const ProfessionalOnboardingPage(),
       'landing' => const AcquisitionSupportPage(),
       'acquisition-support' => const AcquisitionSupportPage(),
-      _ => const AcquisitionSupportPage(),
+      _ => Builder(
+        builder: (context) {
+          final role = WorkspaceRoleScope.of(context);
+          return role == null
+              ? const AcquisitionSupportPage()
+              : workspaceHome(role);
+        },
+      ),
     };
   }
 }

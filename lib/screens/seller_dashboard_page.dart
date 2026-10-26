@@ -1,3 +1,5 @@
+import '../widgets/workspace_destination.dart';
+import '../services/workspace_role_service.dart';
 import 'pact_web_messages.dart';
 import '../widgets/dashboard_greeting.dart';
 import '../widgets/dashboard_header.dart';
@@ -316,50 +318,55 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
   }
 
   @override
-  Widget build(BuildContext context) => Theme(
-    data: DashboardUi.theme(Theme.of(context)),
-    child: Scaffold(
-      backgroundColor: DashboardUi.canvas,
-      appBar: AppBar(
-        automaticallyImplyLeading: MediaQuery.sizeOf(context).width >= 900,
-        toolbarHeight: 72,
-        backgroundColor: const Color(0xFFF7F5F0),
-        surfaceTintColor: Colors.transparent,
-        foregroundColor: DashboardUi.ink,
-        title: const DashboardHeader(
-          label: 'Seller dash',
-          contentKey: 'dashboard.header.seller',
-        ),
-        actions: [
-          AppNavigationMenu(
-            onMessages: () => _showView(SellerDashboardView.messages),
-            showPrivateUpdates: false,
-            side: PlatformSide.business,
-            dark: false,
-            guidePage:
-                'seller/${_view == SellerDashboardView.overview ? 'home' : _view.name}',
-          ),
-          SizedBox(width: 12),
-        ],
-      ),
-      body: !_loaded
-          ? const Center(child: CircularProgressIndicator())
-          : LayoutBuilder(
-              builder: (context, box) => box.maxWidth >= 800
-                  ? Row(
-                      children: [
-                        NovaTarget(id: 'seller.workspace', child: _sidebar()),
-                        const VerticalDivider(
-                          width: 1,
-                          color: DashboardUi.line,
-                        ),
-                        Expanded(child: _workspace(compact: false)),
-                      ],
-                    )
-                  : _workspace(compact: true),
+  Widget build(BuildContext context) =>
+      lockedWorkspaceDestination(context, WorkspaceRole.seller) ??
+      Theme(
+        data: DashboardUi.theme(Theme.of(context)),
+        child: Scaffold(
+          backgroundColor: DashboardUi.canvas,
+          appBar: AppBar(
+            automaticallyImplyLeading: MediaQuery.sizeOf(context).width >= 900,
+            toolbarHeight: 72,
+            backgroundColor: const Color(0xFFF7F5F0),
+            surfaceTintColor: Colors.transparent,
+            foregroundColor: DashboardUi.ink,
+            title: const DashboardHeader(
+              label: 'Seller dash',
+              contentKey: 'dashboard.header.seller',
             ),
-    ),
-  );
+            actions: [
+              AppNavigationMenu(
+                onMessages: () => _showView(SellerDashboardView.messages),
+                showPrivateUpdates: false,
+                side: PlatformSide.business,
+                dark: false,
+                guidePage:
+                    'seller/${_view == SellerDashboardView.overview ? 'home' : _view.name}',
+              ),
+              SizedBox(width: 12),
+            ],
+          ),
+          body: !_loaded
+              ? const Center(child: CircularProgressIndicator())
+              : LayoutBuilder(
+                  builder: (context, box) => box.maxWidth >= 800
+                      ? Row(
+                          children: [
+                            NovaTarget(
+                              id: 'seller.workspace',
+                              child: _sidebar(),
+                            ),
+                            const VerticalDivider(
+                              width: 1,
+                              color: DashboardUi.line,
+                            ),
+                            Expanded(child: _workspace(compact: false)),
+                          ],
+                        )
+                      : _workspace(compact: true),
+                ),
+        ),
+      );
 
   static const _views = <(SellerDashboardView, String, IconData)>[
     (SellerDashboardView.overview, 'Home', Icons.home_outlined),

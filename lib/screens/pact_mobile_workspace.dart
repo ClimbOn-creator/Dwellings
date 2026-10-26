@@ -3,7 +3,8 @@ import '../widgets/pact_mobile_surface.dart';
 import 'pact_professional_matches.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../widgets/workspace_role_gate.dart';
+import '../services/workspace_role_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../services/account_service.dart';
 import '../services/backend_service.dart';
@@ -49,7 +50,8 @@ class _PactMobileWorkspaceState extends State<PactMobileWorkspace>
     with WidgetsBindingObserver {
   late final _service = widget.service ?? PactMobileWorkspaceService();
   PactMobileRole _role = PactMobileRole.buyer;
-  bool _member = false, _loading = true, _checkingRole = true;
+  bool _loading = true, _checkingRole = true, _needsRole = false;
+  String? _choiceError;
   final Set<String> _failures = {};
   int _generation = 0, _days = 7;
   List<BusinessSaleBulletin> _businesses = [];
@@ -87,23 +89,15 @@ class _PactMobileWorkspaceState extends State<PactMobileWorkspace>
       _leads = [];
     });
     try {
-      final member = await _service.isMember(widget.messaging);
-      final prefs = await SharedPreferences.getInstance();
-      final preference = prefs.getString(
-        'pact.mobile.workspace.${widget.userId}',
-      );
+      final role = await _service.loadRole();
       if (!_current || generation != _generation) return;
       setState(() {
-        _member = member;
-        _role = member && preference != 'buyer' && preference != 'seller'
-            ? PactMobileRole.member
-            : preference == 'seller'
-            ? PactMobileRole.seller
-            : PactMobileRole.buyer;
+        _needsRole = role == null;
+        if (role != null) _role = role;
         _checkingRole = false;
         _failures.remove('Account recognition');
       });
-      await _reload();
+      if (role != null) await _reload();
     } catch (_) {
       if (!_current || generation != _generation) return;
       setState(() {
@@ -113,17 +107,26 @@ class _PactMobileWorkspaceState extends State<PactMobileWorkspace>
     }
   }
 
-  Future<void> _switchRole(PactMobileRole value) async {
-    if (value == PactMobileRole.member && !_member) return;
-    setState(() {
-      _role = value;
-      _query = '';
-      _listingId = null;
-    });
-    widget.tab.value = 0;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('pact.mobile.workspace.${widget.userId}', value.name);
-    if (_current) await _reload();
+  Future<void> _chooseRole(WorkspaceRole value) async {
+    final generation = _generation;
+    try {
+      final role = await _service.chooseRole(value);
+      if (!_current || generation != _generation) return;
+      setState(() {
+        _role = role;
+        _needsRole = false;
+        _choiceError = null;
+      });
+      widget.tab.value = 0;
+      await _reload();
+    } catch (_) {
+      if (_current && generation == _generation) {
+        setState(
+          () =>
+              _choiceError = 'Could not save your workspace. Please try again.',
+        );
+      }
+    }
   }
 
   Future<void> _reload() async {
@@ -1024,6 +1027,17 @@ class _PactMobileWorkspaceState extends State<PactMobileWorkspace>
     child: ValueListenableBuilder<int>(
       valueListenable: widget.tab,
       builder: (context, tab, _) {
+        if (_needsRole && !_checkingRole) {
+          return Scaffold(
+            body: SafeArea(
+              child: WorkspaceChoice(
+                onChoose: _chooseRole,
+                error: _choiceError,
+              ),
+            ),
+          );
+        }
+
         final labels = _role.tabs;
         final icons = [
           Icons.home_rounded,
@@ -1072,38 +1086,11 @@ class _PactMobileWorkspaceState extends State<PactMobileWorkspace>
                             ),
                           ),
                           const Spacer(),
-                          if (!_checkingRole)
-                            PopupMenuButton<PactMobileRole>(
-                              tooltip: 'Switch workspace',
-                              onSelected: _switchRole,
-                              itemBuilder: (_) => [
-                                for (final role in PactMobileRole.values)
-                                  if (role != PactMobileRole.member || _member)
-                                    PopupMenuItem(
-                                      value: role,
-                                      child: Text('${role.label} workspace'),
-                                    ),
-                              ],
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 9,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: .8),
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Text(
-                                      _role.label,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                    const Icon(Icons.expand_more, size: 18),
-                                  ],
-                                ),
+                          if (!_checkingRole && !_needsRole)
+                            Text(
+                              _role.label,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           const SizedBox(width: 8),

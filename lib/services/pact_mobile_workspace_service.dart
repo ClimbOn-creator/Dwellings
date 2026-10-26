@@ -4,14 +4,12 @@ import 'business_sale_bulletin_service.dart';
 import 'deal_room_service.dart';
 import 'pact_messaging_service.dart';
 
-enum PactMobileRole { buyer, seller, member }
+import 'workspace_role_service.dart';
+export 'workspace_role_service.dart' show WorkspaceRole;
+
+typedef PactMobileRole = WorkspaceRole;
 
 extension PactMobileRoleDetails on PactMobileRole {
-  String get label => switch (this) {
-    PactMobileRole.buyer => 'Buyer',
-    PactMobileRole.seller => 'Seller',
-    PactMobileRole.member => 'Member',
-  };
   List<String> get tabs => switch (this) {
     PactMobileRole.buyer => const [
       'Home',
@@ -37,9 +35,11 @@ extension PactMobileRoleDetails on PactMobileRole {
   };
 }
 
-/// Role capability comes from provider ownership on the server, never an
-/// editable account-role field. Switching Buyer/Seller is a workspace choice.
+/// Workspace identity is permanent; professional capabilities remain separate.
 class PactMobileWorkspaceService {
+  Future<WorkspaceRole?> loadRole() => WorkspaceRoleService().load();
+  Future<WorkspaceRole> chooseRole(WorkspaceRole role) =>
+      WorkspaceRoleService().choose(role);
   Future<bool> isMember(PactMessagingService messaging) async =>
       (await messaging.call('capabilities'))['is_member'] == true;
   Future<List<SellerPostStats>> listings() =>

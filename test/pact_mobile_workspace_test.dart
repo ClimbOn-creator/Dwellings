@@ -1,3 +1,5 @@
+import 'package:dwelling_iq/widgets/workspace_role_gate.dart';
+import 'package:dwelling_iq/services/workspace_role_service.dart';
 import 'dart:convert';
 import 'package:dwelling_iq/screens/pact_professional_editor.dart';
 import 'package:dwelling_iq/screens/pact_professional_matches.dart';
@@ -21,12 +23,27 @@ import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+String? serverWorkspaceRole;
 bool rejectExperience = false;
 Map<String, dynamic>? experienceSave;
 const accountId = '00000000-0000-0000-0000-000000000001';
 
 class WorkspaceFixture extends PactMobileWorkspaceService {
   bool member = false, failRecognition = false, failInsights = false;
+  bool failSave = false;
+  PactMobileRole? savedRole = PactMobileRole.buyer;
+  @override
+  Future<PactMobileRole?> loadRole() async {
+    if (failRecognition) throw StateError("offline");
+    return savedRole;
+  }
+
+  @override
+  Future<PactMobileRole> chooseRole(PactMobileRole role) async {
+    if (failSave) throw StateError("offline");
+    return savedRole ??= role;
+  }
+
   final reads = <int>[];
   @override
   Future<bool> isMember(PactMessagingService messaging) async {
@@ -58,6 +75,14 @@ class WorkspaceFixture extends PactMobileWorkspaceService {
     if (failInsights) throw StateError('offline');
     return {'owned-listing': []};
   }
+}
+
+class DesktopRoleFixture extends WorkspaceRoleService {
+  WorkspaceRole? role;
+  @override
+  Future<WorkspaceRole?> load() async => role;
+  @override
+  Future<WorkspaceRole> choose(WorkspaceRole value) async => role ??= value;
 }
 
 void main() {
@@ -115,12 +140,32 @@ void main() {
             },
           };
         }
+        if (r.url.path.endsWith('/account_workspaces')) {
+          if (r.method == 'POST') {
+            if (serverWorkspaceRole != null) {
+              return http.Response(
+                '{"code":"23505","message":"duplicate workspace"}',
+                409,
+                request: r,
+                headers: {'content-type': 'application/json'},
+              );
+            }
+            serverWorkspaceRole = (jsonDecode(r.body) as Map)['role'] as String;
+            return http.Response('', 201, request: r);
+          }
+          result = serverWorkspaceRole == null
+              ? []
+              : [
+                  {'role': serverWorkspaceRole},
+                ];
+        }
         if (r.url.path.endsWith('/rpc/pact_save_profile')) {
           experienceSave = jsonDecode(r.body) as Map<String, dynamic>;
           if (rejectExperience) {
             return http.Response(
               '{"message":"Profile changed","code":"P0001"}',
               400,
+              request: r,
               headers: {'content-type': 'application/json'},
             );
           }
@@ -128,6 +173,7 @@ void main() {
         return http.Response(
           jsonEncode(result),
           200,
+          request: r,
           headers: {'content-type': 'application/json'},
         );
       }),
@@ -186,41 +232,78 @@ void main() {
     return tab;
   }
 
-  Future<void> selectRole(WidgetTester tester, String label) async {
-    await tester.tap(find.byTooltip('Switch workspace'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('$label workspace'));
-    await tester.pumpAndSettle();
-  }
-
+  test(
+    'shared service reads saved role and concurrent choices keep the first role',
+    () async {
+      if (!BackendService.configured) return;
+      serverWorkspaceRole = null;
+      final service = WorkspaceRoleService();
+      expect(await service.load(), isNull);
+      expect(await service.choose(WorkspaceRole.seller), WorkspaceRole.seller);
+      expect(await WorkspaceRoleService().load(), WorkspaceRole.seller);
+      expect(await service.choose(WorkspaceRole.buyer), WorkspaceRole.seller);
+    },
+  );
   testWidgets(
-    'buyers and sellers get distinct tabs without granting membership from editable labels',
+    'new accounts choose once; saved desktop role ignores phone preferences',
     (tester) async {
       if (!BackendService.configured) return;
-      final tab = await mount(tester, WorkspaceFixture());
-      expect(find.text('Businesses'), findsWidgets);
-      expect(find.text('Help'), findsWidgets);
-      await tester.tap(find.byTooltip('Switch workspace'));
+      final fixture = WorkspaceFixture()..savedRole = null;
+      final tab = await mount(tester, fixture);
+      expect(find.text('Choose your workspace'), findsOneWidget);
+      for (final label in ['Buyer', 'Seller', 'Member']) {
+        expect(find.text(label), findsOneWidget);
+      }
+      expect(find.text('Businesses'), findsNothing);
+      await tester.tap(find.text('Seller'));
       await tester.pumpAndSettle();
-      expect(find.text('Member workspace'), findsNothing);
-      await tester.tap(find.text('Seller workspace'));
+      await tester.tap(find.text('Confirm workspace'));
       await tester.pumpAndSettle();
+      expect(fixture.savedRole, PactMobileRole.seller);
+      expect(find.byTooltip('Switch workspace'), findsNothing);
       expect(find.text('My Listing'), findsWidgets);
-      expect(find.text('Find Buyers'), findsWidgets);
       tab.value = 2;
       await tester.pumpAndSettle();
       expect(find.text('Shared inbox fixture'), findsOneWidget);
-      tab.value = 4;
-      await tester.pumpAndSettle();
-      expect(find.text('Shared profile fixture'), findsOneWidget);
-      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+      SharedPreferences.setMockInitialValues({
+        'pact.mobile.workspace.$accountId': 'buyer',
+      });
+      await mount(tester, fixture);
+      expect(find.text('My Listing'), findsWidgets);
+      expect(find.text('Choose your workspace'), findsNothing);
     },
   );
+  testWidgets('failed role save stays on selection and can retry', (
+    tester,
+  ) async {
+    if (!BackendService.configured) return;
+    final fixture = WorkspaceFixture()
+      ..savedRole = null
+      ..failSave = true;
+    await mount(tester, fixture);
+    await tester.tap(find.text('Member'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Confirm workspace'));
+    await tester.pumpAndSettle();
+    expect(
+      find.text('Could not save your workspace. Please try again.'),
+      findsOneWidget,
+    );
+    expect(find.text('Clients'), findsNothing);
+    fixture.failSave = false;
+    await tester.tap(find.text('Confirm workspace'));
+    await tester.pumpAndSettle();
+    expect(fixture.savedRole, PactMobileRole.member);
+    expect(find.text('Clients'), findsWidgets);
+  });
   testWidgets(
     'server recognized members see clients and incoming leads on phone and tablet',
     (tester) async {
       if (!BackendService.configured) return;
-      final fixture = WorkspaceFixture()..member = true;
+      final fixture = WorkspaceFixture()
+        ..member = true
+        ..savedRole = PactMobileRole.member;
       final tab = await mount(tester, fixture, width: 834);
       expect(find.text('Member'), findsOneWidget);
       expect(find.text('Clients'), findsWidgets);
@@ -239,9 +322,8 @@ void main() {
     'seller charts use current bookmarks and do not substitute views or failed data',
     (tester) async {
       if (!BackendService.configured) return;
-      final fixture = WorkspaceFixture();
+      final fixture = WorkspaceFixture()..savedRole = PactMobileRole.seller;
       final tab = await mount(tester, fixture);
-      await selectRole(tester, 'Seller');
       tab.value = 1;
       await tester.pumpAndSettle();
       expect(find.text('8'), findsOneWidget);
@@ -282,6 +364,48 @@ void main() {
     );
     expect(tester.takeException(), isNull);
   });
+  testWidgets(
+    'desktop sign-in gates content until a permanent choice is saved',
+    (tester) async {
+      if (!BackendService.configured) return;
+      final service = DesktopRoleFixture();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: WorkspaceRoleGate(
+            service: service,
+            child: Builder(
+              builder: (context) =>
+                  Text('Assigned: ${WorkspaceRoleScope.of(context)?.name}'),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Choose your workspace'), findsOneWidget);
+      expect(find.textContaining('Assigned:'), findsNothing);
+      await tester.tap(find.text('Buyer'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Confirm workspace'));
+      await tester.pumpAndSettle();
+      expect(find.text('Assigned: buyer'), findsOneWidget);
+      expect(service.role, WorkspaceRole.buyer);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpWidget(
+        MaterialApp(
+          home: WorkspaceRoleGate(
+            service: service,
+            child: Builder(
+              builder: (context) =>
+                  Text('Assigned: ${WorkspaceRoleScope.of(context)?.name}'),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Assigned: buyer'), findsOneWidget);
+      expect(find.text('Choose your workspace'), findsNothing);
+    },
+  );
   testWidgets(
     'chart groups real dated saves and has an accessible description',
     (tester) async {

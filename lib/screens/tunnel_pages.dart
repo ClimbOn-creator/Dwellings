@@ -1,3 +1,5 @@
+import '../widgets/workspace_destination.dart';
+import '../services/workspace_role_service.dart';
 import 'package:flutter/material.dart';
 import '../services/backend_service.dart';
 import '../services/business_sale_bulletin_service.dart';
@@ -435,132 +437,138 @@ class _SellerPostsPageState extends State<SellerPostsPage> {
   }
 
   @override
-  Widget build(BuildContext context) => TunnelPageShell(
-    guide: 'seller-posts',
-    title: 'My posts & analytics',
-    intro:
-        'Manage your business listings and follow real buyer saves. Only posts created by your account appear here.',
-    children: [
-      NovaTarget(
-        id: 'seller-posts.create',
-        child: FilledButton.icon(
-          onPressed: _edit,
-          icon: const Icon(Icons.add),
-          label: const SiteCopyText(
-            'tunnel.posts.create',
-            'Create a business post',
+  Widget build(BuildContext context) =>
+      lockedWorkspaceDestination(context, WorkspaceRole.seller) ??
+      TunnelPageShell(
+        guide: 'seller-posts',
+        title: 'My posts & analytics',
+        intro:
+            'Manage your business listings and follow real buyer saves. Only posts created by your account appear here.',
+        children: [
+          NovaTarget(
+            id: 'seller-posts.create',
+            child: FilledButton.icon(
+              onPressed: _edit,
+              icon: const Icon(Icons.add),
+              label: const SiteCopyText(
+                'tunnel.posts.create',
+                'Create a business post',
+              ),
+            ),
           ),
-        ),
-      ),
-      const SizedBox(height: 24),
-      NovaTarget(
-        id: 'seller-posts.list',
-        child: FutureBuilder<List<SellerPostStats>>(
-          future: _posts,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState != ConnectionState.done)
-              return const Center(child: CircularProgressIndicator());
-            if (snapshot.hasError)
-              return _panel(
-                'posts.error',
-                'Posts could not load',
-                'Please try again. If this persists, the seller analytics update may still need to be installed on the server.',
-                action: TextButton(
-                  onPressed: () => setState(_reload),
-                  child: const SiteCopyText('tunnel.posts.retry', 'Try again'),
-                ),
-              );
-            final posts = snapshot.data ?? [];
-            if (posts.isEmpty)
-              return _panel(
-                'posts.empty',
-                'Your sale starts here',
-                'Create a post when you are ready to share your business. Your published listings, status and buyer saves will appear here. Sign in to load your existing posts.',
-              );
-            return Column(
-              children: [
-                Wrap(
-                  spacing: 12,
-                  runSpacing: 12,
+          const SizedBox(height: 24),
+          NovaTarget(
+            id: 'seller-posts.list',
+            child: FutureBuilder<List<SellerPostStats>>(
+              future: _posts,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState != ConnectionState.done)
+                  return const Center(child: CircularProgressIndicator());
+                if (snapshot.hasError)
+                  return _panel(
+                    'posts.error',
+                    'Posts could not load',
+                    'Please try again. If this persists, the seller analytics update may still need to be installed on the server.',
+                    action: TextButton(
+                      onPressed: () => setState(_reload),
+                      child: const SiteCopyText(
+                        'tunnel.posts.retry',
+                        'Try again',
+                      ),
+                    ),
+                  );
+                final posts = snapshot.data ?? [];
+                if (posts.isEmpty)
+                  return _panel(
+                    'posts.empty',
+                    'Your sale starts here',
+                    'Create a post when you are ready to share your business. Your published listings, status and buyer saves will appear here. Sign in to load your existing posts.',
+                  );
+                return Column(
                   children: [
-                    _metric('tunnel.posts.total', 'Posts', posts.length),
-                    _metric(
-                      'tunnel.posts.active',
-                      'Active',
-                      posts.where((p) => p.status == 'active').length,
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 12,
+                      children: [
+                        _metric('tunnel.posts.total', 'Posts', posts.length),
+                        _metric(
+                          'tunnel.posts.active',
+                          'Active',
+                          posts.where((p) => p.status == 'active').length,
+                        ),
+                        _metric(
+                          'tunnel.posts.saves',
+                          'Buyer saves',
+                          posts.fold<int>(0, (sum, p) => sum + p.saves),
+                        ),
+                      ],
                     ),
-                    _metric(
-                      'tunnel.posts.saves',
-                      'Buyer saves',
-                      posts.fold<int>(0, (sum, p) => sum + p.saves),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                for (final post in posts)
-                  Card(
-                    elevation: 0,
-                    color: Colors.white,
-                    child: Padding(
-                      padding: const EdgeInsets.all(22),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            post.listing.title,
-                            style: const TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          Text(
-                            '${post.status} · ${post.listing.region} · ${post.listing.askingPriceBand}',
-                          ),
-                          const SizedBox(height: 10),
-                          Text('${post.saves} buyer saves'),
-                          const SizedBox(height: 16),
-                          Wrap(
-                            spacing: 12,
+                    const SizedBox(height: 20),
+                    for (final post in posts)
+                      Card(
+                        elevation: 0,
+                        color: Colors.white,
+                        child: Padding(
+                          padding: const EdgeInsets.all(22),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              OutlinedButton(
-                                onPressed: () => _edit(post.listing),
-                                child: const SiteCopyText(
-                                  'tunnel.posts.edit',
-                                  'Edit post',
+                              Text(
+                                post.listing.title,
+                                style: const TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
-                              TextButton(
-                                onPressed: () => Navigator.of(context).push(
-                                  MaterialPageRoute<void>(
-                                    builder: (_) => BusinessListingDetailPage(
-                                      bulletinId: post.listing.id,
+                              const SizedBox(height: 10),
+                              Text(
+                                '${post.status} · ${post.listing.region} · ${post.listing.askingPriceBand}',
+                              ),
+                              const SizedBox(height: 10),
+                              Text('${post.saves} buyer saves'),
+                              const SizedBox(height: 16),
+                              Wrap(
+                                spacing: 12,
+                                children: [
+                                  OutlinedButton(
+                                    onPressed: () => _edit(post.listing),
+                                    child: const SiteCopyText(
+                                      'tunnel.posts.edit',
+                                      'Edit post',
                                     ),
                                   ),
-                                ),
-                                child: const SiteCopyText(
-                                  'tunnel.posts.view',
-                                  'View listing',
-                                ),
+                                  TextButton(
+                                    onPressed: () => Navigator.of(context).push(
+                                      MaterialPageRoute<void>(
+                                        builder: (_) =>
+                                            BusinessListingDetailPage(
+                                              bulletinId: post.listing.id,
+                                            ),
+                                      ),
+                                    ),
+                                    child: const SiteCopyText(
+                                      'tunnel.posts.view',
+                                      'View listing',
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
-                        ],
+                        ),
                       ),
+                    const SizedBox(height: 14),
+                    const SiteCopyText(
+                      'tunnel.posts.note',
+                      'Buyer saves are current bookmarks, not unique views or inquiries. No view counts are estimated.',
                     ),
-                  ),
-                const SizedBox(height: 14),
-                const SiteCopyText(
-                  'tunnel.posts.note',
-                  'Buyer saves are current bookmarks, not unique views or inquiries. No view counts are estimated.',
-                ),
-              ],
-            );
-          },
-        ),
-      ),
-    ],
-  );
+                  ],
+                );
+              },
+            ),
+          ),
+        ],
+      );
   Widget _metric(String id, String label, int value) => SizedBox(
     width: 200,
     child: Card(
