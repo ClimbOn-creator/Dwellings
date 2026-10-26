@@ -1,3 +1,4 @@
+import '../widgets/member_roi_dashboard.dart';
 import '../widgets/pact_profile_panel.dart';
 import '../widgets/workspace_destination.dart';
 import '../services/workspace_role_service.dart';
@@ -55,6 +56,7 @@ enum MemberDashboardView {
   professionals,
   dealResponses,
   profile,
+  roi,
 }
 
 enum _InteractionMode { inbox, chat, deal }
@@ -903,6 +905,11 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
             MemberDashboardView.messages,
             Icons.chat_bubble_outline,
             'Messages',
+          ),
+          _dashboardNavItem(
+            MemberDashboardView.roi,
+            Icons.insights_outlined,
+            'Return on Pact',
           ),
           _dashboardNavItem(
             MemberDashboardView.profile,
@@ -1840,6 +1847,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
       _viewChip(MemberDashboardView.dealResponses, 'MY DEAL RESPONSES'),
       _viewChip(MemberDashboardView.messages, 'MESSAGES'),
       _viewChip(MemberDashboardView.profile, 'PROFILE'),
+      _viewChip(MemberDashboardView.roi, 'RETURN ON PACT'),
     ],
   );
 
@@ -1892,6 +1900,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
 
   Widget _currentViewContent() {
     const privateViews = <MemberDashboardView>{
+      MemberDashboardView.roi,
       MemberDashboardView.recommendations,
       MemberDashboardView.saved,
       MemberDashboardView.dealResponses,
@@ -1922,6 +1931,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
         buyerView: true,
       ),
       MemberDashboardView.profile => _professionalProfileWorkspace(),
+      MemberDashboardView.roi => const MemberRoiDashboard(),
     };
   }
 
@@ -2497,6 +2507,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
   Widget _professionalProfileWorkspace() => SizedBox(
     height: MediaQuery.sizeOf(context).height * .85,
     child: PactProfilePanel(
+      desktopLayout: true,
       actions: [
         ListTile(
           leading: const Icon(Icons.manage_accounts_outlined),

@@ -201,6 +201,9 @@ class AffinityApp extends StatelessWidget {
       'bulletin-board' ||
       'businesses-for-sale' => const BusinessSaleBulletinPage(),
       'member-studio' || 'member-dashboard' => const MemberDashboardPage(),
+      'member-roi' => const MemberDashboardPage(
+        initialView: MemberDashboardView.roi,
+      ),
       'personal-consulting' => const PersonalizedConsultingPage(),
       'owner-data' => const CompanyDataPage(),
       'content-studio' => const ContentStudioPage(),

@@ -1,3 +1,4 @@
+import '../widgets/member_roi_dashboard.dart';
 import 'dart:async';
 import '../widgets/pact_mobile_surface.dart';
 import 'pact_professional_matches.dart';
@@ -89,7 +90,9 @@ class _PactMobileWorkspaceState extends State<PactMobileWorkspace>
       _leads = [];
     });
     try {
-      final role = await _service.loadRole();
+      final role = await _service.loadRole().timeout(
+        const Duration(seconds: 12),
+      );
       if (!_current || generation != _generation) return;
       setState(() {
         _needsRole = role == null;
@@ -447,6 +450,24 @@ class _PactMobileWorkspaceState extends State<PactMobileWorkspace>
             ),
           ],
         ),
+        if (_role == PactMobileRole.member)
+          _empty(
+            'Your return on Pact',
+            'See profile views, qualified inquiries and your recorded outcomes.',
+            action: 'Open ROI dashboard',
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => Scaffold(
+                  appBar: AppBar(title: const Text('Return on Pact')),
+                  body: const SingleChildScrollView(
+                    padding: EdgeInsets.all(22),
+                    child: MemberRoiDashboard(),
+                  ),
+                ),
+              ),
+            ),
+          ),
+
         _section(
           'Active transactions',
           onTap: () => _web('${_role.name}-dashboard'),

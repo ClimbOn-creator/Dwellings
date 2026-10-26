@@ -1,7 +1,7 @@
 name: dwelling_iq
 description: Transparent housing investment and homebuyer decision intelligence.
 publish_to: none
-version: 0.3.0+8
+version: 0.3.0+9
 
 environment:
   sdk: ^3.12.2

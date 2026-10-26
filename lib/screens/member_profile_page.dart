@@ -1,3 +1,4 @@
+import '../services/member_roi_service.dart';
 import '../widgets/member_friends_preview.dart';
 import 'pact_web_messages.dart';
 import '../services/app_tunnel.dart';
@@ -70,6 +71,8 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
   @override
   void initState() {
     super.initState();
+    if (!provider.isExample)
+      unawaited(MemberRoiService.view(providerId: provider.id));
     _reviews = MarketplaceService.loadReviews(
       provider.id,
       example: provider.isExample,

@@ -110,7 +110,8 @@ class _WorkspaceRoleGateState extends State<WorkspaceRoleGate> {
   void initState() {
     super.initState();
     _auth = BackendService.authChanges?.listen((_) {
-      if (_userId != BackendService.user?.id) unawaited(_load());
+      if (_userId != BackendService.user?.id)
+        unawaited(Future<void>.delayed(Duration.zero, _load));
     });
     unawaited(_load());
   }
@@ -124,7 +125,9 @@ class _WorkspaceRoleGateState extends State<WorkspaceRoleGate> {
       _loading = true;
     });
     try {
-      final role = _userId == null ? null : await _service.load();
+      final role = _userId == null
+          ? null
+          : await _service.load().timeout(const Duration(seconds: 12));
       if (!mounted || generation != _generation) return;
       setState(() {
         _role = role;
@@ -142,7 +145,9 @@ class _WorkspaceRoleGateState extends State<WorkspaceRoleGate> {
   Future<void> _choose(WorkspaceRole role) async {
     final generation = _generation;
     try {
-      final saved = await _service.choose(role);
+      final saved = await _service
+          .choose(role)
+          .timeout(const Duration(seconds: 12));
       if (mounted &&
           generation == _generation &&
           _userId == BackendService.user?.id) {

@@ -1,3 +1,4 @@
+import '../services/member_roi_service.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../services/backend_service.dart';
@@ -500,6 +501,12 @@ class _MemberFriendProfilePageState extends State<MemberFriendProfilePage> {
   late MemberFriend _friend = widget.friend;
   final _owner = BackendService.user?.id;
   bool _expanded = false;
+  @override
+  void initState() {
+    super.initState();
+    unawaited(MemberRoiService.view(memberId: widget.friend.userId));
+  }
+
   Future<void> _reload() async {
     final data = await widget.service.people(
       scope: 'profile',

@@ -1,4 +1,5 @@
-import '../services/workspace_role_service.dart';
+import '../services/profile_snapshot_service.dart';
+import 'pact_desktop_profile_header.dart';
 import 'member_friends_preview.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
@@ -19,10 +20,14 @@ class PactProfilePanel extends StatefulWidget {
     this.initialProfile,
     this.actions = const [],
     this.onChanged,
+    this.desktopLayout = false,
+    this.load,
   });
   final AccountProfile? initialProfile;
   final List<Widget> actions;
   final VoidCallback? onChanged;
+  final bool desktopLayout;
+  final Future<PactProfileSnapshot> Function()? load;
   @override
   State<PactProfilePanel> createState() => _PactProfilePanelState();
 }
@@ -30,15 +35,14 @@ class PactProfilePanel extends StatefulWidget {
 class _PactProfilePanelState extends State<PactProfilePanel>
     with WidgetsBindingObserver {
   int _sectionIndex = 0;
-  bool _isMember = false;
+  bool _isMember = false, _settingsOpen = false;
+  int _generation = 0;
+  StreamSubscription<dynamic>? _auth;
+  final _owner = BackendService.user?.id;
   AccountProfile? _profile;
   MarketplaceProvider? _professional;
   List<ProviderReview> _reviews = [];
-  Timer? _timer;
-  bool _uploading = false,
-      _loading = true,
-      _refreshing = false,
-      _foreground = true;
+  bool _uploading = false, _loading = true, _refreshing = false;
   String? _error;
   @override
   void initState() {
@@ -46,46 +50,53 @@ class _PactProfilePanelState extends State<PactProfilePanel>
     _profile = widget.initialProfile;
     WidgetsBinding.instance.addObserver(this);
     _reload();
-    _timer = Timer.periodic(const Duration(seconds: 20), (_) {
-      if (_foreground) _reload();
+    _auth = BackendService.authChanges?.listen((_) {
+      if (mounted && BackendService.user?.id != _owner) {
+        _generation++;
+        setState(() {
+          _profile = null;
+          _professional = null;
+          _reviews = [];
+          _isMember = false;
+          _loading = false;
+          _error = 'Sign in again to load your profile.';
+        });
+      }
     });
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    _foreground = state == AppLifecycleState.resumed;
-    if (_foreground) _reload();
+    if (state == AppLifecycleState.resumed) _reload();
   }
 
   Future<void> _reload() async {
     if (_refreshing) return;
     _refreshing = true;
     final id = BackendService.user?.id;
+    final generation = ++_generation;
     try {
-      final account = await AccountService.loadProfile();
-      final isMember =
-          BackendService.user != null &&
-          await WorkspaceRoleService().load() == WorkspaceRole.member;
-      final professional = await MarketplaceService.loadMyProfessionalProfile(
-        strict: true,
-      );
-      final reviews = professional == null
-          ? <ProviderReview>[]
-          : await MarketplaceService.loadReviews(professional.id);
-      if (!mounted || BackendService.user?.id != id) return;
+      final snapshot = await (widget.load ?? ProfileSnapshotService.load)()
+          .timeout(const Duration(seconds: 12));
+      if (!mounted ||
+          generation != _generation ||
+          BackendService.user?.id != id)
+        return;
       setState(() {
-        _profile = account;
-        _isMember = isMember;
-        if ((_sectionIndex == 2 && !isMember) ||
-            (_sectionIndex == 1 && professional == null))
+        _profile = snapshot.account ?? _profile;
+        _isMember = snapshot.member;
+        _professional = snapshot.professional ?? _professional;
+        _reviews = snapshot.reviews;
+        if ((_sectionIndex == 2 && !_isMember) ||
+            (_sectionIndex == 1 && _professional == null))
           _sectionIndex = 0;
-        _error = null;
-        _professional = professional;
-        _reviews = reviews;
+        _error = snapshot.warning;
         _loading = false;
       });
     } catch (_) {
-      if (mounted) {
+      if (mounted &&
+          generation == _generation &&
+          BackendService.user?.id == id) {
         setState(() {
           _error = 'Could not refresh your profile. Pull down to retry.';
           _loading = false;
@@ -136,7 +147,8 @@ class _PactProfilePanelState extends State<PactProfilePanel>
 
   @override
   void dispose() {
-    _timer?.cancel();
+    _generation++;
+    _auth?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -148,6 +160,19 @@ class _PactProfilePanelState extends State<PactProfilePanel>
         ? p!.fullName
         : 'Your Pact profile';
     final description = professional?.personalExperience ?? p?.bio ?? '';
+    return LayoutBuilder(
+      builder: (context, c) => widget.desktopLayout && c.maxWidth >= 850
+          ? _desktop(p, professional, name, description)
+          : _phone(p, professional, name, description),
+    );
+  }
+
+  Widget _phone(
+    AccountProfile? p,
+    MarketplaceProvider? professional,
+    String name,
+    String description,
+  ) {
     return RefreshIndicator(
       onRefresh: _reload,
       child: ListView(
@@ -287,19 +312,216 @@ class _PactProfilePanelState extends State<PactProfilePanel>
               child: Material(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(24),
-                child: ExpansionTile(
-                  shape: const Border(),
-                  collapsedShape: const Border(),
-                  title: const Text('Account & preferences'),
-                  leading: const Icon(Icons.tune_rounded),
-                  children: widget.actions,
-                ),
+                child: _settings(),
               ),
             ),
         ],
       ),
     );
   }
+
+  Widget _settings() => Column(
+    mainAxisSize: MainAxisSize.min,
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      ListTile(
+        leading: const Icon(Icons.tune_rounded),
+        title: const Text('Account & preferences'),
+        trailing: Icon(_settingsOpen ? Icons.expand_less : Icons.expand_more),
+        onTap: () => setState(() => _settingsOpen = !_settingsOpen),
+      ),
+      if (_settingsOpen) ...widget.actions,
+    ],
+  );
+
+  Widget _desktop(
+    AccountProfile? p,
+    MarketplaceProvider? professional,
+    String name,
+    String description,
+  ) => RefreshIndicator(
+    onRefresh: _reload,
+    child: ListView(
+      padding: const EdgeInsets.all(24),
+      children: [
+        if (_error != null)
+          MaterialBanner(
+            content: Text(_error!),
+            actions: [
+              TextButton(onPressed: _reload, child: const Text('Retry')),
+            ],
+          ),
+        if (_loading || _uploading) const LinearProgressIndicator(minHeight: 2),
+        PactDesktopProfileHeader(
+          name: name,
+          photoUrl: p?.photoUrl ?? '',
+          coverUrl: p?.coverUrl ?? '',
+          headline: p?.jobTitle ?? '',
+          company: p?.companyName ?? '',
+          verified: professional?.verified ?? false,
+          onAvatar: _uploading ? null : () => _photo('avatar'),
+          onCover: _uploading ? null : () => _photo('cover'),
+          actions: [
+            OutlinedButton.icon(
+              onPressed: p == null || _uploading ? null : _edit,
+              icon: const Icon(Icons.edit_outlined, size: 17),
+              label: const Text('Edit profile'),
+            ),
+            if (professional != null)
+              FilledButton(
+                onPressed: _uploading ? null : _editExperience,
+                child: const Text('Edit experience'),
+              ),
+          ],
+        ),
+        const SizedBox(height: 22),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: 260,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _desktopCard('At a glance', [
+                    Text(
+                      [
+                            p?.jobTitle ?? '',
+                            p?.companyName ?? '',
+                          ].where((v) => v.isNotEmpty).join(' · ').isEmpty
+                          ? 'Your Pact workspace'
+                          : [
+                              p?.jobTitle ?? '',
+                              p?.companyName ?? '',
+                            ].where((v) => v.isNotEmpty).join(' · '),
+                      style: const TextStyle(
+                        height: 1.7,
+                        color: Color(0xFF777584),
+                      ),
+                    ),
+                  ]),
+                  if (professional != null) ...[
+                    const SizedBox(height: 16),
+                    _desktopCard('Professional details', [
+                      Text(
+                        professional.serviceMarkets.isEmpty
+                            ? 'Add your service areas'
+                            : professional.serviceMarkets.join(' · '),
+                        style: const TextStyle(
+                          height: 1.6,
+                          color: Color(0xFF777584),
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      Wrap(
+                        spacing: 5,
+                        runSpacing: 5,
+                        children: [
+                          for (final tag in professional.specialties.take(5))
+                            Chip(
+                              label: Text(
+                                tag,
+                                style: const TextStyle(fontSize: 11),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ]),
+                  ],
+                  if (widget.actions.isNotEmpty) ...[
+                    const SizedBox(height: 16),
+                    Material(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(18),
+                      child: _settings(),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(width: 22),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Material(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(18),
+                    child: Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: Wrap(
+                        spacing: 8,
+                        children: [
+                          for (final item in [
+                            (0, 'Overview'),
+                            if (professional != null) (1, 'Experience'),
+                            if (_isMember) (2, 'Friends'),
+                          ])
+                            ChoiceChip(
+                              label: Text(item.$2),
+                              selected: _sectionIndex == item.$1,
+                              showCheckmark: false,
+                              onSelected: (_) =>
+                                  setState(() => _sectionIndex = item.$1),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  if (_sectionIndex == 0) ...[
+                    _desktopCard('Introduction', [
+                      Text(
+                        description.isEmpty
+                            ? 'Let your next connection get to know you.'
+                            : description,
+                        style: const TextStyle(fontSize: 16, height: 1.7),
+                      ),
+                    ]),
+                    if (_isMember)
+                      const Padding(
+                        padding: EdgeInsets.only(top: 16),
+                        child: MemberFriendsPreview(),
+                      ),
+                    if (_reviews.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 16),
+                        child: _desktopCard(
+                          'Client reviews',
+                          _reviews.take(3).map(_review).toList(),
+                        ),
+                      ),
+                  ],
+                  if (_sectionIndex == 1 && professional != null)
+                    PactProfessionalExperience(provider: professional),
+                  if (_sectionIndex == 2) const MemberFriendsPreview(),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ],
+    ),
+  );
+  Widget _desktopCard(String title, List<Widget> children) => Container(
+    padding: const EdgeInsets.all(22),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      border: Border.all(color: const Color(0xFFE9E6EE)),
+      borderRadius: BorderRadius.circular(18),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: 16),
+        ...children,
+      ],
+    ),
+  );
 
   Future<void> _editExperience() async {
     if (_profile == null || _professional == null) return;

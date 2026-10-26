@@ -1206,6 +1206,7 @@ class ProfilePage extends StatelessWidget {
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 1200),
             child: PactProfilePanel(
+              desktopLayout: true,
               key: ValueKey(BackendService.user!.id),
               actions: [
                 ListTile(
