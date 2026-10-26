@@ -246,7 +246,7 @@ class AccountService {
     return _client.auth.signUp(
       email: email.trim(),
       password: password,
-      emailRedirectTo: Uri.base.origin,
+      emailRedirectTo: BackendService.authRedirect,
       data: {
         'full_name': fullName.trim(),
         'username': username.trim(),

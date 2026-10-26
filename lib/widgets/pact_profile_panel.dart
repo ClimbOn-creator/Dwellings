@@ -1,3 +1,5 @@
+import '../services/workspace_role_service.dart';
+import 'member_friends_preview.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -27,6 +29,8 @@ class PactProfilePanel extends StatefulWidget {
 
 class _PactProfilePanelState extends State<PactProfilePanel>
     with WidgetsBindingObserver {
+  int _sectionIndex = 0;
+  bool _isMember = false;
   AccountProfile? _profile;
   MarketplaceProvider? _professional;
   List<ProviderReview> _reviews = [];
@@ -59,6 +63,9 @@ class _PactProfilePanelState extends State<PactProfilePanel>
     final id = BackendService.user?.id;
     try {
       final account = await AccountService.loadProfile();
+      final isMember =
+          BackendService.user != null &&
+          await WorkspaceRoleService().load() == WorkspaceRole.member;
       final professional = await MarketplaceService.loadMyProfessionalProfile(
         strict: true,
       );
@@ -68,6 +75,11 @@ class _PactProfilePanelState extends State<PactProfilePanel>
       if (!mounted || BackendService.user?.id != id) return;
       setState(() {
         _profile = account;
+        _isMember = isMember;
+        if ((_sectionIndex == 2 && !isMember) ||
+            (_sectionIndex == 1 && professional == null))
+          _sectionIndex = 0;
+        _error = null;
         _professional = professional;
         _reviews = reviews;
         _loading = false;
@@ -155,43 +167,64 @@ class _PactProfilePanelState extends State<PactProfilePanel>
             ),
           if (_uploading || (_loading && p == null))
             const LinearProgressIndicator(minHeight: 2),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: PactProfessionalHeader(
-              name: name,
-              photoUrl: p?.photoUrl ?? '',
-              coverUrl: p?.coverUrl ?? '',
-              headline: p?.jobTitle ?? '',
-              company: p?.companyName ?? '',
-              location: professional?.serviceMarkets.join(' · ') ?? '',
-              verified: professional?.verified ?? false,
-              tags: professional?.specialties ?? const [],
-              onAvatar: _uploading ? null : () => _photo('avatar'),
-              onCover: _uploading ? null : () => _photo('cover'),
-              actions: [
-                OutlinedButton.icon(
-                  onPressed: p == null || _uploading ? null : _edit,
-                  icon: const Icon(Icons.edit_outlined, size: 18),
-                  label: const Text('Edit profile'),
+          PactProfessionalHeader(
+            edgeToEdge: true,
+            name: name,
+            photoUrl: p?.photoUrl ?? '',
+            coverUrl: p?.coverUrl ?? '',
+            headline: p?.jobTitle ?? '',
+            company: p?.companyName ?? '',
+            location: professional?.serviceMarkets.join(' · ') ?? '',
+            verified: professional?.verified ?? false,
+            tags: professional?.specialties ?? const [],
+            onAvatar: _uploading ? null : () => _photo('avatar'),
+            onCover: _uploading ? null : () => _photo('cover'),
+            actions: [
+              OutlinedButton.icon(
+                onPressed: p == null || _uploading ? null : _edit,
+                icon: const Icon(Icons.edit_outlined, size: 18),
+                label: const Text('Edit profile'),
+              ),
+              if (professional != null)
+                FilledButton.icon(
+                  onPressed: p == null || _uploading ? null : _editExperience,
+                  icon: const Icon(Icons.work_outline, size: 18),
+                  label: const Text('Edit experience'),
                 ),
-                if (professional != null)
-                  FilledButton.icon(
-                    onPressed: p == null || _uploading ? null : _editExperience,
-                    icon: const Icon(Icons.work_outline, size: 18),
-                    label: const Text('Edit experience'),
-                  ),
-              ],
-            ),
+            ],
           ),
-          _section('About', [
-            Text(
-              description.isEmpty
-                  ? 'Tell people about yourself and the work you do.'
-                  : description,
-              style: const TextStyle(height: 1.6, fontSize: 15),
+          if (_isMember || professional != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(22, 20, 22, 4),
+              child: SegmentedButton<int>(
+                showSelectedIcon: false,
+                segments: [
+                  const ButtonSegment(value: 0, label: Text('Overview')),
+                  if (professional != null)
+                    const ButtonSegment(value: 1, label: Text('Experience')),
+                  if (_isMember)
+                    const ButtonSegment(value: 2, label: Text('Friends')),
+                ],
+                selected: {_sectionIndex},
+                onSelectionChanged: (v) =>
+                    setState(() => _sectionIndex = v.first),
+              ),
             ),
-          ]),
-          if (professional != null) ...[
+          if (_sectionIndex == 2)
+            const Padding(
+              padding: EdgeInsets.all(16),
+              child: MemberFriendsPreview(),
+            ),
+          if (_sectionIndex == 0)
+            _section('About', [
+              Text(
+                description.isEmpty
+                    ? 'Tell people about yourself and the work you do.'
+                    : description,
+                style: const TextStyle(height: 1.6, fontSize: 15),
+              ),
+            ]),
+          if (professional != null && _sectionIndex == 1) ...[
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: PactProfessionalExperience(provider: professional),
@@ -243,7 +276,26 @@ class _PactProfilePanelState extends State<PactProfilePanel>
                 ),
             ]),
           ],
-          if (widget.actions.isNotEmpty) _section('Account', widget.actions),
+          if (_sectionIndex == 0 && _isMember)
+            const Padding(
+              padding: EdgeInsets.all(16),
+              child: MemberFriendsPreview(),
+            ),
+          if (_sectionIndex == 0 && widget.actions.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Material(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                child: ExpansionTile(
+                  shape: const Border(),
+                  collapsedShape: const Border(),
+                  title: const Text('Account & preferences'),
+                  leading: const Icon(Icons.tune_rounded),
+                  children: widget.actions,
+                ),
+              ),
+            ),
         ],
       ),
     );

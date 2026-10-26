@@ -1,3 +1,4 @@
+import '../widgets/member_friends_preview.dart';
 import 'pact_web_messages.dart';
 import '../services/app_tunnel.dart';
 import 'dart:async';
@@ -433,6 +434,8 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
                   tags: provider.specialties,
                   verified: provider.verified,
                   actions: [
+                    if (!provider.isExample)
+                      MemberFriendProviderButton(providerId: provider.id),
                     if (_canMessage)
                       FilledButton.icon(
                         onPressed: _messageMember,

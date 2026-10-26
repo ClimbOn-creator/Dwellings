@@ -266,6 +266,10 @@ void main() {
               request: request,
               headers: {'content-type': 'application/json'},
             );
+        } else if (request.url.path.endsWith('/account_workspaces')) {
+          result = [
+            {'role': 'buyer'},
+          ];
         } else if (request.url.path.endsWith('/profiles')) {
           result = [
             {
@@ -340,13 +344,18 @@ void main() {
       await tester.pump(const Duration(seconds: 6));
       await tester.pumpAndSettle();
       expect(api.reads, isEmpty);
+      await tester.ensureVisible(find.text('Account & preferences'));
+      await tester.drag(find.byType(PactProfilePanel), const Offset(0, -240));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Account & preferences'));
+      await tester.pumpAndSettle();
       await tester.ensureVisible(find.text('Sign out'));
       await tester.pumpAndSettle();
       await tester.runAsync(() async {
         await tester.tap(find.text('Sign out'));
       });
       await tester.pumpAndSettle();
-      expect(find.text('Sign in to Pact'), findsOneWidget);
+      expect(find.text('Welcome back.'), findsOneWidget);
       expect(find.text('Business acquisition'), findsNothing);
       await tester.pumpWidget(const SizedBox.shrink());
     },
@@ -397,6 +406,11 @@ void main() {
     expect(api.sends.first, api.sends.last);
     await tester.tap(find.text('Profile'));
     await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Account & preferences'));
+    await tester.drag(find.byType(PactProfilePanel), const Offset(0, -240));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Account & preferences'));
+    await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Sign out'));
     await tester.pumpAndSettle();
     await tester.runAsync(() async {
@@ -404,8 +418,8 @@ void main() {
     });
     await tester.pumpAndSettle();
     expect(find.text('Ready to review the next step'), findsNothing);
-    expect(find.text('Sign in to Pact'), findsOneWidget);
-    expect(find.text('Continue with Google'), findsOneWidget);
+    expect(find.text('Welcome back.'), findsOneWidget);
+    expect(find.text('Email address'), findsOneWidget);
     await tester.pumpWidget(const SizedBox.shrink());
   });
   testWidgets(

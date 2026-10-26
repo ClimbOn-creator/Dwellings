@@ -23,10 +23,12 @@ class PactProfessionalHeader extends StatelessWidget {
     this.nameWidget,
     this.headlineWidget,
     this.exampleIndex,
+    this.edgeToEdge = false,
   });
   final String name, photoUrl, coverUrl, headline, company, location;
   final int? exampleIndex;
   final bool verified;
+  final bool edgeToEdge;
   final List<String> tags;
   final List<Widget> actions;
   final VoidCallback? onAvatar, onCover;
@@ -35,11 +37,13 @@ class PactProfessionalHeader extends StatelessWidget {
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, c) {
       final wide = c.maxWidth >= 700;
-      final cover = wide ? 230.0 : 160.0;
+      final cover =
+          (wide ? 310.0 : 240.0) +
+          (edgeToEdge ? MediaQuery.paddingOf(context).top : 0);
       final size = wide ? 138.0 : 106.0;
       return Material(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(26),
+        borderRadius: BorderRadius.circular(edgeToEdge ? 0 : 26),
         clipBehavior: Clip.antiAlias,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -64,7 +68,10 @@ class PactProfessionalHeader extends StatelessWidget {
                         ),
                       ),
                       child: coverUrl.isEmpty
-                          ? null
+                          ? Image.asset(
+                              'assets/images/pact-river.jpg',
+                              fit: BoxFit.cover,
+                            )
                           : Image.network(
                               coverUrl,
                               fit: BoxFit.cover,
@@ -73,9 +80,25 @@ class PactProfessionalHeader extends StatelessWidget {
                             ),
                     ),
                   ),
+                  Positioned(
+                    top: cover - 28,
+                    left: 0,
+                    right: 0,
+                    height: 28,
+                    child: const DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.vertical(
+                          top: Radius.circular(28),
+                        ),
+                      ),
+                    ),
+                  ),
                   if (onCover != null)
                     Positioned(
-                      top: 12,
+                      top:
+                          12 +
+                          (edgeToEdge ? MediaQuery.paddingOf(context).top : 0),
                       right: 12,
                       child: IconButton.filledTonal(
                         tooltip: 'Change cover photo',
@@ -188,7 +211,7 @@ class PactProfessionalHeader extends StatelessWidget {
                       spacing: 6,
                       runSpacing: 6,
                       children: [
-                        for (final tag in tags.take(8))
+                        for (final tag in tags.take(3))
                           Chip(
                             label: Text(
                               tag,

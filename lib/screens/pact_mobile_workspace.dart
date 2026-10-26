@@ -1071,51 +1071,54 @@ class _PactMobileWorkspaceState extends State<PactMobileWorkspace>
             body: Container(
               color: Colors.transparent,
               child: SafeArea(
+                top: tab != 4,
                 child: Column(
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(22, 12, 16, 6),
-                      child: Row(
-                        children: [
-                          const Text(
-                            'PACT',
-                            style: TextStyle(
-                              fontSize: 27,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: -1.4,
-                            ),
-                          ),
-                          const Spacer(),
-                          if (!_checkingRole && !_needsRole)
-                            Text(
-                              _role.label,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w600,
+                    if (tab != 4)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(22, 12, 16, 6),
+                        child: Row(
+                          children: [
+                            const Text(
+                              'PACT',
+                              style: TextStyle(
+                                fontSize: 27,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: -1.4,
                               ),
                             ),
-                          const SizedBox(width: 8),
-                          IconButton(
-                            tooltip: 'Open profile',
-                            onPressed: () => _go(4),
-                            icon: CircleAvatar(
-                              radius: 18,
-                              backgroundColor: Colors.white,
-                              backgroundImage:
-                                  widget.account?.photoUrl.isNotEmpty == true
-                                  ? NetworkImage(widget.account!.photoUrl)
-                                  : null,
-                              child: widget.account?.photoUrl.isNotEmpty == true
-                                  ? null
-                                  : const Icon(
-                                      Icons.person_outline,
-                                      color: pactMobileAccent,
-                                      size: 21,
-                                    ),
+                            const Spacer(),
+                            if (!_checkingRole && !_needsRole)
+                              Text(
+                                _role.label,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            const SizedBox(width: 8),
+                            IconButton(
+                              tooltip: 'Open profile',
+                              onPressed: () => _go(4),
+                              icon: CircleAvatar(
+                                radius: 18,
+                                backgroundColor: Colors.white,
+                                backgroundImage:
+                                    widget.account?.photoUrl.isNotEmpty == true
+                                    ? NetworkImage(widget.account!.photoUrl)
+                                    : null,
+                                child:
+                                    widget.account?.photoUrl.isNotEmpty == true
+                                    ? null
+                                    : const Icon(
+                                        Icons.person_outline,
+                                        color: pactMobileAccent,
+                                        size: 21,
+                                      ),
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
                     Expanded(
                       child: _checkingRole
                           ? Center(

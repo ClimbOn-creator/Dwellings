@@ -35,14 +35,14 @@ const _ink = Color(0xFF171717);
 const _purple = Color(0xFF252525);
 const _lilac = Color(0xFF9B9B98);
 
-class ProfilePage extends StatefulWidget {
-  const ProfilePage({super.key});
+class _LegacyProfilePage extends StatefulWidget {
+  const _LegacyProfilePage();
 
   @override
-  State<ProfilePage> createState() => _ProfilePageState();
+  State<_LegacyProfilePage> createState() => _ProfilePageState();
 }
 
-class _ProfilePageState extends State<ProfilePage> {
+class _ProfilePageState extends State<_LegacyProfilePage> {
   final _overviewAnchor = GlobalKey();
   final _teamAnchor = GlobalKey();
   final _detailsAnchor = GlobalKey();
@@ -1181,5 +1181,53 @@ class _StatCard extends StatelessWidget {
         ],
       ),
     ),
+  );
+}
+
+class ProfilePage extends StatelessWidget {
+  const ProfilePage({super.key});
+  @override
+  Widget build(BuildContext context) => StreamBuilder<dynamic>(
+    stream: BackendService.authChanges,
+    builder: (context, _) {
+      if (BackendService.user == null) return const AuthPage();
+      return Scaffold(
+        backgroundColor: const Color(0xFFF7F6FA),
+        appBar: AppBar(
+          title: const Text('Your profile'),
+          backgroundColor: Colors.white,
+          surfaceTintColor: Colors.transparent,
+          actions: const [
+            AppNavigationMenu(guidePage: 'profile', dark: false),
+            SizedBox(width: 12),
+          ],
+        ),
+        body: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1200),
+            child: PactProfilePanel(
+              key: ValueKey(BackendService.user!.id),
+              actions: [
+                ListTile(
+                  leading: const Icon(Icons.manage_accounts_outlined),
+                  title: const Text('Account details & tools'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const _LegacyProfilePage(),
+                    ),
+                  ),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.logout),
+                  title: const Text('Sign out'),
+                  onTap: BackendService.signOut,
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    },
   );
 }

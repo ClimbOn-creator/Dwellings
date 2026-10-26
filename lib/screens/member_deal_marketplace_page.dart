@@ -1,3 +1,4 @@
+import '../widgets/pact_profile_panel.dart';
 import '../widgets/workspace_destination.dart';
 import '../services/workspace_role_service.dart';
 import 'pact_web_messages.dart';
@@ -2493,7 +2494,32 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
     },
   );
 
-  Widget _professionalProfileWorkspace() => FutureBuilder<MarketplaceProvider?>(
+  Widget _professionalProfileWorkspace() => SizedBox(
+    height: MediaQuery.sizeOf(context).height * .85,
+    child: PactProfilePanel(
+      actions: [
+        ListTile(
+          leading: const Icon(Icons.manage_accounts_outlined),
+          title: const Text('Professional account settings'),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => Scaffold(
+                appBar: AppBar(title: const Text('Professional settings')),
+                body: SingleChildScrollView(
+                  padding: const EdgeInsets.all(22),
+                  child: _legacyProfessionalProfileWorkspace(),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+
+  Widget
+  _legacyProfessionalProfileWorkspace() => FutureBuilder<MarketplaceProvider?>(
     future: _myProfessionalProfile,
     builder: (context, snapshot) {
       if (snapshot.connectionState == ConnectionState.waiting) {

@@ -1,3 +1,4 @@
+import 'auth_page.dart';
 import 'package:flutter/cupertino.dart';
 import '../widgets/pact_profile_panel.dart';
 import 'pact_mobile_workspace.dart';
@@ -978,6 +979,11 @@ class _PactMessengerPageState extends State<PactMessengerPage>
   @override
   Widget build(BuildContext context) {
     final loggedIn = _userId != null;
+    if (!loggedIn)
+      return AuthPage(
+        compact: widget.mobileWorkspace,
+        onAuthenticated: _accountChanged,
+      );
     if (loggedIn && widget.mobileWorkspace) {
       return PactMobileWorkspace(
         key: ValueKey(_userId),

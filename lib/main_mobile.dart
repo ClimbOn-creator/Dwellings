@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'services/site_content_service.dart';
 import 'package:flutter/material.dart';
 import 'screens/pact_messenger_page.dart';
 import 'widgets/pact_mobile_surface.dart';
@@ -7,6 +9,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await BackendService.initialize();
   runApp(const PactMobileApp());
+  unawaited(SiteContentService.initialize());
 }
 
 class PactMobileApp extends StatelessWidget {
