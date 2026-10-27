@@ -346,6 +346,26 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
     child: LayoutBuilder(
       builder: (context, box) {
         final desktop = box.maxWidth >= 900;
+        if (_view == MemberDashboardView.profile &&
+            BackendService.user != null) {
+          final profile = _profilePanel();
+          return desktop
+              ? Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    SizedBox(width: 206, child: _dashboardNavigation()),
+                    const SizedBox(width: 14),
+                    Expanded(child: profile),
+                  ],
+                )
+              : Column(
+                  children: [
+                    _viewSelector(),
+                    const SizedBox(height: 12),
+                    Expanded(child: profile),
+                  ],
+                );
+        }
         if (_view == MemberDashboardView.messages) {
           final inbox = PactWebMessages(
             workspace: 'member',
@@ -853,7 +873,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
   );
 
   Widget _dashboardNavigation() => Material(
-    color: const Color(0xFF111113),
+    color: Colors.white,
     borderRadius: BorderRadius.circular(14),
     child: Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 18),
@@ -864,7 +884,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
             child: Text(
               'MEMBER STUDIO',
               style: TextStyle(
-                color: Colors.white60,
+                color: DashboardUi.muted,
                 fontSize: 10,
                 fontWeight: FontWeight.w800,
                 letterSpacing: 1.1,
@@ -930,7 +950,7 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
     icon,
     _view == view,
     () => _selectView(view),
-    dark: true,
+    dark: false,
   );
 
   Widget _collapsedInteractionPanel() => Material(
@@ -2506,27 +2526,29 @@ class _MemberDealMarketplacePageState extends State<MemberDealMarketplacePage> {
 
   Widget _professionalProfileWorkspace() => SizedBox(
     height: MediaQuery.sizeOf(context).height * .85,
-    child: PactProfilePanel(
-      desktopLayout: true,
-      actions: [
-        ListTile(
-          leading: const Icon(Icons.manage_accounts_outlined),
-          title: const Text('Professional account settings'),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute<void>(
-              builder: (_) => Scaffold(
-                appBar: AppBar(title: const Text('Professional settings')),
-                body: SingleChildScrollView(
-                  padding: const EdgeInsets.all(22),
-                  child: _legacyProfessionalProfileWorkspace(),
-                ),
+    child: _profilePanel(),
+  );
+
+  Widget _profilePanel() => PactProfilePanel(
+    desktopLayout: true,
+    actions: [
+      ListTile(
+        leading: const Icon(Icons.manage_accounts_outlined),
+        title: const Text('Professional account settings'),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => Scaffold(
+              appBar: AppBar(title: const Text('Professional settings')),
+              body: SingleChildScrollView(
+                padding: const EdgeInsets.all(22),
+                child: _legacyProfessionalProfileWorkspace(),
               ),
             ),
           ),
         ),
-      ],
-    ),
+      ),
+    ],
   );
 
   Widget

@@ -39,3 +39,23 @@ Tests cover profile stability after a minute, stalled reads, phone/desktop layou
 ROI arithmetic, missing/zero cost, failed reads, owner isolation, member-only
 access, repeated views, milestone persistence, linked-outcome deduplication and
 voided revenue. Mobile build 9 includes these changes.
+
+## Desktop route correction
+
+The production bundle already matched the repository when the owner reported
+that desktop profile pages still looked unchanged. The Member navigation opened
+an embedded dashboard profile whose available width could fall below the old
+850px breakpoint, causing the phone layout to appear on desktop. It also nested
+an independently scrolling profile inside the dashboard's outer scroll view.
+
+Global My profile navigation now opens the standalone profile. Member Studio's
+My profile view gives the panel a bounded content pane with a single scroll
+owner. Desktop-enabled panels use the desktop layout from a 700px pane on a
+desktop viewport. The desktop header wraps actions below the identity when the
+pane is narrower than 1000px. Professional directory profiles and friend profiles
+also use the desktop banner/identity header; the professional page has contact
+information in a sidebar and introduction, experience and reviews in the main
+column. The existing phone paths and stable editable content IDs are retained.
+
+Regression checks cover a 760px profile pane inside a desktop viewport and both
+390px phone and 1440px desktop professional profile routes.

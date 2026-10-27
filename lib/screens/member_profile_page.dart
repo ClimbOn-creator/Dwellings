@@ -1,3 +1,4 @@
+import '../widgets/pact_desktop_profile_header.dart';
 import '../services/member_roi_service.dart';
 import '../widgets/member_friends_preview.dart';
 import 'pact_web_messages.dart';
@@ -351,33 +352,45 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
                     if (provider.isExample) _exampleBanner(),
                     if (provider.sponsored) _badge('SPONSORED'),
                     LayoutBuilder(
-                      builder: (context, constraints) {
-                        final desktop = constraints.maxWidth >= 780;
-                        final about = _aboutCard();
-                        final contact = _contactCard();
-                        return desktop
-                            ? Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Expanded(flex: 3, child: about),
-                                  const SizedBox(width: 18),
-                                  Expanded(flex: 2, child: contact),
-                                ],
-                              )
-                            : Column(
-                                children: [
-                                  about,
-                                  const SizedBox(height: 18),
-                                  contact,
-                                ],
-                              );
+                      builder: (context, c) {
+                        if (c.maxWidth >= 780)
+                          return Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              SizedBox(width: 280, child: _contactCard()),
+                              const SizedBox(width: 22),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    _aboutCard(),
+                                    const SizedBox(height: 20),
+                                    _experienceCard(),
+                                    PactProfessionalExperience(
+                                      provider: provider,
+                                    ),
+                                    const SizedBox(height: 24),
+                                    _reviewsSection(),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          );
+                        return Column(
+                          children: [
+                            _aboutCard(),
+                            const SizedBox(height: 18),
+                            _contactCard(),
+                            const SizedBox(height: 38),
+                            _experienceCard(),
+                            PactProfessionalExperience(provider: provider),
+                            const SizedBox(height: 30),
+                            _reviewsSection(),
+                          ],
+                        );
                       },
                     ),
-                    const SizedBox(height: 38),
-                    _experienceCard(),
-                    PactProfessionalExperience(provider: provider),
-                    const SizedBox(height: 30),
-                    _reviewsSection(),
                   ],
                 ),
               ),
@@ -410,69 +423,76 @@ class _MemberProfilePageState extends State<MemberProfilePage> {
                   ],
                 ),
                 const SizedBox(height: 24),
-                PactProfessionalHeader(
-                  name: provider.name,
-                  photoUrl: provider.photoUrl,
-                  exampleIndex: provider.photoIndex,
-                  coverUrl: provider.coverUrl,
-                  nameWidget: SiteText(
-                    contentKey: 'copy.member_profile_page.m7',
-                    literal: false,
-                    provider.name,
-                    style: const TextStyle(
-                      fontSize: 30,
-                      fontWeight: FontWeight.w700,
-                      color: _ink,
-                    ),
-                  ),
-                  headline: provider.jobTitle,
-                  headlineWidget: SiteText(
-                    contentKey: 'copy.member_profile_page.m8',
-                    literal: false,
-                    '${provider.jobTitle} · ${provider.company}',
-                    style: const TextStyle(fontSize: 17, height: 1.4),
-                  ),
-                  company: '',
-                  location: provider.serviceMarkets.join(' · '),
-                  tags: provider.specialties,
-                  verified: provider.verified,
-                  actions: [
-                    if (!provider.isExample)
-                      MemberFriendProviderButton(providerId: provider.id),
-                    if (_canMessage)
-                      FilledButton.icon(
-                        onPressed: _messageMember,
-                        icon: const Icon(Icons.chat_bubble_outline),
-                        label: const SiteText(
-                          contentKey: 'copy.member_profile_page.3',
-                          literal: true,
-                          'MESSAGE',
+                LayoutBuilder(
+                  builder: (context, c) {
+                    final header = PactProfessionalHeader(
+                      name: provider.name,
+                      photoUrl: provider.photoUrl,
+                      exampleIndex: provider.photoIndex,
+                      coverUrl: provider.coverUrl,
+                      nameWidget: SiteText(
+                        contentKey: 'copy.member_profile_page.m7',
+                        literal: false,
+                        provider.name,
+                        style: const TextStyle(
+                          fontSize: 30,
+                          fontWeight: FontWeight.w700,
+                          color: _ink,
                         ),
                       ),
-                    OutlinedButton.icon(
-                      onPressed: _changingTeam ? null : _toggleTeam,
-                      icon: Icon(
-                        _added ? Icons.bookmark : Icons.bookmark_outline,
+                      headline: provider.jobTitle,
+                      headlineWidget: SiteText(
+                        contentKey: 'copy.member_profile_page.m8',
+                        literal: false,
+                        '${provider.jobTitle} · ${provider.company}',
+                        style: const TextStyle(fontSize: 17, height: 1.4),
                       ),
-                      label: _added
-                          ? const Text('Saved to your team')
-                          : const SiteText(
-                              contentKey: 'professional.profile.save',
+                      company: '',
+                      location: provider.serviceMarkets.join(' · '),
+                      tags: provider.specialties,
+                      verified: provider.verified,
+                      actions: [
+                        if (!provider.isExample)
+                          MemberFriendProviderButton(providerId: provider.id),
+                        if (_canMessage)
+                          FilledButton.icon(
+                            onPressed: _messageMember,
+                            icon: const Icon(Icons.chat_bubble_outline),
+                            label: const SiteText(
+                              contentKey: 'copy.member_profile_page.3',
                               literal: true,
-                              'Save professional',
+                              'MESSAGE',
                             ),
-                    ),
-                    if (widget.onRefer != null)
-                      OutlinedButton.icon(
-                        onPressed: _referMember,
-                        icon: const Icon(Icons.person_add_alt_1_outlined),
-                        label: const SiteText(
-                          contentKey: 'copy.member_profile_page.4',
-                          literal: true,
-                          'REFER',
+                          ),
+                        OutlinedButton.icon(
+                          onPressed: _changingTeam ? null : _toggleTeam,
+                          icon: Icon(
+                            _added ? Icons.bookmark : Icons.bookmark_outline,
+                          ),
+                          label: _added
+                              ? const Text('Saved to your team')
+                              : const SiteText(
+                                  contentKey: 'professional.profile.save',
+                                  literal: true,
+                                  'Save professional',
+                                ),
                         ),
-                      ),
-                  ],
+                        if (widget.onRefer != null)
+                          OutlinedButton.icon(
+                            onPressed: _referMember,
+                            icon: const Icon(Icons.person_add_alt_1_outlined),
+                            label: const SiteText(
+                              contentKey: 'copy.member_profile_page.4',
+                              literal: true,
+                              'REFER',
+                            ),
+                          ),
+                      ],
+                    );
+                    return c.maxWidth >= 780
+                        ? PactDesktopProfileHeader.fromProfileHeader(header)
+                        : header;
+                  },
                 ),
               ],
             ),

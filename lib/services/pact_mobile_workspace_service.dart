@@ -37,6 +37,7 @@ extension PactMobileRoleDetails on PactMobileRole {
 
 /// Workspace identity is permanent; professional capabilities remain separate.
 class PactMobileWorkspaceService {
+  Future<bool> isCreator() => WorkspaceRoleService().isCreator();
   Future<WorkspaceRole?> loadRole() => WorkspaceRoleService().load();
   Future<WorkspaceRole> chooseRole(WorkspaceRole role) =>
       WorkspaceRoleService().choose(role);

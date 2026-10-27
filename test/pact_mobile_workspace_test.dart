@@ -1,4 +1,5 @@
 import 'package:dwelling_iq/widgets/workspace_role_gate.dart';
+import 'package:dwelling_iq/widgets/workspace_destination.dart';
 import 'package:dwelling_iq/services/workspace_role_service.dart';
 import 'dart:convert';
 import 'package:dwelling_iq/screens/pact_professional_editor.dart';
@@ -29,7 +30,12 @@ Map<String, dynamic>? experienceSave;
 const accountId = '00000000-0000-0000-0000-000000000001';
 
 class WorkspaceFixture extends PactMobileWorkspaceService {
-  bool member = false, failRecognition = false, failInsights = false;
+  bool creator = false,
+      member = false,
+      failRecognition = false,
+      failInsights = false;
+  @override
+  Future<bool> isCreator() async => creator;
   bool failSave = false;
   PactMobileRole? savedRole = PactMobileRole.buyer;
   @override
@@ -79,6 +85,9 @@ class WorkspaceFixture extends PactMobileWorkspaceService {
 
 class DesktopRoleFixture extends WorkspaceRoleService {
   WorkspaceRole? role;
+  bool creator = false;
+  @override
+  Future<bool> isCreator() async => creator;
   @override
   Future<WorkspaceRole?> load() async => role;
   @override
@@ -232,6 +241,75 @@ void main() {
     return tab;
   }
 
+  testWidgets(
+    'only verified creator scope bypasses every workspace destination',
+    (tester) async {
+      for (final creator in [false, true]) {
+        await tester.pumpWidget(
+          MaterialApp(
+            home: WorkspaceRoleScope(
+              role: WorkspaceRole.member,
+              isCreator: creator,
+              child: Builder(
+                builder: (context) {
+                  for (final requested in WorkspaceRole.values) {
+                    expect(
+                      lockedWorkspaceDestination(context, requested) == null,
+                      creator || requested == WorkspaceRole.member,
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
+              ),
+            ),
+          ),
+        );
+      }
+    },
+  );
+  testWidgets('creator sign-in bypasses permanent role restriction', (
+    tester,
+  ) async {
+    if (!BackendService.configured) return;
+    final service = DesktopRoleFixture()
+      ..role = WorkspaceRole.member
+      ..creator = true;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: WorkspaceRoleGate(
+          service: service,
+          child: Builder(
+            builder: (context) => Text(
+              'Creator access: ${WorkspaceRoleScope.creatorOf(context)}',
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Creator access: true'), findsOneWidget);
+    expect(find.text('Choose your workspace'), findsNothing);
+    expect(service.role, WorkspaceRole.member);
+  });
+  testWidgets(
+    'creator can use buyer and seller on phone without changing saved identity',
+    (tester) async {
+      if (!BackendService.configured) return;
+      final fixture = WorkspaceFixture()
+        ..creator = true
+        ..savedRole = PactMobileRole.member;
+      await mount(tester, fixture);
+      for (final label in ['Buyer', 'Seller']) {
+        await tester.tap(find.byTooltip('Creator workspace'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text(label).last);
+        await tester.pumpAndSettle();
+        expect(find.text('Creator · $label ▾'), findsOneWidget);
+        expect(fixture.savedRole, PactMobileRole.member);
+        expect(tester.takeException(), isNull);
+      }
+    },
+  );
   test(
     'shared service reads saved role and concurrent choices keep the first role',
     () async {

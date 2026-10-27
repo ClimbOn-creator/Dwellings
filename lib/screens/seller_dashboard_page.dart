@@ -379,7 +379,7 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
 
   Widget _sidebar() => Container(
     width: 212,
-    color: const Color(0xFF111113),
+    color: Colors.white,
     padding: const EdgeInsets.fromLTRB(13, 24, 13, 16),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -394,7 +394,7 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
                   child: Text(
                     'WORKSPACE',
                     style: TextStyle(
-                      color: Colors.white60,
+                      color: DashboardUi.muted,
                       fontSize: 10,
                       fontWeight: FontWeight.w800,
                       letterSpacing: 1.2,
@@ -409,7 +409,7 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
                       icon,
                       _view == view,
                       () => _showView(view),
-                      dark: true,
+                      dark: false,
                     ),
                   ),
                   if (view == SellerDashboardView.overview)
@@ -418,7 +418,7 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
                       Icons.view_kanban_outlined,
                       _view == SellerDashboardView.overview,
                       () => _showView(SellerDashboardView.overview),
-                      dark: true,
+                      dark: false,
                     ),
                 ],
               ],
@@ -434,7 +434,7 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
               builder: (_) => const TransactionRoomsPage(seller: true),
             ),
           ),
-          dark: true,
+          dark: false,
         ),
         DashboardUi.nav('Refresh', Icons.refresh_rounded, false, () {
           setState(() {
@@ -442,7 +442,7 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
               _linkedTeam = AccountService.loadTeam();
             }
           });
-        }, dark: true),
+        }, dark: false),
       ],
     ),
   );

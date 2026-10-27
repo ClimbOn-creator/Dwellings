@@ -7,14 +7,21 @@ class WorkspaceRoleScope extends InheritedWidget {
   const WorkspaceRoleScope({
     super.key,
     required this.role,
+    this.isCreator = false,
     required super.child,
   });
   final WorkspaceRole role;
+  final bool isCreator;
   static WorkspaceRole? of(BuildContext context) =>
       context.dependOnInheritedWidgetOfExactType<WorkspaceRoleScope>()?.role;
+  static bool creatorOf(BuildContext context) =>
+      context
+          .dependOnInheritedWidgetOfExactType<WorkspaceRoleScope>()
+          ?.isCreator ??
+      false;
   @override
   bool updateShouldNotify(WorkspaceRoleScope oldWidget) =>
-      role != oldWidget.role;
+      role != oldWidget.role || isCreator != oldWidget.isCreator;
 }
 
 class WorkspaceChoice extends StatefulWidget {
@@ -104,7 +111,7 @@ class _WorkspaceRoleGateState extends State<WorkspaceRoleGate> {
   String? _userId;
   WorkspaceRole? _role;
   String? _error;
-  bool _loading = true;
+  bool _loading = true, _isCreator = false;
   int _generation = 0;
   @override
   void initState() {
@@ -121,16 +128,21 @@ class _WorkspaceRoleGateState extends State<WorkspaceRoleGate> {
     _userId = BackendService.user?.id;
     setState(() {
       _role = null;
+      _isCreator = false;
       _error = null;
       _loading = true;
     });
     try {
-      final role = _userId == null
+      final creator = _userId != null && await _service.isCreator();
+      final role = creator
+          ? WorkspaceRole.member
+          : _userId == null
           ? null
           : await _service.load().timeout(const Duration(seconds: 12));
       if (!mounted || generation != _generation) return;
       setState(() {
         _role = role;
+        _isCreator = creator;
         _loading = false;
       });
     } catch (_) {
@@ -176,7 +188,11 @@ class _WorkspaceRoleGateState extends State<WorkspaceRoleGate> {
   Widget build(BuildContext context) {
     if (_userId == null) return widget.child;
     if (_role != null) {
-      return WorkspaceRoleScope(role: _role!, child: widget.child);
+      return WorkspaceRoleScope(
+        role: _role!,
+        isCreator: _isCreator,
+        child: widget.child,
+      );
     }
     return Scaffold(
       body: _loading

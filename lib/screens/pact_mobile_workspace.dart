@@ -51,7 +51,10 @@ class _PactMobileWorkspaceState extends State<PactMobileWorkspace>
     with WidgetsBindingObserver {
   late final _service = widget.service ?? PactMobileWorkspaceService();
   PactMobileRole _role = PactMobileRole.buyer;
-  bool _loading = true, _checkingRole = true, _needsRole = false;
+  bool _loading = true,
+      _checkingRole = true,
+      _needsRole = false,
+      _isCreator = false;
   String? _choiceError;
   final Set<String> _failures = {};
   int _generation = 0, _days = 7;
@@ -87,14 +90,17 @@ class _PactMobileWorkspaceState extends State<PactMobileWorkspace>
     final generation = ++_generation;
     setState(() {
       _checkingRole = true;
+      _isCreator = false;
       _leads = [];
     });
     try {
-      final role = await _service.loadRole().timeout(
-        const Duration(seconds: 12),
-      );
+      final creator = await _service.isCreator();
+      final role = creator
+          ? PactMobileRole.member
+          : await _service.loadRole().timeout(const Duration(seconds: 12));
       if (!_current || generation != _generation) return;
       setState(() {
+        _isCreator = creator;
         _needsRole = role == null;
         if (role != null) _role = role;
         _checkingRole = false;
@@ -108,6 +114,20 @@ class _PactMobileWorkspaceState extends State<PactMobileWorkspace>
         _loading = false;
       });
     }
+  }
+
+  Future<void> _switchCreatorRole(WorkspaceRole role) async {
+    if (!_isCreator || !_current) return;
+    setState(() {
+      _role = role;
+      _businesses = [];
+      _listings = [];
+      _deals = [];
+      _leads = [];
+      _insights = {};
+    });
+    widget.tab.value = 0;
+    await _reload();
   }
 
   Future<void> _chooseRole(WorkspaceRole value) async {
@@ -1109,7 +1129,23 @@ class _PactMobileWorkspaceState extends State<PactMobileWorkspace>
                               ),
                             ),
                             const Spacer(),
-                            if (!_checkingRole && !_needsRole)
+                            if (!_checkingRole && !_needsRole && _isCreator)
+                              PopupMenuButton<WorkspaceRole>(
+                                tooltip: 'Creator workspace',
+                                onSelected: _switchCreatorRole,
+                                itemBuilder: (_) => [
+                                  for (final role in WorkspaceRole.values)
+                                    PopupMenuItem(
+                                      value: role,
+                                      child: Text(role.label),
+                                    ),
+                                ],
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8),
+                                  child: Text('Creator · ${_role.label} ▾'),
+                                ),
+                              ),
+                            if (!_checkingRole && !_needsRole && !_isCreator)
                               Text(
                                 _role.label,
                                 style: const TextStyle(

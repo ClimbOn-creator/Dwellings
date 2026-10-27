@@ -1,3 +1,4 @@
+import '../widgets/buyer_workspace_style.dart';
 import '../widgets/partner_emblem_carousel.dart';
 import 'tunnel_pages.dart';
 import 'assistant_workspace_page.dart';
@@ -39,7 +40,7 @@ const _line = Color(0xFF292944);
 const _muted = Color(0xFFA5A5B5);
 const _surface = Color(0xFF121225);
 const _lilac = Color(0xFF9B9B98);
-const _cream = Color(0xFFF4F1EB);
+const _cream = Color(0xFFFFFFFF);
 
 class AcquisitionSupportPage extends StatefulWidget {
   const AcquisitionSupportPage({super.key});
@@ -132,7 +133,7 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
       backgroundColor: light ? _acid : _forest,
       foregroundColor: light ? _forest : Colors.white,
       padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 23),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(40)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
     ),
     icon: const Icon(Icons.arrow_outward, size: 20),
     label: SiteCopyText(
@@ -145,9 +146,12 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
   @override
   Widget build(BuildContext context) {
     const enabled = true;
-    return MediaQuery(
-      data: MediaQuery.of(context).copyWith(disableAnimations: !enabled),
-      child: Builder(builder: (context) => _buildPage(context, enabled)),
+    return Theme(
+      data: BuyerWorkspaceStyle.theme(Theme.of(context)),
+      child: MediaQuery(
+        data: MediaQuery.of(context).copyWith(disableAnimations: !enabled),
+        child: Builder(builder: (context) => _buildPage(context, enabled)),
+      ),
     );
   }
 
@@ -553,7 +557,7 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
               );
       },
     ),
-    color: const Color(0xFFE9E8E2),
+    color: const Color(0xFFFFFFFF),
   );
 
   Widget _audiences() => SiteParallaxImage(
@@ -811,7 +815,7 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
           ),
       ],
     ),
-    color: const Color(0xFFF1F3EE),
+    color: const Color(0xFFFFFFFF),
     vertical: 80,
   );
 

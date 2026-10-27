@@ -161,7 +161,10 @@ class _PactProfilePanelState extends State<PactProfilePanel>
         : 'Your Pact profile';
     final description = professional?.personalExperience ?? p?.bio ?? '';
     return LayoutBuilder(
-      builder: (context, c) => widget.desktopLayout && c.maxWidth >= 850
+      builder: (context, c) =>
+          widget.desktopLayout &&
+              c.maxWidth >= 700 &&
+              MediaQuery.sizeOf(context).width >= 900
           ? _desktop(p, professional, name, description)
           : _phone(p, professional, name, description),
     );

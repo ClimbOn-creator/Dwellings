@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'profile_photo.dart';
+import 'pact_professional_profile.dart';
 
 class PactDesktopProfileHeader extends StatelessWidget {
   const PactDesktopProfileHeader({
@@ -13,11 +14,32 @@ class PactDesktopProfileHeader extends StatelessWidget {
     this.onAvatar,
     this.onCover,
     this.verified = false,
+    this.nameWidget,
+    this.headlineWidget,
+    this.exampleIndex,
   });
+  factory PactDesktopProfileHeader.fromProfileHeader(
+    PactProfessionalHeader p,
+  ) => PactDesktopProfileHeader(
+    name: p.name,
+    photoUrl: p.photoUrl,
+    coverUrl: p.coverUrl,
+    headline: p.headline,
+    company: p.company,
+    actions: p.actions,
+    onAvatar: p.onAvatar,
+    onCover: p.onCover,
+    verified: p.verified,
+    nameWidget: p.nameWidget,
+    headlineWidget: p.headlineWidget,
+    exampleIndex: p.exampleIndex,
+  );
   final String name, photoUrl, coverUrl, headline, company;
   final List<Widget> actions;
   final VoidCallback? onAvatar, onCover;
   final bool verified;
+  final Widget? nameWidget, headlineWidget;
+  final int? exampleIndex;
   @override
   Widget build(BuildContext context) => Material(
     color: Colors.white,
@@ -40,7 +62,7 @@ class PactDesktopProfileHeader extends StatelessWidget {
                   : Image.network(
                       coverUrl,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Image.asset(
+                      errorBuilder: (_, _, _) => Image.asset(
                         'assets/images/pact-river.jpg',
                         fit: BoxFit.cover,
                       ),
@@ -67,83 +89,118 @@ class PactDesktopProfileHeader extends StatelessWidget {
             ],
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(28, 0, 28, 24),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Transform.translate(
-                offset: const Offset(0, -36),
-                child: GestureDetector(
-                  onTap: onAvatar,
-                  child: Tooltip(
-                    message: 'Change profile photo',
-                    child: Container(
-                      padding: const EdgeInsets.all(5),
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white,
-                      ),
-                      child: ProfilePhoto(size: 118, photoUrl: photoUrl),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 24),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 22),
-                  child: Column(
+        LayoutBuilder(
+          builder: (context, c) {
+            final inline = c.maxWidth >= 1000;
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(28, 0, 28, 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          Flexible(
-                            child: Text(
-                              name,
-                              style: const TextStyle(
-                                fontSize: 28,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: -.8,
+                      Transform.translate(
+                        offset: const Offset(0, -36),
+                        child: GestureDetector(
+                          onTap: onAvatar,
+                          child: Tooltip(
+                            message: onAvatar == null
+                                ? 'Profile photo'
+                                : 'Change profile photo',
+                            child: Container(
+                              padding: const EdgeInsets.all(5),
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.white,
                               ),
-                            ),
-                          ),
-                          if (verified)
-                            const Padding(
-                              padding: EdgeInsets.only(left: 10),
-                              child: Icon(
-                                Icons.verified_outlined,
-                                color: Color(0xFF6255DC),
-                                size: 21,
+                              child: ProfilePhoto(
+                                size: 118,
+                                photoUrl: photoUrl,
+                                exampleIndex: exampleIndex,
                               ),
-                            ),
-                        ],
-                      ),
-                      if (headline.isNotEmpty || company.isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 7),
-                          child: Text(
-                            [
-                              headline,
-                              company,
-                            ].where((v) => v.isNotEmpty).join(' · '),
-                            style: const TextStyle(
-                              color: Color(0xFF777584),
-                              height: 1.5,
                             ),
                           ),
                         ),
+                      ),
+                      const SizedBox(width: 24),
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 22),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Flexible(
+                                    child:
+                                        nameWidget ??
+                                        Text(
+                                          name,
+                                          style: const TextStyle(
+                                            fontSize: 28,
+                                            fontWeight: FontWeight.w700,
+                                            letterSpacing: -.8,
+                                          ),
+                                        ),
+                                  ),
+                                  if (verified)
+                                    const Padding(
+                                      padding: EdgeInsets.only(left: 10),
+                                      child: Icon(
+                                        Icons.verified_outlined,
+                                        color: Color(0xFF6255DC),
+                                        size: 21,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                              if (headline.isNotEmpty || company.isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 7),
+                                  child:
+                                      headlineWidget ??
+                                      Text(
+                                        [headline, company]
+                                            .where((v) => v.isNotEmpty)
+                                            .join(' · '),
+                                        style: const TextStyle(
+                                          color: Color(0xFF777584),
+                                          height: 1.5,
+                                        ),
+                                      ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      if (inline && actions.isNotEmpty) ...[
+                        const SizedBox(width: 20),
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 430),
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: 24),
+                            child: Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: actions,
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
-                ),
+                  if (!inline && actions.isNotEmpty)
+                    Wrap(
+                      alignment: WrapAlignment.end,
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: actions,
+                    ),
+                ],
               ),
-              const SizedBox(width: 20),
-              Padding(
-                padding: const EdgeInsets.only(top: 24),
-                child: Wrap(spacing: 8, children: actions),
-              ),
-            ],
-          ),
+            );
+          },
         ),
       ],
     ),

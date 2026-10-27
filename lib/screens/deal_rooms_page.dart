@@ -36,7 +36,7 @@ import '../widgets/team_member_portrait.dart';
 import '../widgets/buyer_greeting.dart';
 import '../widgets/private_deal_entry.dart';
 import '../widgets/app_navigation_menu.dart';
-import '../widgets/dashboard_ui.dart';
+import '../widgets/buyer_workspace_style.dart';
 import '../widgets/buyer_deal_screen.dart';
 import 'acquisition_support_page.dart';
 import 'business_acquisition_page.dart';
@@ -385,16 +385,16 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
     if (destination != null) return destination;
     final base = Theme.of(context);
     return Theme(
-      data: DashboardUi.theme(base),
+      data: BuyerWorkspaceStyle.theme(base),
       child: widget.embeddedPipeline
           ? _dashboardBody()
           : Scaffold(
-              backgroundColor: DashboardUi.canvas,
+              backgroundColor: BuyerWorkspaceStyle.canvas,
               appBar: AppBar(
                 automaticallyImplyLeading:
                     MediaQuery.sizeOf(context).width >= 900,
                 toolbarHeight: 72,
-                backgroundColor: const Color(0xFFF7F5F0),
+                backgroundColor: Colors.white,
                 surfaceTintColor: Colors.transparent,
                 foregroundColor: _ink,
                 title: const DashboardHeader(
@@ -485,7 +485,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
         ? Row(
             children: [
               NovaTarget(id: 'buyer.workspace', child: _buyerSidebar()),
-              const VerticalDivider(width: 1, color: DashboardUi.line),
+              const VerticalDivider(width: 1, color: BuyerWorkspaceStyle.line),
               Expanded(child: child),
             ],
           )
@@ -531,9 +531,9 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
   );
 
   Widget _buyerSidebar() => Container(
-    width: 212,
+    width: 232,
     height: double.infinity,
-    color: const Color(0xFF111113),
+    color: Colors.white,
     padding: const EdgeInsets.fromLTRB(13, 24, 13, 16),
     child: SingleChildScrollView(
       child: Column(
@@ -544,14 +544,14 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
             child: Text(
               'WORKSPACE',
               style: TextStyle(
-                color: Colors.white60,
+                color: BuyerWorkspaceStyle.muted,
                 fontSize: 10,
                 fontWeight: FontWeight.w800,
                 letterSpacing: 1.2,
               ),
             ),
           ),
-          DashboardUi.nav(
+          BuyerWorkspaceStyle.nav(
             'Home',
             Icons.home_outlined,
             _dashboardView == BuyerDashboardView.home && !_showArchived,
@@ -559,9 +559,9 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
               _dashboardView = BuyerDashboardView.home;
               _showArchived = false;
             }),
-            dark: true,
+            dark: false,
           ),
-          DashboardUi.nav(
+          BuyerWorkspaceStyle.nav(
             'Pipeline',
             Icons.view_kanban_outlined,
             _dashboardView == BuyerDashboardView.pipeline && !_showArchived,
@@ -569,40 +569,40 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
               _dashboardView = BuyerDashboardView.pipeline;
               _showArchived = false;
             }),
-            dark: true,
+            dark: false,
           ),
-          DashboardUi.nav(
+          BuyerWorkspaceStyle.nav(
             'Deal screen',
             Icons.calculate_outlined,
             _dashboardView == BuyerDashboardView.dealScreen,
             () =>
                 setState(() => _dashboardView = BuyerDashboardView.dealScreen),
-            dark: true,
+            dark: false,
           ),
-          DashboardUi.nav(
+          BuyerWorkspaceStyle.nav(
             'Resources',
             Icons.library_books_outlined,
             _dashboardView == BuyerDashboardView.resources,
             () => setState(() => _dashboardView = BuyerDashboardView.resources),
-            dark: true,
+            dark: false,
           ),
-          DashboardUi.nav(
+          BuyerWorkspaceStyle.nav(
             'Messages',
             Icons.chat_bubble_outline,
             _dashboardView == BuyerDashboardView.messages,
             () => setState(() => _dashboardView = BuyerDashboardView.messages),
-            dark: true,
+            dark: false,
           ),
-          DashboardUi.nav(
+          BuyerWorkspaceStyle.nav(
             'My team',
             Icons.group_outlined,
             _dashboardView == BuyerDashboardView.team,
             () => setState(() {
               _dashboardView = BuyerDashboardView.team;
             }),
-            dark: true,
+            dark: false,
           ),
-          DashboardUi.nav(
+          BuyerWorkspaceStyle.nav(
             'Transaction plan',
             Icons.event_note_outlined,
             _dashboardView == BuyerDashboardView.transactionPlan,
@@ -610,15 +610,15 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
               _dashboardView = BuyerDashboardView.transactionPlan;
               _plannerBundles ??= _loadPlannerBundles();
             }),
-            dark: true,
+            dark: false,
           ),
           const SizedBox(height: 16),
-          DashboardUi.nav(
+          BuyerWorkspaceStyle.nav(
             'Refresh',
             Icons.refresh_rounded,
             false,
             _refresh,
-            dark: true,
+            dark: false,
           ),
         ],
       ),
@@ -722,6 +722,16 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
               const SizedBox(height: 20),
             ],
             if (!pipelineOnly) ...[
+              const SiteCopyText(
+                'buyer.workspace.heading',
+                'My workspace',
+                style: TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: -.7,
+                ),
+              ),
+              const SizedBox(height: 12),
               if (narrow) ...[
                 BuyerGreeting(
                   greeting: greeting,
@@ -753,13 +763,13 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                     width: metricWidth,
                     child: NovaTarget(
                       id: "buyer.home.metric.0",
-                      child: DashboardUi.metric(
+                      child: BuyerWorkspaceStyle.metric(
                         'Active deals',
                         '${active.length}',
                         'In your pipeline',
                         Icons.bar_chart_rounded,
-                        DashboardUi.paleBlue,
-                        const Color(0xFF5F91DC),
+                        BuyerWorkspaceStyle.paleBlue,
+                        BuyerWorkspaceStyle.muted,
                       ),
                     ),
                   ),
@@ -767,13 +777,13 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                     width: metricWidth,
                     child: NovaTarget(
                       id: "buyer.home.metric.1",
-                      child: DashboardUi.metric(
+                      child: BuyerWorkspaceStyle.metric(
                         'Under review',
                         '${active.where((r) => _dashboardStage(r) == 1).length}',
                         'Screening & finance',
                         Icons.trending_up_rounded,
-                        DashboardUi.paleGreen,
-                        const Color(0xFF3C9764),
+                        BuyerWorkspaceStyle.paleGreen,
+                        BuyerWorkspaceStyle.muted,
                       ),
                     ),
                   ),
@@ -781,13 +791,13 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                     width: metricWidth,
                     child: NovaTarget(
                       id: "buyer.home.metric.2",
-                      child: DashboardUi.metric(
+                      child: BuyerWorkspaceStyle.metric(
                         'Due soon',
                         '$dueSoon',
                         'Next 7 days',
                         Icons.event_note_outlined,
-                        DashboardUi.paleGold,
-                        const Color(0xFFB88016),
+                        BuyerWorkspaceStyle.paleGold,
+                        BuyerWorkspaceStyle.muted,
                       ),
                     ),
                   ),
@@ -795,13 +805,13 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                     width: metricWidth,
                     child: NovaTarget(
                       id: "buyer.home.metric.3",
-                      child: DashboardUi.metric(
+                      child: BuyerWorkspaceStyle.metric(
                         'Needs attention',
                         '$blocked',
                         'Blocked or overdue',
                         Icons.notifications_active_outlined,
-                        DashboardUi.paleViolet,
-                        const Color(0xFF8A79D5),
+                        BuyerWorkspaceStyle.paleViolet,
+                        BuyerWorkspaceStyle.muted,
                       ),
                     ),
                   ),
@@ -829,14 +839,14 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                 ),
               ),
             ],
-            DashboardUi.panel(
+            BuyerWorkspaceStyle.panel(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
                       Expanded(
-                        child: DashboardUi.sectionTitle(
+                        child: BuyerWorkspaceStyle.sectionTitle(
                           _showArchived ? 'Deal history' : 'Your pipeline',
                           subtitle: _showArchived
                               ? 'Completed and archived acquisitions'
@@ -881,7 +891,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                     if (shown.isEmpty)
                       const Text(
                         'No archived deals yet.',
-                        style: TextStyle(color: DashboardUi.muted),
+                        style: TextStyle(color: BuyerWorkspaceStyle.muted),
                       ),
                     for (final room in shown)
                       _buyerDealTile(room, bundle: bundleFor(room)),
@@ -910,8 +920,8 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                               ),
                               padding: const EdgeInsets.all(9),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFF5F8FF),
-                                borderRadius: BorderRadius.circular(10),
+                                color: const Color(0xFFFAFAFA),
+                                borderRadius: BorderRadius.circular(6),
                               ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -939,7 +949,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                                           style: const TextStyle(
                                             fontSize: 12,
                                             fontWeight: FontWeight.w800,
-                                            color: DashboardUi.blue,
+                                            color: BuyerWorkspaceStyle.blue,
                                           ),
                                         ),
                                       ],
@@ -951,7 +961,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                                       child: Text(
                                         'No deals here yet',
                                         style: TextStyle(
-                                          color: DashboardUi.muted,
+                                          color: BuyerWorkspaceStyle.muted,
                                           fontSize: 11,
                                         ),
                                       ),
@@ -1037,7 +1047,12 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
         );
       },
     );
-    const padding = EdgeInsets.fromLTRB(26, 30, 26, 56);
+    final padding = EdgeInsets.fromLTRB(
+      MediaQuery.sizeOf(context).width >= 1100 ? 48 : 22,
+      40,
+      MediaQuery.sizeOf(context).width >= 1100 ? 48 : 22,
+      64,
+    );
     return widget.embeddedPipeline
         ? Padding(padding: padding, child: content)
         : SingleChildScrollView(padding: padding, child: content);
@@ -1050,14 +1065,14 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
   }) {
     final people = NovaTarget(
       id: "buyer.home.team",
-      child: DashboardUi.panel(
+      child: BuyerWorkspaceStyle.panel(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
                 Expanded(
-                  child: DashboardUi.sectionTitle(
+                  child: BuyerWorkspaceStyle.sectionTitle(
                     'My personal team',
                     subtitle: 'Your advisers, available from every deal.',
                   ),
@@ -1074,7 +1089,10 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
             if (team.isEmpty)
               const Text(
                 'Add professionals to build your acquisition team.',
-                style: TextStyle(color: DashboardUi.muted, fontSize: 11),
+                style: TextStyle(
+                  color: BuyerWorkspaceStyle.muted,
+                  fontSize: 11,
+                ),
               )
             else
               Wrap(
@@ -1114,12 +1132,12 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
         filled: true,
         fillColor: Colors.white,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: DashboardUi.line),
+          borderRadius: BorderRadius.circular(6),
+          borderSide: const BorderSide(color: BuyerWorkspaceStyle.line),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: DashboardUi.line),
+          borderRadius: BorderRadius.circular(6),
+          borderSide: const BorderSide(color: BuyerWorkspaceStyle.line),
         ),
       ),
     ),
@@ -1205,7 +1223,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                   ? 'Explore the full checklist below. Sign in to connect it to your own deal.'
                   : 'Your checklist is ready. Add a deal to save progress and set dates.',
               textAlign: TextAlign.center,
-              style: const TextStyle(color: DashboardUi.muted),
+              style: const TextStyle(color: BuyerWorkspaceStyle.muted),
             ),
             const SizedBox(height: 30),
             const Text(
@@ -1214,7 +1232,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
             ),
             const SizedBox(height: 14),
             for (final stage in DealRoomService.businessStages) ...[
-              DashboardUi.panel(
+              BuyerWorkspaceStyle.panel(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -1237,7 +1255,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                             const Icon(
                               Icons.check_box_outline_blank,
                               size: 18,
-                              color: DashboardUi.blue,
+                              color: BuyerWorkspaceStyle.blue,
                             ),
                             const SizedBox(width: 10),
                             Expanded(
@@ -1254,7 +1272,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                                   Text(
                                     task.details,
                                     style: const TextStyle(
-                                      color: DashboardUi.muted,
+                                      color: BuyerWorkspaceStyle.muted,
                                       height: 1.4,
                                     ),
                                   ),
@@ -1320,17 +1338,17 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
               const SizedBox(height: 5),
               const Text(
                 'Choose a deal, then work through its complete transaction from start to close.',
-                style: TextStyle(color: DashboardUi.muted),
+                style: TextStyle(color: BuyerWorkspaceStyle.muted),
               ),
               const SizedBox(height: 20),
-              DashboardUi.panel(
+              BuyerWorkspaceStyle.panel(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
                       'DEAL TO VIEW',
                       style: TextStyle(
-                        color: DashboardUi.blue,
+                        color: BuyerWorkspaceStyle.blue,
                         fontSize: 10,
                         fontWeight: FontWeight.w800,
                         letterSpacing: 1.1,
@@ -1345,8 +1363,10 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                         filled: true,
                         fillColor: const Color(0xFFF8FAFE),
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: const BorderSide(color: DashboardUi.line),
+                          borderRadius: BorderRadius.circular(6),
+                          borderSide: const BorderSide(
+                            color: BuyerWorkspaceStyle.line,
+                          ),
                         ),
                       ),
                       items: [
@@ -1372,7 +1392,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                     Text(
                       '${bundle.room.completedTaskCount} of ${bundle.room.totalTaskCount} items complete',
                       style: const TextStyle(
-                        color: DashboardUi.muted,
+                        color: BuyerWorkspaceStyle.muted,
                         fontSize: 11,
                       ),
                     ),
@@ -1382,7 +1402,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                       child: LinearProgressIndicator(
                         value: bundle.room.progress,
                         minHeight: 9,
-                        backgroundColor: DashboardUi.paleBlue,
+                        backgroundColor: BuyerWorkspaceStyle.paleBlue,
                         color: const Color(0xFF45A470),
                       ),
                     ),
@@ -1392,7 +1412,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                 ),
               ),
               const SizedBox(height: 18),
-              DashboardUi.sectionTitle(
+              BuyerWorkspaceStyle.sectionTitle(
                 'Complete acquisition checklist',
                 subtitle:
                     'Every phase is shown here from discovery through completion.',
@@ -1482,7 +1502,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
         ),
         InkWell(
           onTap: () => _scheduleTargetClose(room),
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(6),
           child: _transactionFact(
             Icons.flag_outlined,
             'Target close',
@@ -1506,13 +1526,13 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
     padding: const EdgeInsets.all(11),
     decoration: BoxDecoration(
       color: const Color(0xFFF8FAFE),
-      borderRadius: BorderRadius.circular(10),
-      border: Border.all(color: DashboardUi.line),
+      borderRadius: BorderRadius.circular(6),
+      border: Border.all(color: BuyerWorkspaceStyle.line),
     ),
     child: Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 17, color: DashboardUi.blue),
+        Icon(icon, size: 17, color: BuyerWorkspaceStyle.blue),
         const SizedBox(width: 8),
         Expanded(
           child: Column(
@@ -1521,7 +1541,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
               Text(
                 label.toUpperCase(),
                 style: const TextStyle(
-                  color: DashboardUi.muted,
+                  color: BuyerWorkspaceStyle.muted,
                   fontSize: 8,
                   fontWeight: FontWeight.w800,
                   letterSpacing: .6,
@@ -1533,7 +1553,9 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  color: action ? DashboardUi.blue : DashboardUi.ink,
+                  color: action
+                      ? BuyerWorkspaceStyle.blue
+                      : BuyerWorkspaceStyle.ink,
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
                 ),
@@ -1545,102 +1567,106 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
     ),
   );
 
-  Widget _transactionRoomTeam(DealRoomBundle bundle) => DashboardUi.panel(
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        DashboardUi.sectionTitle(
-          'Transaction team 🤝',
-          subtitle: 'The advisers assigned to this acquisition.',
-        ),
-        const SizedBox(height: 14),
-        if (bundle.members.isEmpty)
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'No advisers are assigned to this deal yet.',
-                style: TextStyle(color: DashboardUi.muted),
-              ),
-              const SizedBox(height: 11),
-              OutlinedButton.icon(
-                onPressed: () =>
-                    setState(() => _dashboardView = BuyerDashboardView.team),
-                icon: const Icon(Icons.person_add_alt_1_outlined, size: 16),
-                label: const Text('Go to My Team'),
-              ),
-            ],
-          )
-        else
-          Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            children: [
-              for (final member in bundle.members)
-                InkWell(
-                  onTap: () => _openTeamProfile(member.provider),
-                  borderRadius: BorderRadius.circular(11),
-                  child: Container(
-                    width: 250,
-                    padding: const EdgeInsets.all(11),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF8FAFE),
-                      borderRadius: BorderRadius.circular(11),
-                      border: Border.all(color: DashboardUi.line),
-                    ),
-                    child: Row(
-                      children: [
-                        ProfilePhoto(
-                          size: 40,
-                          photoUrl: member.provider.photoUrl,
-                          exampleIndex: member.provider.photoIndex,
-                        ),
-                        const SizedBox(width: 9),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                member.provider.name,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                              const SizedBox(height: 3),
-                              Text(
-                                member.provider.specialty,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  color: DashboardUi.muted,
-                                  fontSize: 9,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const Icon(
-                          Icons.chevron_right_rounded,
-                          color: DashboardUi.muted,
-                        ),
-                      ],
-                    ),
+  Widget _transactionRoomTeam(DealRoomBundle bundle) =>
+      BuyerWorkspaceStyle.panel(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            BuyerWorkspaceStyle.sectionTitle(
+              'Transaction team 🤝',
+              subtitle: 'The advisers assigned to this acquisition.',
+            ),
+            const SizedBox(height: 14),
+            if (bundle.members.isEmpty)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'No advisers are assigned to this deal yet.',
+                    style: TextStyle(color: BuyerWorkspaceStyle.muted),
                   ),
-                ),
-            ],
-          ),
-      ],
-    ),
-  );
+                  const SizedBox(height: 11),
+                  OutlinedButton.icon(
+                    onPressed: () => setState(
+                      () => _dashboardView = BuyerDashboardView.team,
+                    ),
+                    icon: const Icon(Icons.person_add_alt_1_outlined, size: 16),
+                    label: const Text('Go to My Team'),
+                  ),
+                ],
+              )
+            else
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: [
+                  for (final member in bundle.members)
+                    InkWell(
+                      onTap: () => _openTeamProfile(member.provider),
+                      borderRadius: BorderRadius.circular(11),
+                      child: Container(
+                        width: 250,
+                        padding: const EdgeInsets.all(11),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF8FAFE),
+                          borderRadius: BorderRadius.circular(11),
+                          border: Border.all(color: BuyerWorkspaceStyle.line),
+                        ),
+                        child: Row(
+                          children: [
+                            ProfilePhoto(
+                              size: 40,
+                              photoUrl: member.provider.photoUrl,
+                              exampleIndex: member.provider.photoIndex,
+                            ),
+                            const SizedBox(width: 9),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    member.provider.name,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 3),
+                                  Text(
+                                    member.provider.specialty,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      color: BuyerWorkspaceStyle.muted,
+                                      fontSize: 9,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const Icon(
+                              Icons.chevron_right_rounded,
+                              color: BuyerWorkspaceStyle.muted,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+          ],
+        ),
+      );
 
-  Widget _transactionRoomNotes(DealRoomBundle bundle) => DashboardUi.panel(
+  Widget _transactionRoomNotes(
+    DealRoomBundle bundle,
+  ) => BuyerWorkspaceStyle.panel(
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        DashboardUi.sectionTitle(
+        BuyerWorkspaceStyle.sectionTitle(
           'Deal notes & updates ✍️',
           subtitle: 'Keep decisions and transaction updates with this deal.',
         ),
@@ -1654,8 +1680,8 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
             filled: true,
             fillColor: const Color(0xFFF8FAFE),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: DashboardUi.line),
+              borderRadius: BorderRadius.circular(6),
+              borderSide: const BorderSide(color: BuyerWorkspaceStyle.line),
             ),
           ),
         ),
@@ -1677,14 +1703,14 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                 CircleAvatar(
                   radius: 15,
                   backgroundColor: note.mine
-                      ? DashboardUi.paleBlue
-                      : DashboardUi.paleGreen,
+                      ? BuyerWorkspaceStyle.paleBlue
+                      : BuyerWorkspaceStyle.paleGreen,
                   child: Icon(
                     note.mine ? Icons.person_outline : Icons.group_outlined,
                     size: 15,
                     color: note.mine
-                        ? DashboardUi.blue
-                        : const Color(0xFF3C9764),
+                        ? BuyerWorkspaceStyle.blue
+                        : BuyerWorkspaceStyle.muted,
                   ),
                 ),
                 const SizedBox(width: 9),
@@ -1700,7 +1726,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                       Text(
                         '${note.mine ? 'You' : 'Team member'} · ${DateFormat.yMMMd().add_jm().format(note.createdAt.toLocal())}',
                         style: const TextStyle(
-                          color: DashboardUi.muted,
+                          color: BuyerWorkspaceStyle.muted,
                           fontSize: 9,
                         ),
                       ),
@@ -1777,7 +1803,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
               : '${part[0].toUpperCase()}${part.substring(1)}',
         )
         .join(' ');
-    return DashboardUi.panel(
+    return BuyerWorkspaceStyle.panel(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1786,12 +1812,14 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
               CircleAvatar(
                 radius: 16,
                 backgroundColor: active
-                    ? DashboardUi.paleBlue
+                    ? BuyerWorkspaceStyle.paleBlue
                     : const Color(0xFFF1F4F8),
                 child: Text(
                   '${index + 1}',
                   style: TextStyle(
-                    color: active ? DashboardUi.blue : DashboardUi.muted,
+                    color: active
+                        ? BuyerWorkspaceStyle.blue
+                        : BuyerWorkspaceStyle.muted,
                     fontSize: 11,
                     fontWeight: FontWeight.w800,
                   ),
@@ -1810,7 +1838,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
               Text(
                 '$completed/${tasks.length}',
                 style: const TextStyle(
-                  color: DashboardUi.muted,
+                  color: BuyerWorkspaceStyle.muted,
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
                 ),
@@ -1822,7 +1850,10 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
               padding: EdgeInsets.fromLTRB(42, 12, 0, 3),
               child: Text(
                 'No checklist items in this stage.',
-                style: TextStyle(color: DashboardUi.muted, fontSize: 11),
+                style: TextStyle(
+                  color: BuyerWorkspaceStyle.muted,
+                  fontSize: 11,
+                ),
               ),
             )
           else ...[
@@ -1841,7 +1872,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(9),
-          border: Border.all(color: DashboardUi.line),
+          border: Border.all(color: BuyerWorkspaceStyle.line),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1872,7 +1903,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                               ? Icons.add_circle_outline
                               : Icons.calendar_today_outlined,
                           size: 13,
-                          color: DashboardUi.blue,
+                          color: BuyerWorkspaceStyle.blue,
                         ),
                         const SizedBox(width: 5),
                         Flexible(
@@ -1881,7 +1912,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                                 ? 'Schedule'
                                 : DateFormat.MMMd().format(task.dueAt!),
                             style: const TextStyle(
-                              color: DashboardUi.blue,
+                              color: BuyerWorkspaceStyle.blue,
                               fontSize: 10,
                               fontWeight: FontWeight.w700,
                             ),
@@ -2029,7 +2060,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
           child: Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              border: Border.all(color: DashboardUi.line),
+              border: Border.all(color: BuyerWorkspaceStyle.line),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
@@ -2045,7 +2076,8 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                       AcquisitionHealth.attention => const Color(0xFFB34035),
                       AcquisitionHealth.dueSoon => const Color(0xFFE7AE30),
                       AcquisitionHealth.onTrack => const Color(0xFF45A470),
-                      AcquisitionHealth.awaitingDetails => DashboardUi.muted,
+                      AcquisitionHealth.awaitingDetails =>
+                        BuyerWorkspaceStyle.muted,
                     },
                   ),
                 ),
@@ -2071,7 +2103,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           fontSize: 10,
-                          color: DashboardUi.muted,
+                          color: BuyerWorkspaceStyle.muted,
                         ),
                       ),
                       if (stageTasks.isNotEmpty) ...[
@@ -2081,7 +2113,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                           child: LinearProgressIndicator(
                             value: stageDone / stageTasks.length,
                             minHeight: 4,
-                            backgroundColor: DashboardUi.paleBlue,
+                            backgroundColor: BuyerWorkspaceStyle.paleBlue,
                             color: const Color(0xFF45A470),
                           ),
                         ),
@@ -2099,7 +2131,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
-                            color: DashboardUi.blue,
+                            color: BuyerWorkspaceStyle.blue,
                             fontSize: 10,
                           ),
                         ),
@@ -2110,7 +2142,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                 const Icon(
                   Icons.more_horiz,
                   size: 15,
-                  color: DashboardUi.muted,
+                  color: BuyerWorkspaceStyle.muted,
                 ),
               ],
             ),
@@ -2125,7 +2157,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
     String detail,
     IconData icon,
     VoidCallback onTap,
-  ) => DashboardUi.panel(
+  ) => BuyerWorkspaceStyle.panel(
     child: InkWell(
       onTap: onTap,
       child: SizedBox(
@@ -2133,7 +2165,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, color: DashboardUi.blue, size: 21),
+            Icon(icon, color: BuyerWorkspaceStyle.blue, size: 21),
             const SizedBox(height: 10),
             Text(
               title,
@@ -2144,7 +2176,10 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
               detail,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: DashboardUi.muted, fontSize: 11),
+              style: const TextStyle(
+                color: BuyerWorkspaceStyle.muted,
+                fontSize: 11,
+              ),
             ),
           ],
         ),
@@ -3180,7 +3215,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
     decoration: BoxDecoration(
       color: _purple.withValues(alpha: .1),
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(6),
     ),
     child: SiteText(
       contentKey: 'copy.deal_rooms_page.m37',

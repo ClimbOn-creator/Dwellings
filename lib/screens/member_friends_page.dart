@@ -1,3 +1,4 @@
+import '../widgets/pact_desktop_profile_header.dart';
 import '../services/member_roi_service.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
@@ -526,20 +527,34 @@ class _MemberFriendProfilePageState extends State<MemberFriendProfilePage> {
     ),
     body: ListView(
       children: [
-        PactProfessionalHeader(
-          name: _friend.name,
-          photoUrl: _friend.photoUrl,
-          coverUrl: _friend.coverUrl,
-          headline: _friend.jobTitle,
-          company: _friend.company,
-          edgeToEdge: true,
-          actions: [
-            FriendActions(
-              friend: _friend,
-              service: widget.service,
-              onChanged: _reload,
-            ),
-          ],
+        LayoutBuilder(
+          builder: (context, c) {
+            final header = PactProfessionalHeader(
+              name: _friend.name,
+              photoUrl: _friend.photoUrl,
+              coverUrl: _friend.coverUrl,
+              headline: _friend.jobTitle,
+              company: _friend.company,
+              edgeToEdge: true,
+              actions: [
+                FriendActions(
+                  friend: _friend,
+                  service: widget.service,
+                  onChanged: _reload,
+                ),
+              ],
+            );
+            if (c.maxWidth < 900) return header;
+            return Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1200),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+                  child: PactDesktopProfileHeader.fromProfileHeader(header),
+                ),
+              ),
+            );
+          },
         ),
         Center(
           child: Container(

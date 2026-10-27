@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/buyer_command_state.dart';
 import '../services/deal_room_service.dart';
-import 'dashboard_ui.dart';
+import 'buyer_workspace_style.dart';
 import 'site_copy_text.dart';
 
 /// Small secondary cards that follow the existing pipeline and team widgets.
@@ -29,7 +29,7 @@ class BuyerDashboardFollowUp extends StatelessWidget {
     String text, {
     double size = 15,
     FontWeight weight = FontWeight.w400,
-    Color color = DashboardUi.ink,
+    Color color = BuyerWorkspaceStyle.ink,
   }) => SiteCopyText(
     'buyer.command.$id',
     text,
@@ -40,7 +40,7 @@ class BuyerDashboardFollowUp extends StatelessWidget {
       height: 1.4,
     ),
   );
-  Widget _resume(AcquisitionCommand? deal) => DashboardUi.panel(
+  Widget _resume(AcquisitionCommand? deal) => BuyerWorkspaceStyle.panel(
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -55,7 +55,7 @@ class BuyerDashboardFollowUp extends StatelessWidget {
           _copy(
             'continue.empty',
             'Your next acquisition starts here. Search businesses or enter a private deal below.',
-            color: DashboardUi.muted,
+            color: BuyerWorkspaceStyle.muted,
           )
         else ...[
           Text(
@@ -66,20 +66,20 @@ class BuyerDashboardFollowUp extends StatelessWidget {
           if (deal.progress case final progress?) ...[
             Text(
               '${progress.$1} ${(progress.$2 * 100).round()}% complete',
-              style: const TextStyle(color: DashboardUi.muted),
+              style: const TextStyle(color: BuyerWorkspaceStyle.muted),
             ),
             const SizedBox(height: 12),
             LinearProgressIndicator(
               value: progress.$2,
               borderRadius: BorderRadius.circular(5),
               minHeight: 6,
-              backgroundColor: DashboardUi.paleBlue,
+              backgroundColor: BuyerWorkspaceStyle.paleBlue,
             ),
           ] else
             _copy(
               'continue.noChecklist',
               'Open the deal to set up its next steps.',
-              color: DashboardUi.muted,
+              color: BuyerWorkspaceStyle.muted,
             ),
           const SizedBox(height: 16),
           FilledButton.icon(
@@ -99,7 +99,7 @@ class BuyerDashboardFollowUp extends StatelessWidget {
     ),
   );
 
-  Widget _upcoming(List<AcquisitionEvent> events) => DashboardUi.panel(
+  Widget _upcoming(List<AcquisitionEvent> events) => BuyerWorkspaceStyle.panel(
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -118,7 +118,7 @@ class BuyerDashboardFollowUp extends StatelessWidget {
                 : error
                 ? 'Scheduled actions are temporarily unavailable.'
                 : 'No deadlines scheduled. Add dates in a deal’s Transaction Plan.',
-            color: DashboardUi.muted,
+            color: BuyerWorkspaceStyle.muted,
           ),
         for (final event in events.take(3))
           TextButton(
@@ -139,21 +139,21 @@ class BuyerDashboardFollowUp extends StatelessWidget {
                       Text(
                         event.title,
                         style: const TextStyle(
-                          color: DashboardUi.ink,
+                          color: BuyerWorkspaceStyle.ink,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                       Text(
                         event.room.title,
                         style: const TextStyle(
-                          color: DashboardUi.muted,
+                          color: BuyerWorkspaceStyle.muted,
                           fontSize: 12,
                         ),
                       ),
                       Text(
                         '${DateFormat(event.date.year == now.year ? 'EEE, MMM d' : 'EEE, MMM d, y').format(event.date.toLocal())}${event.date.toLocal().isBefore(DateTime(now.year, now.month, now.day)) ? ' · Overdue' : ''}',
                         style: const TextStyle(
-                          color: DashboardUi.muted,
+                          color: BuyerWorkspaceStyle.muted,
                           fontSize: 12,
                         ),
                       ),

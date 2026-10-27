@@ -5,6 +5,7 @@ import '../models/marketing_motion_content.dart';
 // These IDs are permanent. Rewrite the fallback VALUE while retaining its ID.
 // Never regenerate or renumber this registry during a redesign.
 const siteCopyCatalog = <String, String>{
+  'buyer.workspace.heading': 'My workspace',
   'transaction.library.title': 'Transaction Room',
   'transaction.library.kicker': 'YOUR DOCUMENT WORKSPACE',
   'learning.room.kicker': 'YOUR DOCUMENT WORKSPACE',

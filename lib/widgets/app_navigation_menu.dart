@@ -193,9 +193,7 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
           : _profilePage(),
   };
 
-  Widget _profilePage() => AppTunnelController.current.value == AppTunnel.member
-      ? const MemberDashboardPage(initialView: MemberDashboardView.profile)
-      : const ProfilePage();
+  Widget _profilePage() => const ProfilePage();
 
   void _open(BuildContext context, AppNavigationDestination destination) {
     if (destination == AppNavigationDestination.usagePrivacy) {

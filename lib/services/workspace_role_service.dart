@@ -14,6 +14,22 @@ extension WorkspaceRoleLabel on WorkspaceRole {
 /// Shared, insert-only account identity; never inferred from device preferences
 /// or editable auth metadata. Member capabilities remain separately authorized.
 class WorkspaceRoleService {
+  /// Existing server-owned creator permission; never trust editable profile data.
+  Future<bool> isCreator() async {
+    final userId = BackendService.user?.id;
+    if (!BackendService.configured || userId == null) return false;
+    try {
+      final permissions = await Supabase.instance.client
+          .rpc('learning_permissions')
+          .timeout(const Duration(seconds: 12));
+      return BackendService.user?.id == userId &&
+          permissions is Map &&
+          permissions['is_owner'] == true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<WorkspaceRole?> load() async {
     final user = BackendService.user;
     if (user == null) throw StateError('Sign in required.');

@@ -39,7 +39,16 @@ void main() {
       final signIn = find.text('Sign in to build your acquisition team');
       expect(
         tester.getCenter(signIn).dx,
-        closeTo(width < 800 ? width / 2 : (width + 213) / 2, 2),
+        closeTo(
+          (width +
+                  (width < 800
+                      ? 0
+                      : tester
+                            .getRect(find.byType(VerticalDivider).first)
+                            .right)) /
+              2,
+          2,
+        ),
       );
       expect(tester.takeException(), isNull);
     });

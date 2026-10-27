@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'dashboard_ui.dart';
+import 'buyer_workspace_style.dart';
 
 /// A horizontal reveal replays each time Home is opened, with stable layout.
 class BuyerGreeting extends StatefulWidget {
@@ -77,7 +77,7 @@ class _BuyerGreetingState extends State<BuyerGreeting>
         _line(
           widget.summary,
           Curves.easeInOut.transform(((_reveal.value - .2) / .8).clamp(0, 1)),
-          const TextStyle(color: DashboardUi.muted),
+          const TextStyle(color: BuyerWorkspaceStyle.muted),
           'buyer-summary-visible',
         ),
       ],

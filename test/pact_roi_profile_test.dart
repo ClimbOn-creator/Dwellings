@@ -1,3 +1,6 @@
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:dwelling_iq/services/marketplace_service.dart';
+import 'package:dwelling_iq/screens/member_profile_page.dart';
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
@@ -39,6 +42,7 @@ class RoiFixture extends MemberRoiService {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(() async {
+    SharedPreferences.setMockInitialValues({});
     final fonts =
         '${File(Platform.resolvedExecutable).parent.parent.parent.path}/material_fonts';
     for (final font in {
@@ -73,6 +77,13 @@ void main() {
         home: Scaffold(body: child),
       ),
     );
+    await tester.pumpAndSettle();
+    // Image decoding happens outside fake test time. Wait for the actual banner
+    // so a busy full-suite run cannot capture its loading placeholder.
+    await tester.runAsync(() => precacheImage(
+      const AssetImage('assets/images/pact-river.jpg'),
+      tester.element(find.byType(Scaffold).first),
+    ));
     await tester.pumpAndSettle();
   }
 
@@ -110,6 +121,62 @@ void main() {
         expect(tester.takeException(), isNull);
       },
     );
+  }
+  testWidgets(
+    'desktop dashboard profile keeps the desktop layout in a 760 pixel pane',
+    (tester) async {
+      await frame(
+        tester,
+        1440,
+        Center(
+          child: SizedBox(
+            width: 760,
+            child: PactProfilePanel(
+              desktopLayout: true,
+              load: () async => PactProfileSnapshot(account: account),
+              actions: [
+                ListTile(title: const Text('Account tools'), onTap: () {}),
+              ],
+            ),
+          ),
+        ),
+      );
+      expect(find.byType(PactDesktopProfileHeader), findsOneWidget);
+      expect(find.byType(PactProfessionalHeader), findsNothing);
+      expect(tester.takeException(), isNull);
+      await expectLater(
+        find.byType(Scaffold),
+        matchesGoldenFile('goldens/pact_desktop_profile_embedded.png'),
+      );
+    },
+  );
+  for (final width in [390.0, 1440.0]) {
+    testWidgets('professional profile uses the correct header at $width', (
+      tester,
+    ) async {
+      final provider = MarketplaceService.providersFromRows([
+        {
+          'id': 'example-profile',
+          'provider_type': 'accountant',
+          'display_name': 'Alex Morgan',
+          'company_name': 'North Coast',
+          'job_title': 'Business adviser',
+          'is_example': true,
+          'verified': false,
+          'years_experience': 8,
+          'membership_tier': 'free',
+        },
+      ]).first;
+      await frame(tester, width, MemberProfilePage(provider: provider));
+      expect(
+        find.byType(
+          width < 900 ? PactProfessionalHeader : PactDesktopProfileHeader,
+        ),
+        findsOneWidget,
+      );
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
   }
   testWidgets(
     'a hung profile request ends with retry while keeping confirmed identity',

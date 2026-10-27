@@ -1,3 +1,4 @@
+import '../widgets/buyer_workspace_style.dart';
 import '../widgets/nova_target.dart';
 import '../widgets/home_brand_button.dart';
 import 'dart:async';
@@ -10,8 +11,8 @@ import '../services/buyer_resources.dart';
 import '../widgets/app_navigation_menu.dart';
 import 'auth_page.dart';
 
-const _resourceBlue = Color(0xFF007DA8);
-const _resourceInk = Color(0xFF14374B);
+const _resourceBlue = Color(0xFF252525);
+const _resourceInk = Color(0xFF292929);
 
 Future<void> _officialLink(BuildContext context, String url) async {
   try {
@@ -134,12 +135,16 @@ class ResourceSelection extends ChangeNotifier {
 class BuyerResourcesPage extends StatelessWidget {
   const BuyerResourcesPage({super.key});
   @override
-  Widget build(BuildContext context) => Scaffold(
-    backgroundColor: const Color(0xFFF8FBFD),
+  Widget build(BuildContext context) => Theme(
+    data: BuyerWorkspaceStyle.theme(Theme.of(context)),
+    child: _page(context),
+  );
+  Widget _page(BuildContext context) => Scaffold(
+    backgroundColor: Colors.white,
     appBar: AppBar(
       automaticallyImplyLeading: false,
       toolbarHeight: 82,
-      backgroundColor: const Color(0xFFF7F8F4),
+      backgroundColor: Colors.white,
       surfaceTintColor: Colors.transparent,
       title: const HomeBrandButton(size: 66, dark: false),
       actions: const [
@@ -211,7 +216,7 @@ class _BuyerResourcesPanelState extends State<BuyerResourcesPanel> {
                 : 'Good support. Greater possibilities.',
             style: const TextStyle(
               fontSize: 32,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w600,
               color: _resourceInk,
             ),
           ),
@@ -229,11 +234,22 @@ class _BuyerResourcesPanelState extends State<BuyerResourcesPanel> {
               child: TextField(
                 onChanged: (v) => setState(() => _query = v),
                 decoration: const InputDecoration(
-                  labelText: 'Search resources',
+                  hintText: 'Search resources',
                   prefixIcon: Icon(Icons.search),
                   filled: true,
                   fillColor: Colors.white,
-                  border: OutlineInputBorder(),
+                  isDense: true,
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(6)),
+                    borderSide: BorderSide(color: Color(0xFFE8E8E8)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(6)),
+                    borderSide: BorderSide(color: Color(0xFF787878)),
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(6)),
+                  ),
                 ),
               ),
             ),
@@ -702,7 +718,7 @@ class _ResourceProviderPageState extends State<ResourceProviderPage> {
       final selection = widget.selection;
       final programs = r.programs.where((p) => p.matches(query)).toList();
       return Scaffold(
-        backgroundColor: const Color(0xFFF8FBFD),
+        backgroundColor: Colors.white,
         appBar: AppBar(
           title: const Text('Provider profile'),
           actions: const [

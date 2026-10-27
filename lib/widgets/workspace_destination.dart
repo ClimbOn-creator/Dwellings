@@ -10,6 +10,7 @@ Widget? lockedWorkspaceDestination(
   BuildContext context,
   WorkspaceRole requested,
 ) {
+  if (WorkspaceRoleScope.creatorOf(context)) return null;
   final role = WorkspaceRoleScope.of(context);
   if (role == null || role == requested) return null;
   return workspaceHome(role);
