@@ -3,7 +3,6 @@ import 'package:dwelling_iq/screens/member_overview_page.dart';
 import 'package:dwelling_iq/screens/learning_dashboard_page.dart';
 import 'package:dwelling_iq/services/learning_service.dart';
 import 'package:dwelling_iq/services/app_tunnel.dart';
-import 'package:dwelling_iq/services/nova_page_guide.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -42,14 +41,6 @@ void main() {
         expect(p.feedback, isNotEmpty);
         expect(p.documents, isNotEmpty);
       }
-      expect(
-        novaPageWalkthrough('learning-feed').first.target,
-        'learning-feed.posts',
-      );
-      expect(
-        novaPageWalkthrough('learning-map').first.target,
-        'learning-map.canvas',
-      );
     },
   );
   test('seminars join only during the session or explicit live status', () {
@@ -79,65 +70,64 @@ void main() {
     expect(LearningSeminar.validUrl('https://example.com/meet'), true);
   });
   for (final width in [390.0, 1440.0]) {
-    for (final view in [
-      LearningView.feed,
-      LearningView.seminars,
-      LearningView.journey,
-    ]) {
-      testWidgets('$view fits $width with account gated publishing', (
-        tester,
-      ) async {
-        tester.view.physicalSize = Size(width, 1000);
-        tester.view.devicePixelRatio = 1;
-        addTearDown(tester.view.resetPhysicalSize);
-        addTearDown(tester.view.resetDevicePixelRatio);
-        await tester.pumpWidget(
-          MaterialApp(
-            home: LearningDashboardPage(
-              initialView: view,
-              loadPosts: () async => [
-                LearningPost(
-                  id: 'p',
-                  authorId: 'a',
-                  author: 'Approved educator',
-                  title: 'Understanding earnings',
-                  body: 'Revenue and earnings are different.',
-                  topic: 'finance',
-                  createdAt: DateTime(2026, 10, 12),
-                ),
-              ],
-              loadSeminars: () async => [],
-              loadPermissions: () async => const LearningPermissions(),
-            ),
+    testWidgets('Learning tabs and quiz fit at $width', (tester) async {
+      tester.view.physicalSize = Size(width, 1000);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: LearningDashboardPage(
+            loadSeminars: () async => [],
+            loadPermissions: () async =>
+                const LearningPermissions(canPublish: true, isOwner: true),
           ),
-        );
-        await tester.pumpAndSettle();
-        expect(find.text('Create a learning post'), findsNothing);
-        if (view == LearningView.feed)
-          expect(find.text('Understanding earnings'), findsOneWidget);
-        if (width == 1440 && view == LearningView.feed) {
-          expect(tester.getTopLeft(find.text('LEARNING')).dy, lessThan(160));
-          expect(find.text('A place to learn, at your pace'), findsNothing);
-        }
-        if (view == LearningView.journey) {
-          expect(find.byType(InteractiveViewer), findsNothing);
-          await tester.ensureVisible(
-            find.byKey(const ValueKey('journey-answer-0')),
-          );
-          await tester.tap(find.byKey(const ValueKey('journey-answer-0')));
-          await tester.pumpAndSettle();
-          expect(find.text('That’s right.'), findsOneWidget);
-          await tester.ensureVisible(
-            find.byKey(const Key('journey-mark-understood')),
-          );
-          await tester.tap(find.byKey(const Key('journey-mark-understood')));
-          await tester.pumpAndSettle();
-          expect(find.text('Understood · undo'), findsOneWidget);
-        }
-        expect(tester.takeException(), isNull);
-        await tester.pumpWidget(const SizedBox.shrink());
-      });
-    }
+        ),
+      );
+      await tester.pumpAndSettle();
+      for (final tab in [
+        'First steps',
+        'Roadmap',
+        'Discover',
+        'Search',
+        'Evaluate',
+        'Financial',
+        'Documents',
+        'Deal Structure',
+        'Transition',
+        'FAQ',
+        'Seminars',
+        'Resources',
+      ]) {
+        expect(find.text(tab), findsOneWidget);
+      }
+      expect(find.text('Learning feed'), findsNothing);
+      expect(find.text('Pact examples'), findsNothing);
+      expect(find.byKey(const Key('learning-create-post')), findsNothing);
+      expect(find.text('Deal comparison quiz'), findsNothing);
+      final quiz = find.byTooltip('Deal comparison quiz');
+      expect(
+        tester.getRect(quiz).right,
+        lessThanOrEqualTo(tester.getRect(find.byTooltip('Sign in')).left),
+      );
+      await tester.tap(find.text('Roadmap'));
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const ValueKey('learning-workspace-roadmap-')),
+        findsOneWidget,
+      );
+      await tester.tap(quiz);
+      await tester.pumpAndSettle();
+      expect(find.text('Roadmap'), findsNothing);
+      expect(find.text('Sign in to start'), findsOneWidget);
+      await tester.tap(find.byTooltip('Back to Learning dashboard'));
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const ValueKey('learning-workspace-roadmap-')),
+        findsOneWidget,
+      );
+      expect(tester.takeException(), isNull);
+    });
   }
   testWidgets('open Canada map refreshes published and cancelled events', (
     tester,
@@ -181,43 +171,4 @@ void main() {
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
   });
-  testWidgets('approved publishers see plus while contributor approvals stay removed', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      MaterialApp(
-        home: LearningDashboardPage(
-          loadPosts: () async => [],
-          loadPermissions: () async =>
-              const LearningPermissions(canPublish: true, isOwner: true),
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-    expect(find.text('Create a learning post'), findsNothing);
-    expect(find.byKey(const Key('learning-create-post')), findsOneWidget);
-    expect(find.byType(FloatingActionButton), findsOneWidget);
-    expect(find.text('Contributor approvals'), findsNothing);
-    await tester.pumpWidget(const SizedBox.shrink());
-  });
-  testWidgets(
-    'quiz is a visible dashboard tab with an embedded sign-in panel',
-    (tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: LearningDashboardPage(
-            initialView: LearningView.quiz,
-            loadPosts: () async => [],
-            loadSeminars: () async => [],
-          ),
-        ),
-      );
-      await tester.pump(const Duration(seconds: 1));
-      expect(find.text('Deal comparison quiz'), findsWidgets);
-      expect(find.text('Sign in to start'), findsOneWidget);
-      expect(find.byType(Scaffold), findsOneWidget);
-      expect(tester.takeException(), isNull);
-      await tester.pumpWidget(const SizedBox.shrink());
-    },
-  );
 }

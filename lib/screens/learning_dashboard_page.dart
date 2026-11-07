@@ -1,5 +1,4 @@
 import '../widgets/transaction_room_panel.dart';
-import '../widgets/acquisition_journey_panel.dart';
 import '../widgets/pact_mobile_surface.dart';
 import '../widgets/dashboard_header.dart';
 import 'deal_comparison_page.dart';
@@ -19,38 +18,41 @@ import '../services/backend_service.dart';
 import '../services/learning_service.dart';
 import '../widgets/dashboard_ui.dart';
 import '../widgets/app_navigation_menu.dart';
-import '../widgets/learning_media_player.dart';
 import '../widgets/site_copy_text.dart';
 import '../widgets/nova_target.dart';
 import 'auth_page.dart';
-import 'buyer_resources_page.dart';
 import '../services/learning_area_service.dart';
-import '../services/nova_training_controller.dart';
 import '../widgets/learning_area_picker.dart';
-import '../widgets/learning_comments.dart';
 
 enum LearningView {
-  feed,
-  seminars,
-  room,
-  journey,
-  map,
-  quiz,
-  pipeline,
-  resources,
-  contributors,
+  firstSteps('First steps', Icons.flag_outlined),
+  roadmap('Roadmap', Icons.route_outlined),
+  discover('Discover', Icons.explore_outlined),
+  search('Search', Icons.search),
+  evaluate('Evaluate', Icons.fact_check_outlined),
+  financial('Financial', Icons.calculate_outlined),
+  room('Documents', Icons.folder_open_outlined),
+  dealStructure('Deal Structure', Icons.account_tree_outlined),
+  transition('Transition', Icons.swap_horiz),
+  faq('FAQ', Icons.help_outline),
+  seminars('Seminars', Icons.videocam_outlined),
+  resources('Resources', Icons.public),
+  quiz('Deal comparison quiz', Icons.compare_arrows);
+
+  const LearningView(this.label, this.icon);
+
+  final String label;
+  final IconData icon;
 }
 
 class LearningDashboardPage extends StatefulWidget {
   const LearningDashboardPage({
     super.key,
-    this.initialView = LearningView.feed,
-    this.loadPosts,
+    this.initialView = LearningView.firstSteps,
     this.loadSeminars,
     this.loadPermissions,
   });
   final LearningView initialView;
-  final Future<List<LearningPost>> Function()? loadPosts;
   final Future<List<LearningSeminar>> Function()? loadSeminars;
   final Future<LearningPermissions> Function()? loadPermissions;
   @override
@@ -59,69 +61,17 @@ class LearningDashboardPage extends StatefulWidget {
 
 class _LearningDashboardPageState extends State<LearningDashboardPage> {
   late LearningView view;
-  String? roomDocument;
-  static LearningView _currentView(LearningView value) => switch (value) {
-    LearningView.map => LearningView.journey,
-    LearningView.pipeline => LearningView.room,
-    LearningView.contributors => LearningView.feed,
-    _ => value,
-  };
-  static const visibleViews = [
-    LearningView.feed,
-    LearningView.seminars,
-    LearningView.room,
-    LearningView.journey,
-    LearningView.quiz,
-    LearningView.resources,
-  ];
+  static final _tabs = LearningView.values.where(
+    (view) => view != LearningView.quiz,
+  );
 
-  Future<List<LearningPost>>? _feedFuture;
   Future<List<LearningSeminar>>? _seminarsFuture;
   LearningArea? area;
-  final exampleLikes = <String>{};
-  final exampleThreads = <String, List<LearningComment>>{};
-  Future<List<LearningPost>> get feed => _feedFuture ??= _loadFeed();
-  Future<List<LearningPost>> _loadFeed() async {
-    if (widget.loadPosts != null) return widget.loadPosts!();
-    return LearningService.posts(order: 'newest');
-  }
 
   Future<void> _loadArea() async {
     final uid = BackendService.user?.id;
     final value = await LearningAreaService.load();
     if (mounted && uid == BackendService.user?.id) setState(() => area = value);
-  }
-
-  Future<void> _comments(LearningPost post) async {
-    final controller = NovaTrainingController.instance;
-    final wasDocked = controller.docked;
-    if (wasDocked) controller.dismissDock();
-    try {
-      await showModalBottomSheet<void>(
-        context: context,
-        isScrollControlled: true,
-        useSafeArea: true,
-        builder: (c) => SizedBox(
-          height: MediaQuery.sizeOf(c).height * .9,
-          child: LearningComments(
-            post: post,
-            isOwner: permissions.isOwner,
-            exampleComments: post.exampleIndex == null
-                ? null
-                : exampleThreads.putIfAbsent(
-                    post.id,
-                    () => LearningExamples.commentsFor(post),
-                  ),
-            onExampleChanged: (values) {
-              if (mounted) setState(() => exampleThreads[post.id] = values);
-            },
-          ),
-        ),
-      );
-    } finally {
-      if (wasDocked) controller.restoreDock();
-    }
-    if (mounted) refresh();
   }
 
   Future<List<LearningSeminar>> get seminars =>
@@ -137,7 +87,7 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
   @override
   void initState() {
     super.initState();
-    view = _currentView(widget.initialView);
+    view = widget.initialView;
     _loadArea();
     refresh();
     auth = BackendService.authChanges?.listen((_) {
@@ -213,7 +163,6 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
 
   void refresh() {
     eventRevision++;
-    _feedFuture = null;
     _seminarsFuture = null;
     _loadPermissions();
     if (mounted) setState(() {});
@@ -271,10 +220,34 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
       height: 1.45,
     ),
   );
-  String get guide =>
-      view == LearningView.quiz ? 'comparison' : 'learning-${view.name}';
-  void show(LearningView next) {
-    setState(() => view = _currentView(next));
+  bool get _showingQuiz => view == LearningView.quiz;
+
+  String get guide => switch (view) {
+    LearningView.quiz => 'comparison',
+    LearningView.room => 'learning-room',
+    LearningView.seminars => 'learning-seminars',
+    _ => 'learning-dashboard',
+  };
+
+  void show(LearningView next) => setState(() => view = next);
+
+  void _openQuiz() => Navigator.of(context).push(
+    MaterialPageRoute<void>(
+      settings: const RouteSettings(name: 'learning-quiz'),
+      builder: (_) =>
+          const LearningDashboardPage(initialView: LearningView.quiz),
+    ),
+  );
+
+  void _returnFromQuiz() {
+    final navigator = Navigator.of(context);
+    if (navigator.canPop()) {
+      navigator.pop();
+    } else {
+      navigator.pushReplacement(
+        MaterialPageRoute<void>(builder: (_) => const LearningDashboardPage()),
+      );
+    }
   }
 
   @override
@@ -301,26 +274,23 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
             guidePage: guide,
             dark: false,
             showPrivateUpdates: false,
+            beforeProfile: IconButton(
+              tooltip: _showingQuiz
+                  ? 'Back to Learning dashboard'
+                  : LearningView.quiz.label,
+              onPressed: _showingQuiz ? _returnFromQuiz : _openQuiz,
+              icon: Icon(
+                _showingQuiz ? Icons.arrow_back : LearningView.quiz.icon,
+              ),
+            ),
           ),
           const SizedBox(width: 12),
         ],
       ),
-      floatingActionButton: view == LearningView.feed && permissions.canPublish
-          ? Padding(
-              // Leave room for the owner's existing page-editor overlay.
-              padding: const EdgeInsets.only(bottom: 64),
-              child: FloatingActionButton(
-                key: const Key('learning-create-post'),
-                tooltip: 'Create a learning post',
-                onPressed: busy ? null : _compose,
-                child: const Icon(Icons.add),
-              ),
-            )
-          : null,
       body: DecoratedBox(
         decoration: const BoxDecoration(gradient: pactSurfaceGradient),
         child: LayoutBuilder(
-          builder: (context, box) => box.maxWidth >= 900
+          builder: (context, box) => !_showingQuiz && box.maxWidth >= 900
               ? Row(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -329,7 +299,7 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
                     Expanded(child: _workspace(false)),
                   ],
                 )
-              : _workspace(true),
+              : _workspace(box.maxWidth < 900),
         ),
       ),
     ),
@@ -352,22 +322,8 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
               weight: FontWeight.w800,
             ),
           ),
-          for (final item in const [
-            (LearningView.feed, 'Learning feed', Icons.home_outlined),
-            (LearningView.seminars, 'Live seminars', Icons.videocam_outlined),
-            (LearningView.room, 'Transaction Room', Icons.folder_open_outlined),
-            (LearningView.journey, 'Acquisition Journey', Icons.route_outlined),
-            (LearningView.quiz, 'Deal comparison quiz', Icons.compare_arrows),
-            (LearningView.resources, 'Resources', Icons.public),
-          ])
-            DashboardUi.nav(
-              item.$2,
-              item.$3,
-              view == item.$1,
-              () => show(item.$1),
-            ),
-          const SizedBox(height: 32),
-          DashboardUi.nav('Refresh', Icons.refresh, false, refresh),
+          for (final tab in _tabs)
+            DashboardUi.nav(tab.label, tab.icon, view == tab, () => show(tab)),
         ],
       ),
     ),
@@ -376,11 +332,11 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
     scrollDirection: Axis.horizontal,
     child: Row(
       children: [
-        for (final v in visibleViews)
+        for (final v in _tabs)
           Padding(
             padding: const EdgeInsets.only(right: 8),
             child: ChoiceChip(
-              label: Text(_label(v)),
+              label: Text(v.label),
               selected: view == v,
               onSelected: (_) => show(v),
             ),
@@ -389,372 +345,42 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
     ),
   );
 
-  Widget _workspace(bool compact) => Stack(
-    fit: StackFit.expand,
+  Widget _workspace(bool compact) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
-      Offstage(
-        offstage: view == LearningView.seminars,
-        child: TickerMode(
-          enabled: view != LearningView.seminars,
-          child: _standardWorkspace(compact),
+      if (compact && !_showingQuiz)
+        Padding(
+          padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
+          child: _compactNavigation(),
         ),
-      ),
-      if (view == LearningView.seminars)
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (compact)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
-                child: _compactNavigation(),
-              ),
-            Expanded(
-              child: Padding(
+      Expanded(
+        child: view == LearningView.seminars
+            ? Padding(
                 padding: EdgeInsets.all(compact ? 8 : 12),
                 child: _seminars(),
-              ),
-            ),
-          ],
-        ),
-    ],
-  );
-
-  Widget _standardWorkspace(bool compact) => SingleChildScrollView(
-    key: ValueKey('learning-workspace-${view.name}-${roomDocument ?? ""}'),
-    padding: EdgeInsets.all(
-      compact ? (view == LearningView.quiz ? 12 : 18) : 28,
-    ),
-    child: Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 1220),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (compact) ...[_compactNavigation(), const SizedBox(height: 22)],
-            Offstage(
-              offstage: view != LearningView.quiz,
-              child: TickerMode(
-                enabled: view == LearningView.quiz,
-                child: const DealComparisonPage(embedded: true),
-              ),
-            ),
-            switch (view) {
-              LearningView.feed => _feed(),
-              LearningView.seminars => const SizedBox.shrink(),
-              LearningView.room => NovaTarget(
-                id: 'learning-room.documents',
-                child: TransactionRoomPanel(
-                  key: ValueKey(roomDocument),
-                  initialDocumentId: roomDocument,
-                ),
-              ),
-              LearningView.journey => AcquisitionJourneyPanel(
-                onOpenDocument: (id) => setState(() {
-                  roomDocument = id;
-                  view = LearningView.room;
-                }),
-              ),
-              LearningView.map => const SizedBox.shrink(),
-              LearningView.quiz => const SizedBox.shrink(),
-              LearningView.pipeline => const SizedBox.shrink(),
-              LearningView.resources => const BuyerResourcesPanel(),
-              LearningView.contributors => const SizedBox.shrink(),
-            },
-          ],
-        ),
-      ),
-    ),
-  );
-  String _label(LearningView v) => switch (v) {
-    LearningView.feed => 'Learning feed',
-    LearningView.seminars => 'Live seminars',
-    LearningView.room => 'Transaction Room',
-    LearningView.journey => 'Acquisition Journey',
-    LearningView.map => 'Buying & selling map',
-    LearningView.quiz => 'Deal comparison quiz',
-    LearningView.pipeline => 'Pipeline',
-    LearningView.resources => 'Resources',
-    LearningView.contributors => 'Contributor approvals',
-  };
-  Widget heading(String id, String title, String intro) => NovaTarget(
-    id: '$guide.title',
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        copy('learning.$id.title', title, size: 28, weight: FontWeight.w800),
-        const SizedBox(height: 8),
-        copy('learning.$id.intro', intro, size: 14, color: DashboardUi.muted),
-        const SizedBox(height: 24),
-      ],
-    ),
-  );
-  Widget _feed() => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      FutureBuilder<List<LearningPost>>(
-        future: feed,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState != ConnectionState.done)
-            return const Center(child: CircularProgressIndicator());
-          if (snapshot.hasError)
-            return _error(
-              'The learning feed could not load. Please try again.',
-            );
-          final published = snapshot.data ?? [];
-          final all = published.isEmpty ? LearningExamples.posts : published;
-          final shown = all;
-          return NovaTarget(
-            id: 'learning-feed.posts',
-            child: Column(
-              children: [
-                if (shown.isEmpty)
-                  DashboardUi.panel(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        copy(
-                          'learning.feed.empty',
-                          'No learning posts yet',
-                          size: 20,
-                          weight: FontWeight.w700,
-                        ),
-                        const SizedBox(height: 8),
-                        copy(
-                          'learning.feed.empty.detail',
-                          'Only creator-approved contributors can publish. Explore the learning map or document guides while new lessons arrive.',
-                          color: DashboardUi.muted,
-                        ),
-                        const SizedBox(height: 18),
-                        Wrap(
-                          spacing: 12,
-                          runSpacing: 8,
-                          children: [
-                            OutlinedButton.icon(
-                              onPressed: () => show(LearningView.map),
-                              icon: const Icon(Icons.account_tree_outlined),
-                              label: copy(
-                                'learning.feed.map',
-                                'Explore Acquisition Journey',
-                              ),
-                            ),
-                            TextButton(
-                              onPressed: _documents,
-                              child: copy(
-                                'learning.feed.documents',
-                                'Document examples',
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
+              )
+            : SingleChildScrollView(
+                key: ValueKey('learning-workspace-${view.name}-'),
+                padding: EdgeInsets.all(compact ? 12 : 28),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 1220),
+                    child: switch (view) {
+                      LearningView.room => const NovaTarget(
+                        id: 'learning-room.documents',
+                        child: TransactionRoomPanel(),
+                      ),
+                      LearningView.quiz => const DealComparisonPage(
+                        embedded: true,
+                      ),
+                      _ => const SizedBox.shrink(),
+                    },
                   ),
-                LayoutBuilder(
-                  builder: (context, box) {
-                    final columns = box.maxWidth >= 700 ? 2 : 1;
-                    final width = (box.maxWidth - (columns - 1) * 20) / columns;
-                    return Wrap(
-                      spacing: 20,
-                      runSpacing: 20,
-                      children: [
-                        for (final post in shown)
-                          SizedBox(width: width, child: _post(post)),
-                      ],
-                    );
-                  },
                 ),
-                const SizedBox(height: 24),
-                _startHere(),
-              ],
-            ),
-          );
-        },
+              ),
       ),
     ],
   );
-  Widget _startHere() => learningCard(
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        copy(
-          'learning.start.title',
-          'Start with the concepts',
-          size: 21,
-          weight: FontWeight.w700,
-        ),
-        const SizedBox(height: 10),
-        copy(
-          'learning.start.body',
-          'Work through Acquisition Journey, then explore the Transaction Room for the documents, examples and templates used at each stage.',
-          color: DashboardUi.muted,
-        ),
-        const SizedBox(height: 16),
-        Wrap(
-          spacing: 12,
-          runSpacing: 10,
-          children: [
-            FilledButton.icon(
-              onPressed: () => show(LearningView.journey),
-              icon: const Icon(Icons.route_outlined),
-              label: const Text('Acquisition Journey'),
-            ),
-            OutlinedButton.icon(
-              onPressed: () => show(LearningView.room),
-              icon: const Icon(Icons.folder_open_outlined),
-              label: const Text('Transaction Room'),
-            ),
-          ],
-        ),
-      ],
-    ),
-  );
-  Widget _post(LearningPost p) => Align(
-    key: ValueKey('learning-post-${p.id}'),
-    alignment: Alignment.topCenter,
-    child: ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 860),
-      child: DashboardUi.panel(
-        padding: const EdgeInsets.all(22),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                CircleAvatar(
-                  backgroundColor: DashboardUi.paleBlue,
-                  child: Text(p.author.isEmpty ? '?' : p.author[0]),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        p.author,
-                        style: const TextStyle(fontWeight: FontWeight.w700),
-                      ),
-                      Text(
-                        '${p.areaName ?? "Community post"}${p.distanceKm == null ? "" : " · ~${p.distanceKm!.round()} km"} · ${DateFormat('MMM d').format(p.createdAt)}',
-                        style: const TextStyle(
-                          color: DashboardUi.muted,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (p.exampleIndex != null)
-                  const Chip(label: Text('Example'))
-                else
-                  const Tooltip(
-                    message: 'Creator-approved contributor',
-                    child: Icon(
-                      Icons.verified,
-                      color: DashboardUi.blue,
-                      size: 21,
-                    ),
-                  ),
-                if (p.exampleIndex == null &&
-                    (permissions.isOwner ||
-                        p.authorId == BackendService.user?.id))
-                  IconButton(
-                    tooltip: 'Hide this post',
-                    onPressed: busy ? null : () => _confirmHide(p),
-                    icon: const Icon(Icons.more_horiz),
-                  ),
-              ],
-            ),
-            if (p.exampleIndex != null) ...[
-              const SizedBox(height: 18),
-              SizedBox(
-                height: MediaQuery.sizeOf(context).width < 600 ? 260 : 420,
-                width: double.infinity,
-                child: LearningExampleCover(index: p.exampleIndex!),
-              ),
-            ],
-            if (p.media.isNotEmpty) ...[
-              const SizedBox(height: 18),
-              LearningGallery(media: p.media),
-            ],
-            const SizedBox(height: 18),
-            Wrap(
-              spacing: 18,
-              children: [
-                TextButton.icon(
-                  onPressed: busy
-                      ? null
-                      : () async {
-                          if (p.exampleIndex != null) {
-                            setState(() {
-                              if (!exampleLikes.add(p.id))
-                                exampleLikes.remove(p.id);
-                            });
-                            return;
-                          }
-                          if (await _signedIn())
-                            _action(
-                              () =>
-                                  LearningService.reaction(p, 'like', !p.liked),
-                            );
-                        },
-                  icon: Icon(
-                    (p.exampleIndex != null
-                            ? exampleLikes.contains(p.id)
-                            : p.liked)
-                        ? Icons.favorite
-                        : Icons.favorite_border,
-                  ),
-                  label: Text(
-                    '${p.likes + (exampleLikes.contains(p.id) ? 1 : 0)} ${p.likes + (exampleLikes.contains(p.id) ? 1 : 0) == 1 ? 'like' : 'likes'}',
-                  ),
-                ),
-                TextButton.icon(
-                  onPressed: () => _comments(p),
-                  icon: const Icon(Icons.chat_bubble_outline),
-                  label: Text(
-                    '${exampleThreads[p.id]?.where((c) => !c.removed).length ?? p.comments} ${(exampleThreads[p.id]?.where((c) => !c.removed).length ?? p.comments) == 1 ? 'comment' : 'comments'}',
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              p.title,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-            ),
-            if (p.body.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              LearningCaption(key: ValueKey(p.id), body: p.body),
-            ],
-            const SizedBox(height: 18),
-            const Divider(color: DashboardUi.line),
-          ],
-        ),
-      ),
-    ),
-  );
-  Future<void> _confirmHide(LearningPost p) async {
-    final yes = await showDialog<bool>(
-      context: context,
-      builder: (c) => AlertDialog(
-        title: const Text('Hide this learning post?'),
-        content: const Text(
-          'It will leave the public feed. Its records are retained.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(c, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(c, true),
-            child: const Text('Hide post'),
-          ),
-        ],
-      ),
-    );
-    if (yes == true && mounted) _action(() => LearningService.hidePost(p.id));
-  }
 
   Widget _error(String message) => DashboardUi.panel(
     child: Column(
@@ -770,17 +396,6 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
       ],
     ),
   );
-  void _documents() => show(LearningView.room);
-  Future<void> _compose() async {
-    await _loadPermissions();
-    if (!mounted || !permissions.canPublish) return;
-    await showDialog<void>(
-      context: context,
-      builder: (_) => LearningPostComposer(initialArea: area),
-    );
-    if (mounted) refresh();
-  }
-
   Future<void> _manageEvents() async {
     final events = await seminars;
     if (!mounted) return;
@@ -1108,255 +723,6 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
   }
 }
 
-class LearningGallery extends StatefulWidget {
-  const LearningGallery({super.key, required this.media});
-  final List<LearningAttachment> media;
-  @override
-  State<LearningGallery> createState() => _LearningGalleryState();
-}
-
-class _LearningGalleryState extends State<LearningGallery> {
-  int current = 0;
-  @override
-  Widget build(BuildContext context) {
-    final file = widget.media[current.clamp(0, widget.media.length - 1)];
-    return Column(
-      children: [
-        if (file.image)
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Image.network(
-              file.url,
-              height: MediaQuery.sizeOf(context).width < 600 ? 260 : 460,
-              width: double.infinity,
-              fit: BoxFit.contain,
-              errorBuilder: (_, __, ___) => const Padding(
-                padding: EdgeInsets.all(32),
-                child: Text(
-                  'This image could not load. Refresh or open the attachment.',
-                ),
-              ),
-            ),
-          )
-        else if (file.video || file.audio)
-          LearningMediaPlayer(
-            key: ValueKey(file.path),
-            url: file.url,
-            audio: file.audio,
-          )
-        else
-          const Padding(
-            padding: EdgeInsets.all(30),
-            child: Icon(
-              Icons.description_outlined,
-              size: 60,
-              color: DashboardUi.blue,
-            ),
-          ),
-        Row(
-          children: [
-            if (widget.media.length > 1)
-              IconButton(
-                tooltip: 'Previous attachment',
-                onPressed: current > 0 ? () => setState(() => current--) : null,
-                icon: const Icon(Icons.chevron_left),
-              ),
-            Expanded(child: Text(file.name, overflow: TextOverflow.ellipsis)),
-            Text('${current + 1}/${widget.media.length}'),
-            if (widget.media.length > 1)
-              IconButton(
-                tooltip: 'Next attachment',
-                onPressed: current < widget.media.length - 1
-                    ? () => setState(() => current++)
-                    : null,
-                icon: const Icon(Icons.chevron_right),
-              ),
-            TextButton(
-              onPressed: () => launchUrl(
-                Uri.parse(file.url),
-                mode: LaunchMode.externalApplication,
-              ),
-              child: const Text('Open file'),
-            ),
-          ],
-        ),
-        if (file.video)
-          const Text(
-            'Playback depends on your browser and the video codec. Use Open file if it cannot play.',
-            style: TextStyle(fontSize: 12, color: DashboardUi.muted),
-          ),
-      ],
-    );
-  }
-}
-
-class LearningPostComposer extends StatefulWidget {
-  const LearningPostComposer({super.key, this.initialArea});
-  final LearningArea? initialArea;
-  @override
-  State<LearningPostComposer> createState() => _LearningPostComposerState();
-}
-
-class _LearningPostComposerState extends State<LearningPostComposer> {
-  final title = TextEditingController(), body = TextEditingController();
-  String topic = 'both';
-  LearningArea? area;
-  @override
-  void initState() {
-    super.initState();
-    area = widget.initialArea;
-  }
-
-  final files = <LearningUpload>[];
-  bool busy = false;
-  String? error;
-  @override
-  void dispose() {
-    title.dispose();
-    body.dispose();
-    super.dispose();
-  }
-
-  Future<void> pick() async {
-    try {
-      final result = await FilePicker.platform.pickFiles(
-        allowMultiple: true,
-        withData: true,
-        type: FileType.custom,
-        allowedExtensions: LearningUpload.types.keys.toList(),
-      );
-      if (result == null || !mounted) return;
-      final chosen = result.files
-          .map((f) => LearningUpload(f.name, f.bytes ?? Uint8List(0)))
-          .toList();
-      for (final f in chosen) f.validate();
-      if (files.length + chosen.length > 10)
-        throw StateError('Add up to 10 attachments.');
-      setState(() => files.addAll(chosen));
-    } catch (e) {
-      if (mounted) setState(() => error = '$e');
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) => AlertDialog(
-    title: const Text('Create a learning post'),
-    content: SizedBox(
-      width: 620,
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            OutlinedButton.icon(
-              onPressed: busy
-                  ? null
-                  : () async {
-                      final value = await chooseLearningArea(context);
-                      if (value != null && mounted)
-                        setState(() => area = value);
-                    },
-              icon: const Icon(Icons.location_on_outlined),
-              label: Text(area?.name ?? 'Choose the post community'),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: title,
-              maxLength: 160,
-              decoration: const InputDecoration(
-                labelText: 'Post title',
-                hintText: 'Example: Understanding working capital',
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: body,
-              maxLength: 12000,
-              minLines: 5,
-              maxLines: 10,
-              decoration: const InputDecoration(
-                labelText: 'Lesson or caption',
-                hintText: 'Explain the concept in your own words…',
-              ),
-            ),
-            DropdownButtonFormField<String>(
-              initialValue: topic,
-              decoration: const InputDecoration(labelText: 'Topic'),
-              items: [
-                for (final t in const [
-                  'both',
-                  'buyer',
-                  'seller',
-                  'finance',
-                  'legal',
-                ])
-                  DropdownMenuItem(
-                    value: t,
-                    child: Text(t == 'both' ? 'Buying & selling' : t),
-                  ),
-              ],
-              onChanged: (t) => topic = t!,
-            ),
-            const SizedBox(height: 14),
-            OutlinedButton.icon(
-              onPressed: busy ? null : pick,
-              icon: const Icon(Icons.attach_file),
-              label: const Text('Add photos, video, audio or PDF'),
-            ),
-            const SizedBox(height: 10),
-            const Text(
-              'JPG, PNG, WebP, GIF, MP4, WebM, MOV, MP3, WAV, M4A and PDF. Up to 10 files, 90 MB each.',
-              style: TextStyle(fontSize: 12, color: DashboardUi.muted),
-            ),
-            for (var i = 0; i < files.length; i++)
-              ListTile(
-                title: Text(files[i].name),
-                trailing: IconButton(
-                  onPressed: busy
-                      ? null
-                      : () => setState(() => files.removeAt(i)),
-                  icon: const Icon(Icons.close),
-                ),
-              ),
-            if (error != null)
-              Text(error!, style: const TextStyle(color: Colors.red)),
-          ],
-        ),
-      ),
-    ),
-    actions: [
-      TextButton(
-        onPressed: busy ? null : () => Navigator.pop(context),
-        child: const Text('Cancel'),
-      ),
-      FilledButton(
-        onPressed: busy
-            ? null
-            : () async {
-                setState(() {
-                  busy = true;
-                  error = null;
-                });
-                try {
-                  await LearningService.publish(
-                    title.text,
-                    body.text,
-                    topic,
-                    files,
-                    area: area,
-                  );
-                  if (mounted) Navigator.pop(context);
-                } catch (e) {
-                  if (mounted) setState(() => error = '$e');
-                } finally {
-                  if (mounted) setState(() => busy = false);
-                }
-              },
-        child: Text(busy ? 'Publishing…' : 'Publish lesson'),
-      ),
-    ],
-  );
-}
-
 class LearningSeminarComposer extends StatefulWidget {
   const LearningSeminarComposer({super.key});
   @override
@@ -1676,37 +1042,6 @@ class _LearningSeminarComposerState extends State<LearningSeminarComposer> {
               },
         child: Text(busy ? 'Publishing…' : 'Publish event'),
       ),
-    ],
-  );
-}
-
-class LearningCaption extends StatefulWidget {
-  const LearningCaption({super.key, required this.body});
-  final String body;
-  @override
-  State<LearningCaption> createState() => _LearningCaptionState();
-}
-
-class _LearningCaptionState extends State<LearningCaption> {
-  bool expanded = false;
-  @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      if (expanded)
-        SelectableText(widget.body, style: const TextStyle(height: 1.5))
-      else
-        Text(
-          widget.body,
-          maxLines: 3,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(height: 1.5),
-        ),
-      if (widget.body.length > 160 || widget.body.split('\n').length > 3)
-        TextButton(
-          onPressed: () => setState(() => expanded = !expanded),
-          child: Text(expanded ? 'Less' : 'Read more'),
-        ),
     ],
   );
 }

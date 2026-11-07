@@ -18,10 +18,12 @@ class NavigationOrganizer extends StatefulWidget {
     required this.onAbout,
     this.onDashboard,
     this.initiallyOpen = false,
+    this.compactTrailingSpace = 0,
     required this.dashboards,
   });
   final int activeTab;
   final bool initiallyOpen;
+  final double compactTrailingSpace;
   final VoidCallback onHome, onAbout;
   final VoidCallback? onDashboard;
   final List<Widget> dashboards;
@@ -222,6 +224,8 @@ class NavigationOrganizerState extends State<NavigationOrganizer> {
   Widget build(BuildContext context) {
     final screen = MediaQuery.sizeOf(context);
     final safeTop = MediaQuery.paddingOf(context).top;
+    final reserveActions =
+        screen.width < 700 && widget.compactTrailingSpace > 0;
     return SizedBox.expand(
       child: Stack(
         children: [
@@ -293,9 +297,15 @@ class NavigationOrganizerState extends State<NavigationOrganizer> {
           ],
           Positioned(
             top: safeTop + 14,
-            left: 0,
-            right: 0,
-            child: Center(child: _bar(organizerWidth(screen.width))),
+            left: reserveActions ? 76 : 0,
+            right: reserveActions ? widget.compactTrailingSpace : 0,
+            child: LayoutBuilder(
+              builder: (context, box) => Center(
+                child: _bar(
+                  organizerWidth(screen.width).clamp(0.0, box.maxWidth),
+                ),
+              ),
+            ),
           ),
         ],
       ),

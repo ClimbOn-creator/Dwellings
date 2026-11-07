@@ -6,7 +6,7 @@ import '../models/marketing_motion_content.dart';
 // Never regenerate or renumber this registry during a redesign.
 const siteCopyCatalog = <String, String>{
   'buyer.workspace.heading': 'My workspace',
-  'transaction.library.title': 'Transaction Room',
+  'transaction.library.title': 'Documents',
   'transaction.library.kicker': 'YOUR DOCUMENT WORKSPACE',
   'learning.room.kicker': 'YOUR DOCUMENT WORKSPACE',
   'learning.room.title': 'Transaction Room',

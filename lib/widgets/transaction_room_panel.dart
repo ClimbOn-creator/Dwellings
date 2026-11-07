@@ -49,7 +49,12 @@ Future<void> downloadTransactionDocument(
 }
 
 class TransactionRoomPanel extends StatefulWidget {
-  const TransactionRoomPanel({super.key, this.initialDocumentId});
+  const TransactionRoomPanel({
+    super.key,
+    this.initialDocumentId,
+    this.title = 'Documents',
+  });
+  final String title;
   final String? initialDocumentId;
   @override
   State<TransactionRoomPanel> createState() => _TransactionRoomPanelState();
@@ -90,10 +95,10 @@ class _TransactionRoomPanelState extends State<TransactionRoomPanel> {
           ),
         ),
         const SizedBox(height: 10),
-        const SiteCopyText(
+        SiteCopyText(
           'transaction.library.title',
-          'Transaction Room',
-          style: TextStyle(
+          widget.title,
+          style: const TextStyle(
             color: learningInk,
             fontSize: 32,
             fontWeight: FontWeight.w800,

@@ -100,6 +100,7 @@ class AppNavigationMenu extends StatefulWidget {
     this.guidePage,
     this.showPrivateUpdates = true,
     this.openDashboardMenu = false,
+    this.beforeProfile,
   });
 
   // Kept while older callers are migrated to the single acquisition app.
@@ -107,6 +108,7 @@ class AppNavigationMenu extends StatefulWidget {
   final String? guidePage;
   final bool showPrivateUpdates;
   final bool openDashboardMenu;
+  final Widget? beforeProfile;
   final PlatformSide side;
   final bool dark;
   final ValueChanged<PlatformSide>? onSideChanged;
@@ -150,8 +152,8 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
     AppNavigationDestination.memberPricing => 'Pricing',
     AppNavigationDestination.memberMarketing => 'Marketing',
     AppNavigationDestination.learningDashboard => 'Learning dashboard',
-    AppNavigationDestination.learningSeminars => 'Live seminars',
-    AppNavigationDestination.learningMap => 'Acquisition Journey',
+    AppNavigationDestination.learningSeminars => 'Seminars',
+    AppNavigationDestination.learningMap => 'Roadmap',
     AppNavigationDestination.profile => 'My profile',
   };
 
@@ -166,7 +168,7 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
       initialView: LearningView.seminars,
     ),
     AppNavigationDestination.learningMap => const LearningDashboardPage(
-      initialView: LearningView.journey,
+      initialView: LearningView.roadmap,
     ),
     AppNavigationDestination.consulting => const PersonalizedConsultingPage(),
     AppNavigationDestination.resources => const BuyerResourcesPage(),
@@ -250,6 +252,7 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
   Widget _organizer() => NavigationOrganizer(
     key: _organizerKey,
     initiallyOpen: widget.openDashboardMenu,
+    compactTrailingSpace: widget.beforeProfile == null ? 0 : 112,
     activeTab: _guidePage() == 'landing'
         ? 0
         : _guidePage() == 'about-us'
@@ -454,6 +457,7 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
                 ),
               ),
             ),
+          if (widget.beforeProfile case final action?) action,
           if (BackendService.user == null)
             IconButton(
               tooltip: 'Sign in',
