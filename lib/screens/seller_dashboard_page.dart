@@ -1,3 +1,4 @@
+import '../widgets/dashboard_coming_soon.dart';
 import '../widgets/workspace_destination.dart';
 import '../services/workspace_role_service.dart';
 import 'pact_web_messages.dart';
@@ -52,7 +53,9 @@ class SellerDashboardPage extends StatefulWidget {
   final bool learning;
 
   @override
-  State<SellerDashboardPage> createState() => _SellerDashboardPageState();
+  State<SellerDashboardPage> createState() => privateDashboardsAvailable
+      ? _SellerDashboardPageState()
+      : DashboardComingSoonState<SellerDashboardPage>('Seller dashboard');
 }
 
 class _SellerDashboardPageState extends State<SellerDashboardPage> {

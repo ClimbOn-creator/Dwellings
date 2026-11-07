@@ -1,3 +1,4 @@
+import '../widgets/dashboard_coming_soon.dart';
 import '../widgets/member_roi_dashboard.dart';
 import '../widgets/pact_profile_panel.dart';
 import '../widgets/workspace_destination.dart';
@@ -73,20 +74,24 @@ class MemberDashboardPage extends StatelessWidget {
   final MarketplaceProvider? initialChatProvider;
 
   @override
-  Widget build(BuildContext context) =>
-      lockedWorkspaceDestination(context, WorkspaceRole.member) ??
-      StreamBuilder<AuthState>(
-        stream: BackendService.authChanges,
-        builder: (context, snapshot) {
-          final user = BackendService.user;
-          if (user == null) return AuthPage(onAuthenticated: () {});
-          return MemberDealMarketplacePage(
-            key: ValueKey(user.id),
-            initialView: initialView,
-            initialChatProvider: initialChatProvider,
-          );
-        },
-      );
+  Widget build(BuildContext context) {
+    if (!privateDashboardsAvailable) {
+      return const DashboardComingSoonPage(title: 'Member dashboard');
+    }
+    return lockedWorkspaceDestination(context, WorkspaceRole.member) ??
+        StreamBuilder<AuthState>(
+          stream: BackendService.authChanges,
+          builder: (context, snapshot) {
+            final user = BackendService.user;
+            if (user == null) return AuthPage(onAuthenticated: () {});
+            return MemberDealMarketplacePage(
+              key: ValueKey(user.id),
+              initialView: initialView,
+              initialChatProvider: initialChatProvider,
+            );
+          },
+        );
+  }
 }
 
 class MemberDealMarketplacePage extends StatefulWidget {

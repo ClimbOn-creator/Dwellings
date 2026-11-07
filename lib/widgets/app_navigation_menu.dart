@@ -1,3 +1,4 @@
+import 'dashboard_coming_soon.dart';
 import '../screens/dashboard_showcase_page.dart';
 import 'navigation_organizer.dart';
 import '../models/footer_page_content.dart';
@@ -241,6 +242,11 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
     NovaTrainingController.instance.startPage(_guidePage());
   }
 
+  bool _dashboardComingSoon(AppNavigationDestination destination) =>
+      !privateDashboardsAvailable &&
+      (destination == AppNavigationDestination.buyerDashboard ||
+          destination == AppNavigationDestination.sellerDashboard);
+
   Widget _organizer() => NavigationOrganizer(
     key: _organizerKey,
     initiallyOpen: widget.openDashboardMenu,
@@ -286,11 +292,12 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
           Icons.swap_horiz_rounded,
           'Plan your succession or business transfer.',
         ),
-        (
-          AppNavigationDestination.memberStudio,
-          Icons.business_center_outlined,
-          'Your professional profile and deal workspace.',
-        ),
+        if (privateDashboardsAvailable)
+          (
+            AppNavigationDestination.memberStudio,
+            Icons.business_center_outlined,
+            'Your professional profile and deal workspace.',
+          ),
         (
           AppNavigationDestination.learningDashboard,
           Icons.school_outlined,
@@ -304,7 +311,9 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
               destination: destination,
               label: _label(destination),
               selected: false,
-              onPressed: () => _open(context, destination),
+              onPressed: _dashboardComingSoon(destination)
+                  ? null
+                  : () => _open(context, destination),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -319,21 +328,27 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
                     ),
                   ),
                   const SizedBox(height: 9),
-                  SiteCopyText(
-                    'navigation.organizer.${destination.name}.description',
-                    description,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      height: 1.5,
-                      color: Color(0xFF657067),
+                  if (_dashboardComingSoon(destination))
+                    const Text(dashboardComingSoon)
+                  else ...[
+                    SiteCopyText(
+                      'navigation.organizer.${destination.name}.description',
+                      description,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        height: 1.5,
+                        color: Color(0xFF657067),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                  const Icon(Icons.arrow_forward_rounded, size: 19),
+                    const SizedBox(height: 20),
+                    const Icon(Icons.arrow_forward_rounded, size: 19),
+                  ],
                 ],
               ),
             ),
             for (final link in switch (destination) {
+              _ when _dashboardComingSoon(destination) =>
+                <AppNavigationDestination>[],
               AppNavigationDestination.buyerDashboard => [
                 AppNavigationDestination.resources,
                 AppNavigationDestination.businessesForSale,
@@ -500,12 +515,13 @@ class AppNavigationPill extends StatelessWidget {
   final AppNavigationDestination? destination;
   final String label;
   final bool selected;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
   final Widget child;
   @override
   Widget build(BuildContext context) => Semantics(
     selected: selected,
     button: true,
+    enabled: onPressed != null,
     child: Tooltip(
       message: label,
       excludeFromSemantics: true,

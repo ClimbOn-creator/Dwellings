@@ -1,3 +1,4 @@
+import '../widgets/dashboard_coming_soon.dart';
 import '../widgets/workspace_destination.dart';
 import '../services/workspace_role_service.dart';
 import 'pact_web_messages.dart';
@@ -87,7 +88,9 @@ class DealRoomsPage extends StatefulWidget {
   loadTeamProviders;
 
   @override
-  State<DealRoomsPage> createState() => _DealRoomsPageState();
+  State<DealRoomsPage> createState() => privateDashboardsAvailable
+      ? _DealRoomsPageState()
+      : DashboardComingSoonState<DealRoomsPage>('Buyer dashboard');
 }
 
 class _DealRoomsPageState extends State<DealRoomsPage> {

@@ -1,3 +1,4 @@
+import 'widgets/dashboard_coming_soon.dart';
 import 'widgets/workspace_destination.dart';
 import 'widgets/workspace_role_gate.dart';
 import 'screens/pact_web_messages.dart';
@@ -214,9 +215,9 @@ class AffinityApp extends StatelessWidget {
       _ => Builder(
         builder: (context) {
           final role = WorkspaceRoleScope.of(context);
-          return role == null
-              ? const AcquisitionSupportPage()
-              : workspaceHome(role);
+          if (role == null) return const AcquisitionSupportPage();
+          if (!privateDashboardsAvailable) return const LearningDashboardPage();
+          return workspaceHome(role);
         },
       ),
     };
