@@ -1,3 +1,4 @@
+import '../widgets/dashboard_coming_soon.dart';
 import '../services/site_content_service.dart';
 import 'package:flutter/material.dart';
 import '../models/dashboard_showcase_content.dart';
@@ -34,7 +35,19 @@ class DashboardShowcasePage extends StatefulWidget {
 }
 
 class _DashboardShowcasePageState extends State<DashboardShowcasePage> {
-  int _preview = 0, _tour = 0;
+  static const _learningIndex = 3;
+  static const _previewRoles = privateDashboardsAvailable
+      ? [0, 1, 2, _learningIndex]
+      : [_learningIndex];
+  static const _workspaceRoles = [
+    0,
+    1,
+    if (privateDashboardsAvailable) 2,
+    _learningIndex,
+  ];
+
+  int _preview = _previewRoles.first;
+  int _tour = _previewRoles.first;
   final _scroll = ScrollController();
   @override
   void dispose() {
@@ -156,7 +169,7 @@ class _DashboardShowcasePageState extends State<DashboardShowcasePage> {
     spacing: 8,
     runSpacing: 8,
     children: [
-      for (var i = 0; i < _roles.length; i++)
+      for (final i in _previewRoles)
         ChoiceChip(
           key: ValueKey(
             'showcase-tab-${onChange == _selectPreview ? 'preview' : 'tour'}-$i',
@@ -316,7 +329,7 @@ class _DashboardShowcasePageState extends State<DashboardShowcasePage> {
             spacing: 24,
             runSpacing: 24,
             children: [
-              for (var i = 0; i < 4; i++)
+              for (final i in _workspaceRoles)
                 Container(
                   width: narrow ? box.maxWidth : (box.maxWidth - 24) / 2,
                   padding: EdgeInsets.all(narrow ? 26 : 40),
@@ -374,7 +387,13 @@ class _DashboardShowcasePageState extends State<DashboardShowcasePage> {
                       const SizedBox(height: 20),
                       _copy('${_roles[i]}.features', size: 12),
                       const SizedBox(height: 26),
-                      _button('${_roles[i]}.action', () => _open(i)),
+                      if (!privateDashboardsAvailable && i != _learningIndex)
+                        const FilledButton(
+                          onPressed: null,
+                          child: Text(dashboardComingSoon),
+                        )
+                      else
+                        _button('${_roles[i]}.action', () => _open(i)),
                     ],
                   ),
                 ),
