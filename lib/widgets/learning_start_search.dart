@@ -112,6 +112,7 @@ class _LearningStartSearchState extends State<LearningStartSearch> {
                     },
                     decoration: InputDecoration(
                       hintText: 'Search Pact Learning',
+                      hintStyle: const TextStyle(color: Color(0xFF646464)),
                       prefixIcon: const Icon(
                         Icons.search,
                         color: Color(0xFF606060),
@@ -124,7 +125,11 @@ class _LearningStartSearchState extends State<LearningStartSearch> {
                             _search(_field.text);
                             FocusScope.of(context).unfocus();
                           },
-                          icon: const Icon(Icons.arrow_upward, size: 19),
+                          icon: const Icon(
+                            Icons.arrow_upward,
+                            size: 19,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                       filled: true,
