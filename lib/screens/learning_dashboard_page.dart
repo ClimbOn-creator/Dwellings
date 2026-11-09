@@ -95,7 +95,7 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
       final map = await CanadaMapGeometry.asset;
       if (!mounted || request != _locationRequest) return;
       if (!region
-          .projectedBounds(map)
+          .projectedBounds(map.normalized)
           .overlaps(const Rect.fromLTWH(0, 0, 1, 1))) {
         setState(
           () => _locationNotice =

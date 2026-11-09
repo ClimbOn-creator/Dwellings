@@ -1,8 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import '../services/learning_service.dart';
 import 'dashboard_ui.dart';
@@ -63,7 +67,9 @@ class SeminarMapRegion {
     return haversine <= math.pow(math.sin(_angularRadius / 2), 2);
   }
 
-  Iterable<Offset> projectedOutline(CanadaMapGeometry geometry) sync* {
+  Iterable<Offset> projectedOutline(
+    Offset Function(double, double) project,
+  ) sync* {
     final lat = latitude * _radians;
     final sinLat = math.sin(lat), cosLat = math.cos(lat);
     final sinRadius = math.sin(_angularRadius);
@@ -80,17 +86,14 @@ class SeminarMapRegion {
         math.sin(bearing) * sinRadius * cosLat,
         cosRadius - sinLat * math.sin(boundaryLat),
       );
-      yield geometry.normalized(
-        boundaryLat / _radians,
-        longitude + boundaryLon / _radians,
-      );
+      yield project(boundaryLat / _radians, longitude + boundaryLon / _radians);
     }
   }
 
-  Rect projectedBounds(CanadaMapGeometry geometry) {
-    final centre = geometry.normalized(latitude, longitude);
+  Rect projectedBounds(Offset Function(double, double) project) {
+    final centre = project(latitude, longitude);
     var bounds = Rect.fromPoints(centre, centre);
-    for (final point in projectedOutline(geometry)) {
+    for (final point in projectedOutline(project)) {
       bounds = bounds.expandToInclude(Rect.fromPoints(point, point));
     }
     return bounds;
@@ -115,6 +118,18 @@ class CanadaEventMap extends StatefulWidget {
   State<CanadaEventMap> createState() => _CanadaEventMapState();
 }
 
+// The national view fits Canada. Tiles and pins share Web Mercator coordinates.
+Offset _mercator(double latitude, double longitude) {
+  final lat = latitude.clamp(-85.051129, 85.051129) * math.pi / 180;
+  final y = (1 - math.log(math.tan(math.pi / 4 + lat / 2)) / math.pi) / 2;
+  return Offset((longitude + 180) / 360, y);
+}
+
+final _canadaMercator = Rect.fromPoints(
+  _mercator(83.3, -142),
+  _mercator(41.5, -51),
+);
+
 class _CanadaEventMapState extends State<CanadaEventMap> {
   final transform = TransformationController();
   Timer? closeTimer;
@@ -122,10 +137,44 @@ class _CanadaEventMapState extends State<CanadaEventMap> {
   Size viewport = Size.zero;
   CanadaMapGeometry? geometry;
   double fitScale = 1;
+  bool _tileError = false;
+  bool _fitted = false;
+  String? _mapboxToken;
+  bool get _showMapbox => _mapboxToken != null && !_tileError;
+
+  Offset _project(double latitude, double longitude) {
+    if (!_showMapbox) return geometry!.normalized(latitude, longitude);
+    final point = _mercator(latitude, longitude) - _canadaMercator.topLeft;
+    return Offset(
+      point.dx / _canadaMercator.width,
+      point.dy / _canadaMercator.height,
+    );
+  }
+
   @override
   void initState() {
     super.initState();
     transform.addListener(changed);
+    if (kIsWeb) _loadMapbox();
+  }
+
+  Future<void> _loadMapbox() async {
+    try {
+      final response = await http
+          .get(Uri.base.resolve('/api/seminar-map-config'))
+          .timeout(const Duration(seconds: 5));
+      if (!mounted || response.statusCode != 200) return;
+      final token = (jsonDecode(response.body) as Map)['mapboxToken'];
+      if (token is! String || !token.startsWith('pk.')) return;
+      setState(() {
+        _mapboxToken = token;
+        _fitted = false;
+        selected = null;
+      });
+      fit();
+    } catch (_) {
+      // The bundled map is already visible while configuration is unavailable.
+    }
   }
 
   void changed() {
@@ -150,11 +199,16 @@ class _CanadaEventMapState extends State<CanadaEventMap> {
     }
   }
 
-  Size get canvasSize => Size(1000, 1000 / (geometry?.aspect ?? 1.176));
+  Size get canvasSize => Size(
+    1000,
+    _showMapbox
+        ? 1000 * _canadaMercator.height / _canadaMercator.width
+        : 1000 / (geometry?.aspect ?? 1.176),
+  );
   void fit() {
     if (!mounted || geometry == null || viewport.isEmpty) return;
     final bounds =
-        widget.region?.projectedBounds(geometry!) ??
+        widget.region?.projectedBounds(_project) ??
         const Rect.fromLTWH(0, 0, 1, 1);
     final scale = math
         .min(
@@ -163,6 +217,7 @@ class _CanadaEventMapState extends State<CanadaEventMap> {
         )
         .clamp(.1, 6.0);
     fitScale = scale;
+    _fitted = true;
     final centre = bounds.center;
     transform.value = Matrix4.identity()
       ..translateByDouble(
@@ -205,7 +260,7 @@ class _CanadaEventMapState extends State<CanadaEventMap> {
     for (final e in widget.events.where(
       (e) => e.visibleOnMap(DateTime.now()),
     )) {
-      final p = geometry!.normalized(e.latitude!, e.longitude!);
+      final p = _project(e.latitude!, e.longitude!);
       final point = MatrixUtils.transformPoint(
         transform.value,
         Offset(p.dx * canvasSize.width, p.dy * canvasSize.height),
@@ -342,6 +397,59 @@ class _CanadaEventMapState extends State<CanadaEventMap> {
     ),
   );
 
+  void _useBundledMap() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _tileError) return;
+      setState(() {
+        _tileError = true;
+        selected = null;
+      });
+      fit();
+    });
+  }
+
+  List<Widget> _tiles() {
+    if (!_fitted) return const [];
+    final scale = transform.value.getMaxScaleOnAxis();
+    final worldSize = canvasSize.width * scale / _canadaMercator.width;
+    final level = (math.log(worldSize / 512) / math.ln2).round().clamp(0, 8);
+    final count = 1 << level;
+    final tileSize = worldSize / count;
+    final offset =
+        MatrixUtils.transformPoint(transform.value, Offset.zero) -
+        _canadaMercator.topLeft * worldSize;
+    final minX = (-offset.dx / tileSize).floor().clamp(0, count - 1);
+    final maxX = ((viewport.width - offset.dx) / tileSize).floor().clamp(
+      0,
+      count - 1,
+    );
+    final minY = (-offset.dy / tileSize).floor().clamp(0, count - 1);
+    final maxY = ((viewport.height - offset.dy) / tileSize).floor().clamp(
+      0,
+      count - 1,
+    );
+    return [
+      for (var y = minY; y <= maxY; y++)
+        for (var x = minX; x <= maxX; x++)
+          Positioned(
+            key: ValueKey((level, x, y)),
+            left: offset.dx + x * tileSize,
+            top: offset.dy + y * tileSize,
+            width: tileSize + .5,
+            height: tileSize + .5,
+            child: Image.network(
+              'https://api.mapbox.com/styles/v1/mapbox/light-v11/tiles/512/$level/$x/$y.webp?access_token=$_mapboxToken',
+              fit: BoxFit.fill,
+              excludeFromSemantics: true,
+              errorBuilder: (_, _, _) {
+                _useBundledMap();
+                return const SizedBox.shrink();
+              },
+            ),
+          ),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) => FutureBuilder<CanadaMapGeometry>(
     future: CanadaMapGeometry.asset,
@@ -406,27 +514,30 @@ class _CanadaEventMapState extends State<CanadaEventMap> {
               height: size.height,
               child: Stack(
                 children: [
+                  const Positioned.fill(
+                    child: ColoredBox(color: Color(0xFFEAF3F5)),
+                  ),
+                  if (_showMapbox) ..._tiles(),
                   Positioned.fill(
-                    child: ColoredBox(
-                      color: const Color(0xFFEAF3F5),
-                      child: InteractiveViewer(
-                        transformationController: transform,
-                        minScale: .1,
-                        maxScale: 6,
-                        constrained: false,
-                        boundaryMargin: const EdgeInsets.all(1500),
-                        child: RepaintBoundary(
-                          child: CustomPaint(
-                            size: canvasSize,
-                            painter: _CanadaPainter(
-                              geometry!,
-                              region: widget.region,
-                              detailed:
-                                  widget.region != null ||
-                                  transform.value.getMaxScaleOnAxis() >
-                                      fitScale * 1.7,
-                            ),
-                          ),
+                    child: InteractiveViewer(
+                      transformationController: transform,
+                      minScale: .1,
+                      maxScale: 6,
+                      constrained: false,
+                      boundaryMargin: const EdgeInsets.all(1500),
+                      child: RepaintBoundary(
+                        child: CustomPaint(
+                          size: canvasSize,
+                          painter: _showMapbox
+                              ? _SeminarRadiusPainter(widget.region, _project)
+                              : _CanadaPainter(
+                                  geometry!,
+                                  region: widget.region,
+                                  detailed:
+                                      widget.region != null ||
+                                      transform.value.getMaxScaleOnAxis() >
+                                          fitScale * 1.7,
+                                ),
                         ),
                       ),
                     ),
@@ -490,22 +601,28 @@ class _CanadaEventMapState extends State<CanadaEventMap> {
                   ),
                   Positioned(
                     left: 14,
+                    right: 12,
                     bottom: 12,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: .9),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Text(
-                        'Natural Earth • Community locations',
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: DashboardUi.muted,
+                    child: Align(
+                      alignment: Alignment.bottomLeft,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
                         ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: .9),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: _showMapbox
+                            ? const _MapboxAttribution()
+                            : const Text(
+                                'Natural Earth • Community locations',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: DashboardUi.muted,
+                                ),
+                              ),
                       ),
                     ),
                   ),
@@ -525,6 +642,70 @@ class _CanadaEventMapState extends State<CanadaEventMap> {
       );
     },
   );
+}
+
+class _MapboxAttribution extends StatelessWidget {
+  const _MapboxAttribution();
+
+  @override
+  Widget build(BuildContext context) => Wrap(
+    spacing: 6,
+    crossAxisAlignment: WrapCrossAlignment.center,
+    children: [
+      SvgPicture.asset(
+        'assets/images/mapbox-wordmark.svg',
+        width: 72,
+        semanticsLabel: 'Mapbox',
+      ),
+      for (final (label, url) in const [
+        ('© Mapbox', 'https://www.mapbox.com/about/maps/'),
+        ('© OpenStreetMap', 'https://www.openstreetmap.org/copyright'),
+        ('Improve this map', 'https://www.mapbox.com/map-feedback/'),
+      ])
+        InkWell(
+          onTap: () => launchUrl(Uri.parse(url)),
+          child: Text(label, style: const TextStyle(fontSize: 10)),
+        ),
+    ],
+  );
+}
+
+void _paintSeminarRadius(
+  Canvas canvas,
+  Size size,
+  SeminarMapRegion region,
+  Offset Function(double, double) project,
+) {
+  final points = region
+      .projectedOutline(project)
+      .map((point) => Offset(point.dx * size.width, point.dy * size.height))
+      .toList();
+  final area = Path()..addPolygon(points, true);
+  canvas.drawPath(area, Paint()..color = const Color(0x164078B8));
+  canvas.drawPath(
+    area,
+    Paint()
+      ..color = const Color(0xB34078B8)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = .6,
+  );
+}
+
+class _SeminarRadiusPainter extends CustomPainter {
+  const _SeminarRadiusPainter(this.region, this.project);
+
+  final SeminarMapRegion? region;
+  final Offset Function(double, double) project;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (region case final local?) {
+      _paintSeminarRadius(canvas, size, local, project);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_SeminarRadiusPainter old) => old.region != region;
 }
 
 class _EventGroup {
@@ -704,19 +885,7 @@ class _CanadaPainter extends CustomPainter {
       canvas.drawPath(path, line);
     }
     if (region case final local?) {
-      final points = local
-          .projectedOutline(geometry)
-          .map((point) => Offset(point.dx * size.width, point.dy * size.height))
-          .toList();
-      final area = Path()..addPolygon(points, true);
-      canvas.drawPath(area, Paint()..color = const Color(0x164078B8));
-      canvas.drawPath(
-        area,
-        Paint()
-          ..color = const Color(0xB34078B8)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = .6,
-      );
+      _paintSeminarRadius(canvas, size, local, geometry.normalized);
     }
     const centres = {
       'BC': (54.2, -126.0),
