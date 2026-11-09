@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/acquisition_journey.dart';
 import '../services/site_content_service.dart';
 import '../services/transaction_learning.dart';
+import 'site_copy_text.dart';
 
 enum LearningSearchSection { roadmap, documents, seminars }
 
@@ -47,13 +48,14 @@ class _LearningStartSearchState extends State<LearningStartSearch> {
             'learning.journey.${stage.id}.title',
             stage.title,
           ),
-          description: SiteContentService.text(
-            'learning.journey.${stage.id}.subtitle',
-            stage.subtitle,
-          ),
+          description: 'Open this Roadmap section.',
           section: LearningSearchSection.roadmap,
           id: stage.id,
-          keywords: stage.phase.explanation,
+          keywords:
+              SiteContentService.published(
+                'learning.journey.${stage.id}.body',
+              ) ??
+              '',
         ),
       for (final lesson in transactionLessons)
         _Result(
@@ -102,6 +104,16 @@ class _LearningStartSearchState extends State<LearningStartSearch> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  SiteCopyText(
+                    'learning.firstSteps.welcome',
+                    'Welcome to Pact.',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -1.5,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
                   TextField(
                     key: const Key('learning-first-steps-search'),
                     controller: _field,

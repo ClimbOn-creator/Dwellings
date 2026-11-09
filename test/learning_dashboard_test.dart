@@ -1,3 +1,5 @@
+import 'package:dwelling_iq/services/site_copy_catalog.dart';
+import 'package:dwelling_iq/widgets/site_copy_text.dart';
 import 'package:dwelling_iq/widgets/canada_event_map.dart';
 import 'package:dwelling_iq/widgets/transaction_room_panel.dart';
 import 'package:dwelling_iq/models/learning_journey.dart';
@@ -143,6 +145,12 @@ void main() {
     await tester.pumpAndSettle();
     final field = find.byKey(const Key('learning-first-steps-search'));
     expect(find.byType(TextField), findsOneWidget);
+    final welcome = find.text('Welcome to Pact.');
+    expect(welcome, findsOneWidget);
+    expect(
+      tester.getBottomLeft(welcome).dy,
+      lessThan(tester.getTopLeft(field).dy),
+    );
 
     Future<void> search(String query) async {
       await tester.enterText(field, query);
@@ -154,7 +162,10 @@ void main() {
     expect(find.textContaining('No matches in Pact Learning'), findsOneWidget);
 
     await search('working capital');
-    final document = find.widgetWithText(ListTile, 'Working capital, debt & asset schedule');
+    final document = find.widgetWithText(
+      ListTile,
+      'Working capital, debt & asset schedule',
+    );
     expect(document, findsOneWidget);
     await tester.tap(document);
     await tester.pumpAndSettle();
@@ -236,56 +247,52 @@ void main() {
     expect(requests, 2);
   });
 
-  testWidgets('Roadmap saves a completed stage and opens its document', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      const MaterialApp(
-        home: LearningDashboardPage(initialView: LearningView.roadmap),
-      ),
-    );
-    await tester.pumpAndSettle();
-    final firstStage = find.byKey(const ValueKey('journey-stage-0'));
-    final secondStage = find.byKey(const ValueKey('journey-stage-1'));
-    final arrow = find.descendant(
-      of: firstStage,
-      matching: find.byType(AnimatedRotation),
-    );
-    expect(tester.widget<AnimatedRotation>(arrow).turns, 0);
-    expect(find.byKey(const ValueKey('journey-answer-0')), findsNothing);
-    await tester.tap(firstStage);
-    await tester.pumpAndSettle();
-    expect(tester.widget<AnimatedRotation>(arrow).turns, .5);
-    await tester.ensureVisible(secondStage);
-    await tester.tap(secondStage);
-    await tester.pumpAndSettle();
-    expect(tester.widget<AnimatedRotation>(arrow).turns, 0);
-    await tester.ensureVisible(firstStage);
-    await tester.tap(firstStage);
-    await tester.pumpAndSettle();
-    final answer = find.byKey(const ValueKey('journey-answer-0'));
-    await tester.ensureVisible(answer);
-    await tester.tap(answer);
-    await tester.pumpAndSettle();
-    final mark = find.byKey(const Key('journey-mark-understood'));
-    await tester.ensureVisible(mark);
-    await tester.tap(mark);
-    await tester.pumpAndSettle();
-    final prefs = await SharedPreferences.getInstance();
-    expect(
-      prefs.getStringList('learning.progress.guest'),
-      contains('buyer-search'),
-    );
-    final doc = find.widgetWithText(TextButton, 'Deal brief & buyer criteria');
-    await tester.ensureVisible(doc);
-    await tester.tap(doc);
-    await tester.pumpAndSettle();
-    final panel = tester.widget<TransactionRoomPanel>(
-      find.byType(TransactionRoomPanel),
-    );
-    expect(panel.initialDocumentId, isNotNull);
-    expect(find.text('DOWNLOAD EDITABLE TEMPLATE'), findsOneWidget);
-  });
+  testWidgets(
+    'Roadmap sections span the workspace and have editable paragraphs',
+    (tester) async {
+      tester.view.physicalSize = const Size(2000, 1000);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: LearningDashboardPage(initialView: LearningView.roadmap),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final firstStage = find.byKey(const ValueKey('journey-stage-0'));
+      final secondStage = find.byKey(const ValueKey('journey-stage-1'));
+      final arrow = find.descendant(
+        of: firstStage,
+        matching: find.byType(AnimatedRotation),
+      );
+      expect(tester.getSize(firstStage).width, greaterThan(1600));
+      expect(tester.widget<AnimatedRotation>(arrow).turns, 0);
+      expect(find.text(learningRoadmapPlaceholder), findsNothing);
+      await tester.tap(firstStage);
+      await tester.pumpAndSettle();
+      expect(tester.widget<AnimatedRotation>(arrow).turns, .5);
+      final body = find.widgetWithText(
+        SiteCopyText,
+        learningRoadmapPlaceholder,
+      );
+      expect(
+        tester.widget<SiteCopyText>(body).contentKey,
+        'learning.journey.find.body',
+      );
+      expect(learningRoadmapPlaceholder.split('\n\n'), hasLength(3));
+      expect(find.text('What would you do?'), findsNothing);
+      expect(find.text('Documents for this stage'), findsNothing);
+      await tester.ensureVisible(secondStage);
+      await tester.tap(secondStage);
+      await tester.pumpAndSettle();
+      expect(tester.widget<AnimatedRotation>(arrow).turns, 0);
+      expect(
+        tester.widget<SiteCopyText>(body).contentKey,
+        'learning.journey.value.body',
+      );
+    },
+  );
 
   testWidgets('open Canada map refreshes published and cancelled events', (
     tester,

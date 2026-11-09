@@ -533,14 +533,17 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
                 padding: EdgeInsets.all(compact ? 12 : 28),
                 child: Center(
                   child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 1220),
+                    constraints: BoxConstraints(
+                      maxWidth: view == LearningView.roadmap
+                          ? double.infinity
+                          : 1220,
+                    ),
                     child: switch (view) {
-                      LearningView.roadmap => AcquisitionJourneyPanel(
-                        initialStageId: _roadmapStageId,
-                        onOpenDocument: (id) => setState(() {
-                          _documentId = id;
-                          view = LearningView.room;
-                        }),
+                      LearningView.roadmap => SizedBox(
+                        width: double.infinity,
+                        child: AcquisitionJourneyPanel(
+                          initialStageId: _roadmapStageId,
+                        ),
                       ),
                       LearningView.room => NovaTarget(
                         id: 'learning-room.documents',

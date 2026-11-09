@@ -36,14 +36,8 @@ const pebbleMainPageCopy = <String, List<(String, String, String, String?)>>{
   'learning-journey': [
     (
       'stages',
-      'Learn one decision at a time',
-      'Choose one of five stages. Read the explanation and fictional example, try the decision, then mark the stage understood. Your learning progress stays separate from actual transaction tasks.',
-      null,
-    ),
-    (
-      'documents',
-      'Connect learning to the documents',
-      'The documents listed at the end of each stage open inside the Transaction Room, where you can inspect an example and download its matching template.',
+      'Explore the Roadmap',
+      'Select a stage to open it. Select the same stage again to close it.',
       null,
     ),
   ],
