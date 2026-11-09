@@ -1,9 +1,12 @@
+import 'package:dwelling_iq/services/site_copy_catalog.dart';
+import 'package:dwelling_iq/widgets/site_copy_text.dart';
+import 'package:dwelling_iq/widgets/canada_event_map.dart';
+import 'package:dwelling_iq/widgets/transaction_room_panel.dart';
 import 'package:dwelling_iq/models/learning_journey.dart';
 import 'package:dwelling_iq/screens/member_overview_page.dart';
 import 'package:dwelling_iq/screens/learning_dashboard_page.dart';
 import 'package:dwelling_iq/services/learning_service.dart';
 import 'package:dwelling_iq/services/app_tunnel.dart';
-import 'package:dwelling_iq/services/nova_page_guide.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -42,14 +45,6 @@ void main() {
         expect(p.feedback, isNotEmpty);
         expect(p.documents, isNotEmpty);
       }
-      expect(
-        novaPageWalkthrough('learning-feed').first.target,
-        'learning-feed.posts',
-      );
-      expect(
-        novaPageWalkthrough('learning-map').first.target,
-        'learning-map.canvas',
-      );
     },
   );
   test('seminars join only during the session or explicit live status', () {
@@ -79,66 +74,226 @@ void main() {
     expect(LearningSeminar.validUrl('https://example.com/meet'), true);
   });
   for (final width in [390.0, 1440.0]) {
-    for (final view in [
-      LearningView.feed,
-      LearningView.seminars,
-      LearningView.journey,
-    ]) {
-      testWidgets('$view fits $width with account gated publishing', (
-        tester,
-      ) async {
-        tester.view.physicalSize = Size(width, 1000);
-        tester.view.devicePixelRatio = 1;
-        addTearDown(tester.view.resetPhysicalSize);
-        addTearDown(tester.view.resetDevicePixelRatio);
-        await tester.pumpWidget(
-          MaterialApp(
-            home: LearningDashboardPage(
-              initialView: view,
-              loadPosts: () async => [
-                LearningPost(
-                  id: 'p',
-                  authorId: 'a',
-                  author: 'Approved educator',
-                  title: 'Understanding earnings',
-                  body: 'Revenue and earnings are different.',
-                  topic: 'finance',
-                  createdAt: DateTime(2026, 10, 12),
-                ),
-              ],
-              loadSeminars: () async => [],
-              loadPermissions: () async => const LearningPermissions(),
-            ),
+    testWidgets('Learning tabs and quiz fit at $width', (tester) async {
+      tester.view.physicalSize = Size(width, 1000);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: LearningDashboardPage(
+            loadSeminars: () async => [],
+            loadPermissions: () async =>
+                const LearningPermissions(canPublish: true, isOwner: true),
           ),
-        );
-        await tester.pumpAndSettle();
-        expect(find.text('Create a learning post'), findsNothing);
-        if (view == LearningView.feed)
-          expect(find.text('Understanding earnings'), findsOneWidget);
-        if (width == 1440 && view == LearningView.feed) {
-          expect(tester.getTopLeft(find.text('LEARNING')).dy, lessThan(160));
-          expect(find.text('A place to learn, at your pace'), findsNothing);
-        }
-        if (view == LearningView.journey) {
-          expect(find.byType(InteractiveViewer), findsNothing);
-          await tester.ensureVisible(
-            find.byKey(const ValueKey('journey-answer-0')),
-          );
-          await tester.tap(find.byKey(const ValueKey('journey-answer-0')));
-          await tester.pumpAndSettle();
-          expect(find.text('That’s right.'), findsOneWidget);
-          await tester.ensureVisible(
-            find.byKey(const Key('journey-mark-understood')),
-          );
-          await tester.tap(find.byKey(const Key('journey-mark-understood')));
-          await tester.pumpAndSettle();
-          expect(find.text('Understood · undo'), findsOneWidget);
-        }
-        expect(tester.takeException(), isNull);
-        await tester.pumpWidget(const SizedBox.shrink());
-      });
-    }
+        ),
+      );
+      await tester.pumpAndSettle();
+      for (final tab in [
+        'First steps',
+        'Roadmap',
+        'Discover',
+        'Search',
+        'Evaluate',
+        'Financial',
+        'Documents',
+        'Deal Structure',
+        'Transition',
+        'FAQ',
+        'Seminars',
+        'Resources',
+      ]) {
+        expect(find.text(tab), findsOneWidget);
+      }
+      expect(find.byKey(const Key('affinity-navigation-bar')), findsNothing);
+      expect(
+        find.byKey(const Key('learning-first-steps-search')),
+        findsOneWidget,
+      );
+      expect(find.text('Learning feed'), findsNothing);
+      expect(find.text('Pact examples'), findsNothing);
+      expect(find.byKey(const Key('learning-create-post')), findsNothing);
+      expect(find.text('Deal comparison quiz'), findsNothing);
+      final quiz = find.byTooltip('Deal comparison quiz');
+      expect(
+        tester.getRect(quiz).right,
+        lessThanOrEqualTo(tester.getRect(find.byTooltip('Sign in')).left),
+      );
+      await tester.tap(find.text('Roadmap'));
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const ValueKey('learning-workspace-roadmap-')),
+        findsOneWidget,
+      );
+      await tester.tap(quiz);
+      await tester.pumpAndSettle();
+      expect(find.text('Roadmap'), findsNothing);
+      expect(find.text('Sign in to start'), findsOneWidget);
+      await tester.tap(find.byTooltip('Back to Learning dashboard'));
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const ValueKey('learning-workspace-roadmap-')),
+        findsOneWidget,
+      );
+      expect(tester.takeException(), isNull);
+    });
   }
+  testWidgets('First steps search opens the matching learning content', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const MaterialApp(home: LearningDashboardPage()));
+    await tester.pumpAndSettle();
+    final field = find.byKey(const Key('learning-first-steps-search'));
+    expect(find.byType(TextField), findsOneWidget);
+    final welcome = find.text('Welcome to Pact.');
+    expect(welcome, findsOneWidget);
+    expect(
+      tester.getBottomLeft(welcome).dy,
+      lessThan(tester.getTopLeft(field).dy),
+    );
+
+    Future<void> search(String query) async {
+      await tester.enterText(field, query);
+      await tester.testTextInput.receiveAction(TextInputAction.search);
+      await tester.pumpAndSettle();
+    }
+
+    await search('no matching content qwerty');
+    expect(find.textContaining('No matches in Pact Learning'), findsOneWidget);
+
+    await search('working capital');
+    final document = find.widgetWithText(
+      ListTile,
+      'Working capital, debt & asset schedule',
+    );
+    expect(document, findsOneWidget);
+    await tester.tap(document);
+    await tester.pumpAndSettle();
+    final panel = tester.widget<TransactionRoomPanel>(
+      find.byType(TransactionRoomPanel),
+    );
+    expect(panel.initialDocumentId, 'working-capital');
+  });
+
+  testWidgets('Seminars requests location on demand and switches map scope', (
+    tester,
+  ) async {
+    var requests = 0;
+    LearningSeminar seminar(String id, double lat, double lon) =>
+        LearningSeminar(
+          id: id,
+          hostId: 'host',
+          title: id,
+          description: '',
+          startsAt: DateTime.now().add(const Duration(days: 1)),
+          duration: 60,
+          joinUrl: '',
+          latitude: lat,
+          longitude: lon,
+          status: 'scheduled',
+        );
+    await tester.pumpWidget(
+      MaterialApp(
+        home: LearningDashboardPage(
+          initialView: LearningView.seminars,
+          locate: () async {
+            requests++;
+            if (requests == 1) throw StateError('Permission denied');
+            return (latitude: 48.4, longitude: -123.4);
+          },
+          loadSeminars: () async => [
+            seminar('within-500', 52.8, -123.4),
+            seminar('outside-500', 53.0, -123.4),
+            seminar('halifax', 44.6, -63.6),
+          ],
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    CanadaEventMap map() => tester.widget(find.byType(CanadaEventMap));
+    Iterable<String> eventIds() => map().events.map((event) => event.id);
+    expect(requests, 0);
+    expect(eventIds(), contains('halifax'));
+
+    await tester.tap(find.text('Use my location'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Location is blocked'), findsOneWidget);
+    expect(map().region, isNull);
+
+    await tester.tap(find.text('Use my location'));
+    await tester.pumpAndSettle();
+    expect(map().region, isNotNull);
+    expect(eventIds(), contains('within-500'));
+    expect(eventIds(), isNot(contains('outside-500')));
+    expect(eventIds(), isNot(contains('halifax')));
+
+    await tester.tap(find.text('Show full map'));
+    await tester.pumpAndSettle();
+    expect(map().region, isNull);
+    expect(eventIds(), contains('halifax'));
+    await tester.tap(find.text('Show nearby'));
+    await tester.pumpAndSettle();
+    expect(map().region, isNotNull);
+    expect(requests, 2);
+
+    await tester.tap(find.text('Choose a city'));
+    await tester.pumpAndSettle();
+    final victoria = find.text('Victoria, BC');
+    await tester.ensureVisible(victoria);
+    await tester.tap(victoria);
+    await tester.pumpAndSettle();
+    expect(find.text('Events within 500 km of Victoria, BC'), findsOneWidget);
+    expect(eventIds(), isNot(contains('halifax')));
+    expect(requests, 2);
+  });
+
+  testWidgets(
+    'Roadmap sections span the workspace and have editable paragraphs',
+    (tester) async {
+      tester.view.physicalSize = const Size(2000, 1000);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: LearningDashboardPage(initialView: LearningView.roadmap),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final firstStage = find.byKey(const ValueKey('journey-stage-0'));
+      final secondStage = find.byKey(const ValueKey('journey-stage-1'));
+      final arrow = find.descendant(
+        of: firstStage,
+        matching: find.byType(AnimatedRotation),
+      );
+      expect(tester.getSize(firstStage).width, greaterThan(1600));
+      expect(tester.widget<AnimatedRotation>(arrow).turns, 0);
+      expect(find.text(learningRoadmapPlaceholder), findsNothing);
+      await tester.tap(firstStage);
+      await tester.pumpAndSettle();
+      expect(tester.widget<AnimatedRotation>(arrow).turns, .5);
+      final body = find.widgetWithText(
+        SiteCopyText,
+        learningRoadmapPlaceholder,
+      );
+      expect(
+        tester.widget<SiteCopyText>(body).contentKey,
+        'learning.journey.find.body',
+      );
+      expect(learningRoadmapPlaceholder.split('\n\n'), hasLength(3));
+      expect(find.text('What would you do?'), findsNothing);
+      expect(find.text('Documents for this stage'), findsNothing);
+      await tester.ensureVisible(secondStage);
+      await tester.tap(secondStage);
+      await tester.pumpAndSettle();
+      expect(tester.widget<AnimatedRotation>(arrow).turns, 0);
+      expect(
+        tester.widget<SiteCopyText>(body).contentKey,
+        'learning.journey.value.body',
+      );
+    },
+  );
+
   testWidgets('open Canada map refreshes published and cancelled events', (
     tester,
   ) async {
@@ -181,43 +336,4 @@ void main() {
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
   });
-  testWidgets('approved publishers see plus while contributor approvals stay removed', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      MaterialApp(
-        home: LearningDashboardPage(
-          loadPosts: () async => [],
-          loadPermissions: () async =>
-              const LearningPermissions(canPublish: true, isOwner: true),
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-    expect(find.text('Create a learning post'), findsNothing);
-    expect(find.byKey(const Key('learning-create-post')), findsOneWidget);
-    expect(find.byType(FloatingActionButton), findsOneWidget);
-    expect(find.text('Contributor approvals'), findsNothing);
-    await tester.pumpWidget(const SizedBox.shrink());
-  });
-  testWidgets(
-    'quiz is a visible dashboard tab with an embedded sign-in panel',
-    (tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: LearningDashboardPage(
-            initialView: LearningView.quiz,
-            loadPosts: () async => [],
-            loadSeminars: () async => [],
-          ),
-        ),
-      );
-      await tester.pump(const Duration(seconds: 1));
-      expect(find.text('Deal comparison quiz'), findsWidgets);
-      expect(find.text('Sign in to start'), findsOneWidget);
-      expect(find.byType(Scaffold), findsOneWidget);
-      expect(tester.takeException(), isNull);
-      await tester.pumpWidget(const SizedBox.shrink());
-    },
-  );
 }

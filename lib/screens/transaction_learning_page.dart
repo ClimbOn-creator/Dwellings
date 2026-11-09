@@ -30,7 +30,7 @@ class TransactionLearningPage extends StatelessWidget {
                 constraints: const BoxConstraints(maxWidth: 1240),
                 child: const Padding(
                   padding: EdgeInsets.all(24),
-                  child: TransactionRoomPanel(),
+                  child: TransactionRoomPanel(title: 'Transaction Room'),
                 ),
               ),
             ),

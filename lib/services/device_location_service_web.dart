@@ -18,13 +18,13 @@ class DeviceLocationResult {
 }
 
 class DeviceLocationService {
-  static Future<DeviceLocationResult> locateCanadianCity() async {
-    final completer = Completer<(double, double)>();
+  static Future<({double latitude, double longitude})> locate() async {
+    final completer = Completer<({double latitude, double longitude})>();
     web.window.navigator.geolocation.getCurrentPosition(
       (web.GeolocationPosition position) {
         completer.complete((
-          position.coords.latitude,
-          position.coords.longitude,
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
         ));
       }.toJS,
       (web.GeolocationPositionError error) {
@@ -39,15 +39,15 @@ class DeviceLocationService {
         maximumAge: 60000,
       ),
     );
-    final coordinates = await completer.future.timeout(
-      const Duration(seconds: 14),
-      onTimeout: () => throw StateError(
-        'Location request timed out. You can still choose a city manually.',
-      ),
-    );
+    // The browser's timeout starts after the user answers its permission prompt.
+    return completer.future;
+  }
+
+  static Future<DeviceLocationResult> locateCanadianCity() async {
+    final coordinates = await locate();
     final city = await MarketplaceService.cityNearCoordinates(
-      coordinates.$1,
-      coordinates.$2,
+      coordinates.latitude,
+      coordinates.longitude,
     );
     if (city == null) {
       throw StateError(
@@ -56,8 +56,8 @@ class DeviceLocationService {
     }
     return DeviceLocationResult(
       city: city,
-      latitude: coordinates.$1,
-      longitude: coordinates.$2,
+      latitude: coordinates.latitude,
+      longitude: coordinates.longitude,
     );
   }
 }

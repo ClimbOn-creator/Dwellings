@@ -1,11 +1,14 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import '../services/learning_service.dart';
-import '../services/learning_area_service.dart';
 import 'dashboard_ui.dart';
 import 'site_copy_text.dart';
 import 'learning_example_cover.dart';
@@ -42,23 +45,90 @@ class CanadaMapGeometry {
   }
 }
 
+/// A 500 km search around the device, used only in the current map session.
+class SeminarMapRegion {
+  const SeminarMapRegion(this.latitude, this.longitude);
+
+  static const _earthRadiusKm = 6371.0;
+  static const _angularRadius = 500 / _earthRadiusKm;
+  static const _radians = math.pi / 180;
+
+  final double latitude, longitude;
+
+  bool includes(LearningSeminar event) {
+    if (!event.mapped) return false;
+    final lat = latitude * _radians;
+    final eventLat = event.latitude! * _radians;
+    final halfLat = math.sin((eventLat - lat) / 2);
+    final halfLon = math.sin((event.longitude! - longitude) * _radians / 2);
+    final haversine =
+        halfLat * halfLat +
+        math.cos(lat) * math.cos(eventLat) * halfLon * halfLon;
+    return haversine <= math.pow(math.sin(_angularRadius / 2), 2);
+  }
+
+  Iterable<Offset> projectedOutline(
+    Offset Function(double, double) project,
+  ) sync* {
+    final lat = latitude * _radians;
+    final sinLat = math.sin(lat), cosLat = math.cos(lat);
+    final sinRadius = math.sin(_angularRadius);
+    final cosRadius = math.cos(_angularRadius);
+    for (var i = 0; i < 48; i++) {
+      final bearing = i * math.pi / 24;
+      final boundaryLat = math.asin(
+        (sinLat * cosRadius + cosLat * sinRadius * math.cos(bearing)).clamp(
+          -1.0,
+          1.0,
+        ),
+      );
+      final boundaryLon = math.atan2(
+        math.sin(bearing) * sinRadius * cosLat,
+        cosRadius - sinLat * math.sin(boundaryLat),
+      );
+      yield project(boundaryLat / _radians, longitude + boundaryLon / _radians);
+    }
+  }
+
+  Rect projectedBounds(Offset Function(double, double) project) {
+    final centre = project(latitude, longitude);
+    var bounds = Rect.fromPoints(centre, centre);
+    for (final point in projectedOutline(project)) {
+      bounds = bounds.expandToInclude(Rect.fromPoints(point, point));
+    }
+    return bounds;
+  }
+}
+
 class CanadaEventMap extends StatefulWidget {
   const CanadaEventMap({
     super.key,
     required this.events,
     required this.onOpen,
-    this.area,
-    this.nearby = false,
+    this.region,
+    this.locationControls,
     this.expandToFill = false,
   });
   final List<LearningSeminar> events;
   final ValueChanged<LearningSeminar> onOpen;
-  final LearningArea? area;
-  final bool nearby;
+  final SeminarMapRegion? region;
+  final Widget? locationControls;
   final bool expandToFill;
   @override
   State<CanadaEventMap> createState() => _CanadaEventMapState();
 }
+
+// The national view fits Canada. Tiles and pins share Web Mercator coordinates.
+Offset _mercator(double latitude, double longitude) {
+  final lat = latitude.clamp(-85.051129, 85.051129) * math.pi / 180;
+  final y = (1 - math.log(math.tan(math.pi / 4 + lat / 2)) / math.pi) / 2;
+  return Offset((longitude + 180) / 360, y);
+}
+
+final _canadaMercator = Rect.fromPoints(
+  _mercator(83.3, -142),
+  _mercator(41.5, -51),
+);
 
 class _CanadaEventMapState extends State<CanadaEventMap> {
   final transform = TransformationController();
@@ -67,10 +137,44 @@ class _CanadaEventMapState extends State<CanadaEventMap> {
   Size viewport = Size.zero;
   CanadaMapGeometry? geometry;
   double fitScale = 1;
+  bool _tileError = false;
+  bool _fitted = false;
+  String? _mapboxToken;
+  bool get _showMapbox => _mapboxToken != null && !_tileError;
+
+  Offset _project(double latitude, double longitude) {
+    if (!_showMapbox) return geometry!.normalized(latitude, longitude);
+    final point = _mercator(latitude, longitude) - _canadaMercator.topLeft;
+    return Offset(
+      point.dx / _canadaMercator.width,
+      point.dy / _canadaMercator.height,
+    );
+  }
+
   @override
   void initState() {
     super.initState();
     transform.addListener(changed);
+    if (kIsWeb) _loadMapbox();
+  }
+
+  Future<void> _loadMapbox() async {
+    try {
+      final response = await http
+          .get(Uri.base.resolve('/api/seminar-map-config'))
+          .timeout(const Duration(seconds: 5));
+      if (!mounted || response.statusCode != 200) return;
+      final token = (jsonDecode(response.body) as Map)['mapboxToken'];
+      if (token is! String || !token.startsWith('pk.')) return;
+      setState(() {
+        _mapboxToken = token;
+        _fitted = false;
+        selected = null;
+      });
+      fit();
+    } catch (_) {
+      // The bundled map is already visible while configuration is unavailable.
+    }
   }
 
   void changed() {
@@ -88,24 +192,33 @@ class _CanadaEventMapState extends State<CanadaEventMap> {
   @override
   void didUpdateWidget(CanadaEventMap old) {
     super.didUpdateWidget(old);
-    if (old.nearby != widget.nearby || old.area?.name != widget.area?.name) {
+    if (old.region != widget.region) {
+      closeTimer?.cancel();
+      selected = null;
       WidgetsBinding.instance.addPostFrameCallback((_) => fit());
     }
   }
 
-  Size get canvasSize => Size(1000, 1000 / (geometry?.aspect ?? 1.176));
+  Size get canvasSize => Size(
+    1000,
+    _showMapbox
+        ? 1000 * _canadaMercator.height / _canadaMercator.width
+        : 1000 / (geometry?.aspect ?? 1.176),
+  );
   void fit() {
     if (!mounted || geometry == null || viewport.isEmpty) return;
-    fitScale = math.min(
-      (viewport.width - 32) / canvasSize.width,
-      (viewport.height - 32) / canvasSize.height,
-    );
-    final scale = widget.nearby && widget.area != null
-        ? math.max(fitScale * 3, 1.2)
-        : fitScale;
-    final centre = widget.nearby && widget.area != null
-        ? geometry!.normalized(widget.area!.latitude, widget.area!.longitude)
-        : const Offset(.5, .5);
+    final bounds =
+        widget.region?.projectedBounds(_project) ??
+        const Rect.fromLTWH(0, 0, 1, 1);
+    final scale = math
+        .min(
+          (viewport.width - 40) / (bounds.width * canvasSize.width),
+          (viewport.height - 40) / (bounds.height * canvasSize.height),
+        )
+        .clamp(.1, 6.0);
+    fitScale = scale;
+    _fitted = true;
+    final centre = bounds.center;
     transform.value = Matrix4.identity()
       ..translateByDouble(
         viewport.width / 2 - centre.dx * canvasSize.width * scale,
@@ -147,7 +260,7 @@ class _CanadaEventMapState extends State<CanadaEventMap> {
     for (final e in widget.events.where(
       (e) => e.visibleOnMap(DateTime.now()),
     )) {
-      final p = geometry!.normalized(e.latitude!, e.longitude!);
+      final p = _project(e.latitude!, e.longitude!);
       final point = MatrixUtils.transformPoint(
         transform.value,
         Offset(p.dx * canvasSize.width, p.dy * canvasSize.height),
@@ -284,6 +397,59 @@ class _CanadaEventMapState extends State<CanadaEventMap> {
     ),
   );
 
+  void _useBundledMap() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _tileError) return;
+      setState(() {
+        _tileError = true;
+        selected = null;
+      });
+      fit();
+    });
+  }
+
+  List<Widget> _tiles() {
+    if (!_fitted) return const [];
+    final scale = transform.value.getMaxScaleOnAxis();
+    final worldSize = canvasSize.width * scale / _canadaMercator.width;
+    final level = (math.log(worldSize / 512) / math.ln2).round().clamp(0, 8);
+    final count = 1 << level;
+    final tileSize = worldSize / count;
+    final offset =
+        MatrixUtils.transformPoint(transform.value, Offset.zero) -
+        _canadaMercator.topLeft * worldSize;
+    final minX = (-offset.dx / tileSize).floor().clamp(0, count - 1);
+    final maxX = ((viewport.width - offset.dx) / tileSize).floor().clamp(
+      0,
+      count - 1,
+    );
+    final minY = (-offset.dy / tileSize).floor().clamp(0, count - 1);
+    final maxY = ((viewport.height - offset.dy) / tileSize).floor().clamp(
+      0,
+      count - 1,
+    );
+    return [
+      for (var y = minY; y <= maxY; y++)
+        for (var x = minX; x <= maxX; x++)
+          Positioned(
+            key: ValueKey((level, x, y)),
+            left: offset.dx + x * tileSize,
+            top: offset.dy + y * tileSize,
+            width: tileSize + .5,
+            height: tileSize + .5,
+            child: Image.network(
+              'https://api.mapbox.com/styles/v1/mapbox/light-v11/tiles/512/$level/$x/$y.webp?access_token=$_mapboxToken',
+              fit: BoxFit.fill,
+              excludeFromSemantics: true,
+              errorBuilder: (_, _, _) {
+                _useBundledMap();
+                return const SizedBox.shrink();
+              },
+            ),
+          ),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) => FutureBuilder<CanadaMapGeometry>(
     future: CanadaMapGeometry.asset,
@@ -348,20 +514,30 @@ class _CanadaEventMapState extends State<CanadaEventMap> {
               height: size.height,
               child: Stack(
                 children: [
+                  const Positioned.fill(
+                    child: ColoredBox(color: Color(0xFFEAF3F5)),
+                  ),
+                  if (_showMapbox) ..._tiles(),
                   Positioned.fill(
-                    child: ColoredBox(
-                      color: const Color(0xFFEAF3F5),
-                      child: InteractiveViewer(
-                        transformationController: transform,
-                        minScale: .1,
-                        maxScale: 6,
-                        constrained: false,
-                        boundaryMargin: const EdgeInsets.all(1500),
-                        child: RepaintBoundary(
-                          child: CustomPaint(
-                            size: canvasSize,
-                            painter: _CanadaPainter(geometry!),
-                          ),
+                    child: InteractiveViewer(
+                      transformationController: transform,
+                      minScale: .1,
+                      maxScale: 6,
+                      constrained: false,
+                      boundaryMargin: const EdgeInsets.all(1500),
+                      child: RepaintBoundary(
+                        child: CustomPaint(
+                          size: canvasSize,
+                          painter: _showMapbox
+                              ? _SeminarRadiusPainter(widget.region, _project)
+                              : _CanadaPainter(
+                                  geometry!,
+                                  region: widget.region,
+                                  detailed:
+                                      widget.region != null ||
+                                      transform.value.getMaxScaleOnAxis() >
+                                          fitScale * 1.7,
+                                ),
                         ),
                       ),
                     ),
@@ -371,6 +547,27 @@ class _CanadaEventMapState extends State<CanadaEventMap> {
                       left: g.point.dx - 18,
                       top: g.point.dy - 18,
                       child: pin(g),
+                    ),
+                  if (widget.locationControls case final controls?)
+                    Positioned(
+                      top: 12,
+                      left: 12,
+                      right: 68,
+                      child: Align(
+                        alignment: Alignment.topLeft,
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 260),
+                          child: Material(
+                            color: Colors.white,
+                            elevation: 2,
+                            borderRadius: BorderRadius.circular(12),
+                            child: Padding(
+                              padding: const EdgeInsets.all(8),
+                              child: controls,
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
                   Positioned(
                     top: 12,
@@ -392,7 +589,9 @@ class _CanadaEventMapState extends State<CanadaEventMap> {
                             icon: const Icon(Icons.remove),
                           ),
                           IconButton(
-                            tooltip: 'Reset Canada map',
+                            tooltip: widget.region == null
+                                ? 'Reset Canada map'
+                                : 'Reset nearby map',
                             onPressed: fit,
                             icon: const Icon(Icons.center_focus_strong),
                           ),
@@ -402,22 +601,28 @@ class _CanadaEventMapState extends State<CanadaEventMap> {
                   ),
                   Positioned(
                     left: 14,
+                    right: 12,
                     bottom: 12,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: .9),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Text(
-                        'Natural Earth • Community locations',
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: DashboardUi.muted,
+                    child: Align(
+                      alignment: Alignment.bottomLeft,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
                         ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: .9),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: _showMapbox
+                            ? const _MapboxAttribution()
+                            : const Text(
+                                'Natural Earth • Community locations',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: DashboardUi.muted,
+                                ),
+                              ),
                       ),
                     ),
                   ),
@@ -437,6 +642,70 @@ class _CanadaEventMapState extends State<CanadaEventMap> {
       );
     },
   );
+}
+
+class _MapboxAttribution extends StatelessWidget {
+  const _MapboxAttribution();
+
+  @override
+  Widget build(BuildContext context) => Wrap(
+    spacing: 6,
+    crossAxisAlignment: WrapCrossAlignment.center,
+    children: [
+      SvgPicture.asset(
+        'assets/images/mapbox-wordmark.svg',
+        width: 72,
+        semanticsLabel: 'Mapbox',
+      ),
+      for (final (label, url) in const [
+        ('© Mapbox', 'https://www.mapbox.com/about/maps/'),
+        ('© OpenStreetMap', 'https://www.openstreetmap.org/copyright'),
+        ('Improve this map', 'https://www.mapbox.com/map-feedback/'),
+      ])
+        InkWell(
+          onTap: () => launchUrl(Uri.parse(url)),
+          child: Text(label, style: const TextStyle(fontSize: 10)),
+        ),
+    ],
+  );
+}
+
+void _paintSeminarRadius(
+  Canvas canvas,
+  Size size,
+  SeminarMapRegion region,
+  Offset Function(double, double) project,
+) {
+  final points = region
+      .projectedOutline(project)
+      .map((point) => Offset(point.dx * size.width, point.dy * size.height))
+      .toList();
+  final area = Path()..addPolygon(points, true);
+  canvas.drawPath(area, Paint()..color = const Color(0x164078B8));
+  canvas.drawPath(
+    area,
+    Paint()
+      ..color = const Color(0xB34078B8)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = .6,
+  );
+}
+
+class _SeminarRadiusPainter extends CustomPainter {
+  const _SeminarRadiusPainter(this.region, this.project);
+
+  final SeminarMapRegion? region;
+  final Offset Function(double, double) project;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (region case final local?) {
+      _paintSeminarRadius(canvas, size, local, project);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_SeminarRadiusPainter old) => old.region != region;
 }
 
 class _EventGroup {
@@ -569,8 +838,28 @@ class EventMapPreview extends StatelessWidget {
 }
 
 class _CanadaPainter extends CustomPainter {
-  _CanadaPainter(this.geometry);
+  _CanadaPainter(this.geometry, {required this.region, required this.detailed});
   final CanadaMapGeometry geometry;
+  final SeminarMapRegion? region;
+  final bool detailed;
+
+  Offset _point(double lat, double lon, Size size) {
+    final p = geometry.normalized(lat, lon);
+    return Offset(p.dx * size.width, p.dy * size.height);
+  }
+
+  void _label(Canvas canvas, Offset point, String text, TextStyle style) {
+    final painter = TextPainter(
+      text: TextSpan(text: text, style: style),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    painter.paint(
+      canvas,
+      point - Offset(painter.width / 2, painter.height / 2),
+    );
+    painter.dispose();
+  }
+
   @override
   void paint(Canvas canvas, Size size) {
     final fill = Paint()..color = const Color(0xFFD2E4DB);
@@ -595,6 +884,9 @@ class _CanadaPainter extends CustomPainter {
       canvas.drawPath(path, fill);
       canvas.drawPath(path, line);
     }
+    if (region case final local?) {
+      _paintSeminarRadius(canvas, size, local, geometry.normalized);
+    }
     const centres = {
       'BC': (54.2, -126.0),
       'AB': (55.0, -115.0),
@@ -611,28 +903,74 @@ class _CanadaPainter extends CustomPainter {
       'NU': (69.0, -97.0),
     };
     for (final e in centres.entries) {
-      final p = geometry.normalized(e.value.$1, e.value.$2);
-      final t = TextPainter(
-        text: TextSpan(
-          text: e.key,
-          style: const TextStyle(
-            fontSize: 18,
-            color: Color(0xFF668878),
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        textDirection: TextDirection.ltr,
-      )..layout();
-      t.paint(
+      _label(
         canvas,
-        Offset(
-          p.dx * size.width - t.width / 2,
-          p.dy * size.height - t.height / 2,
+        _point(e.value.$1, e.value.$2, size),
+        e.key,
+        const TextStyle(
+          fontSize: 18,
+          color: Color(0xFF668878),
+          fontWeight: FontWeight.w600,
         ),
+      );
+    }
+    const water = {
+      'Pacific Ocean': (50.5, -133.0),
+      'Hudson Bay': (59.0, -86.0),
+      'Atlantic Ocean': (43.0, -53.5),
+    };
+    for (final e in water.entries) {
+      _label(
+        canvas,
+        _point(e.value.$1, e.value.$2, size),
+        e.key,
+        const TextStyle(
+          fontSize: 14,
+          color: Color(0xFF567483),
+          fontStyle: FontStyle.italic,
+        ),
+      );
+    }
+    const cities = {
+      'Vancouver': (49.3, -123.1),
+      'Calgary': (51.0, -114.1),
+      'Winnipeg': (49.9, -97.1),
+      'Toronto': (43.7, -79.4),
+      'Montréal': (45.5, -73.6),
+      'Halifax': (44.6, -63.6),
+    };
+    const localCities = {
+      'Victoria': (48.4, -123.4),
+      'Nanaimo': (49.2, -123.9),
+      'Kelowna': (49.9, -119.5),
+      'Edmonton': (53.5, -113.5),
+      'Saskatoon': (52.1, -106.7),
+      'Ottawa': (45.4, -75.7),
+      'Québec': (46.8, -71.2),
+      'St. John’s': (47.6, -52.7),
+      'Whitehorse': (60.7, -135.1),
+      'Yellowknife': (62.5, -114.4),
+      'Iqaluit': (63.7, -68.5),
+    };
+    for (final e in {...cities, if (detailed) ...localCities}.entries) {
+      final p = _point(e.value.$1, e.value.$2, size);
+      canvas.drawCircle(
+        p,
+        detailed ? 1.3 : 2,
+        Paint()..color = const Color(0xFF3F6457),
+      );
+      _label(
+        canvas,
+        p + Offset(0, detailed ? 4 : 9),
+        e.key,
+        TextStyle(fontSize: detailed ? 5 : 12, color: const Color(0xFF2B5345)),
       );
     }
   }
 
   @override
-  bool shouldRepaint(_CanadaPainter old) => old.geometry != geometry;
+  bool shouldRepaint(_CanadaPainter old) =>
+      old.geometry != geometry ||
+      old.region != region ||
+      old.detailed != detailed;
 }

@@ -2,16 +2,42 @@ import '../models/dashboard_showcase_content.dart';
 import '../models/about_story_content.dart';
 import '../models/marketing_motion_content.dart';
 
+const learningRoadmapPlaceholder =
+    'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed posuere '
+    'libero vitae justo facilisis, sit amet blandit neque vulputate. '
+    'Curabitur et arcu vel sapien tincidunt iaculis.\n\n'
+    'Integer commodo, erat vitae consequat finibus, nulla augue dapibus '
+    'diam, sed ullamcorper augue enim at felis. Aenean vitae erat non '
+    'lectus pharetra faucibus.\n\n'
+    'Donec consequat lorem vel sem posuere, eu tincidunt leo aliquam. '
+    'Vivamus ullamcorper magna a risus congue, quis consequat sem viverra.';
+
 // These IDs are permanent. Rewrite the fallback VALUE while retaining its ID.
 // Never regenerate or renumber this registry during a redesign.
 const siteCopyCatalog = <String, String>{
   'buyer.workspace.heading': 'My workspace',
-  'transaction.library.title': 'Transaction Room',
+  'transaction.library.title': 'Documents',
   'transaction.library.kicker': 'YOUR DOCUMENT WORKSPACE',
   'learning.room.kicker': 'YOUR DOCUMENT WORKSPACE',
   'learning.room.title': 'Transaction Room',
   'learning.journey.kicker': 'LEARN BY WORKING THROUGH A DEAL',
-  'learning.journey.title': 'Acquisition Journey',
+  'learning.journey.title': 'Roadmap',
+  'learning.journey.find.body': learningRoadmapPlaceholder,
+  'learning.journey.value.body': learningRoadmapPlaceholder,
+  'learning.journey.offer.body': learningRoadmapPlaceholder,
+  'learning.journey.diligence.body': learningRoadmapPlaceholder,
+  'learning.journey.close.body': learningRoadmapPlaceholder,
+  'learning.firstSteps.welcome': 'Welcome to Pact.',
+  'learning.financial.statements.title': 'Financial statements',
+  'learning.financial.earnings.title': 'Earnings',
+  'learning.financial.working-capital.title': 'Working capital',
+  'learning.financial.financing.title': 'Financing',
+  'learning.financial.cash-flow.title': 'Cash flow',
+  'learning.financial.revenue.title': 'Revenue',
+  'learning.financial.expenses.title': 'Expenses',
+  'learning.financial.balance-sheet.title': 'Balance sheet',
+  'learning.financial.forecasts.title': 'Forecasts',
+  'learning.financial.capital-spending.title': 'Capital spending',
   'learning.journey.intro':
       'Five stages. One clearer path to ownership. Learn the concepts, explore a fictional example, and practise the next decision.',
   'professional.matching.open': 'Match professionals to a deal',
