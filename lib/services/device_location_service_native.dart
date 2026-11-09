@@ -15,7 +15,7 @@ class DeviceLocationResult {
 }
 
 class DeviceLocationService {
-  static Future<DeviceLocationResult> locateCanadianCity() async {
+  static Future<({double latitude, double longitude})> locate() async {
     if (!await Geolocator.isLocationServiceEnabled()) {
       throw StateError('Location services are turned off on this device.');
     }
@@ -35,6 +35,11 @@ class DeviceLocationService {
         timeLimit: Duration(seconds: 12),
       ),
     );
+    return (latitude: position.latitude, longitude: position.longitude);
+  }
+
+  static Future<DeviceLocationResult> locateCanadianCity() async {
+    final position = await locate();
     final city = await MarketplaceService.cityNearCoordinates(
       position.latitude,
       position.longitude,

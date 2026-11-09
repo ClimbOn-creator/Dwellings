@@ -11,7 +11,7 @@ const siteCopyCatalog = <String, String>{
   'learning.room.kicker': 'YOUR DOCUMENT WORKSPACE',
   'learning.room.title': 'Transaction Room',
   'learning.journey.kicker': 'LEARN BY WORKING THROUGH A DEAL',
-  'learning.journey.title': 'Acquisition Journey',
+  'learning.journey.title': 'Roadmap',
   'learning.journey.intro':
       'Five stages. One clearer path to ownership. Learn the concepts, explore a fictional example, and practise the next decision.',
   'professional.matching.open': 'Match professionals to a deal',

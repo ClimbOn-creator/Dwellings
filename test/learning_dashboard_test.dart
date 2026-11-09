@@ -1,3 +1,5 @@
+import 'package:dwelling_iq/widgets/canada_event_map.dart';
+import 'package:dwelling_iq/widgets/transaction_room_panel.dart';
 import 'package:dwelling_iq/models/learning_journey.dart';
 import 'package:dwelling_iq/screens/member_overview_page.dart';
 import 'package:dwelling_iq/screens/learning_dashboard_page.dart';
@@ -129,6 +131,101 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   }
+  testWidgets('Seminars requests location on demand and switches map scope', (
+    tester,
+  ) async {
+    var requests = 0;
+    LearningSeminar seminar(String id, double lat, double lon) =>
+        LearningSeminar(
+          id: id,
+          hostId: 'host',
+          title: id,
+          description: '',
+          startsAt: DateTime.now().add(const Duration(days: 1)),
+          duration: 60,
+          joinUrl: '',
+          latitude: lat,
+          longitude: lon,
+          status: 'scheduled',
+        );
+    await tester.pumpWidget(
+      MaterialApp(
+        home: LearningDashboardPage(
+          initialView: LearningView.seminars,
+          locate: () async {
+            requests++;
+            if (requests == 1) throw StateError('Permission denied');
+            return (latitude: 48.4, longitude: -123.4);
+          },
+          loadSeminars: () async => [
+            seminar('within-500', 52.8, -123.4),
+            seminar('outside-500', 53.0, -123.4),
+            seminar('halifax', 44.6, -63.6),
+          ],
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    CanadaEventMap map() => tester.widget(find.byType(CanadaEventMap));
+    Iterable<String> eventIds() => map().events.map((event) => event.id);
+    expect(requests, 0);
+    expect(eventIds(), contains('halifax'));
+
+    await tester.tap(find.text('Use my location'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Location is unavailable'), findsOneWidget);
+    expect(map().region, isNull);
+
+    await tester.tap(find.text('Use my location'));
+    await tester.pumpAndSettle();
+    expect(map().region, isNotNull);
+    expect(eventIds(), contains('within-500'));
+    expect(eventIds(), isNot(contains('outside-500')));
+    expect(eventIds(), isNot(contains('halifax')));
+
+    await tester.tap(find.text('Show full map'));
+    await tester.pumpAndSettle();
+    expect(map().region, isNull);
+    expect(eventIds(), contains('halifax'));
+    await tester.tap(find.text('Show nearby'));
+    await tester.pumpAndSettle();
+    expect(map().region, isNotNull);
+    expect(requests, 2);
+  });
+
+  testWidgets('Roadmap saves a completed stage and opens its document', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: LearningDashboardPage(initialView: LearningView.roadmap),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final answer = find.byKey(const ValueKey('journey-answer-0'));
+    await tester.ensureVisible(answer);
+    await tester.tap(answer);
+    await tester.pumpAndSettle();
+    final mark = find.byKey(const Key('journey-mark-understood'));
+    await tester.ensureVisible(mark);
+    await tester.tap(mark);
+    await tester.pumpAndSettle();
+    final prefs = await SharedPreferences.getInstance();
+    expect(
+      prefs.getStringList('learning.progress.guest'),
+      contains('buyer-search'),
+    );
+    final doc = find.widgetWithText(TextButton, 'Deal brief & buyer criteria');
+    await tester.ensureVisible(doc);
+    await tester.tap(doc);
+    await tester.pumpAndSettle();
+    final panel = tester.widget<TransactionRoomPanel>(
+      find.byType(TransactionRoomPanel),
+    );
+    expect(panel.initialDocumentId, isNotNull);
+    expect(find.text('DOWNLOAD EDITABLE TEMPLATE'), findsOneWidget);
+  });
+
   testWidgets('open Canada map refreshes published and cancelled events', (
     tester,
   ) async {

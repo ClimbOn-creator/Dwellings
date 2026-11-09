@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import '../services/learning_service.dart';
-import '../services/learning_area_service.dart';
 import 'dashboard_ui.dart';
 import 'site_copy_text.dart';
 import 'learning_example_cover.dart';
@@ -42,19 +41,70 @@ class CanadaMapGeometry {
   }
 }
 
+/// A 500 km search around the device, used only in the current map session.
+class SeminarMapRegion {
+  const SeminarMapRegion(this.latitude, this.longitude);
+
+  static const _earthRadiusKm = 6371.0;
+  static const _angularRadius = 500 / _earthRadiusKm;
+  static const _radians = math.pi / 180;
+
+  final double latitude, longitude;
+
+  bool includes(LearningSeminar event) {
+    if (!event.mapped) return false;
+    final lat = latitude * _radians;
+    final eventLat = event.latitude! * _radians;
+    final halfLat = math.sin((eventLat - lat) / 2);
+    final halfLon = math.sin((event.longitude! - longitude) * _radians / 2);
+    final haversine =
+        halfLat * halfLat +
+        math.cos(lat) * math.cos(eventLat) * halfLon * halfLon;
+    return haversine <= math.pow(math.sin(_angularRadius / 2), 2);
+  }
+
+  Rect projectedBounds(CanadaMapGeometry geometry) {
+    final lat = latitude * _radians;
+    final sinLat = math.sin(lat), cosLat = math.cos(lat);
+    final sinRadius = math.sin(_angularRadius);
+    final cosRadius = math.cos(_angularRadius);
+    final centre = geometry.normalized(latitude, longitude);
+    var bounds = Rect.fromPoints(centre, centre);
+    for (var i = 0; i < 16; i++) {
+      final bearing = i * math.pi / 8;
+      final boundaryLat = math.asin(
+        (sinLat * cosRadius + cosLat * sinRadius * math.cos(bearing)).clamp(
+          -1.0,
+          1.0,
+        ),
+      );
+      final boundaryLon = math.atan2(
+        math.sin(bearing) * sinRadius * cosLat,
+        cosRadius - sinLat * math.sin(boundaryLat),
+      );
+      final point = geometry.normalized(
+        boundaryLat / _radians,
+        longitude + boundaryLon / _radians,
+      );
+      bounds = bounds.expandToInclude(Rect.fromPoints(point, point));
+    }
+    return bounds;
+  }
+}
+
 class CanadaEventMap extends StatefulWidget {
   const CanadaEventMap({
     super.key,
     required this.events,
     required this.onOpen,
-    this.area,
-    this.nearby = false,
+    this.region,
+    this.locationControls,
     this.expandToFill = false,
   });
   final List<LearningSeminar> events;
   final ValueChanged<LearningSeminar> onOpen;
-  final LearningArea? area;
-  final bool nearby;
+  final SeminarMapRegion? region;
+  final Widget? locationControls;
   final bool expandToFill;
   @override
   State<CanadaEventMap> createState() => _CanadaEventMapState();
@@ -88,7 +138,9 @@ class _CanadaEventMapState extends State<CanadaEventMap> {
   @override
   void didUpdateWidget(CanadaEventMap old) {
     super.didUpdateWidget(old);
-    if (old.nearby != widget.nearby || old.area?.name != widget.area?.name) {
+    if (old.region != widget.region) {
+      closeTimer?.cancel();
+      selected = null;
       WidgetsBinding.instance.addPostFrameCallback((_) => fit());
     }
   }
@@ -96,16 +148,17 @@ class _CanadaEventMapState extends State<CanadaEventMap> {
   Size get canvasSize => Size(1000, 1000 / (geometry?.aspect ?? 1.176));
   void fit() {
     if (!mounted || geometry == null || viewport.isEmpty) return;
-    fitScale = math.min(
-      (viewport.width - 32) / canvasSize.width,
-      (viewport.height - 32) / canvasSize.height,
-    );
-    final scale = widget.nearby && widget.area != null
-        ? math.max(fitScale * 3, 1.2)
-        : fitScale;
-    final centre = widget.nearby && widget.area != null
-        ? geometry!.normalized(widget.area!.latitude, widget.area!.longitude)
-        : const Offset(.5, .5);
+    final bounds =
+        widget.region?.projectedBounds(geometry!) ??
+        const Rect.fromLTWH(0, 0, 1, 1);
+    final scale = math
+        .min(
+          (viewport.width - 40) / (bounds.width * canvasSize.width),
+          (viewport.height - 40) / (bounds.height * canvasSize.height),
+        )
+        .clamp(.1, 6.0);
+    fitScale = scale;
+    final centre = bounds.center;
     transform.value = Matrix4.identity()
       ..translateByDouble(
         viewport.width / 2 - centre.dx * canvasSize.width * scale,
@@ -372,6 +425,27 @@ class _CanadaEventMapState extends State<CanadaEventMap> {
                       top: g.point.dy - 18,
                       child: pin(g),
                     ),
+                  if (widget.locationControls case final controls?)
+                    Positioned(
+                      top: 12,
+                      left: 12,
+                      right: 68,
+                      child: Align(
+                        alignment: Alignment.topLeft,
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 260),
+                          child: Material(
+                            color: Colors.white,
+                            elevation: 2,
+                            borderRadius: BorderRadius.circular(12),
+                            child: Padding(
+                              padding: const EdgeInsets.all(8),
+                              child: controls,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                   Positioned(
                     top: 12,
                     right: 12,
@@ -392,7 +466,9 @@ class _CanadaEventMapState extends State<CanadaEventMap> {
                             icon: const Icon(Icons.remove),
                           ),
                           IconButton(
-                            tooltip: 'Reset Canada map',
+                            tooltip: widget.region == null
+                                ? 'Reset Canada map'
+                                : 'Reset nearby map',
                             onPressed: fit,
                             icon: const Icon(Icons.center_focus_strong),
                           ),

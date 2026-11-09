@@ -1,3 +1,5 @@
+import '../services/device_location_service.dart';
+import '../widgets/acquisition_journey_panel.dart';
 import '../widgets/transaction_room_panel.dart';
 import '../widgets/pact_mobile_surface.dart';
 import '../widgets/dashboard_header.dart';
@@ -51,10 +53,12 @@ class LearningDashboardPage extends StatefulWidget {
     this.initialView = LearningView.firstSteps,
     this.loadSeminars,
     this.loadPermissions,
+    this.locate = DeviceLocationService.locate,
   });
   final LearningView initialView;
   final Future<List<LearningSeminar>> Function()? loadSeminars;
   final Future<LearningPermissions> Function()? loadPermissions;
+  final Future<({double latitude, double longitude})> Function() locate;
   @override
   State<LearningDashboardPage> createState() => _LearningDashboardPageState();
 }
@@ -66,12 +70,50 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
   );
 
   Future<List<LearningSeminar>>? _seminarsFuture;
-  LearningArea? area;
+  SeminarMapRegion? _region;
+  bool _nearby = false;
+  bool _locating = false;
+  String? _locationNotice;
+  String? _documentId;
 
-  Future<void> _loadArea() async {
-    final uid = BackendService.user?.id;
-    final value = await LearningAreaService.load();
-    if (mounted && uid == BackendService.user?.id) setState(() => area = value);
+  Future<void> _showNearby() async {
+    if (_region != null) {
+      setState(() => _nearby = true);
+      return;
+    }
+
+    setState(() {
+      _locating = true;
+      _locationNotice = null;
+    });
+    try {
+      final position = await widget.locate();
+      final region = SeminarMapRegion(position.latitude, position.longitude);
+      final map = await CanadaMapGeometry.asset;
+      if (!mounted) return;
+      if (!region
+          .projectedBounds(map)
+          .overlaps(const Rect.fromLTWH(0, 0, 1, 1))) {
+        setState(
+          () => _locationNotice =
+              'This map covers Canada. Showing the full map for your location.',
+        );
+        return;
+      }
+      setState(() {
+        _region = region;
+        _nearby = true;
+      });
+    } catch (_) {
+      if (mounted) {
+        setState(
+          () => _locationNotice =
+              'Location is unavailable. You can still browse the full Canada map.',
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _locating = false);
+    }
   }
 
   Future<List<LearningSeminar>> get seminars =>
@@ -88,14 +130,11 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
   void initState() {
     super.initState();
     view = widget.initialView;
-    _loadArea();
     refresh();
     auth = BackendService.authChanges?.listen((_) {
       if (mounted) {
         setState(() {
           permissions = const LearningPermissions();
-          area = null;
-          _loadArea();
         });
         refresh();
       }
@@ -225,6 +264,7 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
   String get guide => switch (view) {
     LearningView.quiz => 'comparison',
     LearningView.room => 'learning-room',
+    LearningView.roadmap => 'learning-journey',
     LearningView.seminars => 'learning-seminars',
     _ => 'learning-dashboard',
   };
@@ -366,9 +406,17 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 1220),
                     child: switch (view) {
-                      LearningView.room => const NovaTarget(
+                      LearningView.roadmap => AcquisitionJourneyPanel(
+                        onOpenDocument: (id) => setState(() {
+                          _documentId = id;
+                          view = LearningView.room;
+                        }),
+                      ),
+                      LearningView.room => NovaTarget(
                         id: 'learning-room.documents',
-                        child: TransactionRoomPanel(),
+                        child: TransactionRoomPanel(
+                          initialDocumentId: _documentId,
+                        ),
                       ),
                       LearningView.quiz => const DealComparisonPage(
                         embedded: true,
@@ -492,31 +540,20 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
                 ...snapshot.data ?? <LearningSeminar>[],
                 ...LearningExamples.events,
               ].where((e) => e.visibleOnMap(DateTime.now())).toList();
+              final region = _nearby ? _region : null;
+              final visible = region == null
+                  ? events
+                  : events.where(region.includes).toList();
               return NovaTarget(
                 id: 'learning-seminars.map',
                 child: CanadaEventMap(
-                  events: events,
-                  area: area,
+                  events: visible,
+                  region: region,
                   expandToFill: true,
-                  onOpen: (event) {
-                    if (event.informationUrl.isNotEmpty) {
-                      _openUrl(event.informationUrl);
-                    } else {
-                      showModalBottomSheet<void>(
-                        context: context,
-                        isScrollControlled: true,
-                        builder: (context) => SafeArea(
-                          child: SizedBox(
-                            height: MediaQuery.sizeOf(context).height * .85,
-                            child: SingleChildScrollView(
-                              padding: const EdgeInsets.all(20),
-                              child: _seminar(event),
-                            ),
-                          ),
-                        ),
-                      );
-                    }
-                  },
+                  locationControls: _locationControls(
+                    hasNearbyEvents: visible.isNotEmpty,
+                  ),
+                  onOpen: _openSeminar,
                 ),
               );
             },
@@ -525,6 +562,61 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
       ),
     ],
   );
+  Widget _locationControls({required bool hasNearbyEvents}) => Column(
+    mainAxisSize: MainAxisSize.min,
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      if (_nearby)
+        OutlinedButton.icon(
+          onPressed: () => setState(() => _nearby = false),
+          icon: const Icon(Icons.public),
+          label: const Text('Show full map'),
+        )
+      else
+        OutlinedButton.icon(
+          onPressed: _locating ? null : _showNearby,
+          icon: const Icon(Icons.my_location),
+          label: Text(
+            _locating
+                ? 'Finding your location…'
+                : _region == null
+                ? 'Use my location'
+                : 'Show nearby',
+          ),
+        ),
+      const SizedBox(height: 4),
+      Text(
+        _locationNotice ??
+            (_nearby
+                ? (hasNearbyEvents
+                      ? 'Events within 500 km'
+                      : 'No upcoming seminars within 500 km.')
+                : 'Find events within 500 km. Pact does not save your location.'),
+        style: const TextStyle(fontSize: 12),
+      ),
+    ],
+  );
+
+  void _openSeminar(LearningSeminar event) {
+    if (event.informationUrl.isNotEmpty) {
+      _openUrl(event.informationUrl);
+      return;
+    }
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => SafeArea(
+        child: SizedBox(
+          height: MediaQuery.sizeOf(context).height * .85,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: _seminar(event),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _seminar(LearningSeminar s) {
     final ended = s.status == 'ended' || DateTime.now().isAfter(s.endsAt);
     final canJoin = s.canJoin(DateTime.now());
