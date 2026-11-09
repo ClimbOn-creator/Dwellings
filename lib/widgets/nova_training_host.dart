@@ -79,9 +79,10 @@ class _NovaTrainingHostState extends State<NovaTrainingHost>
         !widget.autoStart ||
         _controller.active)
       return;
-    // Leave the search and location controls interactive on arrival.
+    // Leave the interactive Learning entry points accessible on arrival.
     if (!const {
           'learning-first-steps',
+          'learning-financial',
           'learning-seminars',
         }.contains(_controller.currentPage) &&
         pikaAllowedOnPage(_controller.currentPage) &&

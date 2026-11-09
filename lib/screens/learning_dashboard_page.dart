@@ -3,6 +3,7 @@ import '../widgets/acquisition_journey_panel.dart';
 import '../widgets/transaction_room_panel.dart';
 import '../widgets/home_brand_button.dart';
 import '../widgets/learning_start_search.dart';
+import '../widgets/learning_financial_folders.dart';
 import '../widgets/dashboard_header.dart';
 import 'deal_comparison_page.dart';
 import 'dart:async';
@@ -295,6 +296,7 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
     LearningView.roadmap => 'learning-journey',
     LearningView.seminars => 'learning-seminars',
     LearningView.firstSteps => 'learning-first-steps',
+    LearningView.financial => 'learning-financial',
     _ => 'learning-dashboard',
   };
 
@@ -545,6 +547,8 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
                           initialStageId: _roadmapStageId,
                         ),
                       ),
+                      LearningView.financial =>
+                        const LearningFinancialFolders(),
                       LearningView.room => NovaTarget(
                         id: 'learning-room.documents',
                         child: TransactionRoomPanel(

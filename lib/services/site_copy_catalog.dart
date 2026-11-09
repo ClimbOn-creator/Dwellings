@@ -28,6 +28,11 @@ const siteCopyCatalog = <String, String>{
   'learning.journey.diligence.body': learningRoadmapPlaceholder,
   'learning.journey.close.body': learningRoadmapPlaceholder,
   'learning.firstSteps.welcome': 'Welcome to Pact.',
+  'learning.financial.statements.title': 'Financial statements',
+  'learning.financial.earnings.title': 'Earnings',
+  'learning.financial.working-capital.title': 'Working capital',
+  'learning.financial.financing.title': 'Financing',
+  'learning.financial.cash-flow.title': 'Cash flow',
   'learning.journey.intro':
       'Five stages. One clearer path to ownership. Learn the concepts, explore a fictional example, and practise the next decision.',
   'professional.matching.open': 'Match professionals to a deal',
