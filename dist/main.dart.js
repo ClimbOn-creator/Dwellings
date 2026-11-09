@@ -74142,7 +74142,8 @@ if(p.c!=null)if(o===p.Q){p.a.toString
 o=p.d.b}else o=n
 else o=n
 if(o){s=1
-break}if(A.bl4(p.d.Q)&&p.d.a.d.c==null){o=p.d
+break}o=p.d.Q
+if(o!=="learning-seminars"&&A.bl4(o)&&p.d.a.d.c==null){o=p.d
 o.a_6(o.Q,!0)}case 1:return A.q(q,r)}})
 return A.r($async$BF,r)},
 aFr(){var s=this,r=s.d
