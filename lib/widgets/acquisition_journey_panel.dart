@@ -11,7 +11,13 @@ import 'site_image.dart';
 import 'transaction_room_panel.dart';
 
 class AcquisitionJourneyPanel extends StatefulWidget {
-  const AcquisitionJourneyPanel({super.key, required this.onOpenDocument});
+  const AcquisitionJourneyPanel({
+    super.key,
+    required this.onOpenDocument,
+    this.initialStageId,
+  });
+
+  final String? initialStageId;
   final ValueChanged<String> onOpenDocument;
   @override
   State<AcquisitionJourneyPanel> createState() =>
@@ -31,6 +37,10 @@ class _AcquisitionJourneyPanelState extends State<AcquisitionJourneyPanel> {
   @override
   void initState() {
     super.initState();
+    final stageIndex = acquisitionJourneyStages.indexWhere(
+      (stage) => stage.id == widget.initialStageId,
+    );
+    if (stageIndex >= 0) selected = stageIndex;
     _load();
     auth = BackendService.authChanges?.listen((_) {
       if (!mounted) return;
@@ -137,7 +147,7 @@ class _AcquisitionJourneyPanelState extends State<AcquisitionJourneyPanel> {
           'learning.journey.kicker',
           'LEARN BY WORKING THROUGH A DEAL',
           style: TextStyle(
-            color: learningViolet,
+            color: learningAccent,
             fontSize: 11,
             fontWeight: FontWeight.w800,
             letterSpacing: 1.2,
@@ -178,8 +188,8 @@ class _AcquisitionJourneyPanelState extends State<AcquisitionJourneyPanel> {
                 child: LinearProgressIndicator(
                   value: count / 5,
                   minHeight: 7,
-                  color: learningViolet,
-                  backgroundColor: const Color(0xFFEEEAFF),
+                  color: learningAccent,
+                  backgroundColor: learningSelected,
                 ),
               ),
               const SizedBox(height: 12),
@@ -258,7 +268,7 @@ class _AcquisitionJourneyPanelState extends State<AcquisitionJourneyPanel> {
                     if (completed.contains(item.phaseId)) ...[
                       const Icon(
                         Icons.check_circle_outline,
-                        color: learningViolet,
+                        color: learningAccent,
                         size: 18,
                       ),
                       const SizedBox(width: 10),
@@ -334,7 +344,7 @@ class _AcquisitionJourneyPanelState extends State<AcquisitionJourneyPanel> {
           width: double.infinity,
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: const Color(0xFFF2EFFF),
+            color: learningPaper,
             borderRadius: BorderRadius.circular(20),
           ),
           child: Column(
@@ -359,7 +369,7 @@ class _AcquisitionJourneyPanelState extends State<AcquisitionJourneyPanel> {
               const Text(
                 'A FICTIONAL DEAL',
                 style: TextStyle(
-                  color: learningViolet,
+                  color: learningAccent,
                   fontSize: 11,
                   fontWeight: FontWeight.w800,
                   letterSpacing: 1,
@@ -386,9 +396,7 @@ class _AcquisitionJourneyPanelState extends State<AcquisitionJourneyPanel> {
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
             child: Material(
-              color: answer == i
-                  ? const Color(0xFFEEEAFF)
-                  : const Color(0xFFF8F8FA),
+              color: answer == i ? learningSelected : learningPaper,
               borderRadius: BorderRadius.circular(16),
               child: ListTile(
                 key: ValueKey('journey-answer-$i'),
@@ -397,7 +405,7 @@ class _AcquisitionJourneyPanelState extends State<AcquisitionJourneyPanel> {
                   answer == i
                       ? Icons.radio_button_checked
                       : Icons.radio_button_unchecked,
-                  color: learningViolet,
+                  color: learningAccent,
                 ),
                 title: text('choice.$i', phase.choices[i]),
               ),
@@ -428,7 +436,7 @@ class _AcquisitionJourneyPanelState extends State<AcquisitionJourneyPanel> {
                   ? null
                   : _mark,
               icon: Icon(done ? Icons.check_circle : Icons.check),
-              style: FilledButton.styleFrom(backgroundColor: learningViolet),
+              style: FilledButton.styleFrom(backgroundColor: learningAccent),
               label: Text(done ? 'Understood · undo' : 'Mark stage understood'),
             ),
           ],

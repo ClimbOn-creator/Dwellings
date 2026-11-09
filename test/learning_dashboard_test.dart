@@ -103,6 +103,11 @@ void main() {
       ]) {
         expect(find.text(tab), findsOneWidget);
       }
+      expect(find.byKey(const Key('affinity-navigation-bar')), findsNothing);
+      expect(
+        find.byKey(const Key('learning-first-steps-search')),
+        findsOneWidget,
+      );
       expect(find.text('Learning feed'), findsNothing);
       expect(find.text('Pact examples'), findsNothing);
       expect(find.byKey(const Key('learning-create-post')), findsNothing);
@@ -131,6 +136,34 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   }
+  testWidgets('First steps search opens the matching learning content', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const MaterialApp(home: LearningDashboardPage()));
+    await tester.pumpAndSettle();
+    final field = find.byKey(const Key('learning-first-steps-search'));
+    expect(find.byType(TextField), findsOneWidget);
+
+    Future<void> search(String query) async {
+      await tester.enterText(field, query);
+      await tester.testTextInput.receiveAction(TextInputAction.search);
+      await tester.pumpAndSettle();
+    }
+
+    await search('no matching content qwerty');
+    expect(find.textContaining('No matches in Pact Learning'), findsOneWidget);
+
+    await search('working capital');
+    final document = find.widgetWithText(ListTile, 'Working capital, debt & asset schedule');
+    expect(document, findsOneWidget);
+    await tester.tap(document);
+    await tester.pumpAndSettle();
+    final panel = tester.widget<TransactionRoomPanel>(
+      find.byType(TransactionRoomPanel),
+    );
+    expect(panel.initialDocumentId, 'working-capital');
+  });
+
   testWidgets('Seminars requests location on demand and switches map scope', (
     tester,
   ) async {

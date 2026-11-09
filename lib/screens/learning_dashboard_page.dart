@@ -1,7 +1,8 @@
 import '../services/device_location_service.dart';
 import '../widgets/acquisition_journey_panel.dart';
 import '../widgets/transaction_room_panel.dart';
-import '../widgets/pact_mobile_surface.dart';
+import '../widgets/home_brand_button.dart';
+import '../widgets/learning_start_search.dart';
 import '../widgets/dashboard_header.dart';
 import 'deal_comparison_page.dart';
 import 'dart:async';
@@ -77,6 +78,7 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
   String? _nearbyCity;
   String? _locationNotice;
   String? _documentId;
+  String? _roadmapStageId;
 
   Future<void> _showNearby() async {
     if (_region != null) {
@@ -292,10 +294,29 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
     LearningView.room => 'learning-room',
     LearningView.roadmap => 'learning-journey',
     LearningView.seminars => 'learning-seminars',
+    LearningView.firstSteps => 'learning-first-steps',
     _ => 'learning-dashboard',
   };
 
-  void show(LearningView next) => setState(() => view = next);
+  void show(LearningView next) {
+    if (view == next) return;
+    setState(() => view = next);
+  }
+
+  void _openSearchResult(LearningSearchDestination result) {
+    setState(() {
+      switch (result.section) {
+        case LearningSearchSection.roadmap:
+          _roadmapStageId = result.id;
+          view = LearningView.roadmap;
+        case LearningSearchSection.documents:
+          _documentId = result.id;
+          view = LearningView.room;
+        case LearningSearchSection.seminars:
+          view = LearningView.seminars;
+      }
+    });
+  }
 
   void _openQuiz() => Navigator.of(context).push(
     MaterialPageRoute<void>(
@@ -317,28 +338,70 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
   }
 
   @override
-  Widget build(BuildContext context) => Theme(
-    data: DashboardUi.theme(Theme.of(context)).copyWith(
-      colorScheme: const ColorScheme.light(
-        primary: learningViolet,
-        surface: Colors.white,
-      ),
-    ),
-    child: Scaffold(
-      backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        toolbarHeight: 72,
-        backgroundColor: const Color(0xFFF7F5F0),
-        surfaceTintColor: Colors.transparent,
-        title: const DashboardHeader(
-          label: 'Learning dash',
-          contentKey: 'dashboard.header.learning',
+  Widget build(BuildContext context) {
+    final base = DashboardUi.theme(Theme.of(context));
+    return Theme(
+      data: base.copyWith(
+        colorScheme: const ColorScheme.light(
+          primary: learningAccent,
+          surface: Colors.white,
+          onSurface: learningInk,
         ),
-        actions: [
+        textTheme: base.textTheme.apply(
+          bodyColor: learningInk,
+          displayColor: learningInk,
+        ),
+      ),
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        body: SafeArea(
+          child: LayoutBuilder(
+            builder: (context, box) {
+              final compact = box.maxWidth < 900;
+              final sidebar = !compact && !_showingQuiz;
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (sidebar) ...[
+                    _sidebar(),
+                    const VerticalDivider(width: 1, color: learningLine),
+                  ],
+                  Expanded(
+                    child: Column(
+                      children: [
+                        _header(showTitle: !sidebar),
+                        Expanded(child: _workspace(compact)),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _header({required bool showTitle}) => Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 16),
+    child: SizedBox(
+      height: 58,
+      child: Row(
+        children: [
+          if (showTitle)
+            const Expanded(
+              child: DashboardHeader(
+                label: 'Learning dash',
+                contentKey: 'dashboard.header.learning',
+              ),
+            )
+          else
+            const Spacer(),
           AppNavigationMenu(
             guidePage: guide,
             dark: false,
+            showOrganizer: false,
             showPrivateUpdates: false,
             beforeProfile: IconButton(
               tooltip: _showingQuiz
@@ -350,50 +413,87 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
               ),
             ),
           ),
-          const SizedBox(width: 12),
         ],
-      ),
-      body: DecoratedBox(
-        decoration: const BoxDecoration(gradient: pactSurfaceGradient),
-        child: LayoutBuilder(
-          builder: (context, box) => !_showingQuiz && box.maxWidth >= 900
-              ? Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _sidebar(),
-                    const VerticalDivider(width: 1, color: DashboardUi.line),
-                    Expanded(child: _workspace(false)),
-                  ],
-                )
-              : _workspace(box.maxWidth < 900),
-        ),
       ),
     ),
   );
-  Widget _sidebar() => Container(
-    width: 212,
-    color: Colors.white,
-    child: SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(13, 24, 13, 16),
+
+  Widget _sidebar() => Material(
+    color: learningPaper,
+    child: SizedBox(
+      width: 216,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(13, 0, 0, 18),
-            child: copy(
-              'learning.nav.workspace',
-              'LEARNING',
-              size: 10,
-              color: DashboardUi.muted,
-              weight: FontWeight.w800,
+            padding: const EdgeInsets.fromLTRB(16, 12, 12, 8),
+            child: Row(
+              children: [
+                const HomeBrandButton(size: 25, dark: false),
+                const SizedBox(width: 12),
+                Flexible(
+                  child: copy(
+                    'dashboard.header.learning',
+                    'Learning dash',
+                    weight: FontWeight.w700,
+                    color: learningInk,
+                  ),
+                ),
+              ],
             ),
           ),
-          for (final tab in _tabs)
-            DashboardUi.nav(tab.label, tab.icon, view == tab, () => show(tab)),
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(12, 16, 12, 12),
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(10, 0, 0, 10),
+                  child: copy(
+                    'learning.nav.workspace',
+                    'LEARNING',
+                    size: 11,
+                    color: learningMuted,
+                    weight: FontWeight.w700,
+                  ),
+                ),
+                for (final tab in _tabs)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 2),
+                    child: ListTile(
+                      dense: true,
+                      minTileHeight: 40,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      selected: view == tab,
+                      selectedTileColor: learningSelected,
+                      selectedColor: learningInk,
+                      iconColor: learningMuted,
+                      textColor: learningInk,
+                      leading: Icon(tab.icon, size: 18),
+                      title: Text(
+                        tab.label,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: view == tab
+                              ? FontWeight.w700
+                              : FontWeight.w500,
+                        ),
+                      ),
+                      onTap: () => show(tab),
+                    ),
+                  ),
+              ],
+            ),
+          ),
         ],
       ),
     ),
   );
+
   Widget _compactNavigation() => SingleChildScrollView(
     scrollDirection: Axis.horizontal,
     child: Row(
@@ -404,6 +504,7 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
             child: ChoiceChip(
               label: Text(v.label),
               selected: view == v,
+              selectedColor: learningSelected,
               onSelected: (_) => show(v),
             ),
           ),
@@ -420,7 +521,9 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
           child: _compactNavigation(),
         ),
       Expanded(
-        child: view == LearningView.seminars
+        child: view == LearningView.firstSteps
+            ? LearningStartSearch(onOpen: _openSearchResult)
+            : view == LearningView.seminars
             ? Padding(
                 padding: EdgeInsets.all(compact ? 8 : 12),
                 child: _seminars(),
@@ -433,6 +536,7 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
                     constraints: const BoxConstraints(maxWidth: 1220),
                     child: switch (view) {
                       LearningView.roadmap => AcquisitionJourneyPanel(
+                        initialStageId: _roadmapStageId,
                         onOpenDocument: (id) => setState(() {
                           _documentId = id;
                           view = LearningView.room;

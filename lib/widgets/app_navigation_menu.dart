@@ -101,6 +101,7 @@ class AppNavigationMenu extends StatefulWidget {
     this.showPrivateUpdates = true,
     this.openDashboardMenu = false,
     this.beforeProfile,
+    this.showOrganizer = true,
   });
 
   // Kept while older callers are migrated to the single acquisition app.
@@ -109,6 +110,7 @@ class AppNavigationMenu extends StatefulWidget {
   final bool showPrivateUpdates;
   final bool openDashboardMenu;
   final Widget? beforeProfile;
+  final bool showOrganizer;
   final PlatformSide side;
   final bool dark;
   final ValueChanged<PlatformSide>? onSideChanged;
@@ -124,7 +126,7 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _organizerPortal.show();
+      if (mounted && widget.showOrganizer) _organizerPortal.show();
     });
   }
 
@@ -405,103 +407,105 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
     }
     final compact = MediaQuery.sizeOf(context).width < 700;
     final current = ModalRoute.isCurrentOf(context) ?? true;
-    return OverlayPortal(
-      controller: _organizerPortal,
-      overlayChildBuilder: (_) =>
-          current ? _organizer() : const SizedBox.shrink(),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
+    final actions = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (widget.showOrganizer)
           SizedBox(
             width: compact
                 ? 0
                 : organizerWidth(MediaQuery.sizeOf(context).width),
           ),
-          const SizedBox(width: 8),
-          if (!compact && pikaAllowedOnPage(_guidePage()))
-            ListenableBuilder(
-              listenable: NovaTrainingController.instance,
-              builder: (context, _) =>
-                  (!NovaTrainingController.instance.hosted ||
-                      !NovaTrainingController.instance.docked)
-                  ? IconButton(
-                      key: const Key('pebble_page_help'),
-                      tooltip: 'Pika · guide to this page',
-                      onPressed: () {
-                        NovaTrainingController.instance.restoreDock();
-                        _showPika();
-                      },
-                      icon: const NovaCharacter(size: 32),
-                    )
-                  : const SizedBox.shrink(),
-            ),
-          if (!compact &&
-              widget.showPrivateUpdates &&
-              BackendService.user != null)
-            FutureBuilder<int>(
-              future: MemberBetaService.unreadCount(),
-              builder: (context, snapshot) => Badge(
-                isLabelVisible: (snapshot.data ?? 0) > 0,
-                label: SiteText(
-                  contentKey: 'copy.app_navigation_menu.m1',
-                  literal: false,
-                  '${snapshot.data ?? 0}',
-                ),
-                child: IconButton(
-                  tooltip: 'Private updates',
-                  onPressed: _openNotifications,
-                  icon: Icon(
-                    Icons.notifications_none_rounded,
-                    color: widget.dark ? Colors.white : const Color(0xFF161616),
-                  ),
+        const SizedBox(width: 8),
+        if (!compact && pikaAllowedOnPage(_guidePage()))
+          ListenableBuilder(
+            listenable: NovaTrainingController.instance,
+            builder: (context, _) =>
+                (!NovaTrainingController.instance.hosted ||
+                    !NovaTrainingController.instance.docked)
+                ? IconButton(
+                    key: const Key('pebble_page_help'),
+                    tooltip: 'Pika · guide to this page',
+                    onPressed: () {
+                      NovaTrainingController.instance.restoreDock();
+                      _showPika();
+                    },
+                    icon: const NovaCharacter(size: 32),
+                  )
+                : const SizedBox.shrink(),
+          ),
+        if (!compact &&
+            widget.showPrivateUpdates &&
+            BackendService.user != null)
+          FutureBuilder<int>(
+            future: MemberBetaService.unreadCount(),
+            builder: (context, snapshot) => Badge(
+              isLabelVisible: (snapshot.data ?? 0) > 0,
+              label: SiteText(
+                contentKey: 'copy.app_navigation_menu.m1',
+                literal: false,
+                '${snapshot.data ?? 0}',
+              ),
+              child: IconButton(
+                tooltip: 'Private updates',
+                onPressed: _openNotifications,
+                icon: Icon(
+                  Icons.notifications_none_rounded,
+                  color: widget.dark ? Colors.white : const Color(0xFF161616),
                 ),
               ),
             ),
-          if (widget.beforeProfile case final action?) action,
-          if (BackendService.user == null)
-            IconButton(
-              tooltip: 'Sign in',
-              onPressed: () => _open(context, AppNavigationDestination.profile),
-              icon: Icon(
-                Icons.person_outline_rounded,
-                color: widget.dark ? Colors.white : const Color(0xFF161616),
-              ),
-            )
-          else
-            FutureBuilder<AccountProfile?>(
-              future: AccountService.loadProfile(),
-              builder: (context, snapshot) => Tooltip(
-                message: 'My profile',
-                child: Semantics(
-                  button: true,
-                  label: 'Open my profile',
-                  child: InkWell(
-                    onTap: () =>
-                        _open(context, AppNavigationDestination.profile),
-                    customBorder: const CircleBorder(),
-                    child: Container(
-                      width: 38,
-                      height: 38,
-                      padding: const EdgeInsets.all(2),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: widget.dark
-                              ? Colors.white.withValues(alpha: .55)
-                              : const Color(0xFFD2D0C9),
-                        ),
+          ),
+        if (widget.beforeProfile case final action?) action,
+        if (BackendService.user == null)
+          IconButton(
+            tooltip: 'Sign in',
+            onPressed: () => _open(context, AppNavigationDestination.profile),
+            icon: Icon(
+              Icons.person_outline_rounded,
+              color: widget.dark ? Colors.white : const Color(0xFF161616),
+            ),
+          )
+        else
+          FutureBuilder<AccountProfile?>(
+            future: AccountService.loadProfile(),
+            builder: (context, snapshot) => Tooltip(
+              message: 'My profile',
+              child: Semantics(
+                button: true,
+                label: 'Open my profile',
+                child: InkWell(
+                  onTap: () => _open(context, AppNavigationDestination.profile),
+                  customBorder: const CircleBorder(),
+                  child: Container(
+                    width: 38,
+                    height: 38,
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: widget.dark
+                            ? Colors.white.withValues(alpha: .55)
+                            : const Color(0xFFD2D0C9),
                       ),
-                      child: ProfilePhoto(
-                        size: 32,
-                        photoUrl: snapshot.data?.photoUrl ?? '',
-                      ),
+                    ),
+                    child: ProfilePhoto(
+                      size: 32,
+                      photoUrl: snapshot.data?.photoUrl ?? '',
                     ),
                   ),
                 ),
               ),
             ),
-        ],
-      ),
+          ),
+      ],
+    );
+    if (!widget.showOrganizer) return actions;
+    return OverlayPortal(
+      controller: _organizerPortal,
+      overlayChildBuilder: (_) =>
+          current ? _organizer() : const SizedBox.shrink(),
+      child: actions,
     );
   }
 }

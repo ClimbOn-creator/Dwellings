@@ -79,8 +79,11 @@ class _NovaTrainingHostState extends State<NovaTrainingHost>
         !widget.autoStart ||
         _controller.active)
       return;
-    // Leave the seminar map interactive on arrival, including location consent.
-    if (_controller.currentPage != 'learning-seminars' &&
+    // Leave the search and location controls interactive on arrival.
+    if (!const {
+          'learning-first-steps',
+          'learning-seminars',
+        }.contains(_controller.currentPage) &&
         pikaAllowedOnPage(_controller.currentPage) &&
         !_controller.service.progress.completed) {
       _controller.startPage(_controller.currentPage, automatic: true);

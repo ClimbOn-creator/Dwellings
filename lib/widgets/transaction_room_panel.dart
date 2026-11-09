@@ -6,9 +6,12 @@ import '../services/site_content_service.dart';
 import 'site_copy_text.dart';
 import 'site_image.dart';
 
-const learningViolet = Color(0xFF6255DC);
-const learningInk = Color(0xFF242536);
-const learningMuted = Color(0xFF797B8B);
+const learningAccent = Color(0xFF242424);
+const learningInk = Color(0xFF202020);
+const learningMuted = Color(0xFF646464);
+const learningLine = Color(0xFFE6E6E6);
+const learningPaper = Color(0xFFFAFAFA);
+const learningSelected = Color(0xFFEEEEEE);
 
 Widget learningCard({
   required Widget child,
@@ -18,7 +21,7 @@ Widget learningCard({
   decoration: BoxDecoration(
     color: Colors.white,
     borderRadius: BorderRadius.circular(26),
-    border: Border.all(color: const Color(0xFFEAE7F5)),
+    border: Border.all(color: learningLine),
   ),
   child: child,
 );
@@ -88,7 +91,7 @@ class _TransactionRoomPanelState extends State<TransactionRoomPanel> {
           'transaction.library.kicker',
           'YOUR DOCUMENT WORKSPACE',
           style: TextStyle(
-            color: learningViolet,
+            color: learningAccent,
             fontSize: 11,
             fontWeight: FontWeight.w800,
             letterSpacing: 1.4,
@@ -204,7 +207,7 @@ class _TransactionRoomPanelState extends State<TransactionRoomPanel> {
                       padding: const EdgeInsets.only(bottom: 6),
                       child: Material(
                         color: selected == item.id
-                            ? const Color(0xFFEEEAFF)
+                            ? learningSelected
                             : Colors.transparent,
                         borderRadius: BorderRadius.circular(16),
                         child: ListTile(
@@ -213,7 +216,7 @@ class _TransactionRoomPanelState extends State<TransactionRoomPanel> {
                             item.fileExtension == 'docx'
                                 ? Icons.description_outlined
                                 : Icons.table_chart_outlined,
-                            color: learningViolet,
+                            color: learningAccent,
                           ),
                           title: SiteCopyText(
                             'transaction.${item.id}.title',
@@ -326,7 +329,7 @@ class _RoomFact extends StatelessWidget {
   Widget build(BuildContext context) => Row(
     mainAxisSize: MainAxisSize.min,
     children: [
-      Icon(icon, color: learningViolet, size: 22),
+      Icon(icon, color: learningAccent, size: 22),
       const SizedBox(width: 10),
       Flexible(
         child: Text(
@@ -352,7 +355,7 @@ class TransactionDocumentGuide extends StatelessWidget {
         Text(
           title,
           style: const TextStyle(
-            color: learningViolet,
+            color: learningAccent,
             fontSize: 12,
             fontWeight: FontWeight.w700,
           ),
@@ -375,7 +378,7 @@ class TransactionDocumentGuide extends StatelessWidget {
           'transaction.stage.${lesson.stage.split(" · ").first}',
           lesson.stage.toUpperCase(),
           style: const TextStyle(
-            color: learningViolet,
+            color: learningAccent,
             fontSize: 11,
             fontWeight: FontWeight.w700,
           ),
@@ -408,7 +411,7 @@ class TransactionDocumentGuide extends StatelessWidget {
                   downloadTransactionDocument(context, lesson, false),
               icon: const Icon(Icons.download_rounded),
               style: FilledButton.styleFrom(
-                backgroundColor: learningViolet,
+                backgroundColor: learningAccent,
                 foregroundColor: Colors.white,
               ),
               label: const SiteCopyText(
@@ -459,7 +462,7 @@ class TransactionDocumentGuide extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
-            color: const Color(0xFFF2EFFF),
+            color: learningPaper,
             borderRadius: BorderRadius.circular(18),
           ),
           child: block('KEEP IN MIND', 'watchout', lesson.buyerWatchOut),
