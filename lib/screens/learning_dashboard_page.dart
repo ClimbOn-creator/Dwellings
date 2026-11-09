@@ -536,7 +536,9 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
                 child: Center(
                   child: ConstrainedBox(
                     constraints: BoxConstraints(
-                      maxWidth: view == LearningView.roadmap
+                      maxWidth:
+                          view == LearningView.roadmap ||
+                              view == LearningView.financial
                           ? double.infinity
                           : 1220,
                     ),

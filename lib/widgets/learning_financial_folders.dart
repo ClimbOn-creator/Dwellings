@@ -9,12 +9,20 @@ import 'site_copy_text.dart';
 const _manila = Color(0xFFF3EBD9);
 const _seam = Color(0xFFCDBD9F);
 
-const _folders = [
+const _leftFolders = [
   (id: 'statements', color: Color(0xFF9BBCAF)),
   (id: 'earnings', color: Color(0xFF9EBBD8)),
   (id: 'working-capital', color: Color(0xFFE9A886)),
   (id: 'financing', color: Color(0xFFE4C978)),
   (id: 'cash-flow', color: Color(0xFFDCA0A4)),
+];
+
+const _rightFolders = [
+  (id: 'revenue', color: Color(0xFFB8AED6)),
+  (id: 'expenses', color: Color(0xFF9AC9C7)),
+  (id: 'balance-sheet', color: Color(0xFFAFC58C)),
+  (id: 'forecasts', color: Color(0xFFECB59D)),
+  (id: 'capital-spending', color: Color(0xFFD7A6C5)),
 ];
 
 typedef _Folder = ({String id, Color color});
@@ -29,53 +37,75 @@ String _title(_Folder folder) => SiteContentService.text(
 class LearningFinancialFolders extends StatelessWidget {
   const LearningFinancialFolders({super.key});
 
-  void _open(BuildContext context, _Folder folder) {
-    showDialog<void>(
-      context: context,
-      builder: (context) => _OpenedFolder(folder: folder),
-    );
-  }
-
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(12, 16, 12, 40),
+    padding: const EdgeInsets.fromLTRB(8, 16, 8, 40),
     child: Center(
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 680),
+        constraints: const BoxConstraints(maxWidth: 1500),
         child: LayoutBuilder(
           builder: (context, box) {
-            final compact = box.maxWidth < 480;
-            final horizontalStep = compact ? 10.0 : 18.0;
-            final verticalStep = compact ? 42.0 : 47.0;
-            final width = box.maxWidth - horizontalStep * (_folders.length - 1);
-            final height = (width * .51).clamp(145.0, 290.0);
-            return SizedBox(
-              width: box.maxWidth,
-              height: height + verticalStep * (_folders.length - 1) + 20,
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  for (var i = 0; i < _folders.length; i++)
-                    Positioned(
-                      key: ValueKey('financial-layer-${_folders[i].id}'),
-                      left: i * horizontalStep,
-                      top: 12 + i * verticalStep,
-                      width: width,
-                      height: height,
-                      child: _ClosedFolder(
-                        folder: _folders[i],
-                        tabOffset: 12 + i * width * .105,
-                        onOpen: () => _open(context, _folders[i]),
-                      ),
-                    ),
-                ],
-              ),
+            const gap = 40.0;
+            final sideBySide = box.maxWidth >= 860;
+            final stackWidth = math.min(
+              730.0,
+              sideBySide ? (box.maxWidth - gap) / 2 : box.maxWidth,
+            );
+            return Wrap(
+              spacing: gap,
+              runSpacing: 24,
+              alignment: WrapAlignment.center,
+              children: [
+                _FolderStack(folders: _leftFolders, width: stackWidth),
+                _FolderStack(folders: _rightFolders, width: stackWidth),
+              ],
             );
           },
         ),
       ),
     ),
   );
+}
+
+class _FolderStack extends StatelessWidget {
+  const _FolderStack({required this.folders, required this.width});
+
+  final List<_Folder> folders;
+  final double width;
+
+  @override
+  Widget build(BuildContext context) {
+    final compact = width < 480;
+    final horizontalStep = compact ? 9.0 : 17.0;
+    final verticalStep = compact ? 42.0 : 47.0;
+    final folderWidth = width - horizontalStep * (folders.length - 1);
+    final height = (folderWidth * .54).clamp(155.0, 322.0);
+    return SizedBox(
+      width: width,
+      height: height + verticalStep * (folders.length - 1) + 20,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          for (var i = 0; i < folders.length; i++)
+            Positioned(
+              key: ValueKey('financial-layer-${folders[i].id}'),
+              left: i * horizontalStep,
+              top: 12 + i * verticalStep,
+              width: folderWidth,
+              height: height,
+              child: _ClosedFolder(
+                folder: folders[i],
+                tabOffset: 12 + i * folderWidth * .105,
+                onOpen: () => showDialog<void>(
+                  context: context,
+                  builder: (_) => _OpenedFolder(folder: folders[i]),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
 }
 
 class _ClosedFolder extends StatefulWidget {
@@ -295,6 +325,10 @@ class _OpenedFolder extends StatelessWidget {
                     right: 2,
                     child: IconButton.filledTonal(
                       tooltip: 'Close folder',
+                      style: IconButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: const Color(0xFF202020),
+                      ),
                       onPressed: () => Navigator.of(context).pop(),
                       icon: const Icon(Icons.close, size: 19),
                     ),

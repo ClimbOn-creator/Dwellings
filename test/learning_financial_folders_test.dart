@@ -21,6 +21,35 @@ void main() {
       );
       await tester.pumpAndSettle();
       final rear = find.text('Financial statements');
+      final right = find.text('Revenue');
+      final rightTitle = find.widgetWithText(SiteCopyText, 'Revenue');
+      expect(
+        tester.widget<SiteCopyText>(rightTitle).contentKey,
+        'learning.financial.revenue.title',
+      );
+      expect(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is SiteCopyText &&
+              widget.contentKey.startsWith('learning.financial.'),
+        ),
+        findsNWidgets(10),
+      );
+      if (width >= 900) {
+        expect(
+          tester.getTopLeft(right).dx,
+          greaterThan(tester.getTopLeft(rear).dx),
+        );
+        expect(
+          tester.getCenter(right).dy,
+          closeTo(tester.getCenter(rear).dy, 1),
+        );
+      } else {
+        expect(
+          tester.getTopLeft(right).dy,
+          greaterThan(tester.getTopLeft(rear).dy),
+        );
+      }
       final front = find.text('Cash flow');
       final rearBefore = tester.getCenter(rear);
       final frontBefore = tester.getCenter(front);
@@ -57,6 +86,17 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(Dialog), findsNothing);
       await mouse.removePointer();
+
+      await tester.ensureVisible(right);
+      await tester.pumpAndSettle();
+      await tester.tap(right);
+      await tester.pumpAndSettle();
+      expect(
+        find.descendant(of: find.byType(Dialog), matching: right),
+        findsOneWidget,
+      );
+      await tester.tap(find.byTooltip('Close folder'));
+      await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
     });
   }

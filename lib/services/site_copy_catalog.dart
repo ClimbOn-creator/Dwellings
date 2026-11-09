@@ -33,6 +33,11 @@ const siteCopyCatalog = <String, String>{
   'learning.financial.working-capital.title': 'Working capital',
   'learning.financial.financing.title': 'Financing',
   'learning.financial.cash-flow.title': 'Cash flow',
+  'learning.financial.revenue.title': 'Revenue',
+  'learning.financial.expenses.title': 'Expenses',
+  'learning.financial.balance-sheet.title': 'Balance sheet',
+  'learning.financial.forecasts.title': 'Forecasts',
+  'learning.financial.capital-spending.title': 'Capital spending',
   'learning.journey.intro':
       'Five stages. One clearer path to ownership. Learn the concepts, explore a fictional example, and practise the next decision.',
   'professional.matching.open': 'Match professionals to a deal',
