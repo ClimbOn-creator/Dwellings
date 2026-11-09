@@ -73,6 +73,8 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
   SeminarMapRegion? _region;
   bool _nearby = false;
   bool _locating = false;
+  int _locationRequest = 0;
+  String? _nearbyCity;
   String? _locationNotice;
   String? _documentId;
 
@@ -82,6 +84,7 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
       return;
     }
 
+    final request = ++_locationRequest;
     setState(() {
       _locating = true;
       _locationNotice = null;
@@ -90,7 +93,7 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
       final position = await widget.locate();
       final region = SeminarMapRegion(position.latitude, position.longitude);
       final map = await CanadaMapGeometry.asset;
-      if (!mounted) return;
+      if (!mounted || request != _locationRequest) return;
       if (!region
           .projectedBounds(map)
           .overlaps(const Rect.fromLTWH(0, 0, 1, 1))) {
@@ -104,16 +107,39 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
         _region = region;
         _nearby = true;
       });
-    } catch (_) {
-      if (mounted) {
+    } catch (error) {
+      if (mounted && request == _locationRequest) {
+        final denied =
+            error is StateError &&
+            error.message.toLowerCase().contains('permission');
         setState(
-          () => _locationNotice =
-              'Location is unavailable. You can still browse the full Canada map.',
+          () => _locationNotice = denied
+              ? 'Location is blocked. Allow it in your browser’s site settings or choose a city.'
+              : 'Location is unavailable. Choose a city or browse the full Canada map.',
         );
       }
     } finally {
-      if (mounted) setState(() => _locating = false);
+      if (mounted && request == _locationRequest) {
+        setState(() => _locating = false);
+      }
     }
+  }
+
+  Future<void> _chooseSeminarCity() async {
+    final city = await chooseLearningArea(
+      context,
+      description: 'Pick a Canadian community to see seminars within 500 km.',
+      allowDeviceLocation: false,
+    );
+    if (!mounted || city == null) return;
+    _locationRequest++;
+    setState(() {
+      _region = SeminarMapRegion(city.latitude, city.longitude);
+      _nearbyCity = city.name;
+      _nearby = true;
+      _locating = false;
+      _locationNotice = null;
+    });
   }
 
   Future<List<LearningSeminar>> get seminars =>
@@ -566,30 +592,42 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
     mainAxisSize: MainAxisSize.min,
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      if (_nearby)
-        OutlinedButton.icon(
-          onPressed: () => setState(() => _nearby = false),
-          icon: const Icon(Icons.public),
-          label: const Text('Show full map'),
-        )
-      else
-        OutlinedButton.icon(
-          onPressed: _locating ? null : _showNearby,
-          icon: const Icon(Icons.my_location),
-          label: Text(
-            _locating
-                ? 'Finding your location…'
-                : _region == null
-                ? 'Use my location'
-                : 'Show nearby',
+      Wrap(
+        spacing: 4,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          if (_nearby)
+            OutlinedButton.icon(
+              onPressed: () => setState(() => _nearby = false),
+              icon: const Icon(Icons.public),
+              label: const Text('Show full map'),
+            )
+          else
+            OutlinedButton.icon(
+              onPressed: _locating ? null : _showNearby,
+              icon: const Icon(Icons.my_location),
+              label: Text(
+                _locating
+                    ? 'Finding your location…'
+                    : _region == null
+                    ? 'Use my location'
+                    : 'Show nearby',
+              ),
+            ),
+          TextButton(
+            onPressed: _chooseSeminarCity,
+            child: const Text('Choose a city'),
           ),
-        ),
+        ],
+      ),
       const SizedBox(height: 4),
       Text(
         _locationNotice ??
             (_nearby
                 ? (hasNearbyEvents
-                      ? 'Events within 500 km'
+                      ? (_nearbyCity == null
+                            ? 'Events within 500 km'
+                            : 'Events within 500 km of $_nearbyCity')
                       : 'No upcoming seminars within 500 km.')
                 : 'Find events within 500 km. Pact does not save your location.'),
         style: const TextStyle(fontSize: 12),

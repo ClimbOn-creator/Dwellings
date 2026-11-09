@@ -39,12 +39,8 @@ class DeviceLocationService {
         maximumAge: 60000,
       ),
     );
-    return completer.future.timeout(
-      const Duration(seconds: 14),
-      onTimeout: () => throw StateError(
-        'Location request timed out. You can still choose a city manually.',
-      ),
-    );
+    // The browser's timeout starts after the user answers its permission prompt.
+    return completer.future;
   }
 
   static Future<DeviceLocationResult> locateCanadianCity() async {

@@ -173,7 +173,7 @@ void main() {
 
     await tester.tap(find.text('Use my location'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('Location is unavailable'), findsOneWidget);
+    expect(find.textContaining('Location is blocked'), findsOneWidget);
     expect(map().region, isNull);
 
     await tester.tap(find.text('Use my location'));
@@ -191,6 +191,16 @@ void main() {
     await tester.pumpAndSettle();
     expect(map().region, isNotNull);
     expect(requests, 2);
+
+    await tester.tap(find.text('Choose a city'));
+    await tester.pumpAndSettle();
+    final victoria = find.text('Victoria, BC');
+    await tester.ensureVisible(victoria);
+    await tester.tap(victoria);
+    await tester.pumpAndSettle();
+    expect(find.text('Events within 500 km of Victoria, BC'), findsOneWidget);
+    expect(eventIds(), isNot(contains('halifax')));
+    expect(requests, 2);
   });
 
   testWidgets('Roadmap saves a completed stage and opens its document', (
@@ -201,6 +211,24 @@ void main() {
         home: LearningDashboardPage(initialView: LearningView.roadmap),
       ),
     );
+    await tester.pumpAndSettle();
+    final firstStage = find.byKey(const ValueKey('journey-stage-0'));
+    final secondStage = find.byKey(const ValueKey('journey-stage-1'));
+    final arrow = find.descendant(
+      of: firstStage,
+      matching: find.byType(AnimatedRotation),
+    );
+    expect(tester.widget<AnimatedRotation>(arrow).turns, 0);
+    expect(find.byKey(const ValueKey('journey-answer-0')), findsNothing);
+    await tester.tap(firstStage);
+    await tester.pumpAndSettle();
+    expect(tester.widget<AnimatedRotation>(arrow).turns, .5);
+    await tester.ensureVisible(secondStage);
+    await tester.tap(secondStage);
+    await tester.pumpAndSettle();
+    expect(tester.widget<AnimatedRotation>(arrow).turns, 0);
+    await tester.ensureVisible(firstStage);
+    await tester.tap(firstStage);
     await tester.pumpAndSettle();
     final answer = find.byKey(const ValueKey('journey-answer-0'));
     await tester.ensureVisible(answer);

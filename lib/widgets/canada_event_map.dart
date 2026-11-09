@@ -63,15 +63,13 @@ class SeminarMapRegion {
     return haversine <= math.pow(math.sin(_angularRadius / 2), 2);
   }
 
-  Rect projectedBounds(CanadaMapGeometry geometry) {
+  Iterable<Offset> projectedOutline(CanadaMapGeometry geometry) sync* {
     final lat = latitude * _radians;
     final sinLat = math.sin(lat), cosLat = math.cos(lat);
     final sinRadius = math.sin(_angularRadius);
     final cosRadius = math.cos(_angularRadius);
-    final centre = geometry.normalized(latitude, longitude);
-    var bounds = Rect.fromPoints(centre, centre);
-    for (var i = 0; i < 16; i++) {
-      final bearing = i * math.pi / 8;
+    for (var i = 0; i < 48; i++) {
+      final bearing = i * math.pi / 24;
       final boundaryLat = math.asin(
         (sinLat * cosRadius + cosLat * sinRadius * math.cos(bearing)).clamp(
           -1.0,
@@ -82,10 +80,17 @@ class SeminarMapRegion {
         math.sin(bearing) * sinRadius * cosLat,
         cosRadius - sinLat * math.sin(boundaryLat),
       );
-      final point = geometry.normalized(
+      yield geometry.normalized(
         boundaryLat / _radians,
         longitude + boundaryLon / _radians,
       );
+    }
+  }
+
+  Rect projectedBounds(CanadaMapGeometry geometry) {
+    final centre = geometry.normalized(latitude, longitude);
+    var bounds = Rect.fromPoints(centre, centre);
+    for (final point in projectedOutline(geometry)) {
       bounds = bounds.expandToInclude(Rect.fromPoints(point, point));
     }
     return bounds;
@@ -413,7 +418,14 @@ class _CanadaEventMapState extends State<CanadaEventMap> {
                         child: RepaintBoundary(
                           child: CustomPaint(
                             size: canvasSize,
-                            painter: _CanadaPainter(geometry!),
+                            painter: _CanadaPainter(
+                              geometry!,
+                              region: widget.region,
+                              detailed:
+                                  widget.region != null ||
+                                  transform.value.getMaxScaleOnAxis() >
+                                      fitScale * 1.7,
+                            ),
                           ),
                         ),
                       ),
@@ -645,8 +657,28 @@ class EventMapPreview extends StatelessWidget {
 }
 
 class _CanadaPainter extends CustomPainter {
-  _CanadaPainter(this.geometry);
+  _CanadaPainter(this.geometry, {required this.region, required this.detailed});
   final CanadaMapGeometry geometry;
+  final SeminarMapRegion? region;
+  final bool detailed;
+
+  Offset _point(double lat, double lon, Size size) {
+    final p = geometry.normalized(lat, lon);
+    return Offset(p.dx * size.width, p.dy * size.height);
+  }
+
+  void _label(Canvas canvas, Offset point, String text, TextStyle style) {
+    final painter = TextPainter(
+      text: TextSpan(text: text, style: style),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    painter.paint(
+      canvas,
+      point - Offset(painter.width / 2, painter.height / 2),
+    );
+    painter.dispose();
+  }
+
   @override
   void paint(Canvas canvas, Size size) {
     final fill = Paint()..color = const Color(0xFFD2E4DB);
@@ -671,6 +703,21 @@ class _CanadaPainter extends CustomPainter {
       canvas.drawPath(path, fill);
       canvas.drawPath(path, line);
     }
+    if (region case final local?) {
+      final points = local
+          .projectedOutline(geometry)
+          .map((point) => Offset(point.dx * size.width, point.dy * size.height))
+          .toList();
+      final area = Path()..addPolygon(points, true);
+      canvas.drawPath(area, Paint()..color = const Color(0x164078B8));
+      canvas.drawPath(
+        area,
+        Paint()
+          ..color = const Color(0xB34078B8)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = .6,
+      );
+    }
     const centres = {
       'BC': (54.2, -126.0),
       'AB': (55.0, -115.0),
@@ -687,28 +734,74 @@ class _CanadaPainter extends CustomPainter {
       'NU': (69.0, -97.0),
     };
     for (final e in centres.entries) {
-      final p = geometry.normalized(e.value.$1, e.value.$2);
-      final t = TextPainter(
-        text: TextSpan(
-          text: e.key,
-          style: const TextStyle(
-            fontSize: 18,
-            color: Color(0xFF668878),
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        textDirection: TextDirection.ltr,
-      )..layout();
-      t.paint(
+      _label(
         canvas,
-        Offset(
-          p.dx * size.width - t.width / 2,
-          p.dy * size.height - t.height / 2,
+        _point(e.value.$1, e.value.$2, size),
+        e.key,
+        const TextStyle(
+          fontSize: 18,
+          color: Color(0xFF668878),
+          fontWeight: FontWeight.w600,
         ),
+      );
+    }
+    const water = {
+      'Pacific Ocean': (50.5, -133.0),
+      'Hudson Bay': (59.0, -86.0),
+      'Atlantic Ocean': (43.0, -53.5),
+    };
+    for (final e in water.entries) {
+      _label(
+        canvas,
+        _point(e.value.$1, e.value.$2, size),
+        e.key,
+        const TextStyle(
+          fontSize: 14,
+          color: Color(0xFF567483),
+          fontStyle: FontStyle.italic,
+        ),
+      );
+    }
+    const cities = {
+      'Vancouver': (49.3, -123.1),
+      'Calgary': (51.0, -114.1),
+      'Winnipeg': (49.9, -97.1),
+      'Toronto': (43.7, -79.4),
+      'Montréal': (45.5, -73.6),
+      'Halifax': (44.6, -63.6),
+    };
+    const localCities = {
+      'Victoria': (48.4, -123.4),
+      'Nanaimo': (49.2, -123.9),
+      'Kelowna': (49.9, -119.5),
+      'Edmonton': (53.5, -113.5),
+      'Saskatoon': (52.1, -106.7),
+      'Ottawa': (45.4, -75.7),
+      'Québec': (46.8, -71.2),
+      'St. John’s': (47.6, -52.7),
+      'Whitehorse': (60.7, -135.1),
+      'Yellowknife': (62.5, -114.4),
+      'Iqaluit': (63.7, -68.5),
+    };
+    for (final e in {...cities, if (detailed) ...localCities}.entries) {
+      final p = _point(e.value.$1, e.value.$2, size);
+      canvas.drawCircle(
+        p,
+        detailed ? 1.3 : 2,
+        Paint()..color = const Color(0xFF3F6457),
+      );
+      _label(
+        canvas,
+        p + Offset(0, detailed ? 4 : 9),
+        e.key,
+        TextStyle(fontSize: detailed ? 5 : 12, color: const Color(0xFF2B5345)),
       );
     }
   }
 
   @override
-  bool shouldRepaint(_CanadaPainter old) => old.geometry != geometry;
+  bool shouldRepaint(_CanadaPainter old) =>
+      old.geometry != geometry ||
+      old.region != region ||
+      old.detailed != detailed;
 }

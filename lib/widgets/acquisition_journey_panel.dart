@@ -7,6 +7,7 @@ import '../services/backend_service.dart';
 import '../services/learning_service.dart';
 import '../services/transaction_learning.dart';
 import 'site_copy_text.dart';
+import 'site_image.dart';
 import 'transaction_room_panel.dart';
 
 class AcquisitionJourneyPanel extends StatefulWidget {
@@ -18,14 +19,14 @@ class AcquisitionJourneyPanel extends StatefulWidget {
 }
 
 class _AcquisitionJourneyPanelState extends State<AcquisitionJourneyPanel> {
-  int selected = 0;
+  int? selected;
   int? answer;
   Set<String> completed = {};
   bool saving = false;
   int revision = 0;
   String? notice;
   StreamSubscription? auth;
-  AcquisitionJourneyStage get stage => acquisitionJourneyStages[selected];
+  AcquisitionJourneyStage get stage => acquisitionJourneyStages[selected!];
   String get progressKey => stage.phaseId;
   @override
   void initState() {
@@ -125,14 +126,10 @@ class _AcquisitionJourneyPanelState extends State<AcquisitionJourneyPanel> {
       );
   @override
   Widget build(BuildContext context) {
-    final phase = stage.phase;
-    final document = transactionLessons.firstWhere(
-      (l) => l.id == stage.documentIds.first,
-    );
     final count = acquisitionJourneyStages
         .where((s) => completed.contains(s.phaseId))
         .length;
-    final done = completed.contains(progressKey);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -194,258 +191,271 @@ class _AcquisitionJourneyPanelState extends State<AcquisitionJourneyPanel> {
           ),
         ),
         const SizedBox(height: 20),
-        LayoutBuilder(
-          builder: (context, box) => Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            children: [
-              for (var i = 0; i < acquisitionJourneyStages.length; i++)
-                SizedBox(
-                  width: box.maxWidth >= 1000
-                      ? (box.maxWidth - 40) / 5
-                      : box.maxWidth >= 600
-                      ? (box.maxWidth - 10) / 2
-                      : box.maxWidth,
-                  child: Material(
-                    color: selected == i ? learningViolet : Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    child: InkWell(
-                      key: ValueKey('journey-stage-$i'),
-                      borderRadius: BorderRadius.circular(20),
-                      onTap: () => setState(() {
-                        selected = i;
-                        answer = null;
-                      }),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Icon(
-                              completed.contains(
-                                    acquisitionJourneyStages[i].phaseId,
-                                  )
-                                  ? Icons.check_circle_outline
-                                  : Icons.radio_button_unchecked,
-                              size: 19,
-                              color: selected == i
-                                  ? Colors.white
-                                  : learningViolet,
-                            ),
-                            const SizedBox(width: 9),
-                            Expanded(
-                              child: Text(
-                                '${i + 1}. ${acquisitionJourneyStages[i].title}',
-                                style: TextStyle(
-                                  color: selected == i
-                                      ? Colors.white
-                                      : learningInk,
-                                  fontWeight: FontWeight.w600,
-                                  height: 1.3,
-                                ),
-                              ),
-                            ),
-                          ],
+        for (var i = 0; i < acquisitionJourneyStages.length; i++)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: _section(i),
+          ),
+        const SizedBox(height: 80),
+      ],
+    );
+  }
+
+  void _select(int? index) => setState(() {
+    selected = index;
+    answer = null;
+  });
+
+  Widget _section(int index) {
+    final item = acquisitionJourneyStages[index];
+    final expanded = selected == index;
+    final duration = MediaQuery.disableAnimationsOf(context)
+        ? Duration.zero
+        : const Duration(milliseconds: 240);
+    final borderRadius = BorderRadius.circular(16);
+    return Material(
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: borderRadius,
+        side: const BorderSide(color: Color(0xFFEAE7F5)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Semantics(
+            button: true,
+            expanded: expanded,
+            child: InkWell(
+              key: ValueKey('journey-stage-$index'),
+              onTap: () => _select(expanded ? null : index),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 18,
+                ),
+                child: Row(
+                  children: [
+                    Text(
+                      '${index + 1}.',
+                      style: const TextStyle(
+                        color: learningMuted,
+                        fontSize: 15,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: SiteCopyText(
+                        'learning.journey.${item.id}.title',
+                        item.title,
+                        style: const TextStyle(
+                          color: learningInk,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                     ),
+                    if (completed.contains(item.phaseId)) ...[
+                      const Icon(
+                        Icons.check_circle_outline,
+                        color: learningViolet,
+                        size: 18,
+                      ),
+                      const SizedBox(width: 10),
+                    ],
+                    AnimatedRotation(
+                      turns: expanded ? .5 : 0,
+                      duration: duration,
+                      curve: Curves.easeInOut,
+                      child: const Icon(Icons.keyboard_arrow_down, size: 22),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          AnimatedSize(
+            duration: duration,
+            curve: Curves.easeInOut,
+            alignment: Alignment.topCenter,
+            child: expanded
+                ? Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+                    child: _stageContent(),
+                  )
+                : const SizedBox.shrink(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _stageContent() {
+    final phase = stage.phase;
+    final document = transactionLessons.firstWhere(
+      (lesson) => lesson.id == stage.documentIds.first,
+    );
+    final done = completed.contains(progressKey);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        text(
+          'subtitle',
+          stage.subtitle,
+          style: const TextStyle(color: learningMuted, fontSize: 15),
+        ),
+        const SizedBox(height: 16),
+        text('explanation', phase.explanation),
+        if (stage.id == 'close') ...[
+          const SizedBox(height: 12),
+          text(
+            'funding',
+            buyerLearningJourney
+                .firstWhere((p) => p.id == 'buyer-finance')
+                .explanation,
+          ),
+        ],
+        const SizedBox(height: 20),
+        const Text(
+          'Why this matters',
+          style: TextStyle(color: learningInk, fontWeight: FontWeight.w700),
+        ),
+        const SizedBox(height: 8),
+        text('why', phase.why),
+        const SizedBox(height: 20),
+        const Text(
+          'Your next move',
+          style: TextStyle(color: learningInk, fontWeight: FontWeight.w700),
+        ),
+        const SizedBox(height: 8),
+        text('action', phase.action),
+        const SizedBox(height: 24),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF2EFFF),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: 112,
+                height: 78,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: SiteImage(
+                    contentKey: 'image.transaction.${document.id}.preview',
+                    original: Image.asset(
+                      document.previewAsset,
+                      fit: BoxFit.cover,
+                      alignment: Alignment.topCenter,
+                    ),
                   ),
                 ),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'A FICTIONAL DEAL',
+                style: TextStyle(
+                  color: learningViolet,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1,
+                ),
+              ),
+              const SizedBox(height: 10),
+              text('example', document.example),
             ],
           ),
         ),
         const SizedBox(height: 24),
-        learningCard(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'STAGE ${selected + 1} OF 5 · ABOUT 5 MIN',
-                style: const TextStyle(
-                  color: learningViolet,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 1,
-                ),
-              ),
-              const SizedBox(height: 12),
-              text(
-                'title',
-                stage.title,
-                style: const TextStyle(
-                  color: learningInk,
-                  fontSize: 27,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              const SizedBox(height: 8),
-              text(
-                'subtitle',
-                stage.subtitle,
-                style: const TextStyle(color: learningMuted, fontSize: 15),
-              ),
-              const SizedBox(height: 24),
-              text('explanation', phase.explanation),
-              if (selected == 4) ...[
-                const SizedBox(height: 12),
-                text(
-                  'funding',
-                  buyerLearningJourney
-                      .firstWhere((p) => p.id == 'buyer-finance')
-                      .explanation,
-                ),
-              ],
-              const SizedBox(height: 20),
-              const Text(
-                'Why this matters',
-                style: TextStyle(
-                  color: learningInk,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 8),
-              text('why', phase.why),
-              const SizedBox(height: 20),
-              const Text(
-                'Your next move',
-                style: TextStyle(
-                  color: learningInk,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 8),
-              text('action', phase.action),
-              const SizedBox(height: 24),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF2EFFF),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'A FICTIONAL DEAL',
-                      style: TextStyle(
-                        color: learningViolet,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 1,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    text('example', document.example),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
-              const Text(
-                'What would you do?',
-                style: TextStyle(
-                  color: learningInk,
-                  fontSize: 21,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              const SizedBox(height: 10),
-              text('question', phase.question),
-              const SizedBox(height: 12),
-              for (var i = 0; i < phase.choices.length; i++)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Material(
-                    color: answer == i
-                        ? const Color(0xFFEEEAFF)
-                        : const Color(0xFFF8F8FA),
-                    borderRadius: BorderRadius.circular(16),
-                    child: ListTile(
-                      key: ValueKey('journey-answer-$i'),
-                      onTap: () => setState(() => answer = i),
-                      leading: Icon(
-                        answer == i
-                            ? Icons.radio_button_checked
-                            : Icons.radio_button_unchecked,
-                        color: learningViolet,
-                      ),
-                      title: text('choice.$i', phase.choices[i]),
-                    ),
-                  ),
-                ),
-              if (answer != null) ...[
-                const SizedBox(height: 10),
-                Text(
-                  answer == phase.correct
-                      ? 'That’s right.'
-                      : 'Try another approach.',
-                  style: TextStyle(
-                    color: answer == phase.correct
-                        ? const Color(0xFF24745D)
-                        : const Color(0xFFAC4E69),
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                text('feedback', phase.feedback),
-              ],
-              const SizedBox(height: 20),
-              Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                children: [
-                  FilledButton.icon(
-                    key: const Key('journey-mark-understood'),
-                    onPressed: saving || (!done && answer != phase.correct)
-                        ? null
-                        : _mark,
-                    icon: Icon(done ? Icons.check_circle : Icons.check),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: learningViolet,
-                    ),
-                    label: Text(
-                      done ? 'Understood · undo' : 'Mark stage understood',
-                    ),
-                  ),
-                  if (selected < 4)
-                    TextButton(
-                      onPressed: () => setState(() {
-                        selected++;
-                        answer = null;
-                      }),
-                      child: const Text('Next stage →'),
-                    ),
-                ],
-              ),
-              if (notice != null) ...[
-                const SizedBox(height: 12),
-                Text(
-                  notice!,
-                  style: const TextStyle(color: learningMuted, fontSize: 12),
-                ),
-              ],
-              const SizedBox(height: 24),
-              const Text(
-                'Documents for this stage',
-                style: TextStyle(
-                  color: learningInk,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 18,
-                ),
-              ),
-              const SizedBox(height: 10),
-              for (final id in stage.documentIds)
-                TextButton.icon(
-                  onPressed: () => widget.onOpenDocument(id),
-                  icon: const Icon(Icons.description_outlined),
-                  label: Text(
-                    transactionLessons.firstWhere((l) => l.id == id).title,
-                  ),
-                ),
-            ],
+        const Text(
+          'What would you do?',
+          style: TextStyle(
+            color: learningInk,
+            fontSize: 21,
+            fontWeight: FontWeight.w800,
           ),
         ),
-        const SizedBox(height: 80),
+        const SizedBox(height: 10),
+        text('question', phase.question),
+        const SizedBox(height: 12),
+        for (var i = 0; i < phase.choices.length; i++)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Material(
+              color: answer == i
+                  ? const Color(0xFFEEEAFF)
+                  : const Color(0xFFF8F8FA),
+              borderRadius: BorderRadius.circular(16),
+              child: ListTile(
+                key: ValueKey('journey-answer-$i'),
+                onTap: () => setState(() => answer = i),
+                leading: Icon(
+                  answer == i
+                      ? Icons.radio_button_checked
+                      : Icons.radio_button_unchecked,
+                  color: learningViolet,
+                ),
+                title: text('choice.$i', phase.choices[i]),
+              ),
+            ),
+          ),
+        if (answer != null) ...[
+          const SizedBox(height: 10),
+          Text(
+            answer == phase.correct ? 'That’s right.' : 'Try another approach.',
+            style: TextStyle(
+              color: answer == phase.correct
+                  ? const Color(0xFF24745D)
+                  : const Color(0xFFAC4E69),
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 8),
+          text('feedback', phase.feedback),
+        ],
+        const SizedBox(height: 20),
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: [
+            FilledButton.icon(
+              key: const Key('journey-mark-understood'),
+              onPressed: saving || (!done && answer != phase.correct)
+                  ? null
+                  : _mark,
+              icon: Icon(done ? Icons.check_circle : Icons.check),
+              style: FilledButton.styleFrom(backgroundColor: learningViolet),
+              label: Text(done ? 'Understood · undo' : 'Mark stage understood'),
+            ),
+          ],
+        ),
+        if (notice != null) ...[
+          const SizedBox(height: 12),
+          Text(
+            notice!,
+            style: const TextStyle(color: learningMuted, fontSize: 12),
+          ),
+        ],
+        const SizedBox(height: 24),
+        const Text(
+          'Documents for this stage',
+          style: TextStyle(
+            color: learningInk,
+            fontWeight: FontWeight.w700,
+            fontSize: 18,
+          ),
+        ),
+        const SizedBox(height: 10),
+        for (final id in stage.documentIds)
+          TextButton.icon(
+            onPressed: () => widget.onOpenDocument(id),
+            icon: const Icon(Icons.description_outlined),
+            label: Text(transactionLessons.firstWhere((l) => l.id == id).title),
+          ),
       ],
     );
   }

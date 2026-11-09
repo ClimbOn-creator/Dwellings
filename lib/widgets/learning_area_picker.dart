@@ -3,14 +3,26 @@ import 'package:flutter/material.dart';
 import '../services/device_location_service.dart';
 import '../services/learning_area_service.dart';
 
-Future<LearningArea?> chooseLearningArea(BuildContext context) =>
-    showDialog<LearningArea>(
-      context: context,
-      builder: (_) => const LearningAreaPicker(),
-    );
+Future<LearningArea?> chooseLearningArea(
+  BuildContext context, {
+  String? description,
+  bool allowDeviceLocation = true,
+}) => showDialog<LearningArea>(
+  context: context,
+  builder: (_) => LearningAreaPicker(
+    description: description,
+    allowDeviceLocation: allowDeviceLocation,
+  ),
+);
 
 class LearningAreaPicker extends StatefulWidget {
-  const LearningAreaPicker({super.key});
+  const LearningAreaPicker({
+    super.key,
+    this.description,
+    this.allowDeviceLocation = true,
+  });
+  final String? description;
+  final bool allowDeviceLocation;
   @override
   State<LearningAreaPicker> createState() => _LearningAreaPickerState();
 }
@@ -78,8 +90,9 @@ class _LearningAreaPickerState extends State<LearningAreaPicker> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Your feed shows posts within about 200 km of this community. We use a broad area, not your exact address.',
+          Text(
+            widget.description ??
+                'Your feed shows posts within about 200 km of this community. We use a broad area, not your exact address.',
           ),
           const SizedBox(height: 14),
           TextField(
@@ -90,11 +103,12 @@ class _LearningAreaPickerState extends State<LearningAreaPicker> {
               prefixIcon: Icon(Icons.search),
             ),
           ),
-          TextButton.icon(
-            onPressed: busy ? null : locate,
-            icon: const Icon(Icons.my_location),
-            label: const Text('Find my community'),
-          ),
+          if (widget.allowDeviceLocation)
+            TextButton.icon(
+              onPressed: busy ? null : locate,
+              icon: const Icon(Icons.my_location),
+              label: const Text('Find my community'),
+            ),
           if (busy) const LinearProgressIndicator(),
           if (error != null)
             Text(error!, style: const TextStyle(color: Colors.red)),
