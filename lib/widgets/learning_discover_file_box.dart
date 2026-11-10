@@ -9,6 +9,7 @@ import 'learning_discover_office.dart';
 const _fileCount = 15;
 const _boxWidth = 440.0;
 const _boxDepth = 610.0;
+const _drawerWall = 152.0;
 const _folderHeight = 174.0;
 const _tabWidth = 106.0;
 const _tabDepth = 27.0;
@@ -258,8 +259,9 @@ class _BoxView {
     required this.cabinet,
     required this.drawer,
   }) {
-    final yaw = (cabinet ? -.43 : .43) * (1 - focus);
-    final pitch = .53 + (math.pi / 2 - .53) * focus;
+    final yaw = cabinet ? 0.0 : .43 * (1 - focus);
+    final restPitch = cabinet ? .34 : .53;
+    final pitch = restPitch + (math.pi / 2 - restPitch) * focus;
     _sinYaw = math.sin(yaw);
     _cosYaw = math.cos(yaw);
     _sinPitch = math.sin(pitch);
@@ -276,23 +278,31 @@ class _BoxView {
       width: math.max(1, size.width - 28),
       height: math.max(1, size.height - 88),
     );
-    final overview = cabinet
-        ? discoverDrawerViewport(size, drawer)
-        : Rect.fromCenter(
-            center: size.center(Offset.zero),
-            width: closeUp.width * .68,
-            height: closeUp.height * .68,
-          );
+    final overview = Rect.fromCenter(
+      center: size.center(Offset.zero),
+      width: closeUp.width * .68,
+      height: closeUp.height * .68,
+    );
     final viewport = Rect.lerp(overview, closeUp, focus)!;
-    _scale = math.min(
+    final fit = math.min(
       viewport.width / bounds.width,
       viewport.height / bounds.height,
     );
-    _offset = viewport.center - bounds.center * _scale;
-    silhouette = Rect.fromCenter(
-      center: viewport.center,
-      width: bounds.width * _scale,
-      height: bounds.height * _scale,
+    final centered = viewport.center - bounds.center * fit;
+    if (cabinet) {
+      final front = discoverDrawerFront(size, drawer);
+      final anchoredScale = front.width / _boxWidth;
+      final anchored =
+          front.topLeft - _project(0, _drawerWall, _boxDepth) * anchoredScale;
+      _scale = anchoredScale + (fit - anchoredScale) * focus;
+      _offset = Offset.lerp(anchored, centered, focus)!;
+    } else {
+      _scale = fit;
+      _offset = centered;
+    }
+    silhouette = Rect.fromPoints(
+      bounds.topLeft * _scale + _offset,
+      bounds.bottomRight * _scale + _offset,
     );
   }
 
@@ -339,7 +349,17 @@ class _FileBoxPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    const wall = 152.0;
+    const wall = _drawerWall;
+    if (view.cabinet) {
+      canvas.clipRect(
+        Rect.fromLTRB(
+          0,
+          discoverDeskUnderside(size) * (1 - view.focus),
+          size.width,
+          size.height,
+        ),
+      );
+    }
     final p = view.point;
     void face(Color color, List<Offset> vertices) {
       final path = Path()..addPolygon(vertices, true);
@@ -448,6 +468,14 @@ class _FileBoxPainter extends CustomPainter {
         p(269, 42, _boxDepth),
         p(269, 61, _boxDepth),
         p(171, 61, _boxDepth),
+      ]);
+      face(const Color(0xffab827b), [
+        p(28, 60, _boxDepth),
+        p(84, 64, _boxDepth),
+        p(87, 86, _boxDepth),
+        p(74, 84, _boxDepth),
+        p(62, 91, _boxDepth),
+        p(28, 87, _boxDepth),
       ]);
     }
     final rim = Paint()
