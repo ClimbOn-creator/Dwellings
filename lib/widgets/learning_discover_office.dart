@@ -1,8 +1,14 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart' show DateFormat;
+
+import '../services/app_tunnel.dart';
+import '../services/learning_service.dart';
 
 import 'learning_discover_arcade.dart';
+import 'learning_discover_calendar.dart';
+import 'learning_discover_portal.dart';
 
 const _officeSize = Size(1100, 740);
 const _cabinet = Rect.fromLTWH(185, 428, 211, 225);
@@ -49,27 +55,211 @@ Rect discoverDrawerFront(Size stage, double slide) =>
 
 double discoverDeskUnderside(Size stage) => _placeInOffice(stage, _cabinet).top;
 
-const _crtGlass = Rect.fromLTWH(478, 225, 102, 119);
+const _crtGlass = Rect.fromLTWH(468, 241, 122, 103);
+const _wallCalendar = Rect.fromLTWH(267, 132, 145, 153);
 
-class DiscoverOffice extends StatelessWidget {
-  const DiscoverOffice({required this.drawer, super.key});
+class DiscoverOffice extends StatefulWidget {
+  const DiscoverOffice({
+    required this.drawer,
+    required this.interactive,
+    this.buyerDashboard,
+    this.loadEvents,
+    this.openEvent,
+    super.key,
+  });
 
   final double drawer;
+  final bool interactive;
+  final WidgetBuilder? buyerDashboard;
+  final Future<List<LearningSeminar>> Function()? loadEvents;
+  final ValueChanged<LearningSeminar>? openEvent;
+
+  @override
+  State<DiscoverOffice> createState() => _DiscoverOfficeState();
+}
+
+class _DiscoverOfficeState extends State<DiscoverOffice> {
+  final _today = DiscoverToday();
+  bool _opening = false;
+
+  @override
+  void dispose() {
+    _today.dispose();
+    super.dispose();
+  }
+
+  Future<void> _openPortal(Rect local, {required bool arcade}) async {
+    if (_opening) return;
+    final navigator = Navigator.of(context, rootNavigator: true);
+    final overlay = navigator.overlay!.context.findRenderObject()! as RenderBox;
+    final office = context.findRenderObject()! as RenderBox;
+    final source = local.shift(
+      office.localToGlobal(Offset.zero, ancestor: overlay),
+    );
+    final previous = AppTunnelController.current.value;
+    final route = DiscoverPortalRoute(
+      destination: arcade
+          ? widget.buyerDashboard!
+          : (_) => DiscoverCalendarPage(
+              today: _today,
+              loadEvents: widget.loadEvents!,
+              openEvent: widget.openEvent!,
+            ),
+      source: source,
+      arcade: arcade,
+      calendarPage: arcade
+          ? null
+          : CustomPaint(painter: _WallCalendarPainter(_today.value, 1)),
+    );
+    _opening = true;
+    if (arcade) AppTunnelController.select(AppTunnel.buyer);
+    try {
+      await navigator.push(route);
+      await route.completed;
+    } finally {
+      if (arcade && AppTunnelController.current.value == AppTunnel.buyer) {
+        AppTunnelController.select(previous);
+      }
+      _opening = false;
+    }
+  }
+
+  Widget _hotspot(Rect rect, String label, VoidCallback open) =>
+      Positioned.fromRect(
+        rect: rect,
+        child: Tooltip(
+          message: label,
+          child: Semantics(
+            label: label,
+            button: true,
+            child: Material(
+              type: MaterialType.transparency,
+              child: InkWell(
+                onTap: open,
+                borderRadius: BorderRadius.circular(4),
+                hoverColor: Colors.white.withValues(alpha: .08),
+                focusColor: const Color(0x33536ca0),
+              ),
+            ),
+          ),
+        ),
+      );
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(
-    builder: (context, bounds) => Stack(
-      children: [
-        Positioned.fill(
-          child: CustomPaint(painter: _DiscoverOfficePainter(drawer)),
-        ),
-        Positioned.fromRect(
-          rect: _placeInOffice(bounds.biggest, _crtGlass),
-          child: const DiscoverArcade(),
-        ),
-      ],
-    ),
+    builder: (context, bounds) {
+      final screen = _placeInOffice(bounds.biggest, _crtGlass);
+      final calendar = _placeInOffice(bounds.biggest, _wallCalendar);
+      return Stack(
+        children: [
+          Positioned.fill(
+            child: CustomPaint(painter: _DiscoverOfficePainter(widget.drawer)),
+          ),
+          Positioned.fromRect(rect: screen, child: const DiscoverArcade()),
+          Positioned.fromRect(
+            rect: calendar,
+            child: ValueListenableBuilder<DateTime>(
+              valueListenable: _today,
+              builder: (context, today, _) => TweenAnimationBuilder<double>(
+                key: ValueKey(today),
+                tween: Tween(begin: 0, end: 1),
+                duration: const Duration(milliseconds: 630),
+                builder: (context, ink, _) =>
+                    CustomPaint(painter: _WallCalendarPainter(today, ink)),
+              ),
+            ),
+          ),
+          if (widget.interactive && widget.buyerDashboard != null)
+            _hotspot(
+              screen,
+              'Enter Buyer Dashboard',
+              () => _openPortal(screen, arcade: true),
+            ),
+          if (widget.interactive &&
+              widget.loadEvents != null &&
+              widget.openEvent != null)
+            _hotspot(
+              calendar,
+              'Open Discover calendar',
+              () => _openPortal(calendar, arcade: false),
+            ),
+        ],
+      );
+    },
   );
+}
+
+class _WallCalendarPainter extends CustomPainter {
+  const _WallCalendarPainter(this.today, this.ink);
+
+  final DateTime today;
+  final double ink;
+
+  @override
+  void paint(Canvas c, Size size) {
+    c.save();
+    c.scale(size.width / 145, size.height / 153);
+    _fill(c, const Rect.fromLTWH(5, 5, 140, 146), const Color(0xffdaddd6));
+    _poly(c, const [
+      Offset(0, 0),
+      Offset(141, 0),
+      Offset(141, 129),
+      Offset(124, 148),
+      Offset(103, 146),
+      Offset(92, 149),
+      Offset(0, 148),
+    ], calendarPaper);
+    _fill(c, const Rect.fromLTWH(0, 0, 141, 34), calendarInk);
+    _poly(c, const [
+      Offset(124, 148),
+      Offset(124, 130),
+      Offset(141, 129),
+    ], const Color(0xffdce1d4));
+    _fill(c, const Rect.fromLTWH(10, 4, 18, 4), const Color(0xffb6bab1));
+    _fill(c, const Rect.fromLTWH(113, 4, 18, 4), const Color(0xffb6bab1));
+    _text(
+      c,
+      DateFormat.MMMM().format(today).toUpperCase(),
+      const Offset(70, 20),
+      14,
+      calendarPaper,
+      FontWeight.w700,
+    );
+    for (var column = 0; column < 7; column++) {
+      _text(
+        c,
+        'SMTWTFS'[column],
+        Offset(13.0 + column * 19, 44),
+        7,
+        calendarInk,
+        FontWeight.w700,
+      );
+    }
+    final offset = calendarOffset(today);
+    final count = DateUtils.getDaysInMonth(today.year, today.month);
+    for (var row = 0; row < 6; row++) {
+      final y = 51.0 + row * 15;
+      _line(c, Offset(4, y), Offset(136, y), const Color(0xffd6ddce), .6);
+    }
+    for (var day = 1; day <= count; day++) {
+      final cell = offset + day - 1;
+      final center = Offset(13.0 + cell % 7 * 19, 58.0 + cell ~/ 7 * 15);
+      _text(c, '$day', center, 8, calendarInk, FontWeight.w500);
+      if (day <= today.day) {
+        paintCalendarMark(
+          c,
+          Rect.fromCenter(center: center, width: 17, height: 15),
+          today: day == today.day,
+          progress: day >= today.day - 1 ? ink : 1,
+        );
+      }
+    }
+    c.restore();
+  }
+
+  @override
+  bool shouldRepaint(_WallCalendarPainter oldDelegate) =>
+      oldDelegate.today != today || oldDelegate.ink != ink;
 }
 
 class _DiscoverOfficePainter extends CustomPainter {
@@ -104,7 +294,6 @@ class _DiscoverOfficePainter extends CustomPainter {
     ], const Color(0xffe2e1dd));
     _filingCabinet(canvas);
     _desk(canvas);
-    _calendar(canvas);
     _pinboard(canvas);
     _computer(canvas);
     _lamp(canvas);
@@ -312,92 +501,11 @@ class _DiscoverOfficePainter extends CustomPainter {
     ], const Color(0xffa8a188).withValues(alpha: alpha));
   }
 
-  void _calendar(Canvas c) {
-    c.save();
-    c.translate(271, 128);
-    c.rotate(-.065);
-    _fill(c, const Rect.fromLTWH(5, 5, 141, 152), const Color(0xffd5cbbb));
-    _poly(c, const [
-      Offset(0, 0),
-      Offset(141, 0),
-      Offset(141, 136),
-      Offset(121, 154),
-      Offset(89, 151),
-      Offset(77, 154),
-      Offset(0, 154),
-    ], const Color(0xfff6eed8));
-    _fill(c, const Rect.fromLTWH(0, 0, 141, 33), const Color(0xffaa705c));
-    _poly(c, const [
-      Offset(121, 154),
-      Offset(121, 136),
-      Offset(141, 136),
-    ], const Color(0xffdfcdb0));
-    _fill(c, const Rect.fromLTWH(20, -6, 5, 14), const Color(0xff716857));
-    _fill(c, const Rect.fromLTWH(116, -6, 5, 14), const Color(0xff716857));
-    _poly(c, const [
-      Offset(100, 8),
-      Offset(139, 7),
-      Offset(139, 17),
-      Offset(131, 15),
-      Offset(112, 18),
-    ], const Color(0xffb78169));
-    _poly(c, const [
-      Offset(0, 111),
-      Offset(12, 106),
-      Offset(8, 124),
-      Offset(19, 131),
-      Offset(11, 149),
-      Offset(0, 151),
-    ], const Color(0xffe4d1a9));
-    _line(
-      c,
-      const Offset(8, 93),
-      const Offset(131, 94),
-      const Color(0xffe2d3b8),
-      1,
-    );
-    _line(
-      c,
-      const Offset(121, 111),
-      const Offset(137, 108),
-      const Color(0xffd8c5a5),
-      1,
-    );
-    _poly(c, const [
-      Offset(5, 1),
-      Offset(25, -3),
-      Offset(28, 7),
-      Offset(7, 10),
-    ], const Color(0xffd5b788));
-    _text(
-      c,
-      'NOVEMBER',
-      const Offset(70, 17),
-      15,
-      const Color(0xfffff5e5),
-      FontWeight.w700,
-    );
-    for (var i = 0; i < 30; i++) {
-      _text(
-        c,
-        '${i + 1}',
-        Offset(15.0 + i % 7 * 18, 52.0 + (i ~/ 7) * 17),
-        9,
-        const Color(0xff685c49),
-        FontWeight.w500,
-      );
-    }
-    _line(
-      c,
-      const Offset(10, 138),
-      const Offset(47, 138),
-      const Color(0xffd2bda0),
-      1,
-    );
-    c.restore();
-  }
-
   void _pinboard(Canvas c) {
+    c.save();
+    c.translate(750, 164);
+    c.scale(1.13);
+    c.translate(-750, -164);
     _fill(c, const Rect.fromLTWH(756, 169, 171, 105), const Color(0xffd4c7b3));
     _fill(c, const Rect.fromLTWH(751, 164, 171, 105), const Color(0xff8e6449));
     _fill(c, const Rect.fromLTWH(757, 170, 159, 93), const Color(0xffbc9468));
@@ -470,6 +578,7 @@ class _DiscoverOfficePainter extends CustomPainter {
     ]) {
       c.drawCircle(pin, 3, Paint()..color = const Color(0xff9a5b4e));
     }
+    c.restore();
   }
 
   void _computer(Canvas c) {
@@ -495,25 +604,25 @@ class _DiscoverOfficePainter extends CustomPainter {
     _fill(c, const Rect.fromLTWH(500, 351, 58, 26), shade);
     _fill(c, const Rect.fromLTWH(483, 371, 93, 12), beige);
     _poly(c, const [
-      Offset(472, 205),
-      Offset(586, 205),
-      Offset(596, 216),
-      Offset(596, 351),
-      Offset(586, 361),
-      Offset(472, 361),
-      Offset(462, 351),
-      Offset(462, 216),
+      Offset(460, 220),
+      Offset(598, 220),
+      Offset(607, 229),
+      Offset(607, 350),
+      Offset(598, 359),
+      Offset(460, 359),
+      Offset(451, 350),
+      Offset(451, 229),
     ], beige);
-    _line(c, const Offset(473, 209), const Offset(585, 209), light, 2);
+    _line(c, const Offset(461, 224), const Offset(597, 224), light, 2);
     _poly(c, const [
-      Offset(479, 218),
-      Offset(579, 218),
-      Offset(586, 225),
-      Offset(586, 344),
-      Offset(579, 351),
-      Offset(479, 351),
-      Offset(472, 344),
-      Offset(472, 225),
+      Offset(469, 233),
+      Offset(589, 233),
+      Offset(597, 241),
+      Offset(597, 344),
+      Offset(589, 351),
+      Offset(469, 351),
+      Offset(461, 344),
+      Offset(461, 241),
     ], const Color(0xff8f8169));
     _line(c, const Offset(468, 350), const Offset(477, 353), shade, 2);
     c.drawCircle(

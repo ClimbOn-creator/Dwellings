@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 
 const _screenSize = Size(86, 108);
 const _shipY = 96.0;
-const _phosphor = Color(0xffa8ef82);
+const _phosphor = Color(0xff91cb75);
 
 class DiscoverArcade extends StatefulWidget {
   const DiscoverArcade({super.key});
@@ -16,20 +16,25 @@ class DiscoverArcade extends StatefulWidget {
 
 class _DiscoverArcadeState extends State<DiscoverArcade> {
   final _demo = _ArcadeDemo();
-  late final Timer _timer;
+  Timer? _timer;
 
   @override
-  void initState() {
-    super.initState();
-    _timer = Timer.periodic(
-      const Duration(milliseconds: 50),
-      (_) => _demo.step(),
-    );
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (ModalRoute.isCurrentOf(context) ?? true) {
+      _timer ??= Timer.periodic(
+        const Duration(milliseconds: 50),
+        (_) => _demo.step(),
+      );
+    } else {
+      _timer?.cancel();
+      _timer = null;
+    }
   }
 
   @override
   void dispose() {
-    _timer.cancel();
+    _timer?.cancel();
     _demo.dispose();
     super.dispose();
   }
@@ -187,7 +192,7 @@ class _ArcadePainter extends CustomPainter {
           Offset(x, y + 4),
           Offset(x - 4, y + 3),
         ], true),
-        paint..color = const Color(0xff76ce64),
+        paint..color = const Color(0xff68b358),
       );
     }
     for (final shot in demo._shots) {

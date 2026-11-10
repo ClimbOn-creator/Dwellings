@@ -74,9 +74,11 @@ class DealRoomsPage extends StatefulWidget {
     this.loadTransactionBundles,
     this.loadTeamProviders,
     this.embeddedPipeline = false,
+    this.openedFromDiscover = false,
   });
 
   final bool embeddedPipeline;
+  final bool openedFromDiscover;
   final PlatformSide initialSide;
   final bool startIntake;
   final DealIntakeDetails? initialIntake;
@@ -88,7 +90,8 @@ class DealRoomsPage extends StatefulWidget {
   loadTeamProviders;
 
   @override
-  State<DealRoomsPage> createState() => privateDashboardsAvailable
+  State<DealRoomsPage> createState() =>
+      privateDashboardsAvailable || openedFromDiscover
       ? _DealRoomsPageState()
       : DashboardComingSoonState<DealRoomsPage>('Buyer dashboard');
 }
@@ -396,6 +399,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
               appBar: AppBar(
                 automaticallyImplyLeading:
                     MediaQuery.sizeOf(context).width >= 900,
+                leading: widget.openedFromDiscover ? const BackButton() : null,
                 toolbarHeight: 72,
                 backgroundColor: Colors.white,
                 surfaceTintColor: Colors.transparent,

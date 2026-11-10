@@ -8,6 +8,7 @@ import '../widgets/learning_evaluate_cover_flow.dart';
 import '../widgets/learning_discover_file_box.dart';
 import '../widgets/dashboard_header.dart';
 import 'deal_comparison_page.dart';
+import 'deal_rooms_page.dart';
 import 'dart:async';
 import '../widgets/canada_event_map.dart';
 import '../widgets/learning_example_cover.dart';
@@ -531,9 +532,13 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
         child: view == LearningView.firstSteps
             ? LearningStartSearch(onOpen: _openSearchResult)
             : view == LearningView.discover
-            ? const LearningDiscoverFileBox(
-                key: ValueKey(LearningView.discover),
+            ? LearningDiscoverFileBox(
+                key: const ValueKey(LearningView.discover),
                 cabinet: true,
+                buyerDashboard: (_) =>
+                    const DealRoomsPage(openedFromDiscover: true),
+                loadEvents: widget.loadSeminars ?? LearningService.seminars,
+                openEvent: _openSeminar,
               )
             : view == LearningView.search
             ? const LearningDiscoverFileBox(key: ValueKey(LearningView.search))

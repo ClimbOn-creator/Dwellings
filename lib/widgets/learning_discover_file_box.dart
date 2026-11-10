@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../services/nova_training_controller.dart';
+import '../services/learning_service.dart';
 import 'learning_discover_office.dart';
 
 const _fileCount = 15;
@@ -30,9 +31,18 @@ Color _fileColor(int index) => _palette[index % _palette.length];
 String _fileName(int index) => 'File ${(index + 1).toString().padLeft(2, '0')}';
 
 class LearningDiscoverFileBox extends StatefulWidget {
-  const LearningDiscoverFileBox({super.key, this.cabinet = false});
+  const LearningDiscoverFileBox({
+    super.key,
+    this.cabinet = false,
+    this.buyerDashboard,
+    this.loadEvents,
+    this.openEvent,
+  });
 
   final bool cabinet;
+  final WidgetBuilder? buyerDashboard;
+  final Future<List<LearningSeminar>> Function()? loadEvents;
+  final ValueChanged<LearningSeminar>? openEvent;
 
   @override
   State<LearningDiscoverFileBox> createState() =>
@@ -184,6 +194,10 @@ class _LearningDiscoverFileBoxState extends State<LearningDiscoverFileBox>
                         child: DiscoverOffice(
                           key: const ValueKey('discover-office'),
                           drawer: drawer,
+                          interactive: _camera.isDismissed,
+                          buyerDashboard: widget.buyerDashboard,
+                          loadEvents: widget.loadEvents,
+                          openEvent: widget.openEvent,
                         ),
                       ),
                     ),
