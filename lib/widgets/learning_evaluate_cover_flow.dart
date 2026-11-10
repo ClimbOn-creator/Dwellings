@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math' as math;
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -7,7 +6,6 @@ import 'package:flutter/services.dart';
 
 import '../services/transaction_learning.dart';
 import 'site_copy_text.dart';
-import 'site_image.dart';
 import 'transaction_room_panel.dart';
 
 final _evaluationFiles = [
@@ -89,11 +87,21 @@ class _LearningEvaluateCoverFlowState extends State<LearningEvaluateCoverFlow>
     });
   }
 
-  void _select(int index) {
+  Future<void> _select(int index) async {
     final relative = _relative(index);
     if (relative.abs() > .05) {
       _settle((_position.value + relative).roundToDouble());
-    } else {
+      return;
+    }
+    _wheelEnd?.cancel();
+    final openGuide = await showDialog<bool>(
+      context: context,
+      builder: (_) => _EvaluationFolderOpening(
+        lesson: _evaluationFiles[index],
+        color: _fileColors[index],
+      ),
+    );
+    if (mounted && openGuide == true) {
       widget.onOpenFile(_evaluationFiles[index].id);
     }
   }
@@ -107,28 +115,16 @@ class _LearningEvaluateCoverFlowState extends State<LearningEvaluateCoverFlow>
     child: Focus(
       autofocus: true,
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 18),
+        padding: const EdgeInsets.only(top: 78, bottom: 20),
         child: Column(
           children: [
-            const SiteCopyText(
-              'learning.evaluate.files.title',
-              'Evaluation files',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: learningInk,
-                fontSize: 30,
-                fontWeight: FontWeight.w800,
-                letterSpacing: -.8,
-              ),
-            ),
-            const SizedBox(height: 10),
             LayoutBuilder(
               builder: (context, box) {
                 final width = box.maxWidth;
                 final compact = width < 620;
                 final stride = (width * .23).clamp(72.0, 166.0);
-                final cardWidth = (width * .30).clamp(88.0, 228.0);
-                final height = compact ? 264.0 : 398.0;
+                final cardWidth = (width * .34).clamp(104.0, 260.0);
+                final height = compact ? 245.0 : 380.0;
                 return Listener(
                   onPointerSignal: (event) => _scroll(event, stride),
                   child: GestureDetector(
@@ -160,31 +156,21 @@ class _LearningEvaluateCoverFlowState extends State<LearningEvaluateCoverFlow>
                 );
               },
             ),
-            AnimatedBuilder(
-              animation: _position,
-              builder: (context, _) => Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  IconButton.outlined(
-                    tooltip: 'Previous file',
-                    onPressed: () => _step(-1),
-                    icon: const Icon(Icons.arrow_back, size: 19),
-                  ),
-                  SizedBox(
-                    width: 74,
-                    child: Text(
-                      '${_position.value.round() % _evaluationFiles.length + 1} / ${_evaluationFiles.length}',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(color: learningMuted),
-                    ),
-                  ),
-                  IconButton.outlined(
-                    tooltip: 'Next file',
-                    onPressed: () => _step(1),
-                    icon: const Icon(Icons.arrow_forward, size: 19),
-                  ),
-                ],
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                IconButton.outlined(
+                  tooltip: 'Previous file',
+                  onPressed: () => _step(-1),
+                  icon: const Icon(Icons.arrow_back, size: 19),
+                ),
+                const SizedBox(width: 22),
+                IconButton.outlined(
+                  tooltip: 'Next file',
+                  onPressed: () => _step(1),
+                  icon: const Icon(Icons.arrow_forward, size: 19),
+                ),
+              ],
             ),
           ],
         ),
@@ -193,9 +179,8 @@ class _LearningEvaluateCoverFlowState extends State<LearningEvaluateCoverFlow>
   );
 
   Widget _stage(double width, double height, double cardWidth, bool compact) {
-    const cameraAngle = 35 * math.pi / 180;
-    final radius = width * .42;
-    final spread = compact ? .49 : .44;
+    final limit = compact ? 2.25 : 3.45;
+    final spacing = (width - cardWidth * .72) / (compact ? 3.9 : 6);
     final files = [
       for (var i = 0; i < _evaluationFiles.length; i++)
         (index: i, relative: _relative(i)),
@@ -204,77 +189,31 @@ class _LearningEvaluateCoverFlowState extends State<LearningEvaluateCoverFlow>
     return ClipRect(
       child: Stack(
         children: [
-          Positioned(
-            left: width * .08,
-            right: width * .08,
-            bottom: compact ? 35 : 33,
-            height: height * .34,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                borderRadius: const BorderRadius.all(
-                  Radius.elliptical(900, 180),
-                ),
-                color: const Color(0xFFF7F6F3),
-                border: Border.all(color: const Color(0xFFECEAE5)),
-              ),
-            ),
-          ),
           for (final file in files)
-            if (file.relative.abs() < (compact ? 2.55 : 3.45))
-              _positionedFile(
-                file.index,
-                file.relative,
-                width,
-                height,
-                cardWidth,
-                radius,
-                spread,
-                cameraAngle,
-                compact,
+            if (file.relative.abs() < limit)
+              Positioned(
+                key: ValueKey(
+                  'evaluate-file-${_evaluationFiles[file.index].id}',
+                ),
+                left: width / 2 + file.relative * spacing - cardWidth / 2,
+                top: height - cardWidth / 1.07 - 66,
+                width: cardWidth,
+                child: Opacity(
+                  opacity: ((limit - file.relative.abs()) / .45).clamp(
+                    0.0,
+                    1.0,
+                  ),
+                  child: _FileCover(
+                    lesson: _evaluationFiles[file.index],
+                    color: _fileColors[file.index],
+                    turn: (file.relative * .19).clamp(-.55, .55),
+                    labelWidth: spacing - 6,
+                    selected: file.relative.abs() < .5,
+                    onTap: () => _select(file.index),
+                  ),
+                ),
               ),
         ],
-      ),
-    );
-  }
-
-  Widget _positionedFile(
-    int index,
-    double relative,
-    double width,
-    double height,
-    double cardWidth,
-    double radius,
-    double spread,
-    double cameraAngle,
-    bool compact,
-  ) {
-    final angle = relative * spread;
-    final depth = (1 - math.cos(angle));
-    final scale = 1 - depth * .30;
-    final size = cardWidth * scale;
-    final left = width / 2 + math.sin(angle) * radius - size / 2;
-    final rise = math.min(radius, 228.0) * depth * math.sin(cameraAngle);
-    final fade = (((compact ? 2.55 : 3.45) - relative.abs()) / .45).clamp(
-      0.0,
-      1.0,
-    );
-    return Positioned(
-      key: ValueKey('evaluate-file-${_evaluationFiles[index].id}'),
-      left: left,
-      width: size,
-      top: height * .72 - size * 1.02 - rise,
-      child: IgnorePointer(
-        ignoring: fade < .3,
-        child: Opacity(
-          opacity: fade,
-          child: _FileCover(
-            lesson: _evaluationFiles[index],
-            color: _fileColors[index],
-            turn: angle,
-            selected: relative.abs() < .5,
-            onTap: () => _select(index),
-          ),
-        ),
       ),
     );
   }
@@ -285,13 +224,14 @@ class _FileCover extends StatefulWidget {
     required this.lesson,
     required this.color,
     required this.turn,
+    required this.labelWidth,
     required this.selected,
     required this.onTap,
   });
 
   final TransactionLesson lesson;
   final Color color;
-  final double turn;
+  final double turn, labelWidth;
   final bool selected;
   final VoidCallback onTap;
 
@@ -326,19 +266,19 @@ class _FileCoverState extends State<_FileCover> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Transform(
-                  alignment: Alignment.center,
+                  alignment: Alignment.bottomCenter,
                   transform: Matrix4.identity()
-                    ..setEntry(3, 2, .0017)
-                    ..rotateX(-.12)
-                    ..rotateY(-widget.turn * .8),
+                    ..setEntry(3, 2, .0013)
+                    ..rotateY(-widget.turn)
+                    ..rotateX(-.53),
                   child: AspectRatio(
                     aspectRatio: 1.07,
                     child: Stack(
                       children: [
                         Positioned(
                           top: 0,
-                          left: 10,
-                          width: 44,
+                          left: 12,
+                          width: 48,
                           height: 18,
                           child: DecoratedBox(
                             decoration: BoxDecoration(
@@ -351,61 +291,191 @@ class _FileCoverState extends State<_FileCover> {
                         ),
                         Positioned.fill(
                           top: 12,
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              color: widget.color,
-                              border: Border.all(color: Colors.black12),
-                              borderRadius: BorderRadius.circular(8),
-                              boxShadow: const [
-                                BoxShadow(
-                                  color: Color(0x1C000000),
-                                  blurRadius: 10,
-                                  offset: Offset(0, 5),
-                                ),
-                              ],
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(9),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(4),
-                                child: SiteImage(
-                                  contentKey:
-                                      'image.transaction.${widget.lesson.id}.preview',
-                                  original: Image.asset(
-                                    widget.lesson.previewAsset,
-                                    fit: BoxFit.cover,
-                                    alignment: Alignment.topCenter,
-                                    excludeFromSemantics: true,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
+                          child: _CoverSurface(color: widget.color),
                         ),
                       ],
                     ),
                   ),
                 ),
                 const SizedBox(height: 10),
-                SiteCopyText(
-                  'transaction.${widget.lesson.id}.title',
-                  widget.lesson.title,
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: widget.selected ? learningInk : learningMuted,
-                    fontSize: widget.selected ? 14 : 12,
-                    fontWeight: widget.selected
-                        ? FontWeight.w700
-                        : FontWeight.w500,
-                    height: 1.18,
+                Align(
+                  alignment: Alignment.topCenter,
+                  child: SizedBox(
+                    width: widget.labelWidth,
+                    child: SiteCopyText(
+                      'transaction.${widget.lesson.id}.title',
+                      widget.lesson.title,
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: widget.selected ? learningInk : learningMuted,
+                        fontSize: widget.selected ? 14 : 12,
+                        fontWeight: widget.selected
+                            ? FontWeight.w700
+                            : FontWeight.w500,
+                        height: 1.18,
+                      ),
+                    ),
                   ),
                 ),
               ],
             ),
           ),
         ),
+      ),
+    ),
+  );
+}
+
+class _CoverSurface extends StatelessWidget {
+  const _CoverSurface({required this.color});
+
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) => DecoratedBox(
+    decoration: BoxDecoration(
+      color: color,
+      border: Border.all(color: Colors.black12),
+      borderRadius: BorderRadius.circular(8),
+      boxShadow: const [
+        BoxShadow(
+          color: Color(0x22000000),
+          blurRadius: 12,
+          offset: Offset(0, 6),
+        ),
+      ],
+    ),
+  );
+}
+
+class _EvaluationFolderOpening extends StatelessWidget {
+  const _EvaluationFolderOpening({required this.lesson, required this.color});
+
+  final TransactionLesson lesson;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) => Dialog(
+    backgroundColor: Colors.transparent,
+    insetPadding: const EdgeInsets.all(20),
+    child: ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 450),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            height: (MediaQuery.sizeOf(context).height * .54).clamp(
+              150.0,
+              338.0,
+            ),
+            child: LayoutBuilder(
+              builder: (context, box) => TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0, end: 1),
+                duration: MediaQuery.disableAnimationsOf(context)
+                    ? Duration.zero
+                    : const Duration(milliseconds: 720),
+                curve: Curves.easeInOutCubic,
+                builder: (context, progress, _) {
+                  final height = box.maxHeight;
+                  final slide = ((progress - .18) / .82).clamp(0.0, 1.0);
+                  return Stack(
+                    children: [
+                      Positioned.fill(
+                        top: height * .33,
+                        child: _CoverSurface(color: color),
+                      ),
+                      Positioned(
+                        key: const Key('evaluate-rising-sheet'),
+                        left: 22,
+                        right: 22,
+                        top: height * (.39 - slide * .33),
+                        bottom: height * (.05 + slide * .17),
+                        child: Opacity(
+                          opacity: (progress * 3).clamp(0.0, 1.0),
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              border: Border.all(
+                                color: const Color(0xFFE4E4E4),
+                              ),
+                              borderRadius: BorderRadius.circular(7),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.fromLTRB(16, 14, 34, 8),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  SiteCopyText(
+                                    'transaction.${lesson.id}.title',
+                                    lesson.title,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 9),
+                                  for (final width in [.88, .73, .81])
+                                    Padding(
+                                      padding: const EdgeInsets.only(bottom: 8),
+                                      child: FractionallySizedBox(
+                                        widthFactor: width,
+                                        child: const SizedBox(
+                                          height: 2,
+                                          child: ColoredBox(
+                                            color: Color(0xFFEAEAEA),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        height: height * .64,
+                        child: Transform(
+                          key: const Key('evaluate-opening-flap'),
+                          alignment: Alignment.bottomCenter,
+                          transform: Matrix4.identity()
+                            ..setEntry(3, 2, .001)
+                            ..rotateX(progress * 1.23),
+                          child: _CoverSurface(color: color),
+                        ),
+                      ),
+                      Positioned(
+                        top: 3,
+                        right: 5,
+                        child: IconButton.filledTonal(
+                          tooltip: 'Close folder',
+                          onPressed: () => Navigator.of(context).pop(),
+                          style: IconButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: learningInk,
+                          ),
+                          icon: const Icon(Icons.close, size: 19),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+          ),
+          const SizedBox(height: 18),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Open document guide'),
+          ),
+        ],
       ),
     ),
   );

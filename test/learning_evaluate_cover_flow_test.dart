@@ -5,6 +5,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+Finder file(String id) => find.byKey(ValueKey('evaluate-file-$id'));
+
+Finder centeredFile(String id) => find.descendant(
+  of: file(id),
+  matching: find.byWidgetPredicate(
+    (widget) => widget is Semantics && widget.properties.selected == true,
+  ),
+);
+
 void main() {
   testWidgets('Evaluate scrolls, lifts a file, and opens its guide', (
     tester,
@@ -25,7 +34,17 @@ void main() {
       of: first,
       matching: find.byType(AnimatedSlide),
     );
-    expect(find.text('1 / 7'), findsOneWidget);
+    expect(centeredFile('deal-brief'), findsOneWidget);
+    expect(find.text('1 / 7'), findsNothing);
+    expect(find.text('Evaluation files'), findsNothing);
+    expect(
+      find.descendant(of: stage, matching: find.byType(Image)),
+      findsNothing,
+    );
+    expect(
+      tester.getTopLeft(first).dy,
+      tester.getTopLeft(file('nda-brief')).dy,
+    );
     final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
     await mouse.addPointer(location: tester.getCenter(first));
     await tester.pumpAndSettle();
@@ -34,10 +53,10 @@ void main() {
 
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
     await tester.pumpAndSettle();
-    expect(find.text('7 / 7'), findsOneWidget);
+    expect(centeredFile('funding'), findsOneWidget);
     await tester.tap(find.byTooltip('Next file'));
     await tester.pumpAndSettle();
-    expect(find.text('1 / 7'), findsOneWidget);
+    expect(centeredFile('deal-brief'), findsOneWidget);
     await tester.sendEventToBinding(
       PointerScrollEvent(
         position: tester.getCenter(stage),
@@ -45,9 +64,21 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.text('2 / 7'), findsOneWidget);
+    expect(centeredFile('nda-brief'), findsOneWidget);
     final selected = find.byKey(const ValueKey('evaluate-file-nda-brief'));
     await tester.tap(selected);
+    await tester.pump();
+    final flap = find.byKey(const Key('evaluate-opening-flap'));
+    final sheet = find.byKey(const Key('evaluate-rising-sheet'));
+    final closedAngle = tester.widget<Transform>(flap).transform.entry(1, 1);
+    final sheetStart = tester.widget<Positioned>(sheet).top!;
+    await tester.pumpAndSettle();
+    expect(
+      tester.widget<Transform>(flap).transform.entry(1, 1),
+      lessThan(closedAngle),
+    );
+    expect(tester.widget<Positioned>(sheet).top!, lessThan(sheetStart));
+    await tester.tap(find.text('Open document guide'));
     await tester.pumpAndSettle();
     expect(
       tester
@@ -73,7 +104,7 @@ void main() {
     final stage = find.byKey(const Key('evaluation-cover-flow'));
     await tester.drag(stage, const Offset(-95, 0));
     await tester.pumpAndSettle();
-    expect(find.text('2 / 7'), findsOneWidget);
+    expect(centeredFile('nda-brief'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }
