@@ -9,6 +9,7 @@ import 'learning_discover_arcade.dart';
 import 'learning_discover_calendar.dart';
 import 'learning_discover_portal.dart';
 import 'learning_discover_pinboard.dart';
+import 'learning_discover_paper_sling.dart';
 
 const _officeSize = Size(1100, 740);
 const _cabinet = Rect.fromLTWH(185, 428, 211, 225);
@@ -57,7 +58,8 @@ double discoverDeskUnderside(Size stage) => _placeInOffice(stage, _cabinet).top;
 
 const _crtGlass = Rect.fromLTWH(468, 241, 122, 103);
 const _wallCalendar = Rect.fromLTWH(267, 132, 145, 153);
-const _lampHit = Rect.fromLTWH(220, 286, 106, 115);
+const _lampHit = Rect.fromLTWH(238, 250, 131, 153);
+const _trashHit = Rect.fromLTWH(978, 549, 82, 117);
 const _deskGlobe = Rect.fromLTWH(794, 296, 82, 94);
 const _learningCallout = Rect.fromLTWH(160, 690, 262, 30);
 const _buyerCallout = Rect.fromLTWH(420, 115, 219, 31);
@@ -258,6 +260,22 @@ class _DiscoverOfficeState extends State<DiscoverOffice> {
                 child: SizedBox(width: 480, child: DiscoverPinboard()),
               ),
             ),
+          Positioned.fill(
+            child: IgnorePointer(
+              child: CustomPaint(painter: _OfficeLampPainter(widget.lampOn)),
+            ),
+          ),
+          if (widget.interactive)
+            _hotspot(
+              _placeInOffice(bounds.biggest, _trashHit),
+              'Open Paper Sling',
+              () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const DiscoverPaperSlingPage(),
+                ),
+              ),
+              highlight: false,
+            ),
           if (widget.interactive)
             _hotspot(
               pinboard,
@@ -362,7 +380,6 @@ class _DiscoverOfficePainter extends CustomPainter {
     _desk(canvas);
     _deskAccessories(canvas);
     _computer(canvas);
-    _lamp(canvas);
     _trashCan(canvas);
     if (drawer == 0) _deskArrows(canvas);
     canvas.restore();
@@ -939,10 +956,30 @@ class _DiscoverOfficePainter extends CustomPainter {
     _line(c, const Offset(680, 391), const Offset(680, 398), shade, 1);
   }
 
+  @override
+  bool shouldRepaint(_DiscoverOfficePainter oldDelegate) =>
+      oldDelegate.drawer != drawer || oldDelegate.lampOn != lampOn;
+}
+
+class _OfficeLampPainter extends CustomPainter {
+  const _OfficeLampPainter(this.lampOn);
+  final bool lampOn;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final frame = _officeFrame(size);
+    final scale = frame.width / _officeSize.width;
+    canvas.save();
+    canvas.translate(frame.left, frame.top);
+    canvas.scale(scale);
+    _lamp(canvas);
+    canvas.restore();
+  }
+
   void _lamp(Canvas c) {
     c.save();
-    c.translate(247, 398);
-    c.scale(1.23);
+    c.translate(265, 398);
+    c.scale(1.52);
     c.translate(-247, -398);
     final neck = Path()
       ..moveTo(252, 387)
@@ -987,8 +1024,8 @@ class _DiscoverOfficePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_DiscoverOfficePainter oldDelegate) =>
-      oldDelegate.drawer != drawer || oldDelegate.lampOn != lampOn;
+  bool shouldRepaint(_OfficeLampPainter oldDelegate) =>
+      oldDelegate.lampOn != lampOn;
 }
 
 void _fill(Canvas c, Rect rect, Color color) =>

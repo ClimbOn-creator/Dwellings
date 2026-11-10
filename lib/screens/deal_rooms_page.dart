@@ -6,6 +6,7 @@ import '../widgets/dashboard_header.dart';
 import '../widgets/nova_target.dart';
 import '../widgets/nova_panel.dart';
 import '../services/nova_service.dart';
+import '../services/discover_activity.dart';
 import '../models/buyer_command_state.dart';
 import '../widgets/buyer_command_centre.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -178,6 +179,9 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
   }
 
   void _openCommandPlan(DealRoom room) {
+    unawaited(
+      DiscoverActivity.record(DiscoverActivityKind.deals, 'room:${room.id}'),
+    );
     final userId = BackendService.user?.id ?? 'guest';
     SharedPreferences.getInstance().then(
       (prefs) => prefs.setString('affinity.command.last_room.$userId', room.id),
@@ -2663,12 +2667,13 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
   );
 
   Future<void> _openRoom(DealRoom room) async {
+    final userId = BackendService.user?.id;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(
-      'affinity.command.last_room.${BackendService.user?.id ?? "guest"}',
+      'affinity.command.last_room.${userId ?? "guest"}',
       room.id,
     );
-    if (!mounted) return;
+    if (!mounted || BackendService.user?.id != userId) return;
     setState(() => _lastRoomId = room.id);
     _openCommandPlan(room);
   }

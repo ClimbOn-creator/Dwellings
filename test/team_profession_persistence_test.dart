@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:dwelling_iq/services/account_service.dart';
 import 'package:dwelling_iq/services/backend_service.dart';
 import 'package:dwelling_iq/services/marketplace_service.dart';
 import 'team_professions_test.dart' show member;
@@ -51,6 +52,10 @@ void main() {
           };
         } else if (request.url.path.endsWith('/user_team_members')) {
           if (request.method == 'GET') {
+            expect(
+              request.url.queryParameters['user_id'],
+              'eq.${user()['id']}',
+            );
             body = team;
           } else {
             final row = Map<String, dynamic>.from(
@@ -60,6 +65,7 @@ void main() {
             team.add({
               ...row,
               'provider_profiles': {
+                'id': id,
                 'provider_type': id == 'accountant'
                     ? 'accountant'
                     : id == 'first'
@@ -111,6 +117,8 @@ void main() {
         member('accountant', 'Accountant', ProviderCategory.accountant),
       );
       expect(team.length, 2);
+      final savedTeam = await AccountService.loadTeam();
+      expect(savedTeam.map((member) => member.name), ['first', 'accountant']);
       team.clear();
       final outcomes = await Future.wait([
         MarketplaceService.addToTeam(

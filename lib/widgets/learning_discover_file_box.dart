@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../services/nova_training_controller.dart';
+import '../services/discover_activity.dart';
 import '../services/device_location_service.dart';
 import 'learning_discover_calendar.dart';
 import '../services/learning_service.dart';
@@ -117,6 +118,10 @@ class _LearningDiscoverFileBoxState extends State<LearningDiscoverFileBox>
         )
         .shift(origin);
     setState(() => _selected = index);
+    DiscoverActivity.record(
+      DiscoverActivityKind.files,
+      '${widget.cabinet ? 'discover' : 'search'}:$index',
+    );
     final route = _DiscoverReaderRoute(index: index, source: source);
     final guide = NovaTrainingController.instance;
     guide.setFullscreenOverlay(true);

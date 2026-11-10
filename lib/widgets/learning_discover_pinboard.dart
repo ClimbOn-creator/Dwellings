@@ -2,6 +2,11 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../services/account_service.dart';
+import '../services/backend_service.dart';
+import '../services/discover_activity.dart';
+import '../services/marketplace_service.dart';
+
 const _notes = [
   Color(0xffead481),
   Color(0xffe8b7a8),
@@ -10,6 +15,16 @@ const _notes = [
   Color(0xffe9d3a7),
   Color(0xffd3c4dc),
   Color(0xffebdb99),
+];
+
+const _noteTitles = [
+  'Files opened',
+  'Deals viewed',
+  'My team',
+  'Best 5 files',
+  'Note 5',
+  'Note 6',
+  'Note 7',
 ];
 
 class DiscoverPinboard extends StatelessWidget {
@@ -32,16 +47,16 @@ class DiscoverPinboard extends StatelessWidget {
         builder: (context, bounds) {
           final w = bounds.maxWidth;
           final h = bounds.maxHeight;
-          final noteWidth = w * .19;
-          final noteHeight = h * .33;
+          final noteWidth = w * .215;
+          final noteHeight = h * .39;
           return Stack(
             children: [
               for (var i = 0; i < _notes.length; i++)
                 Positioned(
                   left: i < 4
-                      ? w * (.065 + i * .23)
-                      : w * (.18 + (i - 4) * .245),
-                  top: h * (i < 4 ? .15 : .56),
+                      ? w * (.047 + i * .23)
+                      : w * (.156 + (i - 4) * .242),
+                  top: h * (i < 4 ? .085 : .53),
                   width: noteWidth,
                   height: noteHeight,
                   child: Transform.rotate(
@@ -65,11 +80,18 @@ class DiscoverPinboard extends StatelessWidget {
                             ),
                             if (writing > 0)
                               Center(
-                                child: Text(
-                                  _writtenTitle(i),
-                                  style: TextStyle(
-                                    color: const Color(0xff4d3829),
-                                    fontSize: noteWidth * .17,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                  ),
+                                  child: Text(
+                                    _writtenTitle(i),
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      color: const Color(0xff4d3829),
+                                      fontSize: noteWidth * .115,
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -88,7 +110,7 @@ class DiscoverPinboard extends StatelessWidget {
   String _writtenTitle(int index) {
     final start = index * .069;
     final progress = ((writing - start) / .46).clamp(0.0, 1.0);
-    final title = 'Note ${index + 1}';
+    final title = _noteTitles[index];
     final count = (title.length * progress).floor();
     if (progress == 0) return '';
     return title.substring(0, count) + (count == title.length ? '' : '▏');
@@ -135,10 +157,7 @@ class _ZoomedPinboard extends StatelessWidget {
           final size = bounds.biggest;
           final width = math.max(
             1.0,
-            math.min(
-              940.0,
-              math.min(size.width - 42, (size.height - 96) * 1.6),
-            ),
+            math.min(size.width - 36, (size.height - 84) * 1.6),
           );
           final destination = Rect.fromCenter(
             center: size.center(const Offset(0, 24)),
@@ -212,28 +231,137 @@ class _ZoomedPinboard extends StatelessWidget {
     builder: (context) => Dialog(
       backgroundColor: _notes[index],
       child: SizedBox(
-        width: 440,
-        height: 320,
+        width: 500,
+        height: 365,
         child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Expanded(
-                child: Text(
-                  'Note ${index + 1}',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      _noteTitles[index],
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: 'Close note',
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: const Icon(Icons.close),
+                  ),
+                ],
               ),
-              IconButton(
-                tooltip: 'Close note',
-                onPressed: () => Navigator.of(context).pop(),
-                icon: const Icon(Icons.close),
-              ),
+              const Divider(),
+              Expanded(child: _noteContent(index)),
             ],
           ),
         ),
       ),
     ),
+  );
+
+  Widget _noteContent(int index) {
+    if (index == 3)
+      return const Center(
+        child: Text('Your starter-file recommendations are coming soon.'),
+      );
+    if (index > 3) return const SizedBox.shrink();
+    return StreamBuilder(
+      stream: BackendService.authChanges,
+      builder: (context, _) {
+        final userId = BackendService.user?.id;
+        if (userId == null) {
+          return const Center(
+            child: Text('Sign in to see your activity and team.'),
+          );
+        }
+        return _PrivateNote(
+          key: ValueKey(userId),
+          index: index,
+          userId: userId,
+        );
+      },
+    );
+  }
+}
+
+class _PrivateNote extends StatefulWidget {
+  const _PrivateNote({required this.index, required this.userId, super.key});
+
+  final int index;
+  final String userId;
+
+  @override
+  State<_PrivateNote> createState() => _PrivateNoteState();
+}
+
+class _PrivateNoteState extends State<_PrivateNote> {
+  late Future<Object> _data = _load();
+
+  Future<Object> _load() => widget.index == 2
+      ? AccountService.loadTeam()
+      : DiscoverActivity.count(
+          widget.userId,
+          widget.index == 0
+              ? DiscoverActivityKind.files
+              : DiscoverActivityKind.deals,
+        );
+
+  @override
+  Widget build(BuildContext context) => FutureBuilder<Object>(
+    future: _data,
+    builder: (context, snapshot) {
+      if (BackendService.user?.id != widget.userId)
+        return const SizedBox.shrink();
+      if (snapshot.hasError) {
+        return Center(
+          child: TextButton(
+            onPressed: () => setState(() => _data = _load()),
+            child: const Text('Could not load this note. Try again'),
+          ),
+        );
+      }
+      if (!snapshot.hasData)
+        return const Center(child: CircularProgressIndicator());
+      final data = snapshot.data;
+      if (data is List<MarketplaceProvider>) {
+        if (data.isEmpty)
+          return const Center(child: Text('Your saved team is empty.'));
+        return ListView(
+          children: [
+            for (final member in data)
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.person_outline),
+                title: Text(member.name),
+                subtitle:
+                    member.jobTitle.isNotEmpty || member.company.isNotEmpty
+                    ? Text(
+                        [
+                          member.jobTitle,
+                          member.company,
+                        ].where((part) => part.isNotEmpty).join(' · '),
+                      )
+                    : null,
+              ),
+          ],
+        );
+      }
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('$data', style: Theme.of(context).textTheme.displaySmall),
+            Text(
+              widget.index == 0
+                  ? 'Unique files opened in this browser'
+                  : 'Unique deals viewed in this browser',
+            ),
+          ],
+        ),
+      );
+    },
   );
 }

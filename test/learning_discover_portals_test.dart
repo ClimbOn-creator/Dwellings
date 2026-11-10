@@ -97,14 +97,36 @@ void main() {
       await tester.pump(const Duration(milliseconds: 1500));
       expect(find.textContaining('▏'), findsWidgets);
       await tester.pumpAndSettle();
-      for (var note = 1; note <= 7; note++) {
-        expect(find.text('Note $note'), findsOneWidget);
+      for (final note in [
+        'Files opened',
+        'Deals viewed',
+        'My team',
+        'Best 5 files',
+        'Note 5',
+        'Note 6',
+        'Note 7',
+      ]) {
+        expect(find.text(note), findsOneWidget);
       }
+      await tester.tap(find.text('Best 5 files'));
+      await tester.pumpAndSettle();
+      expect(
+        find.text('Your starter-file recommendations are coming soon.'),
+        findsOneWidget,
+      );
+      await tester.tap(find.byTooltip('Close note'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Note 7'));
       await tester.pumpAndSettle();
       expect(find.byTooltip('Close note'), findsOneWidget);
       await tester.tap(find.byTooltip('Close note'));
       await tester.pumpAndSettle();
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byTooltip('Open Paper Sling'));
+      await tester.pumpAndSettle();
+      expect(find.text('Level 1 / 15'), findsOneWidget);
       await tester.pageBack();
       await tester.pumpAndSettle();
 
