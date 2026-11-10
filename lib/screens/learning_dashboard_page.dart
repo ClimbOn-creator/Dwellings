@@ -4,6 +4,7 @@ import '../widgets/transaction_room_panel.dart';
 import '../widgets/home_brand_button.dart';
 import '../widgets/learning_start_search.dart';
 import '../widgets/learning_financial_folders.dart';
+import '../widgets/learning_evaluate_cover_flow.dart';
 import '../widgets/dashboard_header.dart';
 import 'deal_comparison_page.dart';
 import 'dart:async';
@@ -297,6 +298,7 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
     LearningView.seminars => 'learning-seminars',
     LearningView.firstSteps => 'learning-first-steps',
     LearningView.financial => 'learning-financial',
+    LearningView.evaluate => 'learning-evaluate',
     _ => 'learning-dashboard',
   };
 
@@ -548,6 +550,12 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
                         child: AcquisitionJourneyPanel(
                           initialStageId: _roadmapStageId,
                         ),
+                      ),
+                      LearningView.evaluate => LearningEvaluateCoverFlow(
+                        onOpenFile: (id) => setState(() {
+                          _documentId = id;
+                          view = LearningView.room;
+                        }),
                       ),
                       LearningView.financial =>
                         const LearningFinancialFolders(),

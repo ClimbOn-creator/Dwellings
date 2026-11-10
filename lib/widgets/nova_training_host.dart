@@ -83,6 +83,7 @@ class _NovaTrainingHostState extends State<NovaTrainingHost>
     if (!const {
           'learning-first-steps',
           'learning-financial',
+          'learning-evaluate',
           'learning-seminars',
         }.contains(_controller.currentPage) &&
         pikaAllowedOnPage(_controller.currentPage) &&
