@@ -41,6 +41,7 @@ class _LearningDiscoverFileBoxState extends State<LearningDiscoverFileBox>
   late final _camera = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 820),
+    animationBehavior: AnimationBehavior.preserve,
   );
   late final _lift = AnimationController(
     vsync: this,
@@ -63,9 +64,7 @@ class _LearningDiscoverFileBoxState extends State<LearningDiscoverFileBox>
       _hovered = null;
     });
     _lift.value = 0;
-    if (MediaQuery.disableAnimationsOf(context)) {
-      _camera.value = zoomed ? 1 : 0;
-    } else if (zoomed) {
+    if (zoomed) {
       _camera.forward();
     } else {
       _camera.reverse();
@@ -99,19 +98,8 @@ class _LearningDiscoverFileBoxState extends State<LearningDiscoverFileBox>
           _hovered == index ? Curves.easeOut.transform(_lift.value) : 0,
         )
         .shift(origin);
-    final reduceMotion = MediaQuery.disableAnimationsOf(context);
     setState(() => _selected = index);
-    final route = PageRouteBuilder<void>(
-      opaque: false,
-      transitionDuration: reduceMotion
-          ? Duration.zero
-          : const Duration(milliseconds: 1950),
-      reverseTransitionDuration: reduceMotion
-          ? Duration.zero
-          : const Duration(milliseconds: 1250),
-      pageBuilder: (_, animation, _) =>
-          _DiscoverReader(index: index, source: source, animation: animation),
-    );
+    final route = _DiscoverReaderRoute(index: index, source: source);
     final guide = NovaTrainingController.instance;
     guide.setFullscreenOverlay(true);
     try {
@@ -382,6 +370,26 @@ class _FileBoxPainter extends CustomPainter {
       oldDelegate.hovered != hovered ||
       oldDelegate.lift != lift ||
       oldDelegate.selected != selected;
+}
+
+// The click-driven transitions show how the file box and reader fit together.
+class _DiscoverReaderRoute extends PageRouteBuilder<void> {
+  _DiscoverReaderRoute({required int index, required Rect source})
+    : super(
+        opaque: false,
+        transitionDuration: const Duration(milliseconds: 1950),
+        reverseTransitionDuration: const Duration(milliseconds: 1250),
+        pageBuilder: (_, animation, _) =>
+            _DiscoverReader(index: index, source: source, animation: animation),
+      );
+
+  @override
+  AnimationController createAnimationController() => AnimationController(
+    vsync: navigator!,
+    duration: transitionDuration,
+    reverseDuration: reverseTransitionDuration,
+    animationBehavior: AnimationBehavior.preserve,
+  );
 }
 
 class _DiscoverReader extends StatelessWidget {
