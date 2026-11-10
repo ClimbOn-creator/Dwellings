@@ -4,9 +4,14 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  for (final reducedMotion in [false, true]) {
+  for (final (view, reducedMotion) in [
+    (LearningView.discover, false),
+    (LearningView.discover, true),
+    (LearningView.search, false),
+  ]) {
+    final cabinet = view == LearningView.discover;
     testWidgets(
-      'Discover animates zoom and opening with reduced motion: $reducedMotion',
+      '${view.label} animates zoom and opening with reduced motion: $reducedMotion',
       (tester) async {
         tester.platformDispatcher.accessibilityFeaturesTestValue =
             FakeAccessibilityFeatures(disableAnimations: reducedMotion);
@@ -19,15 +24,13 @@ void main() {
         addTearDown(tester.view.resetPhysicalSize);
         addTearDown(tester.view.resetDevicePixelRatio);
         await tester.pumpWidget(
-          const MaterialApp(
-            home: LearningDashboardPage(initialView: LearningView.discover),
-          ),
+          MaterialApp(home: LearningDashboardPage(initialView: view)),
         );
         await tester.pumpAndSettle();
 
         final overview = find.widgetWithText(
           TextButton,
-          'Explore the file box',
+          cabinet ? 'Open filing cabinet' : 'Explore the file box',
         );
         final tabs = find.byWidgetPredicate(
           (widget) =>
@@ -35,12 +38,19 @@ void main() {
               RegExp(r'^File \d\d$').hasMatch(widget.data ?? ''),
         );
         final office = find.byKey(const ValueKey('discover-office'));
-        expect(office, findsOneWidget);
+        expect(office, cabinet ? findsOneWidget : findsNothing);
         expect(tabs, findsNothing);
         await tester.tapAt(tester.getTopLeft(overview) + const Offset(28, 36));
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 400));
         expect(tabs, findsNothing);
+        if (cabinet) {
+          expect(office, findsOneWidget);
+          expect(
+            find.byKey(const ValueKey('learning-folder-collection')),
+            findsOneWidget,
+          );
+        }
         await tester.pumpAndSettle();
         expect(tabs, findsNWidgets(15));
         expect(office, findsNothing);
@@ -68,10 +78,14 @@ void main() {
         await tester.pumpAndSettle();
         expect(left, findsNothing);
         expect(tabs, findsNWidgets(15));
-        await tester.tap(find.byTooltip('Zoom out of the file box'));
+        await tester.tap(
+          find.byTooltip(
+            cabinet ? 'Close filing cabinet' : 'Zoom out of the file box',
+          ),
+        );
         await tester.pumpAndSettle();
         expect(overview, findsOneWidget);
-        expect(office, findsOneWidget);
+        expect(office, cabinet ? findsOneWidget : findsNothing);
       },
     );
   }

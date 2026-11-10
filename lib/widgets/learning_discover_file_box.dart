@@ -29,7 +29,9 @@ Color _fileColor(int index) => _palette[index % _palette.length];
 String _fileName(int index) => 'File ${(index + 1).toString().padLeft(2, '0')}';
 
 class LearningDiscoverFileBox extends StatefulWidget {
-  const LearningDiscoverFileBox({super.key});
+  const LearningDiscoverFileBox({super.key, this.cabinet = false});
+
+  final bool cabinet;
 
   @override
   State<LearningDiscoverFileBox> createState() =>
@@ -41,7 +43,7 @@ class _LearningDiscoverFileBoxState extends State<LearningDiscoverFileBox>
   final _stageKey = GlobalKey();
   late final _camera = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 820),
+    duration: Duration(milliseconds: widget.cabinet ? 1500 : 820),
     animationBehavior: AnimationBehavior.preserve,
   );
   late final _lift = AnimationController(
@@ -128,53 +130,85 @@ class _LearningDiscoverFileBoxState extends State<LearningDiscoverFileBox>
           builder: (context, _) => LayoutBuilder(
             builder: (context, bounds) {
               final focused = _camera.isCompleted;
+              final progress = _camera.value;
+              final cabinet = widget.cabinet;
+              final drawer = cabinet
+                  ? const Interval(
+                      0,
+                      .43,
+                      curve: Curves.easeInOutCubic,
+                    ).transform(progress)
+                  : 1.0;
+              final focus =
+                  (cabinet
+                          ? const Interval(.43, 1, curve: Curves.easeInOutCubic)
+                          : Curves.easeInOutCubic)
+                      .transform(progress);
+              final size = bounds.biggest;
               final view = _BoxView(
-                bounds.biggest,
-                Curves.easeInOutCubic.transform(_camera.value),
+                size,
+                focus,
+                cabinet: cabinet,
+                drawer: drawer,
+              );
+              final openButton = TextButton(
+                onPressed: () => _zoom(true),
+                style:
+                    TextButton.styleFrom(
+                      alignment: Alignment.bottomCenter,
+                      padding: EdgeInsets.only(bottom: cabinet ? 5 : 20),
+                      shape: const RoundedRectangleBorder(),
+                      foregroundColor: const Color(0xff4b443b),
+                    ).copyWith(
+                      overlayColor: WidgetStateProperty.resolveWith(
+                        (states) => states.contains(WidgetState.focused)
+                            ? Colors.black.withValues(alpha: .05)
+                            : Colors.transparent,
+                      ),
+                    ),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    cabinet ? 'Open filing cabinet' : 'Explore the file box',
+                    maxLines: 1,
+                  ),
+                ),
               );
               return Stack(
                 children: [
-                  if (view.focus < 1)
+                  if (cabinet && focus < 1)
                     Positioned.fill(
                       child: Opacity(
-                        opacity: 1 - view.focus,
-                        child: const RepaintBoundary(
-                          child: CustomPaint(
-                            key: ValueKey('discover-office'),
-                            painter: DiscoverOfficePainter(),
+                        opacity: 1 - focus,
+                        child: CustomPaint(
+                          key: const ValueKey('discover-office'),
+                          painter: DiscoverOfficePainter(drawer),
+                        ),
+                      ),
+                    ),
+                  if (drawer > 0)
+                    Positioned.fill(
+                      child: Opacity(
+                        opacity: (drawer * 4).clamp(0.0, 1.0),
+                        child: CustomPaint(
+                          key: const ValueKey('learning-folder-collection'),
+                          painter: _FileBoxPainter(
+                            view,
+                            _hovered,
+                            _lift.value,
+                            _selected,
                           ),
                         ),
                       ),
                     ),
-                  Positioned.fill(
-                    child: CustomPaint(
-                      painter: _FileBoxPainter(
-                        view,
-                        _hovered,
-                        _lift.value,
-                        _selected,
-                      ),
-                    ),
-                  ),
-                  if (!_zoomed)
-                    Positioned.fill(
-                      child: TextButton(
-                        onPressed: () => _zoom(true),
-                        style:
-                            TextButton.styleFrom(
-                              alignment: Alignment.bottomCenter,
-                              padding: const EdgeInsets.only(bottom: 20),
-                              foregroundColor: const Color(0xff4b443b),
-                            ).copyWith(
-                              overlayColor: WidgetStateProperty.resolveWith(
-                                (states) => states.contains(WidgetState.focused)
-                                    ? Colors.black.withValues(alpha: .04)
-                                    : Colors.transparent,
-                              ),
-                            ),
-                        child: const Text('Explore the file box'),
-                      ),
-                    ),
+                  if (!_zoomed && _camera.isDismissed)
+                    if (cabinet)
+                      Positioned.fromRect(
+                        rect: discoverCabinetHitArea(size),
+                        child: openButton,
+                      )
+                    else
+                      Positioned.fill(child: openButton),
                   if (focused)
                     for (var i = 0; i < _fileCount; i++)
                       Positioned.fromRect(
@@ -201,7 +235,9 @@ class _LearningDiscoverFileBoxState extends State<LearningDiscoverFileBox>
                       right: 8,
                       child: IconButton(
                         onPressed: () => _zoom(false),
-                        tooltip: 'Zoom out of the file box',
+                        tooltip: cabinet
+                            ? 'Close filing cabinet'
+                            : 'Zoom out of the file box',
                         icon: const Icon(Icons.zoom_out_map),
                       ),
                     ),
@@ -216,8 +252,13 @@ class _LearningDiscoverFileBoxState extends State<LearningDiscoverFileBox>
 }
 
 class _BoxView {
-  _BoxView(this.size, this.focus) {
-    final yaw = .43 * (1 - focus);
+  _BoxView(
+    this.size,
+    this.focus, {
+    required this.cabinet,
+    required this.drawer,
+  }) {
+    final yaw = (cabinet ? -.43 : .43) * (1 - focus);
     final pitch = .53 + (math.pi / 2 - .53) * focus;
     _sinYaw = math.sin(yaw);
     _cosYaw = math.cos(yaw);
@@ -229,12 +270,19 @@ class _BoxView {
           for (final z in [0.0, _boxDepth]) _project(x, y, z),
     ];
     final bounds = _bounds(corners);
-    final overview = discoverOfficeFileBox(size);
+
     final closeUp = Rect.fromCenter(
       center: size.center(Offset.zero),
       width: math.max(1, size.width - 28),
       height: math.max(1, size.height - 88),
     );
+    final overview = cabinet
+        ? discoverDrawerViewport(size, drawer)
+        : Rect.fromCenter(
+            center: size.center(Offset.zero),
+            width: closeUp.width * .68,
+            height: closeUp.height * .68,
+          );
     final viewport = Rect.lerp(overview, closeUp, focus)!;
     _scale = math.min(
       viewport.width / bounds.width,
@@ -249,7 +297,8 @@ class _BoxView {
   }
 
   final Size size;
-  final double focus;
+  final double focus, drawer;
+  final bool cabinet;
   late final double _sinYaw, _cosYaw, _sinPitch, _cosPitch, _scale;
   late final Offset _offset;
   late final Rect silhouette;
@@ -316,11 +365,16 @@ class _FileBoxPainter extends CustomPainter {
       p(_boxWidth, wall, _boxDepth),
       p(0, wall, _boxDepth),
     ]);
+    final emerge = const Interval(
+      .24,
+      1,
+      curve: Curves.easeOutCubic,
+    ).transform(view.drawer);
     for (var i = 0; i < _fileCount; i++) {
-      if (i == selected) continue;
+      if (i == selected || emerge == 0) continue;
       final raised = i == hovered ? Curves.easeOut.transform(lift) : 0.0;
       final z = _rail(i) - raised * 5;
-      final h = _folderHeight + raised * 25;
+      final h = _folderHeight - (1 - emerge) * 105 + raised * 25;
       final color = _fileColor(i);
       final x = _tabLeft(i);
       face(Color.lerp(color, const Color(0xff493f35), .48)!, [
@@ -363,20 +417,41 @@ class _FileBoxPainter extends CustomPainter {
         label.dispose();
       }
     }
-    face(const Color(0xffb58253), [
-      p(_boxWidth, 0, 0),
-      p(_boxWidth, wall, 0),
-      p(_boxWidth, wall, _boxDepth),
-      p(_boxWidth, 0, _boxDepth),
+    final side = view.cabinet ? 0.0 : _boxWidth;
+    face(view.cabinet ? discoverDrawerSide : const Color(0xffb58253), [
+      p(side, 0, 0),
+      p(side, wall, 0),
+      p(side, wall, _boxDepth),
+      p(side, 0, _boxDepth),
     ]);
-    face(const Color(0xffd4a475), [
+    face(view.cabinet ? discoverDrawerFace : const Color(0xffd4a475), [
       p(0, 0, _boxDepth),
       p(_boxWidth, 0, _boxDepth),
       p(_boxWidth, wall, _boxDepth),
       p(0, wall, _boxDepth),
     ]);
+    if (view.cabinet) {
+      face(const Color(0xff30332f), [
+        p(157, 96, _boxDepth),
+        p(283, 96, _boxDepth),
+        p(283, 130, _boxDepth),
+        p(157, 130, _boxDepth),
+      ]);
+      face(const Color(0xffe9e2d2), [
+        p(166, 104, _boxDepth),
+        p(274, 104, _boxDepth),
+        p(274, 122, _boxDepth),
+        p(166, 122, _boxDepth),
+      ]);
+      face(const Color(0xff2c2f2b), [
+        p(171, 42, _boxDepth),
+        p(269, 42, _boxDepth),
+        p(269, 61, _boxDepth),
+        p(171, 61, _boxDepth),
+      ]);
+    }
     final rim = Paint()
-      ..color = const Color(0xffe5bc8d)
+      ..color = view.cabinet ? discoverDrawerRim : const Color(0xffe5bc8d)
       ..strokeWidth = math.max(1, 7 * view._scale)
       ..style = PaintingStyle.stroke;
     canvas.drawPath(

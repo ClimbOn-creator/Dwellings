@@ -301,6 +301,7 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
     LearningView.financial => 'learning-financial',
     LearningView.evaluate => 'learning-evaluate',
     LearningView.discover => 'learning-discover',
+    LearningView.search => 'learning-search',
     _ => 'learning-dashboard',
   };
 
@@ -530,7 +531,12 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
         child: view == LearningView.firstSteps
             ? LearningStartSearch(onOpen: _openSearchResult)
             : view == LearningView.discover
-            ? const LearningDiscoverFileBox()
+            ? const LearningDiscoverFileBox(
+                key: ValueKey(LearningView.discover),
+                cabinet: true,
+              )
+            : view == LearningView.search
+            ? const LearningDiscoverFileBox(key: ValueKey(LearningView.search))
             : view == LearningView.seminars
             ? Padding(
                 padding: EdgeInsets.all(compact ? 8 : 12),
