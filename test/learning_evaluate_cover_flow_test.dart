@@ -18,7 +18,7 @@ void main() {
   testWidgets('Evaluate scrolls, lifts a file, and opens its guide', (
     tester,
   ) async {
-    tester.view.physicalSize = const Size(1440, 900);
+    tester.view.physicalSize = const Size(1720, 900);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
@@ -35,6 +35,12 @@ void main() {
       matching: find.byType(AnimatedSlide),
     );
     expect(centeredFile('deal-brief'), findsOneWidget);
+    expect(tester.getSize(stage).width, greaterThan(1220));
+    final center = tester.getCenter(first).dx;
+    final next = tester.getCenter(file('nda-brief')).dx;
+    final outer = tester.getCenter(file('earnings')).dx;
+    expect(next - center, greaterThan(270));
+    expect(tester.getTopRight(stage).dx - outer, lessThan(85));
     expect(find.text('1 / 7'), findsNothing);
     expect(find.text('Evaluation files'), findsNothing);
     expect(find.byTooltip('Next file'), findsNothing);

@@ -160,11 +160,17 @@ class _LearningEvaluateCoverFlowState extends State<LearningEvaluateCoverFlow>
   );
 
   Widget _stage(double width, double height, double cardWidth, bool compact) {
-    final limit = compact ? 2.45 : 3.45;
-    final centerGap = cardWidth * (compact ? .57 : .62);
-    final sideGap = math.min(cardWidth * .35, (width / 2 - centerGap) / 2);
+    final sideCount = compact ? 1 : (width >= 1260 ? 3 : 2);
+    final limit = sideCount + .45;
+    final outerCenter = width / 2 - cardWidth * .22;
+    final centerGap = sideCount == 1
+        ? outerCenter
+        : math.max(cardWidth * .78, width * .20);
+    final sideGap = sideCount == 1
+        ? centerGap * .7
+        : (outerCenter - centerGap) / (sideCount - 1);
 
-    // Open a little room for the face-on file, then pack the edge-on files together.
+    // Spread the visible side files to the workspace edges at each width.
     double offset(double relative) {
       final distance = relative.abs();
       return relative.sign *
@@ -200,7 +206,13 @@ class _LearningEvaluateCoverFlowState extends State<LearningEvaluateCoverFlow>
                     turn: file.relative.clamp(-1.0, 1.0) * 1.06,
                     labelWidth: file.relative.abs() < .5
                         ? cardWidth * .9
-                        : math.max(54.0, sideGap - 6),
+                        : math.min(
+                            (sideGap - 6).clamp(54.0, cardWidth * .9),
+                            math.max(
+                              1.0,
+                              width - 2 * offset(file.relative).abs() - 6,
+                            ),
+                          ),
                     selected: file.relative.abs() < .5,
                     onTap: () => _select(file.index),
                   ),
@@ -298,7 +310,7 @@ class _FileCoverState extends State<_FileCover> {
                       'transaction.${widget.lesson.id}.title',
                       widget.lesson.title,
                       textAlign: TextAlign.center,
-                      maxLines: 2,
+                      maxLines: widget.selected ? 2 : 3,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         color: widget.selected ? learningInk : learningMuted,
