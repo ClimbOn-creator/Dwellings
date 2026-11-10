@@ -12,7 +12,42 @@ class BuyerWorkspaceStyle {
   static const paleGold = Color(0xFFFAFAFA);
   static const paleViolet = Color(0xFFFAFAFA);
 
-  static ThemeData theme(ThemeData base) => base.copyWith(
+  static const sidebar = (
+    home: 'Home',
+    pipeline: 'Pipeline',
+    dealScreen: 'Deal screen',
+    resources: 'Resources',
+    messages: 'Messages',
+    team: 'My team',
+    transactionPlan: 'Transaction plan',
+    refresh: 'Refresh',
+  );
+
+  // Map the existing workspace's light surfaces and dark ink to CRT phosphor.
+  static const crtFilter = ColorFilter.matrix(<double>[
+    -.104,
+    -.351,
+    -.035,
+    0,
+    129,
+    -.189,
+    -.636,
+    -.065,
+    0,
+    242,
+    -.108,
+    -.365,
+    -.037,
+    0,
+    137,
+    0,
+    0,
+    0,
+    1,
+    0,
+  ]);
+
+  static ThemeData theme(ThemeData base, {bool crt = false}) => base.copyWith(
     colorScheme: const ColorScheme.light(primary: blue, surface: Colors.white),
     scaffoldBackgroundColor: Colors.white,
     dividerColor: line,
@@ -76,7 +111,7 @@ class BuyerWorkspaceStyle {
       ),
     ),
     textTheme: base.textTheme.apply(
-      fontFamily: 'PactInter',
+      fontFamily: crt ? 'monospace' : 'PactInter',
       bodyColor: ink,
       displayColor: ink,
     ),

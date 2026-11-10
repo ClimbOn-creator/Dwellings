@@ -539,6 +539,7 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
                     const DealRoomsPage(openedFromDiscover: true),
                 loadEvents: widget.loadSeminars ?? LearningService.seminars,
                 openEvent: _openSeminar,
+                locate: widget.locate,
               )
             : view == LearningView.search
             ? const LearningDiscoverFileBox(key: ValueKey(LearningView.search))

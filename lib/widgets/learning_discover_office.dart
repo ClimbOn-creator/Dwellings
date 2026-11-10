@@ -1,11 +1,11 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart' show DateFormat;
 
 import '../services/app_tunnel.dart';
 import '../services/learning_service.dart';
 
+import 'canada_event_map.dart';
 import 'learning_discover_arcade.dart';
 import 'learning_discover_calendar.dart';
 import 'learning_discover_portal.dart';
@@ -57,11 +57,18 @@ double discoverDeskUnderside(Size stage) => _placeInOffice(stage, _cabinet).top;
 
 const _crtGlass = Rect.fromLTWH(468, 241, 122, 103);
 const _wallCalendar = Rect.fromLTWH(267, 132, 145, 153);
+const _lampHit = Rect.fromLTWH(220, 286, 106, 115);
+const _deskAtlas = Rect.fromLTWH(785, 370, 76, 40);
+
+enum _OfficePortal { buyer, calendar, atlas }
 
 class DiscoverOffice extends StatefulWidget {
   const DiscoverOffice({
     required this.drawer,
     required this.interactive,
+    required this.lampOn,
+    required this.toggleLamp,
+    required this.locate,
     this.buyerDashboard,
     this.loadEvents,
     this.openEvent,
@@ -69,7 +76,9 @@ class DiscoverOffice extends StatefulWidget {
   });
 
   final double drawer;
-  final bool interactive;
+  final bool interactive, lampOn;
+  final VoidCallback toggleLamp;
+  final DiscoverLocate locate;
   final WidgetBuilder? buyerDashboard;
   final Future<List<LearningSeminar>> Function()? loadEvents;
   final ValueChanged<LearningSeminar>? openEvent;
@@ -80,15 +89,18 @@ class DiscoverOffice extends StatefulWidget {
 
 class _DiscoverOfficeState extends State<DiscoverOffice> {
   final _today = DiscoverToday();
+  final _lastRegion = ValueNotifier<SeminarMapRegion?>(null);
   bool _opening = false;
 
   @override
   void dispose() {
     _today.dispose();
+    _lastRegion.dispose();
     super.dispose();
   }
 
-  Future<void> _openPortal(Rect local, {required bool arcade}) async {
+  Future<void> _openPortal(Rect local, _OfficePortal portal) async {
+    final arcade = portal == _OfficePortal.buyer;
     if (_opening) return;
     final navigator = Navigator.of(context, rootNavigator: true);
     final overlay = navigator.overlay!.context.findRenderObject()! as RenderBox;
@@ -104,12 +116,17 @@ class _DiscoverOfficeState extends State<DiscoverOffice> {
               today: _today,
               loadEvents: widget.loadEvents!,
               openEvent: widget.openEvent!,
+              locate: widget.locate,
+              lastRegion: _lastRegion,
+              atlasOnly: portal == _OfficePortal.atlas,
             ),
       source: source,
       arcade: arcade,
-      calendarPage: arcade
-          ? null
-          : CustomPaint(painter: _WallCalendarPainter(_today.value, 1)),
+      calendarPage: switch (portal) {
+        _OfficePortal.buyer => null,
+        _OfficePortal.calendar => _paper(_today.value, 1),
+        _OfficePortal.atlas => const ColoredBox(color: Color(0xff536d65)),
+      },
     );
     _opening = true;
     if (arcade) AppTunnelController.select(AppTunnel.buyer);
@@ -145,15 +162,28 @@ class _DiscoverOfficeState extends State<DiscoverOffice> {
         ),
       );
 
+  Widget _paper(DateTime today, double ink) => ExcludeSemantics(
+    child: FittedBox(
+      fit: BoxFit.fill,
+      child: SizedBox(
+        width: 410,
+        child: DiscoverPaperCalendar(month: today, today: today, ink: ink),
+      ),
+    ),
+  );
+
   @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, bounds) {
       final screen = _placeInOffice(bounds.biggest, _crtGlass);
       final calendar = _placeInOffice(bounds.biggest, _wallCalendar);
+      final atlas = _placeInOffice(bounds.biggest, _deskAtlas);
       return Stack(
         children: [
           Positioned.fill(
-            child: CustomPaint(painter: _DiscoverOfficePainter(widget.drawer)),
+            child: CustomPaint(
+              painter: _DiscoverOfficePainter(widget.drawer, widget.lampOn),
+            ),
           ),
           Positioned.fromRect(rect: screen, child: const DiscoverArcade()),
           Positioned.fromRect(
@@ -164,8 +194,7 @@ class _DiscoverOfficeState extends State<DiscoverOffice> {
                 key: ValueKey(today),
                 tween: Tween(begin: 0, end: 1),
                 duration: const Duration(milliseconds: 630),
-                builder: (context, ink, _) =>
-                    CustomPaint(painter: _WallCalendarPainter(today, ink)),
+                builder: (context, ink, _) => _paper(today, ink),
               ),
             ),
           ),
@@ -173,7 +202,7 @@ class _DiscoverOfficeState extends State<DiscoverOffice> {
             _hotspot(
               screen,
               'Enter Buyer Dashboard',
-              () => _openPortal(screen, arcade: true),
+              () => _openPortal(screen, _OfficePortal.buyer),
             ),
           if (widget.interactive &&
               widget.loadEvents != null &&
@@ -181,7 +210,21 @@ class _DiscoverOfficeState extends State<DiscoverOffice> {
             _hotspot(
               calendar,
               'Open Discover calendar',
-              () => _openPortal(calendar, arcade: false),
+              () => _openPortal(calendar, _OfficePortal.calendar),
+            ),
+          if (widget.interactive &&
+              widget.loadEvents != null &&
+              widget.openEvent != null)
+            _hotspot(
+              atlas,
+              'Open desk atlas',
+              () => _openPortal(atlas, _OfficePortal.atlas),
+            ),
+          if (widget.interactive)
+            _hotspot(
+              _placeInOffice(bounds.biggest, _lampHit),
+              widget.lampOn ? 'Turn lamp off' : 'Turn lamp on',
+              widget.toggleLamp,
             ),
         ],
       );
@@ -189,83 +232,11 @@ class _DiscoverOfficeState extends State<DiscoverOffice> {
   );
 }
 
-class _WallCalendarPainter extends CustomPainter {
-  const _WallCalendarPainter(this.today, this.ink);
-
-  final DateTime today;
-  final double ink;
-
-  @override
-  void paint(Canvas c, Size size) {
-    c.save();
-    c.scale(size.width / 145, size.height / 153);
-    _fill(c, const Rect.fromLTWH(5, 5, 140, 146), const Color(0xffdaddd6));
-    _poly(c, const [
-      Offset(0, 0),
-      Offset(141, 0),
-      Offset(141, 129),
-      Offset(124, 148),
-      Offset(103, 146),
-      Offset(92, 149),
-      Offset(0, 148),
-    ], calendarPaper);
-    _fill(c, const Rect.fromLTWH(0, 0, 141, 34), calendarInk);
-    _poly(c, const [
-      Offset(124, 148),
-      Offset(124, 130),
-      Offset(141, 129),
-    ], const Color(0xffdce1d4));
-    _fill(c, const Rect.fromLTWH(10, 4, 18, 4), const Color(0xffb6bab1));
-    _fill(c, const Rect.fromLTWH(113, 4, 18, 4), const Color(0xffb6bab1));
-    _text(
-      c,
-      DateFormat.MMMM().format(today).toUpperCase(),
-      const Offset(70, 20),
-      14,
-      calendarPaper,
-      FontWeight.w700,
-    );
-    for (var column = 0; column < 7; column++) {
-      _text(
-        c,
-        'SMTWTFS'[column],
-        Offset(13.0 + column * 19, 44),
-        7,
-        calendarInk,
-        FontWeight.w700,
-      );
-    }
-    final offset = calendarOffset(today);
-    final count = DateUtils.getDaysInMonth(today.year, today.month);
-    for (var row = 0; row < 6; row++) {
-      final y = 51.0 + row * 15;
-      _line(c, Offset(4, y), Offset(136, y), const Color(0xffd6ddce), .6);
-    }
-    for (var day = 1; day <= count; day++) {
-      final cell = offset + day - 1;
-      final center = Offset(13.0 + cell % 7 * 19, 58.0 + cell ~/ 7 * 15);
-      _text(c, '$day', center, 8, calendarInk, FontWeight.w500);
-      if (day <= today.day) {
-        paintCalendarMark(
-          c,
-          Rect.fromCenter(center: center, width: 17, height: 15),
-          today: day == today.day,
-          progress: day >= today.day - 1 ? ink : 1,
-        );
-      }
-    }
-    c.restore();
-  }
-
-  @override
-  bool shouldRepaint(_WallCalendarPainter oldDelegate) =>
-      oldDelegate.today != today || oldDelegate.ink != ink;
-}
-
 class _DiscoverOfficePainter extends CustomPainter {
-  const _DiscoverOfficePainter(this.drawer);
+  const _DiscoverOfficePainter(this.drawer, this.lampOn);
 
   final double drawer;
+  final bool lampOn;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -294,6 +265,7 @@ class _DiscoverOfficePainter extends CustomPainter {
     ], const Color(0xffe2e1dd));
     _filingCabinet(canvas);
     _desk(canvas);
+    _deskAccessories(canvas);
     _pinboard(canvas);
     _computer(canvas);
     _lamp(canvas);
@@ -322,20 +294,22 @@ class _DiscoverOfficePainter extends CustomPainter {
         Offset(152, 415),
       ], true);
     c.drawPath(surface, Paint()..color = const Color(0xff414242));
-    c.save();
-    c.clipPath(surface);
-    c.translate(340, 391);
-    c.scale(1, .32);
-    final pool = Rect.fromCircle(center: Offset.zero, radius: 104);
-    c.drawOval(
-      pool,
-      Paint()
-        ..shader = const RadialGradient(
-          colors: [Color(0xaaedc586), Color(0x59d6a362), Color(0x00d6a362)],
-          stops: [0, .52, 1],
-        ).createShader(pool),
-    );
-    c.restore();
+    if (lampOn) {
+      c.save();
+      c.clipPath(surface);
+      c.translate(340, 391);
+      c.scale(1, .32);
+      final pool = Rect.fromCircle(center: Offset.zero, radius: 104);
+      c.drawOval(
+        pool,
+        Paint()
+          ..shader = const RadialGradient(
+            colors: [Color(0xaaedc586), Color(0x59d6a362), Color(0x00d6a362)],
+            stops: [0, .52, 1],
+          ).createShader(pool),
+      );
+      c.restore();
+    }
     _poly(c, const [
       Offset(152, 415),
       Offset(960, 415),
@@ -375,6 +349,115 @@ class _DiscoverOfficePainter extends CustomPainter {
     );
     _fill(c, const Rect.fromLTWH(723, 434, 146, 29), const Color(0xff353636));
     _fill(c, const Rect.fromLTWH(778, 445, 36, 5), const Color(0xff222323));
+  }
+
+  void _deskAccessories(Canvas c) {
+    _poly(c, const [
+      Offset(301, 388),
+      Offset(357, 382),
+      Offset(380, 399),
+      Offset(311, 409),
+    ], const Color(0xffc1b79e));
+    _poly(c, const [
+      Offset(309, 381),
+      Offset(368, 387),
+      Offset(371, 405),
+      Offset(298, 399),
+    ], const Color(0xffe8e0c7));
+    _poly(c, const [
+      Offset(354, 403),
+      Offset(359, 397),
+      Offset(371, 405),
+    ], const Color(0xffbeb094));
+    _line(
+      c,
+      const Offset(313, 387),
+      const Offset(347, 391),
+      const Color(0xff998b72),
+      1.2,
+    );
+    _line(
+      c,
+      const Offset(310, 391),
+      const Offset(354, 395),
+      const Color(0xff998b72),
+      1.2,
+    );
+    _line(
+      c,
+      const Offset(308, 395),
+      const Offset(332, 398),
+      const Color(0xff998b72),
+      1.2,
+    );
+    for (final center in const [Offset(397, 397), Offset(420, 382)]) {
+      final x = center.dx;
+      final y = center.dy;
+      _poly(c, [
+        Offset(x - 10, y),
+        Offset(x - 5, y - 7),
+        Offset(x + 2, y - 8),
+        Offset(x + 9, y - 4),
+        Offset(x + 11, y + 3),
+        Offset(x + 3, y + 8),
+        Offset(x - 6, y + 6),
+      ], const Color(0xffd4ccb6));
+      _line(
+        c,
+        Offset(x - 4, y - 4),
+        Offset(x + 4, y + 3),
+        const Color(0xff958d79),
+        1.3,
+      );
+      _line(
+        c,
+        Offset(x - 6, y + 3),
+        Offset(x + 3, y - 2),
+        const Color(0xffa79a84),
+        1,
+      );
+    }
+    // The desk atlas is a separate copy of the map users see beside the calendar.
+    _poly(c, const [
+      Offset(793, 372),
+      Offset(851, 372),
+      Offset(863, 405),
+      Offset(785, 405),
+    ], const Color(0xff39534d));
+    _poly(c, const [
+      Offset(785, 405),
+      Offset(863, 405),
+      Offset(861, 411),
+      Offset(785, 411),
+    ], const Color(0xffbdb396));
+    _poly(c, const [
+      Offset(793, 371),
+      Offset(851, 371),
+      Offset(861, 404),
+      Offset(785, 404),
+    ], const Color(0xff607a6d));
+    _line(
+      c,
+      const Offset(793, 372),
+      const Offset(786, 403),
+      const Color(0xff344f47),
+      3,
+    );
+    _line(
+      c,
+      const Offset(804, 395),
+      const Offset(846, 395),
+      const Color(0xffa7b39a),
+      1.5,
+    );
+    _text(
+      c,
+      'ATLAS',
+      const Offset(824, 385),
+      10,
+      const Color(0xffe8e5c8),
+      FontWeight.w800,
+    );
   }
 
   void _filingCabinet(Canvas c) {
@@ -703,7 +786,7 @@ class _DiscoverOfficePainter extends CustomPainter {
       Offset(311, 328),
       Offset(308, 334),
       Offset(294, 343),
-    ], const Color(0xfff0d8a9));
+    ], lampOn ? const Color(0xfff0d8a9) : const Color(0xff675446));
     _line(
       c,
       const Offset(278, 314),
@@ -716,7 +799,7 @@ class _DiscoverOfficePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_DiscoverOfficePainter oldDelegate) =>
-      oldDelegate.drawer != drawer;
+      oldDelegate.drawer != drawer || oldDelegate.lampOn != lampOn;
 }
 
 void _fill(Canvas c, Rect rect, Color color) =>

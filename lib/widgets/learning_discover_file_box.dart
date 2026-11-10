@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../services/nova_training_controller.dart';
+import '../services/device_location_service.dart';
+import 'learning_discover_calendar.dart';
 import '../services/learning_service.dart';
 import 'learning_discover_office.dart';
 
@@ -37,12 +39,14 @@ class LearningDiscoverFileBox extends StatefulWidget {
     this.buyerDashboard,
     this.loadEvents,
     this.openEvent,
+    this.locate = DeviceLocationService.locate,
   });
 
   final bool cabinet;
   final WidgetBuilder? buyerDashboard;
   final Future<List<LearningSeminar>> Function()? loadEvents;
   final ValueChanged<LearningSeminar>? openEvent;
+  final DiscoverLocate locate;
 
   @override
   State<LearningDiscoverFileBox> createState() =>
@@ -63,6 +67,7 @@ class _LearningDiscoverFileBoxState extends State<LearningDiscoverFileBox>
     animationBehavior: AnimationBehavior.preserve,
   );
   bool _zoomed = false;
+  bool _lampOn = true;
   int? _selected;
   int? _hovered;
 
@@ -195,6 +200,9 @@ class _LearningDiscoverFileBoxState extends State<LearningDiscoverFileBox>
                           key: const ValueKey('discover-office'),
                           drawer: drawer,
                           interactive: _camera.isDismissed,
+                          lampOn: _lampOn,
+                          toggleLamp: () => setState(() => _lampOn = !_lampOn),
+                          locate: widget.locate,
                           buyerDashboard: widget.buyerDashboard,
                           loadEvents: widget.loadEvents,
                           openEvent: widget.openEvent,

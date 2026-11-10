@@ -6,6 +6,9 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' show DateFormat;
 
 import '../services/learning_service.dart';
+import '../services/device_location_service.dart';
+import 'canada_event_map.dart';
+import 'learning_area_picker.dart';
 
 class DiscoverToday extends ValueNotifier<DateTime>
     with WidgetsBindingObserver {
@@ -115,17 +118,26 @@ void paintCalendarMark(
   }
 }
 
+typedef DiscoverLocate =
+    Future<({double latitude, double longitude})> Function();
+
 class DiscoverCalendarPage extends StatefulWidget {
   const DiscoverCalendarPage({
     super.key,
     required this.today,
     required this.loadEvents,
     required this.openEvent,
+    this.locate = DeviceLocationService.locate,
+    this.lastRegion,
+    this.atlasOnly = false,
   });
 
   final ValueListenable<DateTime> today;
   final Future<List<LearningSeminar>> Function() loadEvents;
   final ValueChanged<LearningSeminar> openEvent;
+  final DiscoverLocate locate;
+  final ValueNotifier<SeminarMapRegion?>? lastRegion;
+  final bool atlasOnly;
 
   @override
   State<DiscoverCalendarPage> createState() => _DiscoverCalendarPageState();
@@ -133,12 +145,69 @@ class DiscoverCalendarPage extends StatefulWidget {
 
 class _DiscoverCalendarPageState extends State<DiscoverCalendarPage> {
   DateTime? _browsedMonth;
+  late Future<List<LearningSeminar>> _events = widget.loadEvents();
+  late SeminarMapRegion? _region = widget.lastRegion?.value;
+  bool _locating = false;
+  String? _locationMessage;
+
   DateTime get _month {
     final today = widget.today.value;
     return _browsedMonth ?? DateTime(today.year, today.month);
   }
 
-  late Future<List<LearningSeminar>> _events = widget.loadEvents();
+  void _setRegion(SeminarMapRegion region, String message) {
+    setState(() {
+      _region = region;
+      _locationMessage = message;
+    });
+    widget.lastRegion?.value = region;
+  }
+
+  Future<void> _locate() async {
+    setState(() => _locating = true);
+    try {
+      final position = await widget.locate();
+      final region = SeminarMapRegion(
+        position.latitude,
+        position.longitude,
+        radiusKm: 700,
+      );
+      final geometry = await CanadaMapGeometry.asset;
+      if (!mounted) return;
+      if (!region
+          .projectedBounds(geometry.normalized)
+          .overlaps(const Rect.fromLTWH(0, 0, 1, 1))) {
+        setState(
+          () => _locationMessage =
+              'Choose a Canadian city to find nearby events on this map.',
+        );
+        return;
+      }
+      _setRegion(region, 'Showing events within 700 km of your location.');
+    } catch (_) {
+      if (mounted) {
+        setState(
+          () => _locationMessage =
+              'Location is unavailable. Choose a city to see nearby events.',
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _locating = false);
+    }
+  }
+
+  Future<void> _chooseCity() async {
+    final city = await chooseLearningArea(
+      context,
+      description: 'See events within 700 km of a Canadian city.',
+      allowDeviceLocation: false,
+    );
+    if (!mounted || city == null) return;
+    _setRegion(
+      SeminarMapRegion(city.latitude, city.longitude, radiusKm: 700),
+      'Showing events within 700 km of ${city.name}.',
+    );
+  }
 
   @override
   Widget build(BuildContext context) => ValueListenableBuilder<DateTime>(
@@ -148,101 +217,37 @@ class _DiscoverCalendarPageState extends State<DiscoverCalendarPage> {
       appBar: AppBar(
         backgroundColor: calendarPaper,
         leading: const BackButton(),
-        title: const Text('Discover calendar'),
+        title: Text(widget.atlasOnly ? 'Discover atlas' : 'Discover calendar'),
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 820),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    children: [
-                      IconButton(
-                        tooltip: 'Previous month',
-                        onPressed: () => setState(
-                          () => _browsedMonth = DateTime(
-                            _month.year,
-                            _month.month - 1,
-                          ),
-                        ),
-                        icon: const Icon(Icons.chevron_left),
-                      ),
-                      Expanded(
-                        child: Text(
-                          DateFormat.yMMMM().format(_month),
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.headlineSmall
-                              ?.copyWith(color: calendarInk),
-                        ),
-                      ),
-                      IconButton(
-                        tooltip: 'Next month',
-                        onPressed: () => setState(
-                          () => _browsedMonth = DateTime(
-                            _month.year,
-                            _month.month + 1,
-                          ),
-                        ),
-                        icon: const Icon(Icons.chevron_right),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  TweenAnimationBuilder<double>(
-                    key: ValueKey(today),
-                    tween: Tween(begin: 0, end: 1),
-                    duration: const Duration(milliseconds: 630),
-                    builder: (context, ink, _) => _monthGrid(today, ink),
-                  ),
-                  const SizedBox(height: 24),
-                  FutureBuilder<List<LearningSeminar>>(
-                    future: _events,
-                    builder: (context, snapshot) {
-                      if (snapshot.hasError) {
-                        return TextButton.icon(
-                          onPressed: () =>
-                              setState(() => _events = widget.loadEvents()),
-                          icon: const Icon(Icons.refresh),
-                          label: const Text('Could not load events. Retry'),
-                        );
-                      }
-                      if (snapshot.connectionState != ConnectionState.done) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-                      final events =
-                          (snapshot.data ?? []).where((event) {
-                              final date = event.startsAt.toLocal();
-                              return date.year == _month.year &&
-                                  date.month == _month.month &&
-                                  event.status != 'cancelled';
-                            }).toList()
-                            ..sort((a, b) => a.startsAt.compareTo(b.startsAt));
-                      bool inPerson(LearningSeminar event) =>
-                          event.mode == 'in_person' || event.mode == 'hybrid';
+        child: LayoutBuilder(
+          builder: (context, bounds) => SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1320),
+                child: FutureBuilder<List<LearningSeminar>>(
+                  future: _events,
+                  builder: (context, snapshot) {
+                    final atlas = _atlas(snapshot);
+                    if (widget.atlasOnly) return atlas;
+                    final calendar = _calendar(today, snapshot);
+                    if (bounds.maxWidth < 820) {
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          _eventList(
-                            'In-person meetings',
-                            events.where(inPerson),
-                          ),
-                          const SizedBox(height: 16),
-                          _eventList(
-                            'Resource meetings',
-                            events.where(
-                              (event) =>
-                                  event.kind == 'meeting' && !inPerson(event),
-                            ),
-                          ),
-                        ],
+                        children: [calendar, const SizedBox(height: 24), atlas],
                       );
-                    },
-                  ),
-                ],
+                    }
+                    return Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(child: calendar),
+                        const SizedBox(width: 24),
+                        Expanded(child: atlas),
+                      ],
+                    );
+                  },
+                ),
               ),
             ),
           ),
@@ -251,76 +256,130 @@ class _DiscoverCalendarPageState extends State<DiscoverCalendarPage> {
     ),
   );
 
-  Widget _monthGrid(DateTime today, double ink) {
-    final offset = calendarOffset(_month);
-    final count = DateUtils.getDaysInMonth(_month.year, _month.month);
-    final rows = (offset + count + 6) ~/ 7;
-    return Table(
+  Widget _calendar(
+    DateTime today,
+    AsyncSnapshot<List<LearningSeminar>> snapshot,
+  ) {
+    final events = (snapshot.data ?? []).where((event) {
+      final date = event.startsAt.toLocal();
+      return date.year == _month.year &&
+          date.month == _month.month &&
+          event.status != 'cancelled';
+    }).toList()..sort((a, b) => a.startsAt.compareTo(b.startsAt));
+    bool inPerson(LearningSeminar event) =>
+        event.mode == 'in_person' || event.mode == 'hybrid';
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        TableRow(
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            for (final day in const [
-              'Sun',
-              'Mon',
-              'Tue',
-              'Wed',
-              'Thu',
-              'Fri',
-              'Sat',
-            ])
-              Center(
-                child: Text(
-                  day,
-                  style: const TextStyle(
-                    color: calendarInk,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
+            IconButton(
+              tooltip: 'Previous month',
+              onPressed: () => setState(
+                () => _browsedMonth = DateTime(_month.year, _month.month - 1),
               ),
+              icon: const Icon(Icons.chevron_left),
+            ),
+            IconButton(
+              tooltip: 'Next month',
+              onPressed: () => setState(
+                () => _browsedMonth = DateTime(_month.year, _month.month + 1),
+              ),
+              icon: const Icon(Icons.chevron_right),
+            ),
           ],
         ),
-        for (var row = 0; row < rows; row++)
-          TableRow(
-            children: [
-              for (var col = 0; col < 7; col++)
-                _day(row * 7 + col - offset + 1, count, today, ink),
-            ],
+        TweenAnimationBuilder<double>(
+          key: ValueKey(today),
+          tween: Tween(begin: 0, end: 1),
+          duration: const Duration(milliseconds: 630),
+          builder: (context, ink, _) =>
+              DiscoverPaperCalendar(month: _month, today: today, ink: ink),
+        ),
+        const SizedBox(height: 22),
+        if (snapshot.hasData) ...[
+          _eventList('In-person meetings', events.where(inPerson)),
+          const SizedBox(height: 16),
+          _eventList(
+            'Resource meetings',
+            events.where(
+              (event) => event.kind == 'meeting' && !inPerson(event),
+            ),
           ),
+        ],
       ],
     );
   }
 
-  Widget _day(int day, int count, DateTime today, double ink) {
-    if (day < 1 || day > count) return const SizedBox(height: 44);
-    final date = DateTime(_month.year, _month.month, day);
-    final current = date == today;
-    final past = date.isBefore(today);
-    final yesterday = DateTime(today.year, today.month, today.day - 1);
-    return Semantics(
-      label:
-          '${DateFormat.yMMMMd().format(date)}${current
-              ? ', today'
-              : past
-              ? ', passed'
-              : ''}',
-      excludeSemantics: true,
-      child: Container(
-        height: 44,
-        decoration: const BoxDecoration(
-          border: Border(bottom: BorderSide(color: Color(0xffd8ddcf))),
+  Widget _atlas(AsyncSnapshot<List<LearningSeminar>> snapshot) {
+    final region = _region;
+    final now = DateTime.now();
+    final nearby = [
+      if (region != null)
+        for (final event in snapshot.data ?? <LearningSeminar>[])
+          if (event.visibleOnMap(now) && region.includes(event)) event,
+    ];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          'Nearby event atlas',
+          style: Theme.of(context).textTheme.headlineSmall,
         ),
-        alignment: Alignment.center,
-        child: CustomPaint(
-          foregroundPainter: current || past
-              ? _DayMark(current, current || date == yesterday ? ink : 1)
-              : null,
-          child: SizedBox(
-            height: 33,
-            width: 33,
-            child: Center(child: Text('$day')),
+        const SizedBox(height: 8),
+        Text(
+          _locationMessage ??
+              (region == null
+                  ? 'Use your location or choose a city to see events within 700 km.'
+                  : 'Showing events within 700 km.'),
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          children: [
+            OutlinedButton.icon(
+              onPressed: _locating ? null : _locate,
+              icon: const Icon(Icons.my_location),
+              label: Text(_locating ? 'Finding location…' : 'Use my location'),
+            ),
+            TextButton(
+              onPressed: _locating ? null : _chooseCity,
+              child: const Text('Choose a city'),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: widget.atlasOnly ? 480 : 380,
+          child: CanadaEventMap(
+            events: nearby,
+            region: region,
+            onOpen: widget.openEvent,
+            expandToFill: true,
           ),
         ),
-      ),
+        if (snapshot.hasError)
+          TextButton.icon(
+            onPressed: () => setState(() => _events = widget.loadEvents()),
+            icon: const Icon(Icons.refresh),
+            label: const Text('Could not load events. Retry'),
+          )
+        else if (snapshot.connectionState != ConnectionState.done)
+          const Padding(
+            padding: EdgeInsets.all(12),
+            child: Center(child: CircularProgressIndicator()),
+          )
+        else if (region != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(
+              nearby.isEmpty
+                  ? 'No upcoming mapped events within 700 km.'
+                  : '${nearby.length} nearby ${nearby.length == 1 ? 'event' : 'events'}',
+            ),
+          ),
+      ],
     );
   }
 
@@ -351,6 +410,120 @@ class _DiscoverCalendarPageState extends State<DiscoverCalendarPage> {
         ),
     ],
   );
+}
+
+class DiscoverPaperCalendar extends StatelessWidget {
+  const DiscoverPaperCalendar({
+    required this.month,
+    required this.today,
+    required this.ink,
+    super.key,
+  });
+
+  final DateTime month, today;
+  final double ink;
+
+  @override
+  Widget build(BuildContext context) {
+    final offset = calendarOffset(month);
+    final count = DateUtils.getDaysInMonth(month.year, month.month);
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        color: calendarPaper,
+        boxShadow: [BoxShadow(color: Color(0x320c2724), offset: Offset(5, 5))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ColoredBox(
+            color: calendarInk,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              child: Text(
+                DateFormat.yMMMM().format(month).toUpperCase(),
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: calendarPaper,
+                  fontSize: 21,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(10, 12, 10, 16),
+            child: Table(
+              children: [
+                TableRow(
+                  children: [
+                    for (final day in const [
+                      'Sun',
+                      'Mon',
+                      'Tue',
+                      'Wed',
+                      'Thu',
+                      'Fri',
+                      'Sat',
+                    ])
+                      Center(
+                        child: Text(
+                          day,
+                          style: const TextStyle(
+                            color: calendarInk,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                for (var row = 0; row < 6; row++)
+                  TableRow(
+                    children: [
+                      for (var col = 0; col < 7; col++)
+                        _day(row * 7 + col - offset + 1, count),
+                    ],
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _day(int day, int count) {
+    if (day < 1 || day > count) return const SizedBox(height: 42);
+    final date = DateTime(month.year, month.month, day);
+    final current = date == today;
+    final past = date.isBefore(today);
+    final yesterday = DateTime(today.year, today.month, today.day - 1);
+    return Semantics(
+      label:
+          '${DateFormat.yMMMMd().format(date)}${current
+              ? ', today'
+              : past
+              ? ', passed'
+              : ''}',
+      excludeSemantics: true,
+      child: Container(
+        height: 42,
+        decoration: const BoxDecoration(
+          border: Border(bottom: BorderSide(color: Color(0xffd8ddcf))),
+        ),
+        alignment: Alignment.center,
+        child: CustomPaint(
+          foregroundPainter: current || past
+              ? _DayMark(current, current || date == yesterday ? ink : 1)
+              : null,
+          child: SizedBox(
+            height: 33,
+            width: 33,
+            child: Center(child: Text('$day')),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _DayMark extends CustomPainter {

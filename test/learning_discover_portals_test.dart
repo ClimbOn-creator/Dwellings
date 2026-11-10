@@ -1,15 +1,17 @@
 import 'package:dwelling_iq/screens/learning_dashboard_page.dart';
 import 'package:dwelling_iq/services/learning_service.dart';
 import 'package:dwelling_iq/widgets/learning_discover_calendar.dart';
+import 'package:dwelling_iq/widgets/canada_event_map.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   testWidgets(
-    'The two Discover hotspots open the calendar and Buyer workspace',
+    'Discover lamp, atlas, calendar and Buyer workspace work from the desk',
     (tester) async {
       SharedPreferences.setMockInitialValues({});
+      await tester.runAsync(() => CanadaMapGeometry.asset);
       tester.view.physicalSize = const Size(1440, 900);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
@@ -19,15 +21,45 @@ void main() {
           home: LearningDashboardPage(
             initialView: LearningView.discover,
             loadSeminars: () async => [],
+            locate: () async => (latitude: 49.3, longitude: -123.1),
           ),
         ),
       );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byTooltip('Turn lamp off'));
+      await tester.pump();
+      expect(find.byTooltip('Turn lamp on'), findsOneWidget);
+      await tester.tap(find.byTooltip('Turn lamp on'));
+      await tester.pump();
+      expect(find.byTooltip('Turn lamp off'), findsOneWidget);
+
+      await tester.tap(find.byTooltip('Open desk atlas'));
+      await tester.pumpAndSettle();
+      expect(find.text('Discover atlas'), findsOneWidget);
+      await tester.tap(find.text('Use my location'));
+      await tester.pumpAndSettle();
+      expect(
+        tester
+            .widget<CanadaEventMap>(find.byType(CanadaEventMap))
+            .region
+            ?.radiusKm,
+        700,
+      );
+      await tester.pageBack();
       await tester.pumpAndSettle();
 
       await tester.tap(find.byTooltip('Open Discover calendar'));
       await tester.pumpAndSettle();
       expect(find.text('In-person meetings'), findsOneWidget);
       expect(find.text('Resource meetings'), findsOneWidget);
+      expect(
+        tester
+            .widget<CanadaEventMap>(find.byType(CanadaEventMap))
+            .region
+            ?.radiusKm,
+        700,
+      );
       await tester.pageBack();
       await tester.pumpAndSettle();
 
