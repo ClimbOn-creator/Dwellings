@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -116,71 +117,61 @@ class _LearningEvaluateCoverFlowState extends State<LearningEvaluateCoverFlow>
       autofocus: true,
       child: Padding(
         padding: const EdgeInsets.only(top: 78, bottom: 20),
-        child: Column(
-          children: [
-            LayoutBuilder(
-              builder: (context, box) {
-                final width = box.maxWidth;
-                final compact = width < 620;
-                final stride = (width * .23).clamp(72.0, 166.0);
-                final cardWidth = (width * .34).clamp(104.0, 260.0);
-                final height = compact ? 245.0 : 380.0;
-                return Listener(
-                  onPointerSignal: (event) => _scroll(event, stride),
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onHorizontalDragStart: (_) {
-                      _wheelEnd?.cancel();
-                      _position.stop();
-                    },
-                    onHorizontalDragUpdate: (event) =>
-                        _position.value -= event.delta.dx / stride,
-                    onHorizontalDragEnd: (event) {
-                      final velocity = event.primaryVelocity ?? 0;
-                      final glide = (-velocity / (stride * 7)).clamp(-1.6, 1.6);
-                      _settle((_position.value + glide).roundToDouble());
-                    },
-                    onHorizontalDragCancel: () =>
-                        _settle(_position.value.roundToDouble()),
-                    child: SizedBox(
-                      key: const Key('evaluation-cover-flow'),
-                      width: width,
-                      height: height,
-                      child: AnimatedBuilder(
-                        animation: _position,
-                        builder: (context, _) =>
-                            _stage(width, height, cardWidth, compact),
-                      ),
-                    ),
+        child: LayoutBuilder(
+          builder: (context, box) {
+            final width = box.maxWidth;
+            final compact = width < 620;
+            final stride = (width * .23).clamp(72.0, 166.0);
+            final cardWidth = math.min(350.0, width * (compact ? .50 : .42));
+            final height = cardWidth / 1.07 + 152;
+            return Listener(
+              onPointerSignal: (event) => _scroll(event, stride),
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onHorizontalDragStart: (_) {
+                  _wheelEnd?.cancel();
+                  _position.stop();
+                },
+                onHorizontalDragUpdate: (event) =>
+                    _position.value -= event.delta.dx / stride,
+                onHorizontalDragEnd: (event) {
+                  final velocity = event.primaryVelocity ?? 0;
+                  final glide = (-velocity / (stride * 7)).clamp(-1.6, 1.6);
+                  _settle((_position.value + glide).roundToDouble());
+                },
+                onHorizontalDragCancel: () =>
+                    _settle(_position.value.roundToDouble()),
+                child: SizedBox(
+                  key: const Key('evaluation-cover-flow'),
+                  width: width,
+                  height: height,
+                  child: AnimatedBuilder(
+                    animation: _position,
+                    builder: (context, _) =>
+                        _stage(width, height, cardWidth, compact),
                   ),
-                );
-              },
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                IconButton.outlined(
-                  tooltip: 'Previous file',
-                  onPressed: () => _step(-1),
-                  icon: const Icon(Icons.arrow_back, size: 19),
                 ),
-                const SizedBox(width: 22),
-                IconButton.outlined(
-                  tooltip: 'Next file',
-                  onPressed: () => _step(1),
-                  icon: const Icon(Icons.arrow_forward, size: 19),
-                ),
-              ],
-            ),
-          ],
+              ),
+            );
+          },
         ),
       ),
     ),
   );
 
   Widget _stage(double width, double height, double cardWidth, bool compact) {
-    final limit = compact ? 2.25 : 3.45;
-    final spacing = (width - cardWidth * .72) / (compact ? 3.9 : 6);
+    final limit = compact ? 2.45 : 3.45;
+    final centerGap = cardWidth * (compact ? .57 : .62);
+    final sideGap = math.min(cardWidth * .35, (width / 2 - centerGap) / 2);
+
+    // Open a little room for the face-on file, then pack the edge-on files together.
+    double offset(double relative) {
+      final distance = relative.abs();
+      return relative.sign *
+          (math.min(distance, 1) * centerGap +
+              math.max(0, distance - 1) * sideGap);
+    }
+
     final files = [
       for (var i = 0; i < _evaluationFiles.length; i++)
         (index: i, relative: _relative(i)),
@@ -195,7 +186,7 @@ class _LearningEvaluateCoverFlowState extends State<LearningEvaluateCoverFlow>
                 key: ValueKey(
                   'evaluate-file-${_evaluationFiles[file.index].id}',
                 ),
-                left: width / 2 + file.relative * spacing - cardWidth / 2,
+                left: width / 2 + offset(file.relative) - cardWidth / 2,
                 top: height - cardWidth / 1.07 - 66,
                 width: cardWidth,
                 child: Opacity(
@@ -206,8 +197,10 @@ class _LearningEvaluateCoverFlowState extends State<LearningEvaluateCoverFlow>
                   child: _FileCover(
                     lesson: _evaluationFiles[file.index],
                     color: _fileColors[file.index],
-                    turn: (file.relative * .19).clamp(-.55, .55),
-                    labelWidth: spacing - 6,
+                    turn: file.relative.clamp(-1.0, 1.0) * 1.06,
+                    labelWidth: file.relative.abs() < .5
+                        ? cardWidth * .9
+                        : math.max(54.0, sideGap - 6),
                     selected: file.relative.abs() < .5,
                     onTap: () => _select(file.index),
                   ),
@@ -269,8 +262,7 @@ class _FileCoverState extends State<_FileCover> {
                   alignment: Alignment.bottomCenter,
                   transform: Matrix4.identity()
                     ..setEntry(3, 2, .0013)
-                    ..rotateY(-widget.turn)
-                    ..rotateX(-.53),
+                    ..rotateY(-widget.turn),
                   child: AspectRatio(
                     aspectRatio: 1.07,
                     child: Stack(

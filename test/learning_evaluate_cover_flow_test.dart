@@ -37,6 +37,19 @@ void main() {
     expect(centeredFile('deal-brief'), findsOneWidget);
     expect(find.text('1 / 7'), findsNothing);
     expect(find.text('Evaluation files'), findsNothing);
+    expect(find.byTooltip('Next file'), findsNothing);
+    expect(find.byTooltip('Previous file'), findsNothing);
+    final centerSurface = tester.widget<Transform>(
+      find.descendant(of: first, matching: find.byType(Transform)).last,
+    );
+    final sideSurface = tester.widget<Transform>(
+      find
+          .descendant(of: file('nda-brief'), matching: find.byType(Transform))
+          .last,
+    );
+    expect(centerSurface.transform.entry(0, 0), closeTo(1, .001));
+    expect(centerSurface.transform.entry(1, 1), closeTo(1, .001));
+    expect(sideSurface.transform.entry(0, 0), lessThan(.6));
     expect(
       find.descendant(of: stage, matching: find.byType(Image)),
       findsNothing,
@@ -54,7 +67,7 @@ void main() {
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
     await tester.pumpAndSettle();
     expect(centeredFile('funding'), findsOneWidget);
-    await tester.tap(find.byTooltip('Next file'));
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
     await tester.pumpAndSettle();
     expect(centeredFile('deal-brief'), findsOneWidget);
     await tester.sendEventToBinding(
