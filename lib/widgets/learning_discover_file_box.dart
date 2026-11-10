@@ -46,6 +46,7 @@ class _LearningDiscoverFileBoxState extends State<LearningDiscoverFileBox>
   late final _lift = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 210),
+    animationBehavior: AnimationBehavior.preserve,
   );
   bool _zoomed = false;
   int? _selected;
@@ -77,9 +78,7 @@ class _LearningDiscoverFileBoxState extends State<LearningDiscoverFileBox>
       _hovered = index;
       _lift.value = 0;
     }
-    if (MediaQuery.disableAnimationsOf(context)) {
-      _lift.value = entered ? 1 : 0;
-    } else if (entered) {
+    if (entered) {
       _lift.forward();
     } else {
       _lift.reverse();
