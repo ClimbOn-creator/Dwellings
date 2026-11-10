@@ -181,9 +181,9 @@ class _LearningDiscoverFileBoxState extends State<LearningDiscoverFileBox>
                     Positioned.fill(
                       child: Opacity(
                         opacity: 1 - focus,
-                        child: CustomPaint(
+                        child: DiscoverOffice(
                           key: const ValueKey('discover-office'),
-                          painter: DiscoverOfficePainter(drawer),
+                          drawer: drawer,
                         ),
                       ),
                     ),

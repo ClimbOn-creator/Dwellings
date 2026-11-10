@@ -2,6 +2,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import 'learning_discover_arcade.dart';
+
 const _officeSize = Size(1100, 740);
 const _cabinet = Rect.fromLTWH(185, 428, 211, 225);
 const _closedDrawer = Rect.fromLTWH(195, 450, 191, 82);
@@ -47,8 +49,31 @@ Rect discoverDrawerFront(Size stage, double slide) =>
 
 double discoverDeskUnderside(Size stage) => _placeInOffice(stage, _cabinet).top;
 
-class DiscoverOfficePainter extends CustomPainter {
-  const DiscoverOfficePainter(this.drawer);
+const _crtGlass = Rect.fromLTWH(478, 225, 102, 119);
+
+class DiscoverOffice extends StatelessWidget {
+  const DiscoverOffice({required this.drawer, super.key});
+
+  final double drawer;
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, bounds) => Stack(
+      children: [
+        Positioned.fill(
+          child: CustomPaint(painter: _DiscoverOfficePainter(drawer)),
+        ),
+        Positioned.fromRect(
+          rect: _placeInOffice(bounds.biggest, _crtGlass),
+          child: const DiscoverArcade(),
+        ),
+      ],
+    ),
+  );
+}
+
+class _DiscoverOfficePainter extends CustomPainter {
+  const _DiscoverOfficePainter(this.drawer);
 
   final double drawer;
 
@@ -100,12 +125,28 @@ class DiscoverOfficePainter extends CustomPainter {
       Offset(932, 658),
     ], const Color(0xff282929));
     _fill(c, const Rect.fromLTWH(185, 423, 755, 23), const Color(0xff242525));
-    _poly(c, const [
-      Offset(235, 368),
-      Offset(870, 368),
-      Offset(960, 415),
-      Offset(152, 415),
-    ], const Color(0xff414242));
+    final surface = Path()
+      ..addPolygon(const [
+        Offset(235, 368),
+        Offset(870, 368),
+        Offset(960, 415),
+        Offset(152, 415),
+      ], true);
+    c.drawPath(surface, Paint()..color = const Color(0xff414242));
+    c.save();
+    c.clipPath(surface);
+    c.translate(340, 391);
+    c.scale(1, .32);
+    final pool = Rect.fromCircle(center: Offset.zero, radius: 104);
+    c.drawOval(
+      pool,
+      Paint()
+        ..shader = const RadialGradient(
+          colors: [Color(0xaaedc586), Color(0x59d6a362), Color(0x00d6a362)],
+          stops: [0, .52, 1],
+        ).createShader(pool),
+    );
+    c.restore();
     _poly(c, const [
       Offset(152, 415),
       Offset(960, 415),
@@ -293,6 +334,41 @@ class DiscoverOfficePainter extends CustomPainter {
     ], const Color(0xffdfcdb0));
     _fill(c, const Rect.fromLTWH(20, -6, 5, 14), const Color(0xff716857));
     _fill(c, const Rect.fromLTWH(116, -6, 5, 14), const Color(0xff716857));
+    _poly(c, const [
+      Offset(100, 8),
+      Offset(139, 7),
+      Offset(139, 17),
+      Offset(131, 15),
+      Offset(112, 18),
+    ], const Color(0xffb78169));
+    _poly(c, const [
+      Offset(0, 111),
+      Offset(12, 106),
+      Offset(8, 124),
+      Offset(19, 131),
+      Offset(11, 149),
+      Offset(0, 151),
+    ], const Color(0xffe4d1a9));
+    _line(
+      c,
+      const Offset(8, 93),
+      const Offset(131, 94),
+      const Color(0xffe2d3b8),
+      1,
+    );
+    _line(
+      c,
+      const Offset(121, 111),
+      const Offset(137, 108),
+      const Color(0xffd8c5a5),
+      1,
+    );
+    _poly(c, const [
+      Offset(5, 1),
+      Offset(25, -3),
+      Offset(28, 7),
+      Offset(7, 10),
+    ], const Color(0xffd5b788));
     _text(
       c,
       'NOVEMBER',
@@ -343,6 +419,50 @@ class DiscoverOfficePainter extends CustomPainter {
       Offset(899, 219),
       Offset(870, 216),
     ], const Color(0xffc7cdb9));
+    _poly(c, const [
+      Offset(754, 249),
+      Offset(763, 250),
+      Offset(761, 261),
+      Offset(755, 266),
+    ], const Color(0xffbb986d));
+    _line(
+      c,
+      const Offset(885, 166),
+      const Offset(912, 166),
+      const Color(0xffb08960),
+      2,
+    );
+    _poly(c, const [
+      Offset(806, 229),
+      Offset(819, 237),
+      Offset(809, 239),
+    ], const Color(0xffc6ad7c));
+    _line(
+      c,
+      const Offset(830, 217),
+      const Offset(860, 221),
+      const Color(0xffbfb29b),
+      1.5,
+    );
+    _line(
+      c,
+      const Offset(829, 223),
+      const Offset(850, 226),
+      const Color(0xffbfb29b),
+      1.5,
+    );
+    for (final hole in const [
+      Offset(767, 181),
+      Offset(784, 254),
+      Offset(813, 247),
+      Offset(879, 237),
+      Offset(904, 231),
+      Offset(906, 237),
+      Offset(900, 248),
+      Offset(851, 182),
+    ]) {
+      c.drawCircle(hole, 1.35, Paint()..color = const Color(0xff93734d));
+    }
     for (final pin in const [
       Offset(791, 192),
       Offset(845, 203),
@@ -356,86 +476,52 @@ class DiscoverOfficePainter extends CustomPainter {
     const beige = Color(0xffd8c9a9);
     const light = Color(0xffebdfc4);
     const shade = Color(0xffb2a184);
-    _fill(c, const Rect.fromLTWH(621, 247, 65, 141), shade);
-    _fill(c, const Rect.fromLTWH(624, 249, 59, 135), beige);
-    for (final y in [258.0, 277.0, 296.0]) {
-      _fill(c, Rect.fromLTWH(631, y, 45, 14), shade);
-      _fill(c, Rect.fromLTWH(633, y + 2, 41, 9), light);
-      _fill(c, Rect.fromLTWH(638, y + 4, 27, 2), const Color(0xff8d806b));
+    _fill(c, const Rect.fromLTWH(609, 219, 59, 169), shade);
+    _fill(c, const Rect.fromLTWH(612, 221, 53, 163), beige);
+    for (final y in [231.0, 251.0, 271.0]) {
+      _fill(c, Rect.fromLTWH(618, y, 41, 14), shade);
+      _fill(c, Rect.fromLTWH(620, y + 2, 37, 9), light);
+      _fill(c, Rect.fromLTWH(624, y + 4, 26, 2), const Color(0xff8d806b));
     }
-    for (var i = 0; i < 4; i++) {
-      _fill(c, Rect.fromLTWH(637, 322.0 + i * 5, 33, 2), shade);
+    for (var i = 0; i < 5; i++) {
+      _fill(c, Rect.fromLTWH(623, 298.0 + i * 6, 31, 2), shade);
     }
-    _fill(c, const Rect.fromLTWH(651, 352, 9, 15), shade);
+    _fill(c, const Rect.fromLTWH(635, 350, 8, 17), shade);
     c.drawCircle(
-      const Offset(655, 346),
+      const Offset(639, 342),
       2,
       Paint()..color = const Color(0xff74875d),
     );
-    _fill(c, const Rect.fromLTWH(493, 351, 75, 26), shade);
-    _fill(c, const Rect.fromLTWH(473, 371, 115, 12), beige);
+    _fill(c, const Rect.fromLTWH(500, 351, 58, 26), shade);
+    _fill(c, const Rect.fromLTWH(483, 371, 93, 12), beige);
     _poly(c, const [
-      Offset(454, 254),
-      Offset(604, 254),
-      Offset(613, 263),
-      Offset(613, 351),
-      Offset(604, 360),
-      Offset(454, 360),
-      Offset(445, 351),
-      Offset(445, 263),
+      Offset(472, 205),
+      Offset(586, 205),
+      Offset(596, 216),
+      Offset(596, 351),
+      Offset(586, 361),
+      Offset(472, 361),
+      Offset(462, 351),
+      Offset(462, 216),
     ], beige);
-    _line(c, const Offset(455, 257), const Offset(603, 257), light, 2);
+    _line(c, const Offset(473, 209), const Offset(585, 209), light, 2);
     _poly(c, const [
-      Offset(462, 266),
-      Offset(596, 266),
-      Offset(603, 273),
-      Offset(603, 337),
-      Offset(596, 344),
-      Offset(462, 344),
-      Offset(455, 337),
-      Offset(455, 273),
+      Offset(479, 218),
+      Offset(579, 218),
+      Offset(586, 225),
+      Offset(586, 344),
+      Offset(579, 351),
+      Offset(479, 351),
+      Offset(472, 344),
+      Offset(472, 225),
     ], const Color(0xff8f8169));
-    final screen = Path()
-      ..addPolygon(const [
-        Offset(469, 273),
-        Offset(589, 273),
-        Offset(596, 280),
-        Offset(596, 330),
-        Offset(589, 337),
-        Offset(469, 337),
-        Offset(462, 330),
-        Offset(462, 280),
-      ], true);
-    c.drawPath(screen, Paint()..color = const Color(0xff17251c));
-    c.save();
-    c.clipPath(screen);
-    for (var y = 275.0; y < 338; y += 3) {
-      _line(c, Offset(461, y), Offset(597, y), const Color(0xff253a2a), .6);
-    }
-    final terminal = TextPainter(
-      text: const TextSpan(
-        text:
-            'PACT SYSTEMS   V1.0\n> DISCOVER TERMINAL\n  FILE INDEX ONLINE\n> _',
-        style: TextStyle(
-          color: Color(0xff9adb7b),
-          fontFamily: 'monospace',
-          fontSize: 8,
-          height: 1.45,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-    )..layout(maxWidth: 124);
-    terminal.paint(c, const Offset(471, 280));
-    terminal.dispose();
-    c.restore();
-    _line(c, const Offset(456, 349), const Offset(468, 351), shade, 2);
+    _line(c, const Offset(468, 350), const Offset(477, 353), shade, 2);
     c.drawCircle(
-      const Offset(580, 350),
+      const Offset(558, 355),
       2,
       Paint()..color = const Color(0xff7b9b5f),
     );
-    _fill(c, const Rect.fromLTWH(588, 347, 13, 5), shade);
+    _fill(c, const Rect.fromLTWH(565, 353, 12, 4), shade);
 
     _poly(c, const [
       Offset(449, 387),
@@ -473,6 +559,10 @@ class DiscoverOfficePainter extends CustomPainter {
   }
 
   void _lamp(Canvas c) {
+    c.save();
+    c.translate(247, 398);
+    c.scale(1.23);
+    c.translate(-247, -398);
     final neck = Path()
       ..moveTo(252, 387)
       ..cubicTo(251, 361, 260, 328, 282, 318);
@@ -504,7 +594,7 @@ class DiscoverOfficePainter extends CustomPainter {
       Offset(311, 328),
       Offset(308, 334),
       Offset(294, 343),
-    ], const Color(0xffd7bc91));
+    ], const Color(0xfff0d8a9));
     _line(
       c,
       const Offset(278, 314),
@@ -512,10 +602,11 @@ class DiscoverOfficePainter extends CustomPainter {
       const Color(0xffb49374),
       2,
     );
+    c.restore();
   }
 
   @override
-  bool shouldRepaint(DiscoverOfficePainter oldDelegate) =>
+  bool shouldRepaint(_DiscoverOfficePainter oldDelegate) =>
       oldDelegate.drawer != drawer;
 }
 
