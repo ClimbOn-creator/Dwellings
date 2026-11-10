@@ -58,7 +58,11 @@ double discoverDeskUnderside(Size stage) => _placeInOffice(stage, _cabinet).top;
 const _crtGlass = Rect.fromLTWH(468, 241, 122, 103);
 const _wallCalendar = Rect.fromLTWH(267, 132, 145, 153);
 const _lampHit = Rect.fromLTWH(220, 286, 106, 115);
-const _deskGlobe = Rect.fromLTWH(794, 319, 82, 94);
+const _deskGlobe = Rect.fromLTWH(794, 296, 82, 94);
+const _learningCallout = Rect.fromLTWH(160, 690, 262, 30);
+const _buyerCallout = Rect.fromLTWH(420, 115, 219, 31);
+const _headlineCallout = Rect.fromLTWH(741, 63, 228, 31);
+const _opportunitiesCallout = Rect.fromLTWH(119, 57, 327, 31);
 const _wallBoard = Rect.fromLTWH(730, 139, 250, 156);
 
 enum _OfficePortal { buyer, calendar, globe, pinboard }
@@ -69,6 +73,7 @@ class DiscoverOffice extends StatefulWidget {
     required this.interactive,
     required this.lampOn,
     required this.toggleLamp,
+    required this.openLearning,
     required this.locate,
     this.buyerDashboard,
     this.loadEvents,
@@ -78,7 +83,7 @@ class DiscoverOffice extends StatefulWidget {
 
   final double drawer;
   final bool interactive, lampOn;
-  final VoidCallback toggleLamp;
+  final VoidCallback toggleLamp, openLearning;
   final DiscoverLocate locate;
   final WidgetBuilder? buyerDashboard;
   final Future<List<LearningSeminar>> Function()? loadEvents;
@@ -91,6 +96,7 @@ class DiscoverOffice extends StatefulWidget {
 class _DiscoverOfficeState extends State<DiscoverOffice> {
   final _today = DiscoverToday();
   bool _opening = false;
+  bool _pinboardInPortal = false;
 
   @override
   void dispose() {
@@ -108,31 +114,33 @@ class _DiscoverOfficeState extends State<DiscoverOffice> {
       office.localToGlobal(Offset.zero, ancestor: overlay),
     );
     final previous = AppTunnelController.current.value;
-    final route = DiscoverPortalRoute(
-      destination: switch (portal) {
-        _OfficePortal.buyer => widget.buyerDashboard!,
-        _OfficePortal.pinboard => (_) => const DiscoverPinboardPage(),
-        _ => (_) => DiscoverCalendarPage(
-          today: _today,
-          loadEvents: widget.loadEvents!,
-          openEvent: widget.openEvent!,
-          locate: widget.locate,
-          atlasOnly: portal == _OfficePortal.globe,
-        ),
-      },
-      source: source,
-      arcade: arcade,
-      calendarPage: switch (portal) {
-        _OfficePortal.buyer => null,
-        _OfficePortal.calendar => _paper(_today.value, 1),
-        _OfficePortal.globe => const ColoredBox(color: Color(0xff536d65)),
-        _OfficePortal.pinboard => const FittedBox(
-          fit: BoxFit.fill,
-          child: SizedBox(width: 480, child: DiscoverPinboard()),
-        ),
-      },
-    );
+    final PageRoute<void> route;
+    if (portal == _OfficePortal.pinboard) {
+      route = DiscoverPinboardRoute(source);
+    } else {
+      route = DiscoverPortalRoute(
+        destination: arcade
+            ? widget.buyerDashboard!
+            : (_) => DiscoverCalendarPage(
+                today: _today,
+                loadEvents: widget.loadEvents!,
+                openEvent: widget.openEvent!,
+                locate: widget.locate,
+                atlasOnly: portal == _OfficePortal.globe,
+              ),
+        source: source,
+        arcade: arcade,
+        calendarPage: arcade
+            ? null
+            : portal == _OfficePortal.calendar
+            ? _paper(_today.value, 1)
+            : const ColoredBox(color: Color(0xff536d65)),
+      );
+    }
     _opening = true;
+    if (portal == _OfficePortal.pinboard) {
+      setState(() => _pinboardInPortal = true);
+    }
     if (arcade) AppTunnelController.select(AppTunnel.buyer);
     try {
       await navigator.push(route);
@@ -142,24 +150,63 @@ class _DiscoverOfficeState extends State<DiscoverOffice> {
         AppTunnelController.select(previous);
       }
       _opening = false;
+      if (mounted && _pinboardInPortal) {
+        setState(() => _pinboardInPortal = false);
+      }
     }
   }
 
-  Widget _hotspot(Rect rect, String label, VoidCallback open) =>
+  Widget _hotspot(
+    Rect rect,
+    String label,
+    VoidCallback open, {
+    bool highlight = true,
+  }) => Positioned.fromRect(
+    rect: rect,
+    child: Tooltip(
+      message: label,
+      child: Semantics(
+        label: label,
+        button: true,
+        child: Material(
+          type: MaterialType.transparency,
+          child: InkWell(
+            onTap: open,
+            borderRadius: BorderRadius.circular(4),
+            overlayColor: highlight
+                ? null
+                : const WidgetStatePropertyAll(Colors.transparent),
+            hoverColor: highlight
+                ? Colors.white.withValues(alpha: .08)
+                : Colors.transparent,
+            focusColor: highlight
+                ? const Color(0x33536ca0)
+                : Colors.transparent,
+            splashFactory: highlight ? null : NoSplash.splashFactory,
+          ),
+        ),
+      ),
+    ),
+  );
+
+  Widget _callout(Size stage, Rect rect, String label, VoidCallback open) =>
       Positioned.fromRect(
-        rect: rect,
-        child: Tooltip(
-          message: label,
-          child: Semantics(
-            label: label,
-            button: true,
-            child: Material(
-              type: MaterialType.transparency,
-              child: InkWell(
-                onTap: open,
-                borderRadius: BorderRadius.circular(4),
-                hoverColor: Colors.white.withValues(alpha: .08),
-                focusColor: const Color(0x33536ca0),
+        rect: _placeInOffice(stage, rect),
+        child: TextButton(
+          onPressed: open,
+          style: TextButton.styleFrom(
+            foregroundColor: const Color(0xff514940),
+            padding: EdgeInsets.zero,
+            minimumSize: Size.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 15 * _officeFrame(stage).width / _officeSize.width,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ),
@@ -203,13 +250,14 @@ class _DiscoverOfficeState extends State<DiscoverOffice> {
               ),
             ),
           ),
-          Positioned.fromRect(
-            rect: pinboard,
-            child: const FittedBox(
-              fit: BoxFit.fill,
-              child: SizedBox(width: 480, child: DiscoverPinboard()),
+          if (!_pinboardInPortal)
+            Positioned.fromRect(
+              rect: pinboard,
+              child: const FittedBox(
+                fit: BoxFit.fill,
+                child: SizedBox(width: 480, child: DiscoverPinboard()),
+              ),
             ),
-          ),
           if (widget.interactive)
             _hotspot(
               pinboard,
@@ -243,7 +291,36 @@ class _DiscoverOfficeState extends State<DiscoverOffice> {
               _placeInOffice(bounds.biggest, _lampHit),
               widget.lampOn ? 'Turn lamp off' : 'Turn lamp on',
               widget.toggleLamp,
+              highlight: false,
             ),
+          if (widget.interactive) ...[
+            _callout(
+              bounds.biggest,
+              _learningCallout,
+              'Click here for Learning Dash',
+              widget.openLearning,
+            ),
+            if (widget.buyerDashboard != null)
+              _callout(
+                bounds.biggest,
+                _buyerCallout,
+                'Click here for Buyer Dash',
+                () => _openPortal(screen, _OfficePortal.buyer),
+              ),
+            _callout(
+              bounds.biggest,
+              _headlineCallout,
+              'Click here for Headlines',
+              () => _openPortal(pinboard, _OfficePortal.pinboard),
+            ),
+            if (widget.loadEvents != null && widget.openEvent != null)
+              _callout(
+                bounds.biggest,
+                _opportunitiesCallout,
+                'Click here for more learning opportunities',
+                () => _openPortal(calendar, _OfficePortal.calendar),
+              ),
+          ],
         ],
       );
     },
@@ -286,7 +363,101 @@ class _DiscoverOfficePainter extends CustomPainter {
     _deskAccessories(canvas);
     _computer(canvas);
     _lamp(canvas);
+    _trashCan(canvas);
+    if (drawer == 0) _deskArrows(canvas);
     canvas.restore();
+  }
+
+  void _deskArrows(Canvas c) {
+    for (final (start, tip) in const [
+      (Offset(291, 686), Offset(291, 657)),
+      (Offset(529, 149), Offset(529, 208)),
+      (Offset(855, 98), Offset(855, 128)),
+      (Offset(285, 92), Offset(318, 123)),
+    ]) {
+      const ink = Color(0xff786c5d);
+      _line(c, start, tip, ink, 1.7);
+      final angle = math.atan2(tip.dy - start.dy, tip.dx - start.dx);
+      for (final wing in [-.55, .55]) {
+        final direction = angle + wing;
+        _line(
+          c,
+          tip,
+          tip - Offset(math.cos(direction), math.sin(direction)) * 9,
+          ink,
+          1.7,
+        );
+      }
+    }
+  }
+
+  void _trashCan(Canvas c) {
+    c.drawOval(
+      const Rect.fromLTWH(978, 645, 82, 18),
+      Paint()..color = const Color(0xffdedbd4),
+    );
+    _poly(c, const [
+      Offset(981, 575),
+      Offset(1052, 575),
+      Offset(1044, 649),
+      Offset(1034, 655),
+      Offset(999, 655),
+      Offset(989, 649),
+    ], const Color(0xff69675e));
+    for (var i = 0; i < 5; i++) {
+      final x = 991.0 + i * 12;
+      _line(
+        c,
+        Offset(x, 585),
+        Offset(996 + i * 10.0, 644),
+        const Color(0xff827f73),
+        1.8,
+      );
+    }
+    c.drawOval(
+      const Rect.fromLTWH(980, 565, 74, 24),
+      Paint()..color = const Color(0xff474740),
+    );
+    for (final (x, y) in const [
+      (993.0, 567.0),
+      (1008.0, 560.0),
+      (1021.0, 572.0),
+      (1037.0, 565.0),
+    ]) {
+      _poly(c, [
+        Offset(x - 8, y + 2),
+        Offset(x - 6, y - 6),
+        Offset(x + 1, y - 8),
+        Offset(x + 9, y - 3),
+        Offset(x + 10, y + 4),
+        Offset(x + 3, y + 8),
+        Offset(x - 4, y + 7),
+      ], const Color(0xffe2d7be));
+      _line(
+        c,
+        Offset(x - 4, y - 4),
+        Offset(x + 5, y + 4),
+        const Color(0xffa19277),
+        1.4,
+      );
+      _line(
+        c,
+        Offset(x - 5, y + 4),
+        Offset(x + 4, y - 2),
+        const Color(0xffb8a88c),
+        1,
+      );
+    }
+    c.drawArc(
+      const Rect.fromLTWH(980, 565, 74, 24),
+      0,
+      math.pi,
+      false,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3
+        ..color = const Color(0xff9a9688),
+    );
   }
 
   void _desk(Canvas c) {
@@ -453,6 +624,8 @@ class _DiscoverOfficePainter extends CustomPainter {
         1,
       );
     }
+    c.save();
+    c.translate(0, -23);
     _line(
       c,
       const Offset(834, 379),
@@ -509,6 +682,8 @@ class _DiscoverOfficePainter extends CustomPainter {
       Offset(852, 353),
       Offset(846, 348),
     ], const Color(0xffb9b17b));
+
+    c.restore();
 
     // A chipped pen cup and the pens behind its rim.
     _line(

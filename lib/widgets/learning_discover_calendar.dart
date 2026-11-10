@@ -183,7 +183,7 @@ class _DiscoverCalendarPageState extends State<DiscoverCalendarPage> {
         );
         return;
       }
-      _setRegion(region, 'Showing events within 700 km of your location.');
+      _setRegion(region, 'Map centered on your location.');
     } catch (error) {
       if (mounted) {
         final denied =
@@ -203,13 +203,13 @@ class _DiscoverCalendarPageState extends State<DiscoverCalendarPage> {
   Future<void> _chooseCity() async {
     final city = await chooseLearningArea(
       context,
-      description: 'See events within 700 km of a Canadian city.',
+      description: 'Center the event map on a Canadian city.',
       allowDeviceLocation: false,
     );
     if (!mounted || city == null) return;
     _setRegion(
       SeminarMapRegion(city.latitude, city.longitude, radiusKm: 700),
-      'Showing events within 700 km of ${city.name}.',
+      'Map centered on ${city.name}.',
     );
   }
 
@@ -341,9 +341,9 @@ class _DiscoverCalendarPageState extends State<DiscoverCalendarPage> {
   Widget _atlas(AsyncSnapshot<List<LearningSeminar>> snapshot) {
     final region = _region;
     final now = DateTime.now();
-    final nearby = [
+    final events = [
       for (final event in snapshot.data ?? <LearningSeminar>[])
-        if (event.visibleOnMap(now) && region.includes(event)) event,
+        if (event.visibleOnMap(now)) event,
     ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -353,15 +353,12 @@ class _DiscoverCalendarPageState extends State<DiscoverCalendarPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Nearby event map',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
+              Text('Event map', style: Theme.of(context).textTheme.titleLarge),
               Text(
                 _locationMessage ??
                     (region == _vancouver
-                        ? 'Showing events within 700 km of Vancouver.'
-                        : 'Showing events within 700 km.'),
+                        ? 'Map centered on Vancouver.'
+                        : 'Explore published events on the map.'),
               ),
               Wrap(
                 spacing: 8,
@@ -383,7 +380,7 @@ class _DiscoverCalendarPageState extends State<DiscoverCalendarPage> {
                           ? null
                           : () => _setRegion(
                               _vancouver,
-                              'Showing events within 700 km of Vancouver.',
+                              'Map centered on Vancouver.',
                             ),
                       child: const Text('Back to Vancouver'),
                     ),
@@ -394,10 +391,11 @@ class _DiscoverCalendarPageState extends State<DiscoverCalendarPage> {
         ),
         Expanded(
           child: CanadaEventMap(
-            events: nearby,
+            events: events,
             region: region,
             onOpen: widget.openEvent,
             expandToFill: true,
+            showRegionOutline: false,
           ),
         ),
         if (snapshot.hasError)
@@ -410,9 +408,9 @@ class _DiscoverCalendarPageState extends State<DiscoverCalendarPage> {
           Padding(
             padding: const EdgeInsets.all(8),
             child: Text(
-              nearby.isEmpty
-                  ? 'No upcoming mapped events within 700 km.'
-                  : '${nearby.length} nearby ${nearby.length == 1 ? 'event' : 'events'}',
+              events.isEmpty
+                  ? 'No upcoming mapped events.'
+                  : '${events.length} mapped ${events.length == 1 ? 'event' : 'events'}',
             ),
           ),
       ],
@@ -476,64 +474,67 @@ class DiscoverPaperCalendar extends StatelessWidget {
         boxShadow: [BoxShadow(color: Color(0x320c2724), offset: Offset(5, 5))],
       ),
       position: DecorationPosition.background,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          CustomPaint(
-            foregroundPainter: const _CalendarWear(),
-            child: ColoredBox(
-              color: const Color(0xff655546),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                child: Text(
-                  DateFormat.yMMMM().format(month).toUpperCase(),
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: calendarPaper,
-                    fontSize: 21,
-                    fontWeight: FontWeight.w800,
+      child: CustomPaint(
+        foregroundPainter: const _PaperCreases(),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            CustomPaint(
+              foregroundPainter: const _CalendarWear(),
+              child: ColoredBox(
+                color: const Color(0xff655546),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: Text(
+                    DateFormat.yMMMM().format(month).toUpperCase(),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: calendarPaper,
+                      fontSize: 21,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(10, 12, 10, 16),
-            child: Table(
-              children: [
-                TableRow(
-                  children: [
-                    for (final day in const [
-                      'Sun',
-                      'Mon',
-                      'Tue',
-                      'Wed',
-                      'Thu',
-                      'Fri',
-                      'Sat',
-                    ])
-                      Center(
-                        child: Text(
-                          day,
-                          style: const TextStyle(
-                            color: calendarInk,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-                for (var row = 0; row < 6; row++)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(10, 12, 10, 16),
+              child: Table(
+                children: [
                   TableRow(
                     children: [
-                      for (var col = 0; col < 7; col++)
-                        _day(row * 7 + col - offset + 1, count),
+                      for (final day in const [
+                        'Sun',
+                        'Mon',
+                        'Tue',
+                        'Wed',
+                        'Thu',
+                        'Fri',
+                        'Sat',
+                      ])
+                        Center(
+                          child: Text(
+                            day,
+                            style: const TextStyle(
+                              color: calendarInk,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
                     ],
                   ),
-              ],
+                  for (var row = 0; row < 6; row++)
+                    TableRow(
+                      children: [
+                        for (var col = 0; col < 7; col++)
+                          _day(row * 7 + col - offset + 1, count),
+                      ],
+                    ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -606,6 +607,49 @@ class DiscoverPaperCalendar extends StatelessWidget {
             ),
     );
   }
+}
+
+class _PaperCreases extends CustomPainter {
+  const _PaperCreases();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final fold = Path()
+      ..addPolygon([
+        Offset(size.width - 21, size.height),
+        Offset(size.width - 21, size.height - 21),
+        Offset(size.width, size.height - 21),
+      ], true);
+    canvas.drawPath(fold, Paint()..color = const Color(0xffd1bd94));
+    final crease = Paint()
+      ..color = const Color(0x449f8259)
+      ..strokeWidth = 1;
+    canvas.drawLine(
+      Offset(size.width * .74, 53),
+      Offset(size.width * .72, size.height * .90),
+      crease,
+    );
+    canvas.drawLine(
+      Offset(2, size.height * .81),
+      Offset(size.width * .22, size.height * .84),
+      crease,
+    );
+    final stain = Rect.fromCenter(
+      center: Offset(size.width * .13, size.height * .88),
+      width: 43,
+      height: 24,
+    );
+    canvas.drawOval(
+      stain,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.4
+        ..color = const Color(0x3892754e),
+    );
+  }
+
+  @override
+  bool shouldRepaint(_PaperCreases oldDelegate) => false;
 }
 
 class _CalendarWear extends CustomPainter {

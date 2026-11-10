@@ -108,12 +108,13 @@ class CanadaEventMap extends StatefulWidget {
     this.region,
     this.locationControls,
     this.expandToFill = false,
+    this.showRegionOutline = true,
   });
   final List<LearningSeminar> events;
   final ValueChanged<LearningSeminar> onOpen;
   final SeminarMapRegion? region;
   final Widget? locationControls;
-  final bool expandToFill;
+  final bool expandToFill, showRegionOutline;
   @override
   State<CanadaEventMap> createState() => _CanadaEventMapState();
 }
@@ -529,10 +530,17 @@ class _CanadaEventMapState extends State<CanadaEventMap> {
                         child: CustomPaint(
                           size: canvasSize,
                           painter: _showMapbox
-                              ? _SeminarRadiusPainter(widget.region, _project)
+                              ? (widget.showRegionOutline
+                                    ? _SeminarRadiusPainter(
+                                        widget.region,
+                                        _project,
+                                      )
+                                    : null)
                               : _CanadaPainter(
                                   geometry!,
-                                  region: widget.region,
+                                  region: widget.showRegionOutline
+                                      ? widget.region
+                                      : null,
                                   detailed:
                                       widget.region != null ||
                                       transform.value.getMaxScaleOnAxis() >

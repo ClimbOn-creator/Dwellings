@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 const _notes = [
@@ -11,8 +13,9 @@ const _notes = [
 ];
 
 class DiscoverPinboard extends StatelessWidget {
-  const DiscoverPinboard({super.key, this.openNote});
+  const DiscoverPinboard({super.key, this.openNote, this.writing = 0});
   final ValueChanged<int>? openNote;
+  final double writing;
 
   @override
   Widget build(BuildContext context) => AspectRatio(
@@ -60,10 +63,10 @@ class DiscoverPinboard extends StatelessWidget {
                                 child: SizedBox.square(dimension: h * .035),
                               ),
                             ),
-                            if (openNote != null)
+                            if (writing > 0)
                               Center(
                                 child: Text(
-                                  'Note ${i + 1}',
+                                  _writtenTitle(i),
                                   style: TextStyle(
                                     color: const Color(0xff4d3829),
                                     fontSize: noteWidth * .17,
@@ -82,54 +85,152 @@ class DiscoverPinboard extends StatelessWidget {
       ),
     ),
   );
+  String _writtenTitle(int index) {
+    final start = index * .069;
+    final progress = ((writing - start) / .46).clamp(0.0, 1.0);
+    final title = 'Note ${index + 1}';
+    final count = (title.length * progress).floor();
+    if (progress == 0) return '';
+    return title.substring(0, count) + (count == title.length ? '' : '▏');
+  }
 }
 
-class DiscoverPinboardPage extends StatelessWidget {
-  const DiscoverPinboardPage({super.key});
+class DiscoverPinboardRoute extends PageRouteBuilder<void> {
+  DiscoverPinboardRoute(Rect source)
+    : super(
+        opaque: false,
+        transitionDuration: const Duration(milliseconds: 2150),
+        reverseTransitionDuration: const Duration(milliseconds: 620),
+        pageBuilder: (context, animation, _) =>
+            _ZoomedPinboard(source: source, animation: animation),
+      );
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    backgroundColor: const Color(0xfff4eee4),
-    appBar: AppBar(
-      backgroundColor: const Color(0xfff4eee4),
-      leading: const BackButton(),
-      title: const Text('Discover pinboard'),
-    ),
-    body: Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 940),
-          child: DiscoverPinboard(
-            openNote: (index) => showDialog<void>(
-              context: context,
-              builder: (context) => Dialog(
-                backgroundColor: _notes[index],
-                child: SizedBox(
-                  width: 440,
-                  height: 320,
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            'Note ${index + 1}',
-                            style: Theme.of(context).textTheme.titleLarge,
+  AnimationController createAnimationController() => AnimationController(
+    vsync: navigator!,
+    duration: transitionDuration,
+    reverseDuration: reverseTransitionDuration,
+    animationBehavior: AnimationBehavior.preserve,
+  );
+}
+
+class _ZoomedPinboard extends StatelessWidget {
+  const _ZoomedPinboard({required this.source, required this.animation});
+  final Rect source;
+  final Animation<double> animation;
+
+  @override
+  Widget build(BuildContext context) => AnimatedBuilder(
+    animation: animation,
+    builder: (context, _) {
+      final time = animation.value;
+      final zoom = const Interval(
+        0,
+        .84,
+        curve: Curves.easeInOutCubic,
+      ).transform(time);
+      final ink = const Interval(.48, 1).transform(time);
+      return LayoutBuilder(
+        builder: (context, bounds) {
+          final size = bounds.biggest;
+          final width = math.max(
+            1.0,
+            math.min(
+              940.0,
+              math.min(size.width - 42, (size.height - 96) * 1.6),
+            ),
+          );
+          final destination = Rect.fromCenter(
+            center: size.center(const Offset(0, 24)),
+            width: width,
+            height: width / 1.6,
+          );
+          return Stack(
+            children: [
+              Positioned.fill(
+                child: ColoredBox(
+                  color: const Color(0xfff4eee4).withValues(
+                    alpha: const Interval(
+                      0,
+                      .60,
+                      curve: Curves.easeInOut,
+                    ).transform(time),
+                  ),
+                ),
+              ),
+              Positioned.fromRect(
+                rect: Rect.lerp(source, destination, zoom)!,
+                child: DiscoverPinboard(
+                  writing: ink,
+                  openNote: time == 1
+                      ? (index) => _openNote(context, index)
+                      : null,
+                ),
+              ),
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: SafeArea(
+                  bottom: false,
+                  child: IgnorePointer(
+                    ignoring: time < 1,
+                    child: Opacity(
+                      opacity: const Interval(.7, 1).transform(time),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: SizedBox(
+                          height: 55,
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              const Align(
+                                alignment: Alignment.centerLeft,
+                                child: BackButton(),
+                              ),
+                              Text(
+                                'Discover pinboard',
+                                style: Theme.of(context).textTheme.titleLarge,
+                              ),
+                            ],
                           ),
                         ),
-                        IconButton(
-                          tooltip: 'Close note',
-                          onPressed: () => Navigator.of(context).pop(),
-                          icon: const Icon(Icons.close),
-                        ),
-                      ],
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
+            ],
+          );
+        },
+      );
+    },
+  );
+
+  Future<void> _openNote(BuildContext context, int index) => showDialog<void>(
+    context: context,
+    builder: (context) => Dialog(
+      backgroundColor: _notes[index],
+      child: SizedBox(
+        width: 440,
+        height: 320,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  'Note ${index + 1}',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+              ),
+              IconButton(
+                tooltip: 'Close note',
+                onPressed: () => Navigator.of(context).pop(),
+                icon: const Icon(Icons.close),
+              ),
+            ],
           ),
         ),
       ),

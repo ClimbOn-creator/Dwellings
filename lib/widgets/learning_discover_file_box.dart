@@ -182,13 +182,12 @@ class _LearningDiscoverFileBoxState extends State<LearningDiscoverFileBox>
                             : Colors.transparent,
                       ),
                     ),
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    cabinet ? 'Open filing cabinet' : 'Explore the file box',
-                    maxLines: 1,
-                  ),
-                ),
+                child: cabinet
+                    ? const SizedBox.shrink()
+                    : const FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text('Explore the file box'),
+                      ),
               );
               return Stack(
                 children: [
@@ -202,6 +201,7 @@ class _LearningDiscoverFileBoxState extends State<LearningDiscoverFileBox>
                           interactive: _camera.isDismissed,
                           lampOn: _lampOn,
                           toggleLamp: () => setState(() => _lampOn = !_lampOn),
+                          openLearning: () => _zoom(true),
                           locate: widget.locate,
                           buyerDashboard: widget.buyerDashboard,
                           loadEvents: widget.loadEvents,
@@ -228,7 +228,10 @@ class _LearningDiscoverFileBoxState extends State<LearningDiscoverFileBox>
                     if (cabinet)
                       Positioned.fromRect(
                         rect: discoverCabinetHitArea(size),
-                        child: openButton,
+                        child: Tooltip(
+                          message: 'Open filing cabinet',
+                          child: openButton,
+                        ),
                       )
                     else
                       Positioned.fill(child: openButton),

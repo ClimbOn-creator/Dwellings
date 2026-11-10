@@ -20,7 +20,19 @@ void main() {
         MaterialApp(
           home: LearningDashboardPage(
             initialView: LearningView.discover,
-            loadSeminars: () async => [],
+            loadSeminars: () async => [
+              LearningSeminar(
+                id: 'halifax',
+                hostId: 'host',
+                title: 'Halifax meetup',
+                description: '',
+                startsAt: DateTime.now().add(const Duration(days: 1)),
+                duration: 45,
+                joinUrl: '',
+                latitude: 44.65,
+                longitude: -63.57,
+              ),
+            ],
             locate: () async => (latitude: 43.6532, longitude: -79.3832),
           ),
         ),
@@ -44,6 +56,9 @@ void main() {
             ?.latitude,
         closeTo(49.28, .01),
       );
+      final map = tester.widget<CanadaEventMap>(find.byType(CanadaEventMap));
+      expect(map.showRegionOutline, isFalse);
+      expect(map.events.single.id, 'halifax');
       await tester.tap(find.text('Use my location'));
       await tester.pumpAndSettle();
       expect(
@@ -78,6 +93,9 @@ void main() {
       await tester.pumpAndSettle();
 
       await tester.tap(find.byTooltip('Zoom into pinboard'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 1500));
+      expect(find.textContaining('▏'), findsWidgets);
       await tester.pumpAndSettle();
       for (var note = 1; note <= 7; note++) {
         expect(find.text('Note $note'), findsOneWidget);

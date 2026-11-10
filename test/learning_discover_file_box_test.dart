@@ -28,10 +28,9 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        final overview = find.widgetWithText(
-          TextButton,
-          cabinet ? 'Open filing cabinet' : 'Explore the file box',
-        );
+        final overview = cabinet
+            ? find.byTooltip('Open filing cabinet')
+            : find.widgetWithText(TextButton, 'Explore the file box');
         final tabs = find.byWidgetPredicate(
           (widget) =>
               widget is Text &&
