@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../services/nova_training_controller.dart';
+import 'learning_discover_office.dart';
 
 const _fileCount = 15;
 const _boxWidth = 440.0;
@@ -133,6 +134,18 @@ class _LearningDiscoverFileBoxState extends State<LearningDiscoverFileBox>
               );
               return Stack(
                 children: [
+                  if (view.focus < 1)
+                    Positioned.fill(
+                      child: Opacity(
+                        opacity: 1 - view.focus,
+                        child: const RepaintBoundary(
+                          child: CustomPaint(
+                            key: ValueKey('discover-office'),
+                            painter: DiscoverOfficePainter(),
+                          ),
+                        ),
+                      ),
+                    ),
                   Positioned.fill(
                     child: CustomPaint(
                       painter: _FileBoxPainter(
@@ -216,19 +229,30 @@ class _BoxView {
           for (final z in [0.0, _boxDepth]) _project(x, y, z),
     ];
     final bounds = _bounds(corners);
-    _scale =
-        math.min(
-          (size.width - 28) / bounds.width,
-          (size.height - 88) / bounds.height,
-        ) *
-        (.68 + .32 * focus);
-    _offset = size.center(Offset.zero) - bounds.center * _scale;
+    final overview = discoverOfficeFileBox(size);
+    final closeUp = Rect.fromCenter(
+      center: size.center(Offset.zero),
+      width: math.max(1, size.width - 28),
+      height: math.max(1, size.height - 88),
+    );
+    final viewport = Rect.lerp(overview, closeUp, focus)!;
+    _scale = math.min(
+      viewport.width / bounds.width,
+      viewport.height / bounds.height,
+    );
+    _offset = viewport.center - bounds.center * _scale;
+    silhouette = Rect.fromCenter(
+      center: viewport.center,
+      width: bounds.width * _scale,
+      height: bounds.height * _scale,
+    );
   }
 
   final Size size;
   final double focus;
   late final double _sinYaw, _cosYaw, _sinPitch, _cosPitch, _scale;
   late final Offset _offset;
+  late final Rect silhouette;
 
   static Rect _bounds(List<Offset> points) => Rect.fromLTRB(
     points.map((p) => p.dx).reduce(math.min),
@@ -275,13 +299,16 @@ class _FileBoxPainter extends CustomPainter {
 
     canvas.drawOval(
       Rect.fromCenter(
-        center: Offset(size.width / 2, size.height * .69),
-        width: math.min(size.width * .72, 540),
-        height: 52,
+        center: view.silhouette.bottomCenter.translate(
+          0,
+          -view.silhouette.height * .08,
+        ),
+        width: view.silhouette.width * .94,
+        height: view.silhouette.height * .16,
       ),
       Paint()
-        ..color = Colors.black.withValues(alpha: .14 * (1 - view.focus))
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 22),
+        ..color = Colors.black.withValues(alpha: .30 * (1 - view.focus))
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8),
     );
     face(const Color(0xff47382a), [
       p(0, wall, 0),

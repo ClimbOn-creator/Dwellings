@@ -34,6 +34,8 @@ void main() {
               widget is Text &&
               RegExp(r'^File \d\d$').hasMatch(widget.data ?? ''),
         );
+        final office = find.byKey(const ValueKey('discover-office'));
+        expect(office, findsOneWidget);
         expect(tabs, findsNothing);
         await tester.tapAt(tester.getTopLeft(overview) + const Offset(28, 36));
         await tester.pump();
@@ -41,6 +43,7 @@ void main() {
         expect(tabs, findsNothing);
         await tester.pumpAndSettle();
         expect(tabs, findsNWidgets(15));
+        expect(office, findsNothing);
 
         final left = find.byKey(const ValueKey('discover-Text-pane'));
         final right = find.byKey(const ValueKey('discover-Video-pane'));
@@ -68,6 +71,7 @@ void main() {
         await tester.tap(find.byTooltip('Zoom out of the file box'));
         await tester.pumpAndSettle();
         expect(overview, findsOneWidget);
+        expect(office, findsOneWidget);
       },
     );
   }
