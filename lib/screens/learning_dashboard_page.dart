@@ -5,6 +5,7 @@ import '../widgets/home_brand_button.dart';
 import '../widgets/learning_start_search.dart';
 import '../widgets/learning_financial_folders.dart';
 import '../widgets/learning_evaluate_cover_flow.dart';
+import '../widgets/learning_discover_file_box.dart';
 import '../widgets/dashboard_header.dart';
 import 'deal_comparison_page.dart';
 import 'dart:async';
@@ -299,6 +300,7 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
     LearningView.firstSteps => 'learning-first-steps',
     LearningView.financial => 'learning-financial',
     LearningView.evaluate => 'learning-evaluate',
+    LearningView.discover => 'learning-discover',
     _ => 'learning-dashboard',
   };
 
@@ -527,6 +529,8 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
       Expanded(
         child: view == LearningView.firstSteps
             ? LearningStartSearch(onOpen: _openSearchResult)
+            : view == LearningView.discover
+            ? const LearningDiscoverFileBox()
             : view == LearningView.seminars
             ? Padding(
                 padding: EdgeInsets.all(compact ? 8 : 12),

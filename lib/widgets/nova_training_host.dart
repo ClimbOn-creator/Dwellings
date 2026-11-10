@@ -84,6 +84,7 @@ class _NovaTrainingHostState extends State<NovaTrainingHost>
           'learning-first-steps',
           'learning-financial',
           'learning-evaluate',
+          'learning-discover',
           'learning-seminars',
         }.contains(_controller.currentPage) &&
         pikaAllowedOnPage(_controller.currentPage) &&
@@ -231,7 +232,9 @@ class _NovaTrainingHostState extends State<NovaTrainingHost>
 
   @override
   Widget build(BuildContext context) {
-    final allowed = pikaAllowedOnPage(_controller.currentPage);
+    final allowed =
+        !_controller.fullscreenOverlay &&
+        pikaAllowedOnPage(_controller.currentPage);
     final active = allowed && _controller.active;
     return Stack(
       key: _canvas,
