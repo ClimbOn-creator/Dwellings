@@ -12,6 +12,8 @@ const _folderHeight = 174.0;
 const _tabWidth = 106.0;
 const _tabDepth = 27.0;
 const _step = 38.0;
+const _manila = Color(0xfff3ebd9);
+const _manilaSeam = Color(0xffcdbd9f);
 const _palette = [
   Color(0xffe9d7ad),
   Color(0xffd3dfd4),
@@ -103,10 +105,10 @@ class _LearningDiscoverFileBoxState extends State<LearningDiscoverFileBox>
       opaque: false,
       transitionDuration: reduceMotion
           ? Duration.zero
-          : const Duration(milliseconds: 1600),
+          : const Duration(milliseconds: 1950),
       reverseTransitionDuration: reduceMotion
           ? Duration.zero
-          : const Duration(milliseconds: 1050),
+          : const Duration(milliseconds: 1250),
       pageBuilder: (_, animation, _) =>
           _DiscoverReader(index: index, source: source, animation: animation),
     );
@@ -313,7 +315,7 @@ class _FileBoxPainter extends CustomPainter {
         p(_boxWidth - 10, h, z),
         p(10, h, z),
       ]);
-      face(Color.lerp(color, const Color(0xff493f35), .24)!, [
+      face(_manilaSeam, [
         p(7, h, z),
         p(_boxWidth - 7, h, z),
         p(_boxWidth - 7, h, z + 8),
@@ -406,20 +408,20 @@ class _DiscoverReader extends StatelessWidget {
         child: LayoutBuilder(
           builder: (context, constraints) {
             final size = constraints.biggest;
-            final folderWidth = math.min(size.width * .67, 600.0);
-            final folderHeight = math.min(size.height * .42, folderWidth * .68);
-            final center = size.center(Offset(0, size.height * .13));
+            final folderWidth = math.min(size.width * .75, 680.0);
+            final folderHeight = math.min(size.height * .48, folderWidth * .72);
+            final center = size.center(Offset(0, size.height * .12));
             final openFolder = Rect.fromCenter(
               center: center,
               width: folderWidth,
               height: folderHeight,
             );
             final sheetStart = Rect.fromCenter(
-              center: center.translate(0, -folderHeight * .1),
+              center: center.translate(0, folderHeight * .02),
               width: folderWidth * .74,
               height: folderHeight * .77,
             );
-            final sheetTop = sheetStart.shift(Offset(0, -folderHeight * .52));
+            final sheetTop = sheetStart.shift(Offset(0, -folderHeight * .67));
             final left = Rect.fromLTWH(0, 0, size.width / 2, size.height);
             final right = left.shift(Offset(size.width / 2, 0));
             final color = _fileColor(index);
@@ -433,19 +435,48 @@ class _DiscoverReader extends StatelessWidget {
                   Curve curve = Curves.easeInOutCubic,
                 ]) => Interval(start, end, curve: curve).transform(time);
 
-                final extracted = phase(0, .38);
+                final extracted = phase(0, .36);
                 final folder = Rect.lerp(source, openFolder, extracted)!.shift(
                   Offset(
                     0,
                     -math.sin(extracted * math.pi) * folderHeight * .38,
                   ),
                 );
-                final flap = phase(.33, .63);
-                final rise = phase(.50, .73);
-                final spread = phase(.69, 1);
-                final folderOpacity = 1 - phase(.73, .90);
-                final liftedSheet = Rect.lerp(sheetStart, sheetTop, rise)!;
+                final flap = phase(.27, .55);
+                final spread = phase(.63, 1);
+                final folderOpacity = 1 - phase(.73, .94);
                 final opened = time == 1;
+
+                Widget sheet(String label, Rect target, {required bool video}) {
+                  final direction = video ? 1.0 : -1.0;
+                  final rise = video ? phase(.46, .70) : phase(.39, .65);
+                  final lifted = Rect.lerp(sheetStart, sheetTop, rise)!.shift(
+                    Offset(
+                      direction * folderWidth * (.027 + .13 * rise),
+                      video ? 12 : 0,
+                    ),
+                  );
+                  return Positioned.fromRect(
+                    rect: Rect.lerp(lifted, target, spread)!,
+                    child: Transform.rotate(
+                      angle: direction * .13 * rise * (1 - spread),
+                      child: Opacity(
+                        opacity: rise == 0
+                            ? 0
+                            : phase(video ? .46 : .39, video ? .54 : .47),
+                        child: _DiscoverSheet(
+                          key: ValueKey('discover-$label-pane'),
+                          label: label,
+                          video: video,
+                          color: color,
+                          spread: spread,
+                          opened: opened,
+                        ),
+                      ),
+                    ),
+                  );
+                }
+
                 return Stack(
                   clipBehavior: Clip.hardEdge,
                   children: [
@@ -462,44 +493,14 @@ class _DiscoverReader extends StatelessWidget {
                         child: Opacity(
                           opacity: folderOpacity,
                           child: _ReaderFolderFace(
-                            color: Color.lerp(color, Colors.black, .18)!,
+                            color: color,
+                            index: index,
                             back: true,
                           ),
                         ),
                       ),
-                    if (rise > 0)
-                      for (final (label, target) in [
-                        ('Text', left),
-                        ('Video', right),
-                      ])
-                        Positioned.fromRect(
-                          rect: Rect.lerp(
-                            liftedSheet.shift(
-                              Offset(label == 'Text' ? -4 : 4, 0),
-                            ),
-                            target,
-                            spread,
-                          )!,
-                          child: ColoredBox(
-                            key: ValueKey('discover-$label-pane'),
-                            color: label == 'Text'
-                                ? Colors.white
-                                : const Color(0xfff5f5f5),
-                            child: opened
-                                ? Semantics(
-                                    container: true,
-                                    label: label,
-                                    child: label == 'Text'
-                                        ? const SingleChildScrollView(
-                                            child: SizedBox(
-                                              width: double.infinity,
-                                            ),
-                                          )
-                                        : const SizedBox.expand(),
-                                  )
-                                : null,
-                          ),
-                        ),
+                    if (time > .46) sheet('Video', right, video: true),
+                    if (time > .39) sheet('Text', left, video: false),
                     if (folderOpacity > 0)
                       Positioned.fromRect(
                         rect: folder,
@@ -508,9 +509,12 @@ class _DiscoverReader extends StatelessWidget {
                           child: Transform(
                             alignment: Alignment.bottomCenter,
                             transform: Matrix4.identity()
-                              ..setEntry(3, 2, .0014)
-                              ..rotateX(flap * 1.87),
-                            child: _ReaderFolderFace(color: color),
+                              ..setEntry(3, 2, .001)
+                              ..rotateX(flap * 1.21),
+                            child: _ReaderFolderFace(
+                              color: color,
+                              index: index,
+                            ),
                           ),
                         ),
                       ),
@@ -519,7 +523,11 @@ class _DiscoverReader extends StatelessWidget {
                       right: 0,
                       child: SafeArea(
                         minimum: const EdgeInsets.all(12),
-                        child: IconButton.filledTonal(
+                        child: IconButton(
+                          style: IconButton.styleFrom(
+                            backgroundColor: const Color(0xfff0ede6),
+                            foregroundColor: const Color(0xff423d34),
+                          ),
                           onPressed: () => Navigator.of(context).maybePop(),
                           tooltip: 'Close file',
                           icon: const Icon(Icons.close),
@@ -538,48 +546,182 @@ class _DiscoverReader extends StatelessWidget {
 }
 
 class _ReaderFolderFace extends StatelessWidget {
-  const _ReaderFolderFace({required this.color, this.back = false});
+  const _ReaderFolderFace({
+    required this.color,
+    required this.index,
+    this.back = false,
+  });
 
   final Color color;
+  final int index;
   final bool back;
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(
-    builder: (context, constraints) => Stack(
-      children: [
-        if (back)
-          Positioned(
-            left: constraints.maxWidth * .055,
-            top: 0,
-            width: constraints.maxWidth * .26,
-            height: constraints.maxHeight * .25,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: color,
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(7),
+    builder: (context, constraints) {
+      final width = constraints.maxWidth;
+      final height = constraints.maxHeight;
+      final tabWidth = width * _tabWidth / (_boxWidth - 16);
+      return Stack(
+        children: [
+          if (back)
+            Positioned(
+              left: width * (_tabLeft(index) - 8) / (_boxWidth - 16),
+              top: 0,
+              width: tabWidth,
+              height: height * .16,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: color,
+                  border: Border.all(color: Colors.black12),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(9),
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
+                  child: Align(
+                    alignment: Alignment.topCenter,
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        _fileName(index),
+                        style: const TextStyle(
+                          color: Color(0xff332d24),
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
-          ),
-        Positioned.fill(
-          top: constraints.maxHeight * (back ? .12 : .18),
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: color,
-              borderRadius: BorderRadius.circular(6),
-              border: Border.all(color: Colors.black12),
-              boxShadow: const [
-                BoxShadow(
-                  color: Colors.black26,
-                  blurRadius: 18,
-                  offset: Offset(0, 8),
+          Positioned.fill(
+            top: height * (back ? .13 : .23),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: back
+                      ? const [Color(0xffe0d2b7), Color(0xffc6b492)]
+                      : const [Color(0xfffff8e9), _manila, Color(0xffe7d7b9)],
                 ),
-              ],
+                borderRadius: BorderRadius.circular(9),
+                border: Border.all(color: _manilaSeam),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x40000000),
+                    blurRadius: 19,
+                    offset: Offset(0, 9),
+                  ),
+                ],
+              ),
+              child: back
+                  ? null
+                  : Stack(
+                      children: [
+                        Positioned(
+                          left: width * .045,
+                          top: height * .035,
+                          width: width * .13,
+                          height: math.min(height * .035, 6),
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: color,
+                              borderRadius: BorderRadius.circular(3),
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          left: 1,
+                          right: 1,
+                          bottom: height * .065,
+                          child: const Divider(height: 1, color: _manilaSeam),
+                        ),
+                      ],
+                    ),
             ),
           ),
+        ],
+      );
+    },
+  );
+}
+
+class _DiscoverSheet extends StatelessWidget {
+  const _DiscoverSheet({
+    required this.label,
+    required this.video,
+    required this.color,
+    required this.spread,
+    required this.opened,
+    super.key,
+  });
+
+  final String label;
+  final bool video;
+  final Color color;
+  final double spread;
+  final bool opened;
+
+  @override
+  Widget build(BuildContext context) => DecoratedBox(
+    decoration: BoxDecoration(
+      color: video ? const Color(0xfff6f4ef) : Colors.white,
+      borderRadius: BorderRadius.circular(8 * (1 - spread)),
+      border: Border.all(
+        color: const Color(0xffa0937c).withValues(alpha: .46 * (1 - spread)),
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withValues(alpha: .23 * (1 - spread)),
+          blurRadius: 16,
+          offset: const Offset(0, 5),
         ),
       ],
     ),
+    child: opened
+        ? Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Container(height: 4, color: color),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 18, 12, 12),
+                child: Row(
+                  children: [
+                    Icon(
+                      video
+                          ? Icons.videocam_outlined
+                          : Icons.description_outlined,
+                      color: const Color(0xff6a6051),
+                      size: 18,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      label,
+                      style: const TextStyle(
+                        color: Color(0xff514a3e),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1, color: Color(0xffe8e2d8)),
+              if (!video)
+                const Expanded(
+                  child: SingleChildScrollView(
+                    child: SizedBox(width: double.infinity),
+                  ),
+                ),
+            ],
+          )
+        : null,
   );
 }

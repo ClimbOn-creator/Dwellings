@@ -38,14 +38,18 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 650));
     expect(left, findsNothing);
-    await tester.pump(const Duration(milliseconds: 580));
+    await tester.pump(const Duration(milliseconds: 205));
+    expect(left, findsOneWidget);
+    expect(right, findsNothing);
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(right, findsOneWidget);
     expect(tester.getSize(left).width, lessThan(window.width / 2));
     await tester.pumpAndSettle();
 
     expect(tester.getRect(left), const Rect.fromLTWH(0, 0, 720, 900));
     expect(tester.getRect(right), const Rect.fromLTWH(720, 0, 720, 900));
-    expect(find.text('Text'), findsNothing);
-    expect(find.text('Video'), findsNothing);
+    expect(find.text('Text'), findsOneWidget);
+    expect(find.text('Video'), findsOneWidget);
 
     await tester.sendKeyEvent(LogicalKeyboardKey.escape);
     await tester.pumpAndSettle();
