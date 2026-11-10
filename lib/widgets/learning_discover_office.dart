@@ -5,10 +5,10 @@ import 'package:flutter/material.dart';
 import '../services/app_tunnel.dart';
 import '../services/learning_service.dart';
 
-import 'canada_event_map.dart';
 import 'learning_discover_arcade.dart';
 import 'learning_discover_calendar.dart';
 import 'learning_discover_portal.dart';
+import 'learning_discover_pinboard.dart';
 
 const _officeSize = Size(1100, 740);
 const _cabinet = Rect.fromLTWH(185, 428, 211, 225);
@@ -58,9 +58,10 @@ double discoverDeskUnderside(Size stage) => _placeInOffice(stage, _cabinet).top;
 const _crtGlass = Rect.fromLTWH(468, 241, 122, 103);
 const _wallCalendar = Rect.fromLTWH(267, 132, 145, 153);
 const _lampHit = Rect.fromLTWH(220, 286, 106, 115);
-const _deskAtlas = Rect.fromLTWH(785, 370, 76, 40);
+const _deskGlobe = Rect.fromLTWH(794, 319, 82, 94);
+const _wallBoard = Rect.fromLTWH(730, 139, 250, 156);
 
-enum _OfficePortal { buyer, calendar, atlas }
+enum _OfficePortal { buyer, calendar, globe, pinboard }
 
 class DiscoverOffice extends StatefulWidget {
   const DiscoverOffice({
@@ -89,13 +90,11 @@ class DiscoverOffice extends StatefulWidget {
 
 class _DiscoverOfficeState extends State<DiscoverOffice> {
   final _today = DiscoverToday();
-  final _lastRegion = ValueNotifier<SeminarMapRegion?>(null);
   bool _opening = false;
 
   @override
   void dispose() {
     _today.dispose();
-    _lastRegion.dispose();
     super.dispose();
   }
 
@@ -110,22 +109,27 @@ class _DiscoverOfficeState extends State<DiscoverOffice> {
     );
     final previous = AppTunnelController.current.value;
     final route = DiscoverPortalRoute(
-      destination: arcade
-          ? widget.buyerDashboard!
-          : (_) => DiscoverCalendarPage(
-              today: _today,
-              loadEvents: widget.loadEvents!,
-              openEvent: widget.openEvent!,
-              locate: widget.locate,
-              lastRegion: _lastRegion,
-              atlasOnly: portal == _OfficePortal.atlas,
-            ),
+      destination: switch (portal) {
+        _OfficePortal.buyer => widget.buyerDashboard!,
+        _OfficePortal.pinboard => (_) => const DiscoverPinboardPage(),
+        _ => (_) => DiscoverCalendarPage(
+          today: _today,
+          loadEvents: widget.loadEvents!,
+          openEvent: widget.openEvent!,
+          locate: widget.locate,
+          atlasOnly: portal == _OfficePortal.globe,
+        ),
+      },
       source: source,
       arcade: arcade,
       calendarPage: switch (portal) {
         _OfficePortal.buyer => null,
         _OfficePortal.calendar => _paper(_today.value, 1),
-        _OfficePortal.atlas => const ColoredBox(color: Color(0xff536d65)),
+        _OfficePortal.globe => const ColoredBox(color: Color(0xff536d65)),
+        _OfficePortal.pinboard => const FittedBox(
+          fit: BoxFit.fill,
+          child: SizedBox(width: 480, child: DiscoverPinboard()),
+        ),
       },
     );
     _opening = true;
@@ -177,7 +181,8 @@ class _DiscoverOfficeState extends State<DiscoverOffice> {
     builder: (context, bounds) {
       final screen = _placeInOffice(bounds.biggest, _crtGlass);
       final calendar = _placeInOffice(bounds.biggest, _wallCalendar);
-      final atlas = _placeInOffice(bounds.biggest, _deskAtlas);
+      final globe = _placeInOffice(bounds.biggest, _deskGlobe);
+      final pinboard = _placeInOffice(bounds.biggest, _wallBoard);
       return Stack(
         children: [
           Positioned.fill(
@@ -198,6 +203,19 @@ class _DiscoverOfficeState extends State<DiscoverOffice> {
               ),
             ),
           ),
+          Positioned.fromRect(
+            rect: pinboard,
+            child: const FittedBox(
+              fit: BoxFit.fill,
+              child: SizedBox(width: 480, child: DiscoverPinboard()),
+            ),
+          ),
+          if (widget.interactive)
+            _hotspot(
+              pinboard,
+              'Zoom into pinboard',
+              () => _openPortal(pinboard, _OfficePortal.pinboard),
+            ),
           if (widget.interactive && widget.buyerDashboard != null)
             _hotspot(
               screen,
@@ -216,9 +234,9 @@ class _DiscoverOfficeState extends State<DiscoverOffice> {
               widget.loadEvents != null &&
               widget.openEvent != null)
             _hotspot(
-              atlas,
-              'Open desk atlas',
-              () => _openPortal(atlas, _OfficePortal.atlas),
+              globe,
+              'Open desk globe',
+              () => _openPortal(globe, _OfficePortal.globe),
             ),
           if (widget.interactive)
             _hotspot(
@@ -266,7 +284,6 @@ class _DiscoverOfficePainter extends CustomPainter {
     _filingCabinet(canvas);
     _desk(canvas);
     _deskAccessories(canvas);
-    _pinboard(canvas);
     _computer(canvas);
     _lamp(canvas);
     canvas.restore();
@@ -363,12 +380,26 @@ class _DiscoverOfficePainter extends CustomPainter {
       Offset(368, 387),
       Offset(371, 405),
       Offset(298, 399),
-    ], const Color(0xffe8e0c7));
+    ], const Color(0xfff4ebd4));
     _poly(c, const [
       Offset(354, 403),
       Offset(359, 397),
       Offset(371, 405),
     ], const Color(0xffbeb094));
+    _line(
+      c,
+      const Offset(301, 400),
+      const Offset(350, 404),
+      const Color(0xff806e55),
+      1.5,
+    );
+    _line(
+      c,
+      const Offset(311, 408),
+      const Offset(379, 399),
+      const Color(0xff86785d),
+      1.4,
+    );
     _line(
       c,
       const Offset(313, 387),
@@ -390,7 +421,12 @@ class _DiscoverOfficePainter extends CustomPainter {
       const Color(0xff998b72),
       1.2,
     );
-    for (final center in const [Offset(397, 397), Offset(420, 382)]) {
+    for (final center in const [
+      Offset(396, 400),
+      Offset(414, 379),
+      Offset(387, 378),
+      Offset(290, 383),
+    ]) {
       final x = center.dx;
       final y = center.dy;
       _poly(c, [
@@ -417,46 +453,104 @@ class _DiscoverOfficePainter extends CustomPainter {
         1,
       );
     }
-    // The desk atlas is a separate copy of the map users see beside the calendar.
-    _poly(c, const [
-      Offset(793, 372),
-      Offset(851, 372),
-      Offset(863, 405),
-      Offset(785, 405),
-    ], const Color(0xff39534d));
-    _poly(c, const [
-      Offset(785, 405),
-      Offset(863, 405),
-      Offset(861, 411),
-      Offset(785, 411),
-    ], const Color(0xffbdb396));
-    _poly(c, const [
-      Offset(793, 371),
-      Offset(851, 371),
-      Offset(861, 404),
-      Offset(785, 404),
-    ], const Color(0xff607a6d));
     _line(
       c,
-      const Offset(793, 372),
-      const Offset(786, 403),
-      const Color(0xff344f47),
+      const Offset(834, 379),
+      const Offset(839, 402),
+      const Color(0xffb19878),
+      5,
+    );
+    _poly(c, const [
+      Offset(821, 401),
+      Offset(851, 401),
+      Offset(859, 409),
+      Offset(814, 409),
+    ], const Color(0xff806b55));
+    c.drawArc(
+      const Rect.fromLTWH(801, 322, 67, 73),
+      -.65,
+      3.3,
+      false,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 4
+        ..color = const Color(0xffb5a186),
+    );
+    const centre = Offset(834, 356);
+    c.drawCircle(centre, 29, Paint()..color = const Color(0xff7f9e9c));
+    final grid = Paint()
+      ..color = const Color(0xff537576)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
+    c.drawOval(const Rect.fromLTWH(824, 328, 20, 56), grid);
+    c.drawOval(const Rect.fromLTWH(806, 349, 56, 14), grid);
+    _poly(c, const [
+      Offset(813, 344),
+      Offset(826, 334),
+      Offset(838, 334),
+      Offset(835, 344),
+      Offset(826, 349),
+      Offset(826, 356),
+      Offset(820, 360),
+      Offset(817, 351),
+    ], const Color(0xffc2bd84));
+    _poly(c, const [
+      Offset(832, 360),
+      Offset(842, 358),
+      Offset(847, 364),
+      Offset(842, 372),
+      Offset(838, 377),
+      Offset(836, 368),
+    ], const Color(0xffc2bd84));
+    _poly(c, const [
+      Offset(848, 338),
+      Offset(855, 341),
+      Offset(860, 349),
+      Offset(852, 353),
+      Offset(846, 348),
+    ], const Color(0xffb9b17b));
+
+    // A chipped pen cup and the pens behind its rim.
+    _line(
+      c,
+      const Offset(445, 374),
+      const Offset(435, 340),
+      const Color(0xff9b5347),
+      4,
+    );
+    _line(
+      c,
+      const Offset(451, 373),
+      const Offset(450, 335),
+      const Color(0xff566f75),
+      4,
+    );
+    _line(
+      c,
+      const Offset(455, 375),
+      const Offset(464, 342),
+      const Color(0xffbda77d),
+      4,
+    );
+    _line(
+      c,
+      const Offset(458, 373),
+      const Offset(470, 348),
+      const Color(0xff69794e),
       3,
     );
+    _poly(c, const [
+      Offset(435, 361),
+      Offset(466, 361),
+      Offset(462, 392),
+      Offset(441, 392),
+    ], const Color(0xffa28465));
     _line(
       c,
-      const Offset(804, 395),
-      const Offset(846, 395),
-      const Color(0xffa7b39a),
-      1.5,
-    );
-    _text(
-      c,
-      'ATLAS',
-      const Offset(824, 385),
-      10,
-      const Color(0xffe8e5c8),
-      FontWeight.w800,
+      const Offset(436, 362),
+      const Offset(465, 362),
+      const Color(0xffc0a483),
+      2,
     );
   }
 
@@ -582,86 +676,6 @@ class _DiscoverOfficePainter extends CustomPainter {
       Offset(rect.right - 23, y + 60),
       Offset(rect.right - 35, y + 61),
     ], const Color(0xffa8a188).withValues(alpha: alpha));
-  }
-
-  void _pinboard(Canvas c) {
-    c.save();
-    c.translate(750, 164);
-    c.scale(1.13);
-    c.translate(-750, -164);
-    _fill(c, const Rect.fromLTWH(756, 169, 171, 105), const Color(0xffd4c7b3));
-    _fill(c, const Rect.fromLTWH(751, 164, 171, 105), const Color(0xff8e6449));
-    _fill(c, const Rect.fromLTWH(757, 170, 159, 93), const Color(0xffbc9468));
-    _poly(c, const [
-      Offset(770, 190),
-      Offset(811, 183),
-      Offset(819, 237),
-      Offset(776, 243),
-    ], const Color(0xffe9d7ad));
-    _poly(c, const [
-      Offset(822, 194),
-      Offset(869, 201),
-      Offset(863, 249),
-      Offset(817, 242),
-    ], const Color(0xffe4ddd0));
-    _poly(c, const [
-      Offset(873, 182),
-      Offset(901, 185),
-      Offset(899, 219),
-      Offset(870, 216),
-    ], const Color(0xffc7cdb9));
-    _poly(c, const [
-      Offset(754, 249),
-      Offset(763, 250),
-      Offset(761, 261),
-      Offset(755, 266),
-    ], const Color(0xffbb986d));
-    _line(
-      c,
-      const Offset(885, 166),
-      const Offset(912, 166),
-      const Color(0xffb08960),
-      2,
-    );
-    _poly(c, const [
-      Offset(806, 229),
-      Offset(819, 237),
-      Offset(809, 239),
-    ], const Color(0xffc6ad7c));
-    _line(
-      c,
-      const Offset(830, 217),
-      const Offset(860, 221),
-      const Color(0xffbfb29b),
-      1.5,
-    );
-    _line(
-      c,
-      const Offset(829, 223),
-      const Offset(850, 226),
-      const Color(0xffbfb29b),
-      1.5,
-    );
-    for (final hole in const [
-      Offset(767, 181),
-      Offset(784, 254),
-      Offset(813, 247),
-      Offset(879, 237),
-      Offset(904, 231),
-      Offset(906, 237),
-      Offset(900, 248),
-      Offset(851, 182),
-    ]) {
-      c.drawCircle(hole, 1.35, Paint()..color = const Color(0xff93734d));
-    }
-    for (final pin in const [
-      Offset(791, 192),
-      Offset(845, 203),
-      Offset(886, 188),
-    ]) {
-      c.drawCircle(pin, 3, Paint()..color = const Color(0xff9a5b4e));
-    }
-    c.restore();
   }
 
   void _computer(Canvas c) {

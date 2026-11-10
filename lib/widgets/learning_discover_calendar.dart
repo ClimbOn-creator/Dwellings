@@ -42,7 +42,8 @@ class DiscoverToday extends ValueNotifier<DateTime>
 
 const calendarPaper = Color(0xfff5f5ed);
 const calendarInk = Color(0xff273d3b);
-const calendarPen = Color(0xff536ca0);
+const calendarPen = Color(0xffb63236);
+const _vancouver = SeminarMapRegion(49.2827, -123.1207, radiusKm: 700);
 
 int calendarOffset(DateTime month) =>
     DateTime(month.year, month.month).weekday % 7;
@@ -128,7 +129,6 @@ class DiscoverCalendarPage extends StatefulWidget {
     required this.loadEvents,
     required this.openEvent,
     this.locate = DeviceLocationService.locate,
-    this.lastRegion,
     this.atlasOnly = false,
   });
 
@@ -136,7 +136,6 @@ class DiscoverCalendarPage extends StatefulWidget {
   final Future<List<LearningSeminar>> Function() loadEvents;
   final ValueChanged<LearningSeminar> openEvent;
   final DiscoverLocate locate;
-  final ValueNotifier<SeminarMapRegion?>? lastRegion;
   final bool atlasOnly;
 
   @override
@@ -146,7 +145,7 @@ class DiscoverCalendarPage extends StatefulWidget {
 class _DiscoverCalendarPageState extends State<DiscoverCalendarPage> {
   DateTime? _browsedMonth;
   late Future<List<LearningSeminar>> _events = widget.loadEvents();
-  late SeminarMapRegion? _region = widget.lastRegion?.value;
+  SeminarMapRegion _region = _vancouver;
   bool _locating = false;
   String? _locationMessage;
 
@@ -160,13 +159,14 @@ class _DiscoverCalendarPageState extends State<DiscoverCalendarPage> {
       _region = region;
       _locationMessage = message;
     });
-    widget.lastRegion?.value = region;
   }
 
   Future<void> _locate() async {
     setState(() => _locating = true);
     try {
-      final position = await widget.locate();
+      final position = await widget.locate().timeout(
+        const Duration(seconds: 15),
+      );
       final region = SeminarMapRegion(
         position.latitude,
         position.longitude,
@@ -184,11 +184,15 @@ class _DiscoverCalendarPageState extends State<DiscoverCalendarPage> {
         return;
       }
       _setRegion(region, 'Showing events within 700 km of your location.');
-    } catch (_) {
+    } catch (error) {
       if (mounted) {
+        final denied =
+            error is StateError &&
+            error.message.toLowerCase().contains('permission');
         setState(
-          () => _locationMessage =
-              'Location is unavailable. Choose a city to see nearby events.',
+          () => _locationMessage = denied
+              ? 'Browser location is blocked. Allow it in your site settings or choose a city.'
+              : 'Location is unavailable. Try again or choose a city.',
         );
       }
     } finally {
@@ -221,35 +225,35 @@ class _DiscoverCalendarPageState extends State<DiscoverCalendarPage> {
       ),
       body: SafeArea(
         child: LayoutBuilder(
-          builder: (context, bounds) => SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 1320),
-                child: FutureBuilder<List<LearningSeminar>>(
-                  future: _events,
-                  builder: (context, snapshot) {
-                    final atlas = _atlas(snapshot);
-                    if (widget.atlasOnly) return atlas;
-                    final calendar = _calendar(today, snapshot);
-                    if (bounds.maxWidth < 820) {
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [calendar, const SizedBox(height: 24), atlas],
-                      );
-                    }
-                    return Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(child: calendar),
-                        const SizedBox(width: 24),
-                        Expanded(child: atlas),
-                      ],
-                    );
-                  },
-                ),
-              ),
-            ),
+          builder: (context, bounds) => FutureBuilder<List<LearningSeminar>>(
+            future: _events,
+            builder: (context, snapshot) {
+              if (widget.atlasOnly) return _atlas(snapshot);
+              final calendar = _calendar(today, snapshot);
+              if (bounds.maxWidth < 820) {
+                return ListView(
+                  padding: const EdgeInsets.all(10),
+                  children: [
+                    calendar,
+                    const SizedBox(height: 16),
+                    SizedBox(height: 540, child: _atlas(snapshot)),
+                  ],
+                );
+              }
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(12, 0, 12, 24),
+                      child: calendar,
+                    ),
+                  ),
+                  const VerticalDivider(width: 1, color: Color(0xffc5bbab)),
+                  Expanded(child: _atlas(snapshot)),
+                ],
+              );
+            },
           ),
         ),
       ),
@@ -268,6 +272,12 @@ class _DiscoverCalendarPageState extends State<DiscoverCalendarPage> {
     }).toList()..sort((a, b) => a.startsAt.compareTo(b.startsAt));
     bool inPerson(LearningSeminar event) =>
         event.mode == 'in_person' || event.mode == 'hybrid';
+    final meetingsByDay = <int, List<LearningSeminar>>{};
+    for (final event in events.where(inPerson)) {
+      meetingsByDay
+          .putIfAbsent(event.startsAt.toLocal().day, () => [])
+          .add(event);
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -294,12 +304,28 @@ class _DiscoverCalendarPageState extends State<DiscoverCalendarPage> {
           key: ValueKey(today),
           tween: Tween(begin: 0, end: 1),
           duration: const Duration(milliseconds: 630),
-          builder: (context, ink, _) =>
-              DiscoverPaperCalendar(month: _month, today: today, ink: ink),
+          builder: (context, ink, _) => DiscoverPaperCalendar(
+            month: _month,
+            today: today,
+            ink: ink,
+            meetings: meetingsByDay,
+            openMeeting: widget.openEvent,
+          ),
         ),
         const SizedBox(height: 22),
         if (snapshot.hasData) ...[
-          _eventList('In-person meetings', events.where(inPerson)),
+          Text(
+            'In-person meetings',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          if (meetingsByDay.isEmpty)
+            const Text('No meetings scheduled this month.'),
+          for (final day in meetingsByDay.values)
+            for (final event in day.skip(10))
+              ListTile(
+                title: Text(event.title),
+                onTap: () => widget.openEvent(event),
+              ),
           const SizedBox(height: 16),
           _eventList(
             'Resource meetings',
@@ -316,42 +342,57 @@ class _DiscoverCalendarPageState extends State<DiscoverCalendarPage> {
     final region = _region;
     final now = DateTime.now();
     final nearby = [
-      if (region != null)
-        for (final event in snapshot.data ?? <LearningSeminar>[])
-          if (event.visibleOnMap(now) && region.includes(event)) event,
+      for (final event in snapshot.data ?? <LearningSeminar>[])
+        if (event.visibleOnMap(now) && region.includes(event)) event,
     ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          'Nearby event atlas',
-          style: Theme.of(context).textTheme.headlineSmall,
+        Padding(
+          padding: const EdgeInsets.fromLTRB(12, 8, 12, 6),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Nearby event map',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              Text(
+                _locationMessage ??
+                    (region == _vancouver
+                        ? 'Showing events within 700 km of Vancouver.'
+                        : 'Showing events within 700 km.'),
+              ),
+              Wrap(
+                spacing: 8,
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: _locating ? null : _locate,
+                    icon: const Icon(Icons.my_location),
+                    label: Text(
+                      _locating ? 'Finding location…' : 'Use my location',
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: _locating ? null : _chooseCity,
+                    child: const Text('Choose a city'),
+                  ),
+                  if (region != _vancouver)
+                    TextButton(
+                      onPressed: _locating
+                          ? null
+                          : () => _setRegion(
+                              _vancouver,
+                              'Showing events within 700 km of Vancouver.',
+                            ),
+                      child: const Text('Back to Vancouver'),
+                    ),
+                ],
+              ),
+            ],
+          ),
         ),
-        const SizedBox(height: 8),
-        Text(
-          _locationMessage ??
-              (region == null
-                  ? 'Use your location or choose a city to see events within 700 km.'
-                  : 'Showing events within 700 km.'),
-        ),
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          children: [
-            OutlinedButton.icon(
-              onPressed: _locating ? null : _locate,
-              icon: const Icon(Icons.my_location),
-              label: Text(_locating ? 'Finding location…' : 'Use my location'),
-            ),
-            TextButton(
-              onPressed: _locating ? null : _chooseCity,
-              child: const Text('Choose a city'),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        SizedBox(
-          height: widget.atlasOnly ? 480 : 380,
+        Expanded(
           child: CanadaEventMap(
             events: nearby,
             region: region,
@@ -365,14 +406,9 @@ class _DiscoverCalendarPageState extends State<DiscoverCalendarPage> {
             icon: const Icon(Icons.refresh),
             label: const Text('Could not load events. Retry'),
           )
-        else if (snapshot.connectionState != ConnectionState.done)
-          const Padding(
-            padding: EdgeInsets.all(12),
-            child: Center(child: CircularProgressIndicator()),
-          )
-        else if (region != null)
+        else if (snapshot.connectionState == ConnectionState.done)
           Padding(
-            padding: const EdgeInsets.only(top: 8),
+            padding: const EdgeInsets.all(8),
             child: Text(
               nearby.isEmpty
                   ? 'No upcoming mapped events within 700 km.'
@@ -417,11 +453,17 @@ class DiscoverPaperCalendar extends StatelessWidget {
     required this.month,
     required this.today,
     required this.ink,
+    this.meetings,
+    this.openMeeting,
     super.key,
   });
 
   final DateTime month, today;
   final double ink;
+  final Map<int, List<LearningSeminar>>? meetings;
+  final ValueChanged<LearningSeminar>? openMeeting;
+
+  double get _dayHeight => meetings == null ? 42 : 222;
 
   @override
   Widget build(BuildContext context) {
@@ -429,23 +471,28 @@ class DiscoverPaperCalendar extends StatelessWidget {
     final count = DateUtils.getDaysInMonth(month.year, month.month);
     return DecoratedBox(
       decoration: const BoxDecoration(
-        color: calendarPaper,
+        color: Color(0xfff1e7d3),
+        border: Border.fromBorderSide(BorderSide(color: Color(0xffb4a184))),
         boxShadow: [BoxShadow(color: Color(0x320c2724), offset: Offset(5, 5))],
       ),
+      position: DecorationPosition.background,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          ColoredBox(
-            color: calendarInk,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              child: Text(
-                DateFormat.yMMMM().format(month).toUpperCase(),
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: calendarPaper,
-                  fontSize: 21,
-                  fontWeight: FontWeight.w800,
+          CustomPaint(
+            foregroundPainter: const _CalendarWear(),
+            child: ColoredBox(
+              color: const Color(0xff655546),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                child: Text(
+                  DateFormat.yMMMM().format(month).toUpperCase(),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: calendarPaper,
+                    fontSize: 21,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
             ),
@@ -492,12 +539,12 @@ class DiscoverPaperCalendar extends StatelessWidget {
   }
 
   Widget _day(int day, int count) {
-    if (day < 1 || day > count) return const SizedBox(height: 42);
+    if (day < 1 || day > count) return SizedBox(height: _dayHeight);
     final date = DateTime(month.year, month.month, day);
     final current = date == today;
     final past = date.isBefore(today);
     final yesterday = DateTime(today.year, today.month, today.day - 1);
-    return Semantics(
+    final dateLabel = Semantics(
       label:
           '${DateFormat.yMMMMd().format(date)}${current
               ? ', today'
@@ -505,25 +552,97 @@ class DiscoverPaperCalendar extends StatelessWidget {
               ? ', passed'
               : ''}',
       excludeSemantics: true,
-      child: Container(
-        height: 42,
-        decoration: const BoxDecoration(
-          border: Border(bottom: BorderSide(color: Color(0xffd8ddcf))),
-        ),
-        alignment: Alignment.center,
-        child: CustomPaint(
-          foregroundPainter: current || past
-              ? _DayMark(current, current || date == yesterday ? ink : 1)
-              : null,
-          child: SizedBox(
-            height: 33,
-            width: 33,
-            child: Center(child: Text('$day')),
-          ),
+      child: CustomPaint(
+        foregroundPainter: current || past
+            ? _DayMark(current, current || date == yesterday ? ink : 1)
+            : null,
+        child: SizedBox(
+          height: 27,
+          width: 31,
+          child: Center(child: Text('$day')),
         ),
       ),
     );
+    return Container(
+      height: _dayHeight,
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: const BorderSide(color: Color(0xffcbbd9f)),
+          right: meetings != null
+              ? const BorderSide(color: Color(0xffcbbd9f))
+              : BorderSide.none,
+        ),
+      ),
+      child: meetings == null
+          ? Center(child: dateLabel)
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Align(alignment: Alignment.centerLeft, child: dateLabel),
+                for (final event
+                    in (meetings?[day] ?? <LearningSeminar>[]).take(10))
+                  SizedBox(
+                    height: 18,
+                    child: Tooltip(
+                      message: event.title,
+                      child: InkWell(
+                        onTap: () => openMeeting?.call(event),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 3),
+                          child: Text(
+                            event.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Color(0xff513e2c),
+                              fontSize: 11,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+    );
   }
+}
+
+class _CalendarWear extends CustomPainter {
+  const _CalendarWear();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..color = const Color(0xffb5a17f);
+    canvas.drawPath(
+      Path()..addPolygon([
+        const Offset(4, 6),
+        const Offset(42, 1),
+        const Offset(44, 10),
+        const Offset(31, 9),
+        const Offset(8, 15),
+      ], true),
+      paint,
+    );
+    paint.color = const Color(0xff8e765e);
+    canvas.drawPath(
+      Path()..addPolygon([
+        Offset(size.width - 39, 0),
+        Offset(size.width, 0),
+        Offset(size.width, 12),
+        Offset(size.width - 16, 8),
+      ], true),
+      paint,
+    );
+    paint.color = const Color(0xffa48c73);
+    canvas.drawRect(
+      Rect.fromLTWH(size.width - 31, size.height - 8, 25, 1),
+      paint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_CalendarWear oldDelegate) => false;
 }
 
 class _DayMark extends CustomPainter {

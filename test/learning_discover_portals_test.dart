@@ -21,7 +21,7 @@ void main() {
           home: LearningDashboardPage(
             initialView: LearningView.discover,
             loadSeminars: () async => [],
-            locate: () async => (latitude: 49.3, longitude: -123.1),
+            locate: () async => (latitude: 43.6532, longitude: -79.3832),
           ),
         ),
       );
@@ -34,9 +34,16 @@ void main() {
       await tester.pump();
       expect(find.byTooltip('Turn lamp off'), findsOneWidget);
 
-      await tester.tap(find.byTooltip('Open desk atlas'));
+      await tester.tap(find.byTooltip('Open desk globe'));
       await tester.pumpAndSettle();
       expect(find.text('Discover atlas'), findsOneWidget);
+      expect(
+        tester
+            .widget<CanadaEventMap>(find.byType(CanadaEventMap))
+            .region
+            ?.latitude,
+        closeTo(49.28, .01),
+      );
       await tester.tap(find.text('Use my location'));
       await tester.pumpAndSettle();
       expect(
@@ -45,6 +52,13 @@ void main() {
             .region
             ?.radiusKm,
         700,
+      );
+      expect(
+        tester
+            .widget<CanadaEventMap>(find.byType(CanadaEventMap))
+            .region
+            ?.latitude,
+        closeTo(43.65, .01),
       );
       await tester.pageBack();
       await tester.pumpAndSettle();
@@ -60,6 +74,19 @@ void main() {
             ?.radiusKm,
         700,
       );
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byTooltip('Zoom into pinboard'));
+      await tester.pumpAndSettle();
+      for (var note = 1; note <= 7; note++) {
+        expect(find.text('Note $note'), findsOneWidget);
+      }
+      await tester.tap(find.text('Note 7'));
+      await tester.pumpAndSettle();
+      expect(find.byTooltip('Close note'), findsOneWidget);
+      await tester.tap(find.byTooltip('Close note'));
+      await tester.pumpAndSettle();
       await tester.pageBack();
       await tester.pumpAndSettle();
 
@@ -99,7 +126,8 @@ void main() {
           home: DiscoverCalendarPage(
             today: today,
             loadEvents: () async => [
-              meeting('Office meetup', 'in_person'),
+              for (var i = 1; i <= 10; i++)
+                meeting('Office meetup $i', 'in_person'),
               meeting('Resource discussion', 'online'),
               meeting('Cancelled meetup', 'in_person', status: 'cancelled'),
             ],
@@ -110,7 +138,9 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.bySemanticsLabel('November 10, 2026, today'), findsOneWidget);
       expect(find.bySemanticsLabel('November 9, 2026, passed'), findsOneWidget);
-      expect(find.text('Office meetup'), findsOneWidget);
+      for (var i = 1; i <= 10; i++) {
+        expect(find.byTooltip('Office meetup $i'), findsOneWidget);
+      }
       expect(find.text('Resource discussion'), findsOneWidget);
       expect(find.text('Cancelled meetup'), findsNothing);
 
