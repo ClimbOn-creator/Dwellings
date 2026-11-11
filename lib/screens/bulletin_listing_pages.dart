@@ -10,6 +10,7 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../services/backend_service.dart';
+import '../services/discover_activity.dart';
 import '../services/business_sale_bulletin_service.dart';
 import '../widgets/app_navigation_menu.dart';
 import '../widgets/home_brand_button.dart';
@@ -496,8 +497,21 @@ class _BusinessListingDetailPageState extends State<BusinessListingDetailPage> {
     _refresh();
   }
 
-  void _refresh() =>
-      _listing = BusinessSaleBulletinService.loadOne(widget.bulletinId);
+  void _refresh() {
+    final userId = BackendService.user?.id;
+    _listing = BusinessSaleBulletinService.loadOne(widget.bulletinId).then((
+      listing,
+    ) {
+      if (mounted && listing != null && BackendService.user?.id == userId) {
+        DiscoverActivity.record(
+          DiscoverActivityKind.deals,
+          'listing:${listing.id}',
+        );
+      }
+      return listing;
+    });
+  }
+
   Future<void> _toggle(BusinessSaleBulletin b) async {
     if (_saving) return;
     if (!b.isExample && BackendService.user == null) {

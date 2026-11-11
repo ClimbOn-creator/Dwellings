@@ -34,6 +34,15 @@ class NovaTrainingController extends ChangeNotifier {
     });
   }
 
+  bool _fullscreenOverlay = false;
+  bool get fullscreenOverlay => _fullscreenOverlay;
+
+  void setFullscreenOverlay(bool visible) {
+    if (_fullscreenOverlay == visible) return;
+    _fullscreenOverlay = visible;
+    notifyListeners();
+  }
+
   bool docked = true;
   void dismissDock() {
     docked = false;

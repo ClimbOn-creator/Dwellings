@@ -45,15 +45,15 @@ class CanadaMapGeometry {
   }
 }
 
-/// A 500 km search around the device, used only in the current map session.
+/// A distance search around the device, used only in the current map session.
 class SeminarMapRegion {
-  const SeminarMapRegion(this.latitude, this.longitude);
+  const SeminarMapRegion(this.latitude, this.longitude, {this.radiusKm = 500});
 
   static const _earthRadiusKm = 6371.0;
-  static const _angularRadius = 500 / _earthRadiusKm;
+  double get _angularRadius => radiusKm / _earthRadiusKm;
   static const _radians = math.pi / 180;
 
-  final double latitude, longitude;
+  final double latitude, longitude, radiusKm;
 
   bool includes(LearningSeminar event) {
     if (!event.mapped) return false;
@@ -108,12 +108,13 @@ class CanadaEventMap extends StatefulWidget {
     this.region,
     this.locationControls,
     this.expandToFill = false,
+    this.showRegionOutline = true,
   });
   final List<LearningSeminar> events;
   final ValueChanged<LearningSeminar> onOpen;
   final SeminarMapRegion? region;
   final Widget? locationControls;
-  final bool expandToFill;
+  final bool expandToFill, showRegionOutline;
   @override
   State<CanadaEventMap> createState() => _CanadaEventMapState();
 }
@@ -529,10 +530,17 @@ class _CanadaEventMapState extends State<CanadaEventMap> {
                         child: CustomPaint(
                           size: canvasSize,
                           painter: _showMapbox
-                              ? _SeminarRadiusPainter(widget.region, _project)
+                              ? (widget.showRegionOutline
+                                    ? _SeminarRadiusPainter(
+                                        widget.region,
+                                        _project,
+                                      )
+                                    : null)
                               : _CanadaPainter(
                                   geometry!,
-                                  region: widget.region,
+                                  region: widget.showRegionOutline
+                                      ? widget.region
+                                      : null,
                                   detailed:
                                       widget.region != null ||
                                       transform.value.getMaxScaleOnAxis() >

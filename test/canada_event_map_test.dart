@@ -54,6 +54,15 @@ void main() {
       );
     },
   );
+  test('a 700 km atlas includes events beyond the seminar map radius', () {
+    final eventAt600Km = event('600km', lat: 54.7);
+    final eventBeyond700Km = event('800km', lat: 56.5);
+    const seminars = SeminarMapRegion(49.3, -123.1);
+    const atlas = SeminarMapRegion(49.3, -123.1, radiusKm: 700);
+    expect(seminars.includes(eventAt600Km), isFalse);
+    expect(atlas.includes(eventAt600Km), isTrue);
+    expect(atlas.includes(eventBeyond700Km), isFalse);
+  });
   test('cover URL accepts the one-to-one and legacy list relation formats', () {
     final record = {
       'id': 'one',

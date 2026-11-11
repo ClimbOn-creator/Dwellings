@@ -6,6 +6,7 @@ import '../widgets/dashboard_header.dart';
 import '../widgets/nova_target.dart';
 import '../widgets/nova_panel.dart';
 import '../services/nova_service.dart';
+import '../services/discover_activity.dart';
 import '../models/buyer_command_state.dart';
 import '../widgets/buyer_command_centre.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -74,9 +75,11 @@ class DealRoomsPage extends StatefulWidget {
     this.loadTransactionBundles,
     this.loadTeamProviders,
     this.embeddedPipeline = false,
+    this.openedFromDiscover = false,
   });
 
   final bool embeddedPipeline;
+  final bool openedFromDiscover;
   final PlatformSide initialSide;
   final bool startIntake;
   final DealIntakeDetails? initialIntake;
@@ -88,7 +91,8 @@ class DealRoomsPage extends StatefulWidget {
   loadTeamProviders;
 
   @override
-  State<DealRoomsPage> createState() => privateDashboardsAvailable
+  State<DealRoomsPage> createState() =>
+      privateDashboardsAvailable || openedFromDiscover
       ? _DealRoomsPageState()
       : DashboardComingSoonState<DealRoomsPage>('Buyer dashboard');
 }
@@ -175,6 +179,9 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
   }
 
   void _openCommandPlan(DealRoom room) {
+    unawaited(
+      DiscoverActivity.record(DiscoverActivityKind.deals, 'room:${room.id}'),
+    );
     final userId = BackendService.user?.id ?? 'guest';
     SharedPreferences.getInstance().then(
       (prefs) => prefs.setString('affinity.command.last_room.$userId', room.id),
@@ -387,8 +394,9 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
     );
     if (destination != null) return destination;
     final base = Theme.of(context);
-    return Theme(
-      data: BuyerWorkspaceStyle.theme(base),
+    final crt = widget.openedFromDiscover;
+    final dashboard = Theme(
+      data: BuyerWorkspaceStyle.theme(base, crt: crt),
       child: widget.embeddedPipeline
           ? _dashboardBody()
           : Scaffold(
@@ -396,6 +404,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
               appBar: AppBar(
                 automaticallyImplyLeading:
                     MediaQuery.sizeOf(context).width >= 900,
+                leading: widget.openedFromDiscover ? const BackButton() : null,
                 toolbarHeight: 72,
                 backgroundColor: Colors.white,
                 surfaceTintColor: Colors.transparent,
@@ -413,6 +422,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
                     side: PlatformSide.business,
                     dark: false,
                     guidePage: 'buyer/${_dashboardView.name}',
+                    showOrganizer: !crt,
                     showPrivateUpdates: false,
                   ),
                   if (_dashboardView != BuyerDashboardView.home &&
@@ -430,6 +440,12 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
               body: _dashboardBody(),
             ),
     );
+    return crt
+        ? ColorFiltered(
+            colorFilter: BuyerWorkspaceStyle.crtFilter,
+            child: dashboard,
+          )
+        : dashboard;
   }
 
   Widget _dashboardBody() {
@@ -555,7 +571,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
             ),
           ),
           BuyerWorkspaceStyle.nav(
-            'Home',
+            BuyerWorkspaceStyle.sidebar.home,
             Icons.home_outlined,
             _dashboardView == BuyerDashboardView.home && !_showArchived,
             () => setState(() {
@@ -565,7 +581,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
             dark: false,
           ),
           BuyerWorkspaceStyle.nav(
-            'Pipeline',
+            BuyerWorkspaceStyle.sidebar.pipeline,
             Icons.view_kanban_outlined,
             _dashboardView == BuyerDashboardView.pipeline && !_showArchived,
             () => setState(() {
@@ -575,7 +591,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
             dark: false,
           ),
           BuyerWorkspaceStyle.nav(
-            'Deal screen',
+            BuyerWorkspaceStyle.sidebar.dealScreen,
             Icons.calculate_outlined,
             _dashboardView == BuyerDashboardView.dealScreen,
             () =>
@@ -583,21 +599,21 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
             dark: false,
           ),
           BuyerWorkspaceStyle.nav(
-            'Resources',
+            BuyerWorkspaceStyle.sidebar.resources,
             Icons.library_books_outlined,
             _dashboardView == BuyerDashboardView.resources,
             () => setState(() => _dashboardView = BuyerDashboardView.resources),
             dark: false,
           ),
           BuyerWorkspaceStyle.nav(
-            'Messages',
+            BuyerWorkspaceStyle.sidebar.messages,
             Icons.chat_bubble_outline,
             _dashboardView == BuyerDashboardView.messages,
             () => setState(() => _dashboardView = BuyerDashboardView.messages),
             dark: false,
           ),
           BuyerWorkspaceStyle.nav(
-            'My team',
+            BuyerWorkspaceStyle.sidebar.team,
             Icons.group_outlined,
             _dashboardView == BuyerDashboardView.team,
             () => setState(() {
@@ -606,7 +622,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
             dark: false,
           ),
           BuyerWorkspaceStyle.nav(
-            'Transaction plan',
+            BuyerWorkspaceStyle.sidebar.transactionPlan,
             Icons.event_note_outlined,
             _dashboardView == BuyerDashboardView.transactionPlan,
             () => setState(() {
@@ -617,7 +633,7 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
           ),
           const SizedBox(height: 16),
           BuyerWorkspaceStyle.nav(
-            'Refresh',
+            BuyerWorkspaceStyle.sidebar.refresh,
             Icons.refresh_rounded,
             false,
             _refresh,
@@ -2651,12 +2667,13 @@ class _DealRoomsPageState extends State<DealRoomsPage> {
   );
 
   Future<void> _openRoom(DealRoom room) async {
+    final userId = BackendService.user?.id;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(
-      'affinity.command.last_room.${BackendService.user?.id ?? "guest"}',
+      'affinity.command.last_room.${userId ?? "guest"}',
       room.id,
     );
-    if (!mounted) return;
+    if (!mounted || BackendService.user?.id != userId) return;
     setState(() => _lastRoomId = room.id);
     _openCommandPlan(room);
   }

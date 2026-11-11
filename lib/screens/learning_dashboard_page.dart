@@ -4,8 +4,11 @@ import '../widgets/transaction_room_panel.dart';
 import '../widgets/home_brand_button.dart';
 import '../widgets/learning_start_search.dart';
 import '../widgets/learning_financial_folders.dart';
+import '../widgets/learning_evaluate_cover_flow.dart';
+import '../widgets/learning_discover_file_box.dart';
 import '../widgets/dashboard_header.dart';
 import 'deal_comparison_page.dart';
+import 'deal_rooms_page.dart';
 import 'dart:async';
 import '../widgets/canada_event_map.dart';
 import '../widgets/learning_example_cover.dart';
@@ -297,6 +300,9 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
     LearningView.seminars => 'learning-seminars',
     LearningView.firstSteps => 'learning-first-steps',
     LearningView.financial => 'learning-financial',
+    LearningView.evaluate => 'learning-evaluate',
+    LearningView.discover => 'learning-discover',
+    LearningView.search => 'learning-search',
     _ => 'learning-dashboard',
   };
 
@@ -525,6 +531,18 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
       Expanded(
         child: view == LearningView.firstSteps
             ? LearningStartSearch(onOpen: _openSearchResult)
+            : view == LearningView.discover
+            ? LearningDiscoverFileBox(
+                key: const ValueKey(LearningView.discover),
+                cabinet: true,
+                buyerDashboard: (_) =>
+                    const DealRoomsPage(openedFromDiscover: true),
+                loadEvents: widget.loadSeminars ?? LearningService.seminars,
+                openEvent: _openSeminar,
+                locate: widget.locate,
+              )
+            : view == LearningView.search
+            ? const LearningDiscoverFileBox(key: ValueKey(LearningView.search))
             : view == LearningView.seminars
             ? Padding(
                 padding: EdgeInsets.all(compact ? 8 : 12),
@@ -538,7 +556,8 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
                     constraints: BoxConstraints(
                       maxWidth:
                           view == LearningView.roadmap ||
-                              view == LearningView.financial
+                              view == LearningView.financial ||
+                              view == LearningView.evaluate
                           ? double.infinity
                           : 1220,
                     ),
@@ -548,6 +567,12 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
                         child: AcquisitionJourneyPanel(
                           initialStageId: _roadmapStageId,
                         ),
+                      ),
+                      LearningView.evaluate => LearningEvaluateCoverFlow(
+                        onOpenFile: (id) => setState(() {
+                          _documentId = id;
+                          view = LearningView.room;
+                        }),
                       ),
                       LearningView.financial =>
                         const LearningFinancialFolders(),
