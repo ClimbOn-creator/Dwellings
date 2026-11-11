@@ -13,6 +13,25 @@ import 'team_workspace.dart';
 const _boardSize = Size(560, 350);
 const _ink = Color(0xff3c3027);
 const _wall = Color(0xfff4eee4);
+const _portraitSize = Size(153, 132);
+const _portraitAngles = [-.045, .052, .038, -.042];
+
+Offset _portraitPosition(int index) =>
+    Offset(index.isEven ? 97 : 309, index < 2 ? 25 : 167);
+
+// The strings and visible pins share the card's rotated coordinates.
+Offset _portraitPin(int index) {
+  final pin = Offset(index.isEven ? _portraitSize.width - 9 : 9, 43);
+  final center = _portraitSize.center(Offset.zero);
+  final local = pin - center;
+  final angle = _portraitAngles[index];
+  return _portraitPosition(index) +
+      center +
+      Offset(
+        local.dx * math.cos(angle) - local.dy * math.sin(angle),
+        local.dx * math.sin(angle) + local.dy * math.cos(angle),
+      );
+}
 
 class DiscoverTeamBoard extends StatelessWidget {
   const DiscoverTeamBoard({super.key, this.interactive = false});
@@ -102,14 +121,15 @@ class _TeamBoardState extends State<_TeamBoard> {
             type: MaterialType.transparency,
             child: CustomPaint(
               painter: const _TeamCork(),
+              foregroundPainter: const _TeamThreads(),
               child: Stack(
                 children: [
                   for (var i = 0; i < 4; i++)
                     Positioned(
-                      left: i.isEven ? 97 : 309,
-                      top: i < 2 ? 25 : 167,
+                      left: _portraitPosition(i).dx,
+                      top: _portraitPosition(i).dy,
                       child: Transform.rotate(
-                        angle: const [-.045, .052, .038, -.042][i],
+                        angle: _portraitAngles[i],
                         child: _PortraitCard(
                           provider: i < team.length ? team[i] : null,
                           index: i,
@@ -174,8 +194,8 @@ class _PortraitCard extends StatelessWidget {
     final member = provider;
     final role = member?.jobTitle.trim();
     return SizedBox(
-      width: 153,
-      height: 132,
+      width: _portraitSize.width,
+      height: _portraitSize.height,
       child: Material(
         color: const Color(0xfffcf6ea),
         elevation: 3,
@@ -250,21 +270,6 @@ class _PortraitCard extends StatelessWidget {
                   ],
                 ),
               ),
-              Positioned(
-                left: 72,
-                top: 3,
-                child: Container(
-                  width: 8,
-                  height: 8,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Color(0xff952d2c),
-                    boxShadow: [
-                      BoxShadow(color: Color(0x55402a22), offset: Offset(1, 1)),
-                    ],
-                  ),
-                ),
-              ),
             ],
           ),
         ),
@@ -302,16 +307,20 @@ class _TeamCork extends CustomPainter {
               : const Color(0x38f6ce97),
       );
     }
+  }
 
-    const anchors = [
-      Offset(62, 60),
-      Offset(280, 96),
-      Offset(499, 62),
-      Offset(53, 242),
-      Offset(280, 214),
-      Offset(509, 251),
-    ];
-    const threads = [(0, 4), (0, 3), (1, 3), (1, 5), (2, 4), (2, 5), (3, 5)];
+  @override
+  bool shouldRepaint(_TeamCork oldDelegate) => false;
+}
+
+class _TeamThreads extends CustomPainter {
+  const _TeamThreads();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint();
+    final anchors = List.generate(4, _portraitPin);
+    const threads = [(0, 1), (0, 3), (2, 1), (2, 3)];
     for (final (start, end) in threads) {
       canvas.drawLine(
         anchors[start].translate(0, 1.5),
@@ -344,7 +353,7 @@ class _TeamCork extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_TeamCork oldDelegate) => false;
+  bool shouldRepaint(_TeamThreads oldDelegate) => false;
 }
 
 class DiscoverTeamBoardRoute extends PageRouteBuilder<void> {

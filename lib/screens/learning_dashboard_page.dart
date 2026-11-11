@@ -73,6 +73,12 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
   static final _tabs = LearningView.values.where(
     (view) => view != LearningView.quiz,
   );
+  static final _cabinetFiles = [
+    for (final tab in LearningView.values)
+      if (tab.index >= LearningView.roadmap.index &&
+          tab.index <= LearningView.faq.index)
+        tab.label,
+  ];
 
   Future<List<LearningSeminar>>? _seminarsFuture;
   SeminarMapRegion? _region;
@@ -530,17 +536,18 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
         ),
       Expanded(
         child: view == LearningView.firstSteps
-            ? LearningStartSearch(onOpen: _openSearchResult)
-            : view == LearningView.discover
             ? LearningDiscoverFileBox(
-                key: const ValueKey(LearningView.discover),
+                key: const ValueKey(LearningView.firstSteps),
                 cabinet: true,
+                fileNames: _cabinetFiles,
                 buyerDashboard: (_) =>
                     const DealRoomsPage(openedFromDiscover: true),
                 loadEvents: widget.loadSeminars ?? LearningService.seminars,
                 openEvent: _openSeminar,
                 locate: widget.locate,
               )
+            : view == LearningView.discover
+            ? LearningStartSearch(onOpen: _openSearchResult)
             : view == LearningView.search
             ? const LearningDiscoverFileBox(key: ValueKey(LearningView.search))
             : view == LearningView.seminars

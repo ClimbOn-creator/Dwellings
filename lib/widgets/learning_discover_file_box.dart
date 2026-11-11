@@ -17,7 +17,7 @@ const _drawerWall = 152.0;
 const _folderHeight = 174.0;
 const _tabWidth = 106.0;
 const _tabDepth = 27.0;
-const _step = 38.0;
+const _fileRowsDepth = 570.0;
 const _manila = Color(0xfff3ebd9);
 const _manilaSeam = Color(0xffcdbd9f);
 const _palette = [
@@ -28,15 +28,18 @@ const _palette = [
   Color(0xffefcec1),
 ];
 
-double _rail(int index) => 24 + index * _step;
 double _tabLeft(int index) => 20 + (index % 5) * 73;
 Color _fileColor(int index) => _palette[index % _palette.length];
-String _fileName(int index) => 'File ${(index + 1).toString().padLeft(2, '0')}';
+final _numberedFiles = List.generate(
+  _fileCount,
+  (index) => 'File ${(index + 1).toString().padLeft(2, '0')}',
+);
 
 class LearningDiscoverFileBox extends StatefulWidget {
   const LearningDiscoverFileBox({
     super.key,
     this.cabinet = false,
+    this.fileNames,
     this.buyerDashboard,
     this.loadEvents,
     this.openEvent,
@@ -44,6 +47,7 @@ class LearningDiscoverFileBox extends StatefulWidget {
   });
 
   final bool cabinet;
+  final List<String>? fileNames;
   final WidgetBuilder? buyerDashboard;
   final Future<List<LearningSeminar>> Function()? loadEvents;
   final ValueChanged<LearningSeminar>? openEvent;
@@ -71,6 +75,8 @@ class _LearningDiscoverFileBoxState extends State<LearningDiscoverFileBox>
   bool _lampOn = true;
   int? _selected;
   int? _hovered;
+
+  List<String> get _fileNames => widget.fileNames ?? _numberedFiles;
 
   @override
   void dispose() {
@@ -122,7 +128,11 @@ class _LearningDiscoverFileBoxState extends State<LearningDiscoverFileBox>
       DiscoverActivityKind.files,
       '${widget.cabinet ? 'discover' : 'search'}:$index',
     );
-    final route = _DiscoverReaderRoute(index: index, source: source);
+    final route = _DiscoverReaderRoute(
+      index: index,
+      name: _fileNames[index],
+      source: source,
+    );
     final guide = NovaTrainingController.instance;
     guide.setFullscreenOverlay(true);
     try {
@@ -171,6 +181,7 @@ class _LearningDiscoverFileBoxState extends State<LearningDiscoverFileBox>
                 focus,
                 cabinet: cabinet,
                 drawer: drawer,
+                fileCount: _fileNames.length,
               );
               final openButton = TextButton(
                 onPressed: () => _zoom(true),
@@ -225,6 +236,7 @@ class _LearningDiscoverFileBoxState extends State<LearningDiscoverFileBox>
                             _hovered,
                             _lift.value,
                             _selected,
+                            _fileNames,
                           ),
                         ),
                       ),
@@ -241,7 +253,7 @@ class _LearningDiscoverFileBoxState extends State<LearningDiscoverFileBox>
                     else
                       Positioned.fill(child: openButton),
                   if (focused)
-                    for (var i = 0; i < _fileCount; i++)
+                    for (var i = 0; i < _fileNames.length; i++)
                       Positioned.fromRect(
                         rect: view.rowBounds(i),
                         child: TextButton(
@@ -257,7 +269,7 @@ class _LearningDiscoverFileBoxState extends State<LearningDiscoverFileBox>
                             disabledForegroundColor: Colors.transparent,
                             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           ),
-                          child: Text(_fileName(i)),
+                          child: Text(_fileNames[i]),
                         ),
                       ),
                   if (focused && cabinet && _selected == null)
@@ -340,7 +352,8 @@ class _BoxView {
     this.focus, {
     required this.cabinet,
     required this.drawer,
-  }) {
+    required int fileCount,
+  }) : _rowDepth = _fileRowsDepth / fileCount {
     final yaw = cabinet ? 0.0 : .43 * (1 - focus);
     final restPitch = cabinet ? .34 : .53;
     final pitch = restPitch + (math.pi / 2 - restPitch) * focus;
@@ -391,6 +404,7 @@ class _BoxView {
   final Size size;
   final double focus, drawer;
   final bool cabinet;
+  final double _rowDepth;
   late final double _sinYaw, _cosYaw, _sinPitch, _cosPitch, _scale;
   late final Offset _offset;
   late final Rect silhouette;
@@ -410,24 +424,33 @@ class _BoxView {
   Offset point(double x, double y, double z) =>
       _project(x, y, z) * _scale + _offset;
 
+  double rail(int index) => 24 + index * _rowDepth;
+
   Rect rowBounds(int index) => Rect.fromPoints(
-    point(8, _folderHeight, _rail(index) - 3),
-    point(_boxWidth - 8, _folderHeight, _rail(index) + _step - 4),
+    point(8, _folderHeight, rail(index) - 3),
+    point(_boxWidth - 8, _folderHeight, rail(index) + _rowDepth - 4),
   );
 
   Rect fileBounds(int index, double lift) => Rect.fromPoints(
-    point(8, _folderHeight + lift * 25, _rail(index) - 3 - lift * 5),
-    point(_boxWidth - 8, _folderHeight, _rail(index) + _tabDepth - lift * 5),
+    point(8, _folderHeight + lift * 25, rail(index) - 3 - lift * 5),
+    point(_boxWidth - 8, _folderHeight, rail(index) + _tabDepth - lift * 5),
   );
 }
 
 class _FileBoxPainter extends CustomPainter {
-  const _FileBoxPainter(this.view, this.hovered, this.lift, this.selected);
+  const _FileBoxPainter(
+    this.view,
+    this.hovered,
+    this.lift,
+    this.selected,
+    this.fileNames,
+  );
 
   final _BoxView view;
   final int? hovered;
   final double lift;
   final int? selected;
+  final List<String> fileNames;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -472,10 +495,10 @@ class _FileBoxPainter extends CustomPainter {
       1,
       curve: Curves.easeOutCubic,
     ).transform(view.drawer);
-    for (var i = 0; i < _fileCount; i++) {
+    for (var i = 0; i < fileNames.length; i++) {
       if (i == selected || emerge == 0) continue;
       final raised = i == hovered ? Curves.easeOut.transform(lift) : 0.0;
-      final z = _rail(i) - raised * 5;
+      final z = view.rail(i) - raised * 5;
       final h = _folderHeight - (1 - emerge) * 105 + raised * 25;
       final color = _fileColor(i);
       final x = _tabLeft(i);
@@ -500,8 +523,9 @@ class _FileBoxPainter extends CustomPainter {
       if (view.focus > .35) {
         final label = TextPainter(
           text: TextSpan(
-            text: _fileName(i),
+            text: fileNames[i],
             style: TextStyle(
+              fontFamily: 'PactInter',
               color: const Color(
                 0xff2a211c,
               ).withValues(alpha: ((view.focus - .35) / .65).clamp(0.0, 1.0)),
@@ -511,11 +535,14 @@ class _FileBoxPainter extends CustomPainter {
           ),
           textDirection: TextDirection.ltr,
         )..layout();
-        label.paint(
-          canvas,
-          p(x + _tabWidth / 2, h + 8, z + _tabDepth / 2) -
-              Offset(label.width / 2, label.height / 2),
-        );
+        final center = p(x + _tabWidth / 2, h + 8, z + _tabDepth / 2);
+        final tabWidth = (p(x + _tabWidth, h, z) - p(x, h, z)).distance;
+        final textScale = math.min(1.0, tabWidth * .9 / label.width);
+        canvas.save();
+        canvas.translate(center.dx, center.dy);
+        canvas.scale(textScale);
+        label.paint(canvas, Offset(-label.width / 2, -label.height / 2));
+        canvas.restore();
         label.dispose();
       }
     }
@@ -585,14 +612,21 @@ class _FileBoxPainter extends CustomPainter {
 
 // The click-driven transitions show how the file box and reader fit together.
 class _DiscoverReaderRoute extends PageRouteBuilder<void> {
-  _DiscoverReaderRoute({required int index, required Rect source})
-    : super(
-        opaque: false,
-        transitionDuration: const Duration(milliseconds: 1950),
-        reverseTransitionDuration: const Duration(milliseconds: 1250),
-        pageBuilder: (_, animation, _) =>
-            _DiscoverReader(index: index, source: source, animation: animation),
-      );
+  _DiscoverReaderRoute({
+    required int index,
+    required String name,
+    required Rect source,
+  }) : super(
+         opaque: false,
+         transitionDuration: const Duration(milliseconds: 1950),
+         reverseTransitionDuration: const Duration(milliseconds: 1250),
+         pageBuilder: (_, animation, _) => _DiscoverReader(
+           index: index,
+           name: name,
+           source: source,
+           animation: animation,
+         ),
+       );
 
   @override
   AnimationController createAnimationController() => AnimationController(
@@ -606,11 +640,13 @@ class _DiscoverReaderRoute extends PageRouteBuilder<void> {
 class _DiscoverReader extends StatelessWidget {
   const _DiscoverReader({
     required this.index,
+    required this.name,
     required this.source,
     required this.animation,
   });
 
   final int index;
+  final String name;
   final Rect source;
   final Animation<double> animation;
 
@@ -714,6 +750,7 @@ class _DiscoverReader extends StatelessWidget {
                           child: _ReaderFolderFace(
                             color: color,
                             index: index,
+                            name: name,
                             back: true,
                           ),
                         ),
@@ -733,6 +770,7 @@ class _DiscoverReader extends StatelessWidget {
                             child: _ReaderFolderFace(
                               color: color,
                               index: index,
+                              name: name,
                             ),
                           ),
                         ),
@@ -768,11 +806,13 @@ class _ReaderFolderFace extends StatelessWidget {
   const _ReaderFolderFace({
     required this.color,
     required this.index,
+    required this.name,
     this.back = false,
   });
 
   final Color color;
   final int index;
+  final String name;
   final bool back;
 
   @override
@@ -807,7 +847,7 @@ class _ReaderFolderFace extends StatelessWidget {
                     child: FittedBox(
                       fit: BoxFit.scaleDown,
                       child: Text(
-                        _fileName(index),
+                        name,
                         style: const TextStyle(
                           color: Color(0xff332d24),
                           fontSize: 15,

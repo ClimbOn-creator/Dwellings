@@ -63,12 +63,12 @@ const _lampHit = Rect.fromLTWH(238, 250, 131, 153);
 const _trashHit = Rect.fromLTWH(978, 549, 82, 117);
 const _deskGlobe = Rect.fromLTWH(794, 296, 82, 94);
 const _learningCallout = Rect.fromLTWH(160, 690, 262, 30);
-const _buyerCallout = Rect.fromLTWH(646, 102, 166, 28);
+const _buyerCallout = Rect.fromLTWH(673, 310, 118, 28);
 const _headlineCallout = Rect.fromLTWH(416, 27, 228, 29);
-const _teamCallout = Rect.fromLTWH(741, 63, 228, 31);
+const _teamCallout = Rect.fromLTWH(701, 63, 228, 31);
 const _opportunitiesCallout = Rect.fromLTWH(102, 57, 327, 31);
 const _wallHeadlines = Rect.fromLTWH(421, 76, 218, 136);
-const _wallTeam = Rect.fromLTWH(730, 139, 250, 156);
+const _wallTeam = Rect.fromLTWH(690, 139, 250, 156);
 
 enum _OfficePortal { buyer, calendar, globe, pinboard, team }
 
@@ -415,12 +415,11 @@ class _DiscoverOfficePainter extends CustomPainter {
 
   void _deskArrows(Canvas c) {
     const ink = Color(0xff786c5d);
-    _line(c, const Offset(728, 131), const Offset(689, 208), ink, 1.7);
     for (final (start, tip) in const [
       (Offset(291, 686), Offset(291, 657)),
-      (Offset(689, 208), Offset(603, 243)),
+      (Offset(743, 344), Offset(675, 344)),
       (Offset(530, 57), Offset(530, 72)),
-      (Offset(855, 98), Offset(855, 128)),
+      (Offset(815, 98), Offset(815, 128)),
       (Offset(268, 92), Offset(318, 123)),
     ]) {
       _line(c, start, tip, ink, 1.7);

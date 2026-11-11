@@ -8,7 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   testWidgets(
-    'Discover lamp, atlas, calendar and Buyer workspace work from the desk',
+    'First steps lamp, atlas, calendar and Buyer workspace work from the desk',
     (tester) async {
       final semantics = tester.ensureSemantics();
       SharedPreferences.setMockInitialValues({});
@@ -20,7 +20,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: LearningDashboardPage(
-            initialView: LearningView.discover,
+            initialView: LearningView.firstSteps,
             loadSeminars: () async => [
               LearningSeminar(
                 id: 'halifax',

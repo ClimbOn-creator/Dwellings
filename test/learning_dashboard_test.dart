@@ -106,10 +106,7 @@ void main() {
         expect(find.text(tab), findsOneWidget);
       }
       expect(find.byKey(const Key('affinity-navigation-bar')), findsNothing);
-      expect(
-        find.byKey(const Key('learning-first-steps-search')),
-        findsOneWidget,
-      );
+      expect(find.byKey(const ValueKey('discover-office')), findsOneWidget);
       expect(find.text('Learning feed'), findsNothing);
       expect(find.text('Pact examples'), findsNothing);
       expect(find.byKey(const Key('learning-create-post')), findsNothing);
@@ -138,10 +135,14 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   }
-  testWidgets('First steps search opens the matching learning content', (
+  testWidgets('Discover search opens the matching learning content', (
     tester,
   ) async {
-    await tester.pumpWidget(const MaterialApp(home: LearningDashboardPage()));
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: LearningDashboardPage(initialView: LearningView.discover),
+      ),
+    );
     await tester.pumpAndSettle();
     final field = find.byKey(const Key('learning-first-steps-search'));
     expect(find.byType(TextField), findsOneWidget);
