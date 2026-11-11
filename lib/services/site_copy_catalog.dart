@@ -2,6 +2,7 @@ import '../models/dashboard_showcase_content.dart';
 import '../models/about_story_content.dart';
 import '../models/marketing_motion_content.dart';
 import '../models/learning_lesson_content.dart';
+import '../models/learning_creative_content.dart';
 
 const learningRoadmapPlaceholder =
     'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed posuere '
@@ -25,6 +26,7 @@ const siteCopyCatalog = <String, String>{
   'learning.journey.title': 'Roadmap',
   ...learningRoadmapStageCopy,
   ...learningLessonCopy,
+  ...learningCreativeCopy,
   'learning.firstSteps.welcome': 'Welcome to Pact.',
   'learning.evaluate.files.title': 'Evaluation files',
   'learning.financial.statements.title': 'Financial statements',

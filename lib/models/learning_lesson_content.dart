@@ -17,7 +17,7 @@ const learningLessonCopy = <String, String>{
   'learning.lesson.shared.fictional': 'Fictional learning example',
   'learning.lesson.shared.studyTime':
       'Approximate reading times. Move between lessons at your own pace.',
-  'learning.lesson.roadmap.eyebrow': 'Lesson 1 of 9 · Roadmap',
+  'learning.lesson.roadmap.eyebrow': 'Lesson 1 of 9',
   'learning.lesson.roadmap.subtitle': 'See the path to business ownership.',
   'learning.lesson.roadmap.readTime': 'About 6 minutes',
   'learning.lesson.roadmap.goal.0':
@@ -55,9 +55,9 @@ const learningLessonCopy = <String, String>{
   'learning.lesson.roadmap.takeaway.1':
       'Use the lessons in order or jump to the question you need to answer now.',
   'learning.lesson.roadmap.next': 'Next lesson · Discover',
-  'learning.lesson.roadmap.chapter.0': 'Why the journey has checkpoints',
-  'learning.lesson.roadmap.chapter.1': 'Maple Street’s path to ownership',
-  'learning.lesson.roadmap.chapter.2': 'Give yourself room to pause',
+  'learning.lesson.roadmap.chapter.0': 'Find your first stop',
+  'learning.lesson.roadmap.chapter.1': 'Read the route',
+  'learning.lesson.roadmap.chapter.2': 'Know when to pause',
   'learning.lesson.roadmap.story':
       'Alex sees a laundromat for sale and imagines getting the keys. The useful first move is to slow down and understand the journey. Alex explores whether the work fits, compares opportunities and asks for evidence. Specialists help investigate the records and the terms. A funding plan and a handover plan develop alongside that work. Some questions send Alex back to an earlier step. By closing, the goal is to understand what is being bought, how it will be paid for and what happens on the first day of ownership.',
   'learning.lesson.roadmap.term.0': 'Acquisition',
@@ -102,7 +102,7 @@ const learningLessonCopy = <String, String>{
       'Return to definitions and questions as you work through the journey.',
   'learning.lesson.syllabus.faq.time': '5 min',
   'learning.lesson.discover.title': 'Discover',
-  'learning.lesson.discover.eyebrow': 'Lesson 2 of 9 · Discover',
+  'learning.lesson.discover.eyebrow': 'Lesson 2 of 9',
   'learning.lesson.discover.subtitle': 'Is business ownership for you?',
   'learning.lesson.discover.readTime': 'About 6 minutes',
   'learning.lesson.discover.goal.0':
@@ -151,9 +151,9 @@ const learningLessonCopy = <String, String>{
   'learning.lesson.discover.takeaway.1':
       'Use your goals, experience and limits to decide which opportunities deserve a closer look.',
   'learning.lesson.discover.next': 'Next lesson · Search',
-  'learning.lesson.discover.chapter.0': 'Buying or starting',
-  'learning.lesson.discover.chapter.1': 'Meet three kinds of buyer',
-  'learning.lesson.discover.chapter.2': 'Picture an ordinary Tuesday',
+  'learning.lesson.discover.chapter.0': 'Choose a Saturday',
+  'learning.lesson.discover.chapter.1': 'Understand the role you want',
+  'learning.lesson.discover.chapter.2': 'Questions to ask yourself',
   'learning.lesson.discover.story':
       'Alex walks past Maple Street and sees familiar customers coming and going. An existing business has a history Alex can investigate. It also comes with responsibilities. Would Alex enjoy running the shop, or want someone else to manage it? A first-time buyer can take either path, but the questions change with the role. Before searching for the perfect listing, Alex pictures an ordinary working day and names the limits they want to respect. That picture becomes the beginning of a search brief.',
   'learning.lesson.discover.term.0': 'Owner-operator',
@@ -166,7 +166,7 @@ const learningLessonCopy = <String, String>{
   'learning.lesson.discover.definition.2':
       'How much the business relies on the current owner’s work, knowledge or relationships.',
   'learning.lesson.search.title': 'Search',
-  'learning.lesson.search.eyebrow': 'Lesson 3 of 9 · Search',
+  'learning.lesson.search.eyebrow': 'Lesson 3 of 9',
   'learning.lesson.search.subtitle': 'Find a business that fits your life.',
   'learning.lesson.search.readTime': 'About 8 minutes',
   'learning.lesson.search.goal.0':
@@ -234,9 +234,9 @@ const learningLessonCopy = <String, String>{
   'learning.lesson.search.takeaway.1':
       'A promising listing earns further investigation. Translate its claims into questions and evidence requests.',
   'learning.lesson.search.next': 'Next lesson · Evaluate',
-  'learning.lesson.search.chapter.0': 'Build your search brief',
-  'learning.lesson.search.chapter.1': 'Read the Maple Street listing',
-  'learning.lesson.search.chapter.2': 'Turn claims into questions',
+  'learning.lesson.search.chapter.0': 'Flag a listing',
+  'learning.lesson.search.chapter.1': 'Use the four lenses',
+  'learning.lesson.search.chapter.2': 'Reflect on your first impression',
   'learning.lesson.search.story':
       'Alex finds Maple Street on a marketplace. The words “turnkey” and “strong cash flow” sound promising. Alex returns to a search brief organized around skills, money, lifestyle and industry. The location fits, but who handles breakdowns? What does cash flow include? What happens when the owner leaves? Alex compares the listing with broker introductions and conversations in their network. A stronger search produces better questions. Those questions help Alex decide which business deserves a closer evaluation.',
   'learning.lesson.search.term.0': 'Search brief',

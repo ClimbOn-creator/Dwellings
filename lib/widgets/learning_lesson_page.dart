@@ -4,6 +4,10 @@ import 'package:url_launcher/url_launcher.dart';
 import '../models/learning_lesson_content.dart';
 import 'acquisition_journey_panel.dart';
 import 'learning_start_search.dart';
+import 'learning_activity_ui.dart';
+import 'learning_trail.dart';
+import 'learning_two_saturdays.dart';
+import 'learning_listing_swipe.dart';
 import 'site_copy_text.dart';
 import 'transaction_room_panel.dart';
 
@@ -33,6 +37,8 @@ class LearningLessonPage extends StatefulWidget {
 }
 
 class _LearningLessonPageState extends State<LearningLessonPage> {
+  final _scroll = ScrollController();
+  final _videoKey = GlobalKey();
   final _coreKey = GlobalKey();
   final _exampleKey = GlobalKey();
   final _mistakesKey = GlobalKey();
@@ -67,62 +73,77 @@ class _LearningLessonPageState extends State<LearningLessonPage> {
   }
 
   @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) => LayoutBuilder(
-    builder: (context, bounds) {
-      final wide = bounds.maxWidth >= 980;
-      final text = _lessonText();
-      final video = _videoPanel();
-      final support = _lessonSupport();
-      return SingleChildScrollView(
-        key: ValueKey('learning-workspace-${widget.lesson.name}-'),
-        padding: EdgeInsets.fromLTRB(wide ? 40 : 20, 32, wide ? 40 : 20, 48),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 1320),
-            child: wide
-                ? Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(flex: 7, child: text),
-                      const SizedBox(width: 48),
-                      Expanded(
-                        flex: 4,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            video,
-                            const SizedBox(height: 26),
-                            support,
-                          ],
+    builder: (context, bounds) => SingleChildScrollView(
+      controller: _scroll,
+      key: ValueKey('learning-workspace-${widget.lesson.name}-'),
+      padding: EdgeInsets.fromLTRB(
+        bounds.maxWidth < 700 ? 18 : 36,
+        32,
+        bounds.maxWidth < 700 ? 18 : 36,
+        48,
+      ),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1260),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _header(),
+              const SizedBox(height: 26),
+              creativeCopy('${widget.lesson.name}.intro'),
+              const SizedBox(height: 16),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final link in [
+                    (slot: 'try', target: _exampleKey),
+                    (slot: 'watch', target: _videoKey),
+                    (slot: 'read', target: _coreKey),
+                  ])
+                    TextButton(
+                      onPressed: () => _readSection(link.target),
+                      child: creativeCopy(
+                        'shared.${link.slot}',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: _forest,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
-                    ],
-                  )
-                : Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      video,
-                      const SizedBox(height: 36),
-                      text,
-                      const SizedBox(height: 36),
-                      support,
-                    ],
-                  ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              switch (widget.lesson) {
+                LearningLesson.roadmap => _trailPage(),
+                LearningLesson.discover => _saturdaysPage(),
+                LearningLesson.search => _swipePage(),
+              },
+              const SizedBox(height: 34),
+              _finish(),
+            ],
           ),
         ),
-      );
-    },
+      ),
+    ),
   );
 
-  Widget _lessonText() => Column(
-    key: ValueKey('lesson-${widget.lesson.name}-text'),
-    crossAxisAlignment: CrossAxisAlignment.stretch,
+  Widget _header() => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       _copy(
         'eyebrow',
         style: const TextStyle(
-          color: _forest,
           fontSize: 12,
+          color: _forest,
           fontWeight: FontWeight.w700,
           letterSpacing: .8,
         ),
@@ -133,83 +154,151 @@ class _LearningLessonPageState extends State<LearningLessonPage> {
               'learning.journey.title',
               'Roadmap',
               style: TextStyle(
-                fontSize: 40,
-                height: 1.1,
-                fontWeight: FontWeight.w700,
-                letterSpacing: -1.4,
+                fontSize: 18,
+                color: learningMuted,
+                fontWeight: FontWeight.w500,
               ),
             )
           : _copy(
               'title',
-              style: const TextStyle(
-                fontSize: 40,
-                height: 1.1,
-                fontWeight: FontWeight.w700,
-                letterSpacing: -1.4,
-              ),
+              style: const TextStyle(fontSize: 18, color: learningMuted),
             ),
+      const SizedBox(height: 6),
+      creativeCopy(
+        '${widget.lesson.name}.activity',
+        style: const TextStyle(
+          fontSize: 46,
+          height: 1.1,
+          letterSpacing: -1.5,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
       const SizedBox(height: 12),
       _copy(
         'subtitle',
-        style: const TextStyle(
-          fontSize: 23,
-          height: 1.35,
-          color: learningMuted,
-        ),
+        style: const TextStyle(fontSize: 20, height: 1.4, color: learningMuted),
       ),
-      const SizedBox(height: 14),
-      _copy(
-        'readTime',
-        style: const TextStyle(fontSize: 13, color: learningMuted),
-      ),
-      const SizedBox(height: 32),
-      _surface(
-        color: _sage,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _lessonCopy(
-              'learning.lesson.shared.goals',
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                height: 1.4,
-              ),
-            ),
-            const SizedBox(height: 14),
-            for (var i = 0; i < 3; i++) _point('goal.$i'),
-          ],
-        ),
-      ),
-      _section('core', key: _coreKey, child: _copy('core')),
-      _section(
-        'example',
+    ],
+  );
+
+  Widget _trailPage() => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      KeyedSubtree(
         key: _exampleKey,
-        child: Column(
+        child: LearningTrail(controller: _scroll, onOpen: widget.onOpen),
+      ),
+      const SizedBox(height: 40),
+      _videoPanel(hero: true),
+      const SizedBox(height: 28),
+      _columns(_reading(_roadmapExample()), _lessonSupport(), wideAt: 940),
+    ],
+  );
+
+  Widget _saturdaysPage() => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      KeyedSubtree(key: _exampleKey, child: const LearningTwoSaturdays()),
+      const SizedBox(height: 42),
+      _columns(
+        Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _copy(
-              'exampleTitle',
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-                height: 1.4,
-              ),
-            ),
-            const SizedBox(height: 10),
-            _copy('exampleIntro'),
+            _videoPanel(),
             const SizedBox(height: 22),
-            switch (widget.lesson) {
-              LearningLesson.roadmap => _roadmapExample(),
-              LearningLesson.discover => _discoverExample(),
-              LearningLesson.search => _searchExample(),
-            },
+            _lessonSupport(),
           ],
         ),
+        _reading(_discoverExample()),
+        wideAt: 940,
+        leftFlex: 4,
+        rightFlex: 7,
       ),
+    ],
+  );
+
+  Widget _swipePage() => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      _columns(
+        KeyedSubtree(key: _exampleKey, child: const LearningListingSwipe()),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _videoPanel(),
+            const SizedBox(height: 22),
+            _lessonSupport(),
+          ],
+        ),
+        wideAt: 940,
+      ),
+      const SizedBox(height: 42),
+      _reading(_searchExample()),
+    ],
+  );
+
+  Widget _columns(
+    Widget left,
+    Widget right, {
+    required double wideAt,
+    int leftFlex = 7,
+    int rightFlex = 4,
+  }) => LayoutBuilder(
+    builder: (context, box) => box.maxWidth >= wideAt
+        ? Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(flex: leftFlex, child: left),
+              const SizedBox(width: 36),
+              Expanded(flex: rightFlex, child: right),
+            ],
+          )
+        : Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [left, const SizedBox(height: 28), right],
+          ),
+  );
+
+  Widget _reading(Widget example) => Column(
+    key: ValueKey('lesson-${widget.lesson.name}-text'),
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      creativeCopy(
+        '${widget.lesson.name}.reading',
+        style: const TextStyle(
+          fontSize: 28,
+          height: 1.3,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -.5,
+        ),
+      ),
+      const SizedBox(height: 18),
+      KeyedSubtree(key: _coreKey, child: _copy('core')),
+      const SizedBox(height: 24),
+      example,
+      const SizedBox(height: 20),
+      _moreNotes(),
+      const SizedBox(height: 16),
+      _source(),
+    ],
+  );
+
+  Widget _moreNotes() => ExpansionTile(
+    key: _mistakesKey,
+    tilePadding: EdgeInsets.zero,
+    title: creativeCopy(
+      'shared.more',
+      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+    ),
+    children: [
+      _lessonCopy(
+        'learning.lesson.shared.goals',
+        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+      ),
+      const SizedBox(height: 12),
+      for (var i = 0; i < 3; i++) _point('goal.$i'),
       _section(
         'mistakes',
-        key: _mistakesKey,
         child: Column(
           children: [for (var i = 0; i < 3; i++) _point('mistake.$i')],
         ),
@@ -232,51 +321,34 @@ class _LearningLessonPageState extends State<LearningLessonPage> {
       _section(
         'takeaways',
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            for (var i = 0; i < 2; i++) _point('takeaway.$i'),
-            const SizedBox(height: 20),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: FilledButton(
-                key: ValueKey('lesson-${widget.lesson.name}-next'),
-                style: FilledButton.styleFrom(
-                  backgroundColor: _forest,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 22,
-                    vertical: 18,
-                  ),
-                ),
-                onPressed: () => widget.onOpen(switch (widget.lesson) {
-                  LearningLesson.roadmap => 'discover',
-                  LearningLesson.discover => 'search',
-                  LearningLesson.search => 'evaluate',
-                }),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Flexible(
-                      child: _copy(
-                        'next',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    const Icon(Icons.arrow_forward, size: 18),
-                  ],
-                ),
-              ),
-            ),
-          ],
+          children: [for (var i = 0; i < 2; i++) _point('takeaway.$i')],
         ),
       ),
-      const SizedBox(height: 28),
-      _source(),
     ],
+  );
+
+  Widget _finish() => Align(
+    alignment: Alignment.centerRight,
+    child: FilledButton.icon(
+      key: ValueKey('lesson-${widget.lesson.name}-next'),
+      style: FilledButton.styleFrom(
+        backgroundColor: _forest,
+        padding: const EdgeInsets.all(20),
+      ),
+      onPressed: () => widget.onOpen(switch (widget.lesson) {
+        LearningLesson.roadmap => 'discover',
+        LearningLesson.discover => 'search',
+        LearningLesson.search => 'evaluate',
+      }),
+      icon: const Icon(Icons.arrow_forward, size: 18),
+      label: _copy(
+        'next',
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    ),
   );
 
   Widget _section(String id, {Key? key, required Widget child}) => Padding(
@@ -317,75 +389,13 @@ class _LearningLessonPageState extends State<LearningLessonPage> {
   Widget _roadmapExample() => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
-      for (final item in const [
-        (id: 'discover', destination: 'discover'),
-        (id: 'search', destination: 'search'),
-        (id: 'evaluate', destination: 'evaluate'),
-        (id: 'financial', destination: 'financial'),
-        (id: 'documents', destination: 'room'),
-        (id: 'dealStructure', destination: 'dealStructure'),
-        (id: 'transition', destination: 'transition'),
-        (id: 'faq', destination: 'faq'),
-      ])
-        Padding(
-          padding: const EdgeInsets.only(bottom: 10),
-          child: Material(
-            color: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-              side: const BorderSide(color: learningLine),
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              onTap: () => widget.onOpen(item.destination),
-              child: Padding(
-                padding: const EdgeInsets.all(18),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _lessonCopy(
-                            'learning.lesson.syllabus.${item.id}.title',
-                            style: const TextStyle(
-                              fontSize: 17,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          const SizedBox(height: 5),
-                          _lessonCopy(
-                            'learning.lesson.syllabus.${item.id}.body',
-                            style: const TextStyle(
-                              fontSize: 14,
-                              height: 1.5,
-                              color: learningMuted,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    _lessonCopy(
-                      'learning.lesson.syllabus.${item.id}.time',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: learningMuted,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    const Icon(Icons.arrow_forward, size: 17, color: _forest),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      _lessonCopy(
-        'learning.lesson.shared.studyTime',
-        style: const TextStyle(fontSize: 13, height: 1.5, color: learningMuted),
+      _copy(
+        'exampleTitle',
+        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
       ),
-      const SizedBox(height: 24),
+      const SizedBox(height: 10),
+      _copy('exampleIntro'),
+      const SizedBox(height: 22),
       _surface(color: _cream, child: _detail('timingTitle', 'timing')),
       const SizedBox(height: 24),
       _copy(
@@ -483,63 +493,75 @@ class _LearningLessonPageState extends State<LearningLessonPage> {
     ],
   );
 
-  Widget _videoPanel() => Column(
-    key: ValueKey('lesson-${widget.lesson.name}-video'),
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: [
-      _lessonCopy(
-        'learning.lesson.shared.video',
-        style: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-          color: learningMuted,
-        ),
-      ),
-      const SizedBox(height: 12),
-      AspectRatio(
-        aspectRatio: 16 / 9,
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: _forest,
-            borderRadius: BorderRadius.circular(16),
+  Widget _videoPanel({bool hero = false}) => KeyedSubtree(
+    key: _videoKey,
+    child: Column(
+      key: ValueKey('lesson-${widget.lesson.name}-video'),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _lessonCopy(
+          'learning.lesson.shared.video',
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: learningMuted,
           ),
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(
-                    Icons.ondemand_video_outlined,
-                    color: Color(0xFFCDD9CB),
-                    size: 36,
-                  ),
-                  const SizedBox(height: 12),
-                  _lessonCopy(
-                    'learning.lesson.shared.recording',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
+        ),
+        const SizedBox(height: 12),
+        AspectRatio(
+          aspectRatio: hero && MediaQuery.sizeOf(context).width >= 900
+              ? 3
+              : 16 / 9,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: _forest,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.ondemand_video_outlined,
+                      color: Color(0xFFCDD9CB),
+                      size: 36,
                     ),
-                  ),
-                  const SizedBox(height: 5),
-                  const Text(
-                    '60–90 sec',
-                    style: TextStyle(color: Color(0xFFCDD9CB), fontSize: 13),
-                  ),
-                ],
+                    const SizedBox(height: 12),
+                    _lessonCopy(
+                      'learning.lesson.shared.recording',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    creativeCopy(
+                      'shared.videoDuration',
+                      style: const TextStyle(
+                        color: Color(0xFFCDD9CB),
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
         ),
-      ),
-      const SizedBox(height: 12),
-      _lessonCopy(
-        'learning.lesson.shared.videoNote',
-        style: const TextStyle(color: learningMuted, fontSize: 13, height: 1.5),
-      ),
-    ],
+        const SizedBox(height: 12),
+        _lessonCopy(
+          'learning.lesson.shared.videoNote',
+          style: const TextStyle(
+            color: learningMuted,
+            fontSize: 13,
+            height: 1.5,
+          ),
+        ),
+      ],
+    ),
   );
 
   Widget _lessonSupport() => Column(
@@ -559,7 +581,7 @@ class _LearningLessonPageState extends State<LearningLessonPage> {
             padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
           ),
           onPressed: () =>
-              _readSection([_coreKey, _exampleKey, _mistakesKey][i]),
+              _readSection([_exampleKey, _coreKey, _mistakesKey][i]),
           child: Row(
             children: [
               const Icon(Icons.subject, size: 17),
@@ -580,23 +602,26 @@ class _LearningLessonPageState extends State<LearningLessonPage> {
           ),
         ),
       const SizedBox(height: 20),
-      _surface(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _lessonCopy(
-              'learning.lesson.shared.terms',
-              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 18),
-            for (var i = 0; i < 3; i++)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: _detail('term.$i', 'definition.$i'),
-              ),
-          ],
-        ),
+      _lessonCopy(
+        'learning.lesson.shared.terms',
+        style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
       ),
+      const SizedBox(height: 8),
+      creativeCopy(
+        'shared.terms',
+        style: const TextStyle(fontSize: 14, color: learningMuted),
+      ),
+      const SizedBox(height: 8),
+      for (var i = 0; i < 3; i++)
+        ExpansionTile(
+          tilePadding: const EdgeInsets.symmetric(horizontal: 8),
+          title: _copy(
+            'term.$i',
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          ),
+          childrenPadding: const EdgeInsets.fromLTRB(8, 0, 8, 16),
+          children: [_copy('definition.$i')],
+        ),
       const SizedBox(height: 14),
       ExpansionTile(
         tilePadding: const EdgeInsets.symmetric(horizontal: 8),
