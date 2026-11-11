@@ -10,6 +10,7 @@ import 'learning_discover_calendar.dart';
 import 'learning_discover_portal.dart';
 import 'learning_discover_pinboard.dart';
 import 'learning_discover_paper_sling.dart';
+import 'learning_discover_team_board.dart';
 
 const _officeSize = Size(1100, 740);
 const _cabinet = Rect.fromLTWH(185, 428, 211, 225);
@@ -62,12 +63,14 @@ const _lampHit = Rect.fromLTWH(238, 250, 131, 153);
 const _trashHit = Rect.fromLTWH(978, 549, 82, 117);
 const _deskGlobe = Rect.fromLTWH(794, 296, 82, 94);
 const _learningCallout = Rect.fromLTWH(160, 690, 262, 30);
-const _buyerCallout = Rect.fromLTWH(420, 115, 219, 31);
-const _headlineCallout = Rect.fromLTWH(741, 63, 228, 31);
-const _opportunitiesCallout = Rect.fromLTWH(119, 57, 327, 31);
-const _wallBoard = Rect.fromLTWH(730, 139, 250, 156);
+const _buyerCallout = Rect.fromLTWH(646, 102, 166, 28);
+const _headlineCallout = Rect.fromLTWH(416, 27, 228, 29);
+const _teamCallout = Rect.fromLTWH(741, 63, 228, 31);
+const _opportunitiesCallout = Rect.fromLTWH(102, 57, 327, 31);
+const _wallHeadlines = Rect.fromLTWH(421, 76, 218, 136);
+const _wallTeam = Rect.fromLTWH(730, 139, 250, 156);
 
-enum _OfficePortal { buyer, calendar, globe, pinboard }
+enum _OfficePortal { buyer, calendar, globe, pinboard, team }
 
 class DiscoverOffice extends StatefulWidget {
   const DiscoverOffice({
@@ -99,6 +102,7 @@ class _DiscoverOfficeState extends State<DiscoverOffice> {
   final _today = DiscoverToday();
   bool _opening = false;
   _OfficePortal? _paperInPortal;
+  int _teamRevision = 0;
 
   @override
   void dispose() {
@@ -119,6 +123,8 @@ class _DiscoverOfficeState extends State<DiscoverOffice> {
     final PageRoute<void> route;
     if (portal == _OfficePortal.pinboard) {
       route = DiscoverPinboardRoute(source);
+    } else if (portal == _OfficePortal.team) {
+      route = DiscoverTeamBoardRoute(source);
     } else if (portal == _OfficePortal.calendar) {
       route = DiscoverCalendarRoute(
         source: source,
@@ -149,7 +155,9 @@ class _DiscoverOfficeState extends State<DiscoverOffice> {
       );
     }
     _opening = true;
-    if (portal == _OfficePortal.pinboard || portal == _OfficePortal.calendar) {
+    if (portal == _OfficePortal.pinboard ||
+        portal == _OfficePortal.calendar ||
+        portal == _OfficePortal.team) {
       setState(() => _paperInPortal = portal);
     }
     if (arcade) AppTunnelController.select(AppTunnel.buyer);
@@ -161,8 +169,11 @@ class _DiscoverOfficeState extends State<DiscoverOffice> {
         AppTunnelController.select(previous);
       }
       _opening = false;
-      if (mounted && _paperInPortal != null) {
-        setState(() => _paperInPortal = null);
+      if (mounted && (_paperInPortal != null || arcade)) {
+        setState(() {
+          _paperInPortal = null;
+          if (arcade) _teamRevision++;
+        });
       }
     }
   }
@@ -229,7 +240,8 @@ class _DiscoverOfficeState extends State<DiscoverOffice> {
       final screen = _placeInOffice(bounds.biggest, _crtGlass);
       final calendar = _placeInOffice(bounds.biggest, _wallCalendar);
       final globe = _placeInOffice(bounds.biggest, _deskGlobe);
-      final pinboard = _placeInOffice(bounds.biggest, _wallBoard);
+      final pinboard = _placeInOffice(bounds.biggest, _wallHeadlines);
+      final teamBoard = _placeInOffice(bounds.biggest, _wallTeam);
       return Stack(
         children: [
           Positioned.fill(
@@ -259,6 +271,13 @@ class _DiscoverOfficeState extends State<DiscoverOffice> {
                 child: SizedBox(width: 480, child: DiscoverPinboard()),
               ),
             ),
+          if (_paperInPortal != _OfficePortal.team)
+            Positioned.fromRect(
+              rect: teamBoard,
+              child: ExcludeSemantics(
+                child: DiscoverTeamBoard(key: ValueKey(_teamRevision)),
+              ),
+            ),
           Positioned.fill(
             child: IgnorePointer(
               child: CustomPaint(painter: _OfficeLampPainter(widget.lampOn)),
@@ -279,6 +298,12 @@ class _DiscoverOfficeState extends State<DiscoverOffice> {
               pinboard,
               'Zoom into pinboard',
               () => _openPortal(pinboard, _OfficePortal.pinboard),
+            ),
+          if (widget.interactive)
+            _hotspot(
+              teamBoard,
+              'Open team board',
+              () => _openPortal(teamBoard, _OfficePortal.team),
             ),
           if (widget.interactive && widget.buyerDashboard != null)
             _hotspot(
@@ -327,6 +352,12 @@ class _DiscoverOfficeState extends State<DiscoverOffice> {
               _headlineCallout,
               'Click here for Headlines',
               () => _openPortal(pinboard, _OfficePortal.pinboard),
+            ),
+            _callout(
+              bounds.biggest,
+              _teamCallout,
+              'Click here for My Team',
+              () => _openPortal(teamBoard, _OfficePortal.team),
             ),
             if (widget.loadEvents != null && widget.openEvent != null)
               _callout(
@@ -383,13 +414,15 @@ class _DiscoverOfficePainter extends CustomPainter {
   }
 
   void _deskArrows(Canvas c) {
+    const ink = Color(0xff786c5d);
+    _line(c, const Offset(728, 131), const Offset(689, 208), ink, 1.7);
     for (final (start, tip) in const [
       (Offset(291, 686), Offset(291, 657)),
-      (Offset(529, 149), Offset(529, 208)),
+      (Offset(689, 208), Offset(603, 243)),
+      (Offset(530, 57), Offset(530, 72)),
       (Offset(855, 98), Offset(855, 128)),
-      (Offset(285, 92), Offset(318, 123)),
+      (Offset(268, 92), Offset(318, 123)),
     ]) {
-      const ink = Color(0xff786c5d);
       _line(c, start, tip, ink, 1.7);
       final angle = math.atan2(tip.dy - start.dy, tip.dx - start.dx);
       for (final wing in [-.55, .55]) {

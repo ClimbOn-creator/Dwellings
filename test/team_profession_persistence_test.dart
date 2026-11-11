@@ -11,6 +11,8 @@ import 'package:dwelling_iq/services/backend_service.dart';
 import 'package:dwelling_iq/services/marketplace_service.dart';
 import 'package:dwelling_iq/services/discover_activity.dart';
 import 'package:dwelling_iq/widgets/learning_discover_pinboard.dart';
+import 'package:dwelling_iq/widgets/learning_discover_team_board.dart';
+import 'package:dwelling_iq/widgets/profile_photo.dart';
 import 'team_professions_test.dart' show member;
 
 void main() {
@@ -76,10 +78,20 @@ void main() {
                     ? 'ma_lawyer'
                     : 'lawyer',
                 'display_name': id,
+                if (id == 'accountant') 'photo_index': 3,
               },
             });
             body = [];
           }
+        } else if (request.url.path.endsWith('/provider_profiles')) {
+          body = [
+            {
+              'id': 'accountant',
+              'provider_type': 'accountant',
+              'display_name': 'accountant',
+              'photo_index': 3,
+            },
+          ];
         } else if (request.url.path.endsWith('/learning_progress')) {
           expect(request.url.queryParameters['user_id'], 'eq.${user()['id']}');
           body = [
@@ -191,4 +203,38 @@ void main() {
     navigator.currentState!.pop();
     await tester.pumpAndSettle();
   });
+
+  testWidgets(
+    'Discover team board saves a professional and shows their portrait',
+    (tester) async {
+      if (!BackendService.configured) return;
+      team.clear();
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: Center(child: DiscoverTeamBoard(interactive: true)),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('?'), findsNWidgets(4));
+      await tester.tap(find.text('Add professional').first);
+      await tester.pumpAndSettle();
+      final add = find.byTooltip('Add accountant to My Team');
+      await tester.ensureVisible(add);
+      await tester.runAsync(() async {
+        await tester.tap(add);
+        await Future<void>.delayed(const Duration(milliseconds: 30));
+      });
+      await tester.pumpAndSettle();
+      expect(team.single['provider_id'], 'accountant');
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+      expect(find.text('?'), findsNWidgets(3));
+      final portrait = tester.widget<ProfilePhoto>(
+        find.byKey(const ValueKey('team-photo-accountant')),
+      );
+      expect(portrait.exampleIndex, 3);
+    },
+  );
 }
