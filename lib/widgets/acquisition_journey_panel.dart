@@ -6,9 +6,14 @@ import 'site_copy_text.dart';
 import 'transaction_room_panel.dart';
 
 class AcquisitionJourneyPanel extends StatefulWidget {
-  const AcquisitionJourneyPanel({super.key, this.initialStageId});
+  const AcquisitionJourneyPanel({
+    super.key,
+    this.initialStageId,
+    this.showTitle = true,
+  });
 
   final String? initialStageId;
+  final bool showTitle;
 
   @override
   State<AcquisitionJourneyPanel> createState() =>
@@ -28,17 +33,18 @@ class _AcquisitionJourneyPanelState extends State<AcquisitionJourneyPanel> {
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
-      const SiteCopyText(
-        'learning.journey.title',
-        'Roadmap',
-        style: TextStyle(
-          color: learningInk,
-          fontSize: 32,
-          fontWeight: FontWeight.w800,
-          letterSpacing: -1,
+      if (widget.showTitle)
+        const SiteCopyText(
+          'learning.journey.title',
+          'Roadmap',
+          style: TextStyle(
+            color: learningInk,
+            fontSize: 32,
+            fontWeight: FontWeight.w800,
+            letterSpacing: -1,
+          ),
         ),
-      ),
-      const SizedBox(height: 24),
+      if (widget.showTitle) const SizedBox(height: 24),
       for (var i = 0; i < acquisitionJourneyStages.length; i++)
         Padding(padding: const EdgeInsets.only(bottom: 12), child: _section(i)),
     ],
@@ -117,7 +123,7 @@ class _AcquisitionJourneyPanelState extends State<AcquisitionJourneyPanel> {
                         padding: const EdgeInsets.fromLTRB(24, 4, 24, 24),
                         child: SiteCopyText(
                           'learning.journey.${item.id}.body',
-                          learningRoadmapPlaceholder,
+                          siteCopyCatalog['learning.journey.${item.id}.body']!,
                           style: const TextStyle(
                             color: learningInk,
                             fontSize: 16,

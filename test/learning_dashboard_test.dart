@@ -135,16 +135,23 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   }
-  testWidgets('Discover search opens the matching learning content', (
+  testWidgets('Search lesson library opens the matching learning content', (
     tester,
   ) async {
     await tester.pumpWidget(
       const MaterialApp(
-        home: LearningDashboardPage(initialView: LearningView.discover),
+        home: LearningDashboardPage(initialView: LearningView.search),
       ),
     );
     await tester.pumpAndSettle();
+    final library = find.byKey(
+      const ValueKey('learning-lesson-search-library'),
+    );
+    await tester.ensureVisible(library);
+    await tester.tap(library);
+    await tester.pumpAndSettle();
     final field = find.byKey(const Key('learning-first-steps-search'));
+    await tester.ensureVisible(field);
     expect(find.byType(TextField), findsOneWidget);
     final welcome = find.text('Welcome to Pact.');
     expect(welcome, findsOneWidget);
@@ -168,6 +175,7 @@ void main() {
       'Working capital, debt & asset schedule',
     );
     expect(document, findsOneWidget);
+    await tester.ensureVisible(document);
     await tester.tap(document);
     await tester.pumpAndSettle();
     final panel = tester.widget<TransactionRoomPanel>(
@@ -249,7 +257,7 @@ void main() {
   });
 
   testWidgets(
-    'Roadmap sections span the workspace and have editable paragraphs',
+    'Roadmap lesson retains permanent stage IDs and editable paragraphs',
     (tester) async {
       tester.view.physicalSize = const Size(2000, 1000);
       tester.view.devicePixelRatio = 1;
@@ -267,21 +275,20 @@ void main() {
         of: firstStage,
         matching: find.byType(AnimatedRotation),
       );
-      expect(tester.getSize(firstStage).width, greaterThan(1600));
+      expect(tester.getSize(firstStage).width, inExclusiveRange(650, 1000));
+      await tester.ensureVisible(firstStage);
       expect(tester.widget<AnimatedRotation>(arrow).turns, 0);
-      expect(find.text(learningRoadmapPlaceholder), findsNothing);
+      final firstBody = siteCopyCatalog['learning.journey.find.body']!;
+      expect(find.text(firstBody), findsNothing);
       await tester.tap(firstStage);
       await tester.pumpAndSettle();
       expect(tester.widget<AnimatedRotation>(arrow).turns, .5);
-      final body = find.widgetWithText(
-        SiteCopyText,
-        learningRoadmapPlaceholder,
-      );
+      final body = find.widgetWithText(SiteCopyText, firstBody);
       expect(
         tester.widget<SiteCopyText>(body).contentKey,
         'learning.journey.find.body',
       );
-      expect(learningRoadmapPlaceholder.split('\n\n'), hasLength(3));
+      expect(firstBody.split('\n\n'), hasLength(2));
       expect(find.text('What would you do?'), findsNothing);
       expect(find.text('Documents for this stage'), findsNothing);
       await tester.ensureVisible(secondStage);
@@ -289,7 +296,14 @@ void main() {
       await tester.pumpAndSettle();
       expect(tester.widget<AnimatedRotation>(arrow).turns, 0);
       expect(
-        tester.widget<SiteCopyText>(body).contentKey,
+        tester
+            .widget<SiteCopyText>(
+              find.widgetWithText(
+                SiteCopyText,
+                siteCopyCatalog['learning.journey.value.body']!,
+              ),
+            )
+            .contentKey,
         'learning.journey.value.body',
       );
     },

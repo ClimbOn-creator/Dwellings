@@ -94,7 +94,9 @@ class _LearningStartSearchState extends State<LearningStartSearch> {
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, box) => SingleChildScrollView(
       child: ConstrainedBox(
-        constraints: BoxConstraints(minHeight: box.maxHeight),
+        constraints: BoxConstraints(
+          minHeight: box.hasBoundedHeight ? box.maxHeight : 0,
+        ),
         child: Center(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),

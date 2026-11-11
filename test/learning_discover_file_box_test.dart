@@ -26,7 +26,11 @@ void main() {
         addTearDown(tester.view.resetPhysicalSize);
         addTearDown(tester.view.resetDevicePixelRatio);
         await tester.pumpWidget(
-          MaterialApp(home: LearningDashboardPage(initialView: view)),
+          cabinet
+              ? MaterialApp(home: LearningDashboardPage(initialView: view))
+              : const MaterialApp(
+                  home: Scaffold(body: LearningDiscoverFileBox()),
+                ),
         );
         await tester.pumpAndSettle();
 

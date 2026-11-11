@@ -1,6 +1,7 @@
 import '../models/dashboard_showcase_content.dart';
 import '../models/about_story_content.dart';
 import '../models/marketing_motion_content.dart';
+import '../models/learning_lesson_content.dart';
 
 const learningRoadmapPlaceholder =
     'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed posuere '
@@ -22,11 +23,8 @@ const siteCopyCatalog = <String, String>{
   'learning.room.title': 'Transaction Room',
   'learning.journey.kicker': 'LEARN BY WORKING THROUGH A DEAL',
   'learning.journey.title': 'Roadmap',
-  'learning.journey.find.body': learningRoadmapPlaceholder,
-  'learning.journey.value.body': learningRoadmapPlaceholder,
-  'learning.journey.offer.body': learningRoadmapPlaceholder,
-  'learning.journey.diligence.body': learningRoadmapPlaceholder,
-  'learning.journey.close.body': learningRoadmapPlaceholder,
+  ...learningRoadmapStageCopy,
+  ...learningLessonCopy,
   'learning.firstSteps.welcome': 'Welcome to Pact.',
   'learning.evaluate.files.title': 'Evaluation files',
   'learning.financial.statements.title': 'Financial statements',

@@ -1,5 +1,5 @@
 import '../services/device_location_service.dart';
-import '../widgets/acquisition_journey_panel.dart';
+import '../widgets/learning_lesson_page.dart';
 import '../widgets/transaction_room_panel.dart';
 import '../widgets/home_brand_button.dart';
 import '../widgets/learning_start_search.dart';
@@ -546,10 +546,19 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
                 openEvent: _openSeminar,
                 locate: widget.locate,
               )
-            : view == LearningView.discover
-            ? LearningStartSearch(onOpen: _openSearchResult)
-            : view == LearningView.search
-            ? const LearningDiscoverFileBox(key: ValueKey(LearningView.search))
+            : const {
+                LearningView.roadmap,
+                LearningView.discover,
+                LearningView.search,
+              }.contains(view)
+            ? LearningLessonPage(
+                key: ValueKey(view),
+                lesson: LearningLesson.values.byName(view.name),
+                onOpen: (destination) =>
+                    show(LearningView.values.byName(destination)),
+                onSearchResult: _openSearchResult,
+                initialStageId: _roadmapStageId,
+              )
             : view == LearningView.seminars
             ? Padding(
                 padding: EdgeInsets.all(compact ? 8 : 12),
@@ -569,12 +578,6 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
                           : 1220,
                     ),
                     child: switch (view) {
-                      LearningView.roadmap => SizedBox(
-                        width: double.infinity,
-                        child: AcquisitionJourneyPanel(
-                          initialStageId: _roadmapStageId,
-                        ),
-                      ),
                       LearningView.evaluate => LearningEvaluateCoverFlow(
                         onOpenFile: (id) => setState(() {
                           _documentId = id;
