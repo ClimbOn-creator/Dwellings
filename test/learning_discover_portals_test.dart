@@ -139,6 +139,21 @@ void main() {
       await tester.pageBack();
       await tester.pumpAndSettle();
 
+      await tester.tap(find.text('Click here for My Team'));
+      await tester.pumpAndSettle();
+      expect(find.text('My team'), findsOneWidget);
+      expect(find.text('?'), findsNWidgets(4));
+      await tester.tap(find.text('Add professional').first);
+      await tester.pumpAndSettle();
+      expect(
+        find.text('Sign in to build your acquisition team'),
+        findsOneWidget,
+      );
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+
       await tester.tap(find.bySemanticsLabel('Open Paper Sling'));
       await tester.pumpAndSettle();
       expect(find.text('Level 1 / 15'), findsOneWidget);
