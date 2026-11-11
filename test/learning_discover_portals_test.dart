@@ -42,7 +42,13 @@ void main() {
 
       expect(find.byTooltip('Turn lamp off'), findsNothing);
       expect(find.byTooltip('Open Paper Sling'), findsNothing);
-      expect(find.textContaining('Click here for'), findsNothing);
+      expect(find.text('Click here for Learning Dash'), findsOneWidget);
+      expect(find.text('Click here for Buyer Dash'), findsOneWidget);
+      expect(find.text('Click here for Headlines'), findsOneWidget);
+      expect(
+        find.text('Click here for more learning opportunities'),
+        findsOneWidget,
+      );
       await tester.tap(find.bySemanticsLabel('Turn lamp off'));
       await tester.pump();
       expect(find.bySemanticsLabel('Turn lamp on'), findsOneWidget);
@@ -82,7 +88,7 @@ void main() {
       await tester.pageBack();
       await tester.pumpAndSettle();
 
-      await tester.tap(find.bySemanticsLabel('Open Discover calendar'));
+      await tester.tap(find.text('Click here for more learning opportunities'));
       await tester.pumpAndSettle();
       expect(find.text('In-person meetings'), findsOneWidget);
       expect(find.text('Resource meetings'), findsOneWidget);
@@ -96,7 +102,7 @@ void main() {
       await tester.pageBack();
       await tester.pumpAndSettle();
 
-      await tester.tap(find.bySemanticsLabel('Zoom into pinboard'));
+      await tester.tap(find.text('Click here for Headlines'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 1500));
       expect(find.textContaining('▏'), findsWidgets);
@@ -139,7 +145,7 @@ void main() {
       await tester.pageBack();
       await tester.pumpAndSettle();
 
-      await tester.tap(find.bySemanticsLabel('Enter Buyer Dashboard'));
+      await tester.tap(find.text('Click here for Buyer Dash'));
       await tester.pumpAndSettle();
       expect(find.text('Your pipeline'), findsOneWidget);
       await tester.pageBack();

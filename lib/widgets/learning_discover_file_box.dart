@@ -206,6 +206,7 @@ class _LearningDiscoverFileBoxState extends State<LearningDiscoverFileBox>
                           interactive: _camera.isDismissed,
                           lampOn: _lampOn,
                           toggleLamp: () => setState(() => _lampOn = !_lampOn),
+                          openLearning: () => _zoom(true),
                           locate: widget.locate,
                           buyerDashboard: widget.buyerDashboard,
                           loadEvents: widget.loadEvents,
@@ -259,6 +260,8 @@ class _LearningDiscoverFileBoxState extends State<LearningDiscoverFileBox>
                           child: Text(_fileName(i)),
                         ),
                       ),
+                  if (focused && cabinet && _selected == null)
+                    _DrawerHint(drawer: view.silhouette),
                   if (focused)
                     Positioned(
                       top: 4,
@@ -279,6 +282,56 @@ class _LearningDiscoverFileBoxState extends State<LearningDiscoverFileBox>
       ),
     ),
   );
+}
+
+class _DrawerHint extends StatelessWidget {
+  const _DrawerHint({required this.drawer});
+
+  final Rect drawer;
+
+  @override
+  Widget build(BuildContext context) {
+    const ink = Color(0xff514940);
+    const label = Text(
+      'Click on any file that interests you',
+      textAlign: TextAlign.center,
+      style: TextStyle(color: ink, fontSize: 16, fontWeight: FontWeight.w600),
+    );
+    if (drawer.left >= 240) {
+      return Positioned(
+        left: drawer.left - 232,
+        top: drawer.top + drawer.height * .28,
+        width: 226,
+        child: const IgnorePointer(
+          child: Row(
+            children: [
+              Expanded(child: label),
+              SizedBox(width: 8),
+              Icon(Icons.arrow_forward, color: ink, size: 25),
+            ],
+          ),
+        ),
+      );
+    }
+    return Positioned(
+      left: 48,
+      right: 48,
+      top: 1,
+      height: drawer.top - 2,
+      child: const IgnorePointer(
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              label,
+              Icon(Icons.arrow_downward, color: ink, size: 19),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _BoxView {
