@@ -61,6 +61,10 @@ const _wallCalendar = Rect.fromLTWH(267, 132, 145, 153);
 const _lampHit = Rect.fromLTWH(238, 250, 131, 153);
 const _trashHit = Rect.fromLTWH(978, 549, 82, 117);
 const _deskGlobe = Rect.fromLTWH(794, 296, 82, 94);
+const _learningCallout = Rect.fromLTWH(160, 690, 262, 30);
+const _buyerCallout = Rect.fromLTWH(420, 115, 219, 31);
+const _headlineCallout = Rect.fromLTWH(741, 63, 228, 31);
+const _opportunitiesCallout = Rect.fromLTWH(119, 57, 327, 31);
 const _wallBoard = Rect.fromLTWH(730, 139, 250, 156);
 
 enum _OfficePortal { buyer, calendar, globe, pinboard }
@@ -71,6 +75,7 @@ class DiscoverOffice extends StatefulWidget {
     required this.interactive,
     required this.lampOn,
     required this.toggleLamp,
+    required this.openLearning,
     required this.locate,
     this.buyerDashboard,
     this.loadEvents,
@@ -80,7 +85,7 @@ class DiscoverOffice extends StatefulWidget {
 
   final double drawer;
   final bool interactive, lampOn;
-  final VoidCallback toggleLamp;
+  final VoidCallback toggleLamp, openLearning;
   final DiscoverLocate locate;
   final WidgetBuilder? buyerDashboard;
   final Future<List<LearningSeminar>> Function()? loadEvents;
@@ -184,6 +189,30 @@ class _DiscoverOfficeState extends State<DiscoverOffice> {
         ),
       );
 
+  Widget _callout(Size stage, Rect rect, String label, VoidCallback open) =>
+      Positioned.fromRect(
+        rect: _placeInOffice(stage, rect),
+        child: TextButton(
+          onPressed: open,
+          style: TextButton.styleFrom(
+            foregroundColor: const Color(0xff514940),
+            padding: EdgeInsets.zero,
+            minimumSize: Size.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 15 * _officeFrame(stage).width / _officeSize.width,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ),
+      );
+
   Widget _paper(DateTime today, double ink) => ExcludeSemantics(
     child: FittedBox(
       fit: BoxFit.fill,
@@ -279,6 +308,34 @@ class _DiscoverOfficeState extends State<DiscoverOffice> {
               widget.lampOn ? 'Turn lamp off' : 'Turn lamp on',
               widget.toggleLamp,
             ),
+          if (widget.interactive) ...[
+            _callout(
+              bounds.biggest,
+              _learningCallout,
+              'Click here for Learning Dash',
+              widget.openLearning,
+            ),
+            if (widget.buyerDashboard != null)
+              _callout(
+                bounds.biggest,
+                _buyerCallout,
+                'Click here for Buyer Dash',
+                () => _openPortal(screen, _OfficePortal.buyer),
+              ),
+            _callout(
+              bounds.biggest,
+              _headlineCallout,
+              'Click here for Headlines',
+              () => _openPortal(pinboard, _OfficePortal.pinboard),
+            ),
+            if (widget.loadEvents != null && widget.openEvent != null)
+              _callout(
+                bounds.biggest,
+                _opportunitiesCallout,
+                'Click here for more learning opportunities',
+                () => _openPortal(calendar, _OfficePortal.calendar),
+              ),
+          ],
         ],
       );
     },
@@ -321,7 +378,31 @@ class _DiscoverOfficePainter extends CustomPainter {
     _deskAccessories(canvas);
     _computer(canvas);
     _trashCan(canvas);
+    if (drawer == 0) _deskArrows(canvas);
     canvas.restore();
+  }
+
+  void _deskArrows(Canvas c) {
+    for (final (start, tip) in const [
+      (Offset(291, 686), Offset(291, 657)),
+      (Offset(529, 149), Offset(529, 208)),
+      (Offset(855, 98), Offset(855, 128)),
+      (Offset(285, 92), Offset(318, 123)),
+    ]) {
+      const ink = Color(0xff786c5d);
+      _line(c, start, tip, ink, 1.7);
+      final angle = math.atan2(tip.dy - start.dy, tip.dx - start.dx);
+      for (final wing in [-.55, .55]) {
+        final direction = angle + wing;
+        _line(
+          c,
+          tip,
+          tip - Offset(math.cos(direction), math.sin(direction)) * 9,
+          ink,
+          1.7,
+        );
+      }
+    }
   }
 
   void _trashCan(Canvas c) {

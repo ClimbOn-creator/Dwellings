@@ -53,6 +53,10 @@ void main() {
         }
         await tester.pumpAndSettle();
         expect(tabs, findsNWidgets(15));
+        expect(
+          find.text('Click on any file that interests you'),
+          cabinet ? findsOneWidget : findsNothing,
+        );
         expect(office, findsNothing);
 
         final left = find.byKey(const ValueKey('discover-Text-pane'));
