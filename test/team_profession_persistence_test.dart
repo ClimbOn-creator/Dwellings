@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -7,6 +9,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:dwelling_iq/services/account_service.dart';
 import 'package:dwelling_iq/services/backend_service.dart';
 import 'package:dwelling_iq/services/marketplace_service.dart';
+import 'package:dwelling_iq/services/discover_activity.dart';
+import 'package:dwelling_iq/widgets/learning_discover_pinboard.dart';
 import 'team_professions_test.dart' show member;
 
 void main() {
@@ -76,6 +80,13 @@ void main() {
             });
             body = [];
           }
+        } else if (request.url.path.endsWith('/learning_progress')) {
+          expect(request.url.queryParameters['user_id'], 'eq.${user()['id']}');
+          body = [
+            {'concept_id': 'search'},
+          ];
+        } else if (request.url.path.contains('/rest/v1/')) {
+          body = [];
         } else if (request.url.path.endsWith('/user')) {
           if (request.method == 'PUT') {
             metadata.addAll(
@@ -132,4 +143,52 @@ void main() {
       expect(team.length, 1);
     },
   );
+
+  testWidgets('Pinboard shows account data and updates activity in place', (
+    tester,
+  ) async {
+    if (!BackendService.configured) return;
+    team.clear();
+    final navigator = GlobalKey<NavigatorState>();
+    await tester.pumpWidget(
+      MaterialApp(navigatorKey: navigator, home: const Scaffold()),
+    );
+    unawaited(
+      navigator.currentState!.push(
+        DiscoverPinboardRoute(const Rect.fromLTWH(200, 60, 160, 100)),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.runAsync(() async {
+      final account = BackendService.user!.id;
+      await DiscoverActivity.recordForAccount(
+        account,
+        DiscoverActivityKind.files,
+        'a',
+      );
+      await DiscoverActivity.recordForAccount(
+        account,
+        DiscoverActivityKind.files,
+        'b',
+      );
+      await Future<void>.delayed(Duration.zero);
+    });
+    await tester.pump();
+    expect(find.text('Concepts completed'), findsOneWidget);
+    expect(find.text('1'), findsOneWidget);
+    expect(find.text('2'), findsOneWidget);
+    await tester.runAsync(() async {
+      await DiscoverActivity.recordForAccount(
+        BackendService.user!.id,
+        DiscoverActivityKind.files,
+        'c',
+      );
+      await Future<void>.delayed(Duration.zero);
+    });
+    await tester.pump();
+    expect(find.text('2'), findsNothing);
+    expect(find.text('3'), findsOneWidget);
+    navigator.currentState!.pop();
+    await tester.pumpAndSettle();
+  });
 }

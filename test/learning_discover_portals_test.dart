@@ -10,6 +10,7 @@ void main() {
   testWidgets(
     'Discover lamp, atlas, calendar and Buyer workspace work from the desk',
     (tester) async {
+      final semantics = tester.ensureSemantics();
       SharedPreferences.setMockInitialValues({});
       await tester.runAsync(() => CanadaMapGeometry.asset);
       tester.view.physicalSize = const Size(1440, 900);
@@ -39,14 +40,17 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byTooltip('Turn lamp off'));
+      expect(find.byTooltip('Turn lamp off'), findsNothing);
+      expect(find.byTooltip('Open Paper Sling'), findsNothing);
+      expect(find.textContaining('Click here for'), findsNothing);
+      await tester.tap(find.bySemanticsLabel('Turn lamp off'));
       await tester.pump();
-      expect(find.byTooltip('Turn lamp on'), findsOneWidget);
-      await tester.tap(find.byTooltip('Turn lamp on'));
+      expect(find.bySemanticsLabel('Turn lamp on'), findsOneWidget);
+      await tester.tap(find.bySemanticsLabel('Turn lamp on'));
       await tester.pump();
-      expect(find.byTooltip('Turn lamp off'), findsOneWidget);
+      expect(find.bySemanticsLabel('Turn lamp off'), findsOneWidget);
 
-      await tester.tap(find.byTooltip('Open desk globe'));
+      await tester.tap(find.bySemanticsLabel('Open desk globe'));
       await tester.pumpAndSettle();
       expect(find.text('Discover atlas'), findsOneWidget);
       expect(
@@ -78,7 +82,7 @@ void main() {
       await tester.pageBack();
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byTooltip('Open Discover calendar'));
+      await tester.tap(find.bySemanticsLabel('Open Discover calendar'));
       await tester.pumpAndSettle();
       expect(find.text('In-person meetings'), findsOneWidget);
       expect(find.text('Resource meetings'), findsOneWidget);
@@ -92,7 +96,7 @@ void main() {
       await tester.pageBack();
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byTooltip('Zoom into pinboard'));
+      await tester.tap(find.bySemanticsLabel('Zoom into pinboard'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 1500));
       expect(find.textContaining('▏'), findsWidgets);
@@ -102,9 +106,14 @@ void main() {
         'Deals viewed',
         'My team',
         'Best 5 files',
-        'Note 5',
-        'Note 6',
-        'Note 7',
+        'Concepts completed',
+        'Upcoming RSVPs',
+        'Saved listings',
+        'Active deal rooms',
+        'Deal tasks done',
+        'Blocked tasks',
+        'Next target close',
+        'Pending introductions',
       ]) {
         expect(find.text(note), findsOneWidget);
       }
@@ -116,7 +125,7 @@ void main() {
       );
       await tester.tap(find.byTooltip('Close note'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Note 7'));
+      await tester.tap(find.text('My team'));
       await tester.pumpAndSettle();
       expect(find.byTooltip('Close note'), findsOneWidget);
       await tester.tap(find.byTooltip('Close note'));
@@ -124,18 +133,19 @@ void main() {
       await tester.pageBack();
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byTooltip('Open Paper Sling'));
+      await tester.tap(find.bySemanticsLabel('Open Paper Sling'));
       await tester.pumpAndSettle();
       expect(find.text('Level 1 / 15'), findsOneWidget);
       await tester.pageBack();
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byTooltip('Enter Buyer Dashboard'));
+      await tester.tap(find.bySemanticsLabel('Enter Buyer Dashboard'));
       await tester.pumpAndSettle();
       expect(find.text('Your pipeline'), findsOneWidget);
       await tester.pageBack();
       await tester.pumpAndSettle();
-      expect(find.byTooltip('Open Discover calendar'), findsOneWidget);
+      expect(find.bySemanticsLabel('Open Discover calendar'), findsOneWidget);
+      semantics.dispose();
     },
   );
 

@@ -18,6 +18,7 @@ void main() {
         addTearDown(
           tester.platformDispatcher.clearAccessibilityFeaturesTestValue,
         );
+        final semantics = tester.ensureSemantics();
         const window = Size(1440, 900);
         tester.view.physicalSize = window;
         tester.view.devicePixelRatio = 1;
@@ -29,7 +30,7 @@ void main() {
         await tester.pumpAndSettle();
 
         final overview = cabinet
-            ? find.byTooltip('Open filing cabinet')
+            ? find.bySemanticsLabel('Open filing cabinet')
             : find.widgetWithText(TextButton, 'Explore the file box');
         final tabs = find.byWidgetPredicate(
           (widget) =>
@@ -85,6 +86,7 @@ void main() {
         await tester.pumpAndSettle();
         expect(overview, findsOneWidget);
         expect(office, cabinet ? findsOneWidget : findsNothing);
+        semantics.dispose();
       },
     );
   }

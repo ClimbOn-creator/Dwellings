@@ -206,7 +206,6 @@ class _LearningDiscoverFileBoxState extends State<LearningDiscoverFileBox>
                           interactive: _camera.isDismissed,
                           lampOn: _lampOn,
                           toggleLamp: () => setState(() => _lampOn = !_lampOn),
-                          openLearning: () => _zoom(true),
                           locate: widget.locate,
                           buyerDashboard: widget.buyerDashboard,
                           loadEvents: widget.loadEvents,
@@ -233,8 +232,8 @@ class _LearningDiscoverFileBoxState extends State<LearningDiscoverFileBox>
                     if (cabinet)
                       Positioned.fromRect(
                         rect: discoverCabinetHitArea(size),
-                        child: Tooltip(
-                          message: 'Open filing cabinet',
+                        child: Semantics(
+                          label: 'Open filing cabinet',
                           child: openButton,
                         ),
                       )

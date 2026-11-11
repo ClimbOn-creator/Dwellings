@@ -68,6 +68,89 @@ class DiscoverPortalRoute extends PageRouteBuilder<void> {
   );
 }
 
+const discoverPaperDuration = Duration(milliseconds: 2150);
+const discoverPaperReverseDuration = Duration(milliseconds: 620);
+const discoverPaperZoom = Interval(0, .84, curve: Curves.easeInOutCubic);
+const discoverPaperBackdrop = Interval(0, .60, curve: Curves.easeInOut);
+
+class DiscoverCalendarRoute extends PageRouteBuilder<void> {
+  DiscoverCalendarRoute({
+    required Rect source,
+    required Widget paper,
+    required WidgetBuilder destination,
+  }) : super(
+         opaque: false,
+         transitionDuration: discoverPaperDuration,
+         reverseTransitionDuration: discoverPaperReverseDuration,
+         pageBuilder: (context, _, _) => destination(context),
+         transitionsBuilder: (context, animation, _, child) => AnimatedBuilder(
+           animation: animation,
+           child: child,
+           builder: (context, child) {
+             final time = animation.value;
+             final zoom = discoverPaperZoom.transform(time);
+             final reveal = const Interval(
+               .70,
+               .98,
+               curve: Curves.easeInOut,
+             ).transform(time);
+             return LayoutBuilder(
+               builder: (context, bounds) {
+                 final wide = bounds.maxWidth >= 820;
+                 final margin = wide ? 12.0 : 10.0;
+                 final width =
+                     (wide ? (bounds.maxWidth - 1) / 2 : bounds.maxWidth) -
+                     margin * 2;
+                 final target = Rect.fromLTWH(
+                   margin,
+                   MediaQuery.paddingOf(context).top +
+                       kToolbarHeight +
+                       (wide ? 40 : 50),
+                   width,
+                   width * source.height / source.width,
+                 );
+                 return Stack(
+                   fit: StackFit.expand,
+                   children: [
+                     ColoredBox(
+                       color: const Color(0xfff5f5ed).withValues(
+                         alpha: discoverPaperBackdrop.transform(time),
+                       ),
+                     ),
+                     IgnorePointer(
+                       ignoring: time < 1,
+                       child: Opacity(opacity: reveal, child: child),
+                     ),
+                     if (reveal < 1)
+                       Positioned.fromRect(
+                         rect: Rect.lerp(source, target, zoom)!,
+                         child: IgnorePointer(
+                           child: Opacity(
+                             opacity: 1 - reveal,
+                             child: DefaultTextStyle(
+                               style: Theme.of(context).textTheme.bodyMedium!,
+                               child: paper,
+                             ),
+                           ),
+                         ),
+                       ),
+                   ],
+                 );
+               },
+             );
+           },
+         ),
+       );
+
+  @override
+  AnimationController createAnimationController() => AnimationController(
+    vsync: navigator!,
+    duration: transitionDuration,
+    reverseDuration: reverseTransitionDuration,
+    animationBehavior: AnimationBehavior.preserve,
+  );
+}
+
 class _ArcadeTunnel extends CustomPainter {
   const _ArcadeTunnel(this.origin, this.time);
 

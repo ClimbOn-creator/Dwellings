@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'backend_service.dart';
@@ -5,6 +6,9 @@ import 'backend_service.dart';
 enum DiscoverActivityKind { files, deals }
 
 class DiscoverActivity {
+  static final _revision = ValueNotifier<int>(0);
+  static ValueListenable<int> get changes => _revision;
+
   static Future<void> _pending = Future.value();
 
   static String _key(String userId, DiscoverActivityKind kind) =>
@@ -26,7 +30,10 @@ class DiscoverActivity {
           final preferences = await SharedPreferences.getInstance();
           final key = _key(userId, kind);
           final ids = (preferences.getStringList(key) ?? []).toSet();
-          if (ids.add(id)) await preferences.setStringList(key, ids.toList());
+          if (ids.add(id) &&
+              await preferences.setStringList(key, ids.toList())) {
+            _revision.value++;
+          }
         })
         .catchError((Object _) {
           // Local activity tracking is best-effort so opening an item still works.

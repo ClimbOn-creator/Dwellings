@@ -61,10 +61,6 @@ const _wallCalendar = Rect.fromLTWH(267, 132, 145, 153);
 const _lampHit = Rect.fromLTWH(238, 250, 131, 153);
 const _trashHit = Rect.fromLTWH(978, 549, 82, 117);
 const _deskGlobe = Rect.fromLTWH(794, 296, 82, 94);
-const _learningCallout = Rect.fromLTWH(160, 690, 262, 30);
-const _buyerCallout = Rect.fromLTWH(420, 115, 219, 31);
-const _headlineCallout = Rect.fromLTWH(741, 63, 228, 31);
-const _opportunitiesCallout = Rect.fromLTWH(119, 57, 327, 31);
 const _wallBoard = Rect.fromLTWH(730, 139, 250, 156);
 
 enum _OfficePortal { buyer, calendar, globe, pinboard }
@@ -75,7 +71,6 @@ class DiscoverOffice extends StatefulWidget {
     required this.interactive,
     required this.lampOn,
     required this.toggleLamp,
-    required this.openLearning,
     required this.locate,
     this.buyerDashboard,
     this.loadEvents,
@@ -85,7 +80,7 @@ class DiscoverOffice extends StatefulWidget {
 
   final double drawer;
   final bool interactive, lampOn;
-  final VoidCallback toggleLamp, openLearning;
+  final VoidCallback toggleLamp;
   final DiscoverLocate locate;
   final WidgetBuilder? buyerDashboard;
   final Future<List<LearningSeminar>> Function()? loadEvents;
@@ -98,7 +93,7 @@ class DiscoverOffice extends StatefulWidget {
 class _DiscoverOfficeState extends State<DiscoverOffice> {
   final _today = DiscoverToday();
   bool _opening = false;
-  bool _pinboardInPortal = false;
+  _OfficePortal? _paperInPortal;
 
   @override
   void dispose() {
@@ -119,6 +114,17 @@ class _DiscoverOfficeState extends State<DiscoverOffice> {
     final PageRoute<void> route;
     if (portal == _OfficePortal.pinboard) {
       route = DiscoverPinboardRoute(source);
+    } else if (portal == _OfficePortal.calendar) {
+      route = DiscoverCalendarRoute(
+        source: source,
+        paper: _paper(_today.value, 1),
+        destination: (_) => DiscoverCalendarPage(
+          today: _today,
+          loadEvents: widget.loadEvents!,
+          openEvent: widget.openEvent!,
+          locate: widget.locate,
+        ),
+      );
     } else {
       route = DiscoverPortalRoute(
         destination: arcade
@@ -128,20 +134,18 @@ class _DiscoverOfficeState extends State<DiscoverOffice> {
                 loadEvents: widget.loadEvents!,
                 openEvent: widget.openEvent!,
                 locate: widget.locate,
-                atlasOnly: portal == _OfficePortal.globe,
+                atlasOnly: true,
               ),
         source: source,
         arcade: arcade,
         calendarPage: arcade
             ? null
-            : portal == _OfficePortal.calendar
-            ? _paper(_today.value, 1)
             : const ColoredBox(color: Color(0xff536d65)),
       );
     }
     _opening = true;
-    if (portal == _OfficePortal.pinboard) {
-      setState(() => _pinboardInPortal = true);
+    if (portal == _OfficePortal.pinboard || portal == _OfficePortal.calendar) {
+      setState(() => _paperInPortal = portal);
     }
     if (arcade) AppTunnelController.select(AppTunnel.buyer);
     try {
@@ -152,64 +156,29 @@ class _DiscoverOfficeState extends State<DiscoverOffice> {
         AppTunnelController.select(previous);
       }
       _opening = false;
-      if (mounted && _pinboardInPortal) {
-        setState(() => _pinboardInPortal = false);
+      if (mounted && _paperInPortal != null) {
+        setState(() => _paperInPortal = null);
       }
     }
   }
 
-  Widget _hotspot(
-    Rect rect,
-    String label,
-    VoidCallback open, {
-    bool highlight = true,
-  }) => Positioned.fromRect(
-    rect: rect,
-    child: Tooltip(
-      message: label,
-      child: Semantics(
-        label: label,
-        button: true,
-        child: Material(
-          type: MaterialType.transparency,
-          child: InkWell(
-            onTap: open,
-            borderRadius: BorderRadius.circular(4),
-            overlayColor: highlight
-                ? null
-                : const WidgetStatePropertyAll(Colors.transparent),
-            hoverColor: highlight
-                ? Colors.white.withValues(alpha: .08)
-                : Colors.transparent,
-            focusColor: highlight
-                ? const Color(0x33536ca0)
-                : Colors.transparent,
-            splashFactory: highlight ? null : NoSplash.splashFactory,
-          ),
-        ),
-      ),
-    ),
-  );
-
-  Widget _callout(Size stage, Rect rect, String label, VoidCallback open) =>
+  Widget _hotspot(Rect rect, String label, VoidCallback open) =>
       Positioned.fromRect(
-        rect: _placeInOffice(stage, rect),
-        child: TextButton(
-          onPressed: open,
-          style: TextButton.styleFrom(
-            foregroundColor: const Color(0xff514940),
-            padding: EdgeInsets.zero,
-            minimumSize: Size.zero,
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          ),
-          child: FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(
-              label,
-              style: TextStyle(
-                fontSize: 15 * _officeFrame(stage).width / _officeSize.width,
-                fontWeight: FontWeight.w600,
+        rect: rect,
+        child: Semantics(
+          label: label,
+          button: true,
+          child: Material(
+            type: MaterialType.transparency,
+            child: InkWell(
+              onTap: open,
+              borderRadius: BorderRadius.circular(4),
+              overlayColor: WidgetStateProperty.resolveWith(
+                (states) => states.contains(WidgetState.focused)
+                    ? const Color(0x33536ca0)
+                    : Colors.transparent,
               ),
+              splashFactory: NoSplash.splashFactory,
             ),
           ),
         ),
@@ -240,19 +209,20 @@ class _DiscoverOfficeState extends State<DiscoverOffice> {
             ),
           ),
           Positioned.fromRect(rect: screen, child: const DiscoverArcade()),
-          Positioned.fromRect(
-            rect: calendar,
-            child: ValueListenableBuilder<DateTime>(
-              valueListenable: _today,
-              builder: (context, today, _) => TweenAnimationBuilder<double>(
-                key: ValueKey(today),
-                tween: Tween(begin: 0, end: 1),
-                duration: const Duration(milliseconds: 630),
-                builder: (context, ink, _) => _paper(today, ink),
+          if (_paperInPortal != _OfficePortal.calendar)
+            Positioned.fromRect(
+              rect: calendar,
+              child: ValueListenableBuilder<DateTime>(
+                valueListenable: _today,
+                builder: (context, today, _) => TweenAnimationBuilder<double>(
+                  key: ValueKey(today),
+                  tween: Tween(begin: 0, end: 1),
+                  duration: const Duration(milliseconds: 630),
+                  builder: (context, ink, _) => _paper(today, ink),
+                ),
               ),
             ),
-          ),
-          if (!_pinboardInPortal)
+          if (_paperInPortal != _OfficePortal.pinboard)
             Positioned.fromRect(
               rect: pinboard,
               child: const FittedBox(
@@ -274,7 +244,6 @@ class _DiscoverOfficeState extends State<DiscoverOffice> {
                   builder: (_) => const DiscoverPaperSlingPage(),
                 ),
               ),
-              highlight: false,
             ),
           if (widget.interactive)
             _hotspot(
@@ -309,36 +278,7 @@ class _DiscoverOfficeState extends State<DiscoverOffice> {
               _placeInOffice(bounds.biggest, _lampHit),
               widget.lampOn ? 'Turn lamp off' : 'Turn lamp on',
               widget.toggleLamp,
-              highlight: false,
             ),
-          if (widget.interactive) ...[
-            _callout(
-              bounds.biggest,
-              _learningCallout,
-              'Click here for Learning Dash',
-              widget.openLearning,
-            ),
-            if (widget.buyerDashboard != null)
-              _callout(
-                bounds.biggest,
-                _buyerCallout,
-                'Click here for Buyer Dash',
-                () => _openPortal(screen, _OfficePortal.buyer),
-              ),
-            _callout(
-              bounds.biggest,
-              _headlineCallout,
-              'Click here for Headlines',
-              () => _openPortal(pinboard, _OfficePortal.pinboard),
-            ),
-            if (widget.loadEvents != null && widget.openEvent != null)
-              _callout(
-                bounds.biggest,
-                _opportunitiesCallout,
-                'Click here for more learning opportunities',
-                () => _openPortal(calendar, _OfficePortal.calendar),
-              ),
-          ],
         ],
       );
     },
@@ -381,31 +321,7 @@ class _DiscoverOfficePainter extends CustomPainter {
     _deskAccessories(canvas);
     _computer(canvas);
     _trashCan(canvas);
-    if (drawer == 0) _deskArrows(canvas);
     canvas.restore();
-  }
-
-  void _deskArrows(Canvas c) {
-    for (final (start, tip) in const [
-      (Offset(291, 686), Offset(291, 657)),
-      (Offset(529, 149), Offset(529, 208)),
-      (Offset(855, 98), Offset(855, 128)),
-      (Offset(285, 92), Offset(318, 123)),
-    ]) {
-      const ink = Color(0xff786c5d);
-      _line(c, start, tip, ink, 1.7);
-      final angle = math.atan2(tip.dy - start.dy, tip.dx - start.dx);
-      for (final wing in [-.55, .55]) {
-        final direction = angle + wing;
-        _line(
-          c,
-          tip,
-          tip - Offset(math.cos(direction), math.sin(direction)) * 9,
-          ink,
-          1.7,
-        );
-      }
-    }
   }
 
   void _trashCan(Canvas c) {
