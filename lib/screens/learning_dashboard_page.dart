@@ -5,7 +5,8 @@ import '../widgets/home_brand_button.dart';
 import '../widgets/learning_discover_file_box.dart';
 import '../widgets/dashboard_header.dart';
 import 'deal_comparison_page.dart';
-import 'deal_rooms_page.dart';
+import 'buyer_resources_page.dart';
+import 'pact_web_messages.dart';
 import 'dart:async';
 import '../widgets/canada_event_map.dart';
 import '../widgets/learning_example_cover.dart';
@@ -520,8 +521,26 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
                 key: const ValueKey(LearningView.firstSteps),
                 cabinet: true,
                 fileNames: _cabinetFiles,
-                buyerDashboard: (_) =>
-                    const DealRoomsPage(openedFromDiscover: true),
+                buyerDashboard: (_) => Scaffold(
+                  appBar: AppBar(
+                    title: const SiteCopyText(
+                      'learning.desk.buyer.title',
+                      'Buyer dash',
+                    ),
+                  ),
+                  body: const Center(
+                    child: SiteCopyText(
+                      'learning.desk.buyer.comingSoon',
+                      'Coming soon',
+                      style: TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+                messenger: (_) =>
+                    const PactWebMessagesPage(workspace: 'learning'),
                 loadEvents: widget.loadSeminars ?? LearningService.seminars,
                 openEvent: _openSeminar,
                 locate: widget.locate,
@@ -544,6 +563,7 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 1220),
                     child: switch (view) {
+                      LearningView.resources => const BuyerResourcesPanel(),
                       LearningView.quiz => const DealComparisonPage(
                         embedded: true,
                       ),

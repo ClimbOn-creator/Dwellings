@@ -2,6 +2,8 @@ import 'package:dwelling_iq/screens/learning_dashboard_page.dart';
 import 'package:dwelling_iq/services/learning_service.dart';
 import 'package:dwelling_iq/widgets/learning_discover_calendar.dart';
 import 'package:dwelling_iq/widgets/canada_event_map.dart';
+import 'package:dwelling_iq/widgets/learning_discover_portal.dart';
+import 'package:dwelling_iq/screens/pact_web_messages.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -161,8 +163,37 @@ void main() {
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Click here for Buyer Dash'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 650));
+      expect(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is CustomPaint &&
+              widget.painter.runtimeType.toString() == '_ArcadeTunnel',
+        ),
+        findsOneWidget,
+      );
+      final comingSoon = find.text('Coming soon');
+      final opacity = tester.widget<Opacity>(
+        find.ancestor(of: comingSoon, matching: find.byType(Opacity)).first,
+      );
+      expect(opacity.opacity, 0);
+      expect(
+        ModalRoute.of(tester.element(comingSoon)),
+        isA<DiscoverPortalRoute>(),
+      );
       await tester.pumpAndSettle();
-      expect(find.text('Your pipeline'), findsOneWidget);
+      expect(comingSoon, findsOneWidget);
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+      await tester.tap(find.bySemanticsLabel('Open Messenger'));
+      await tester.pumpAndSettle();
+      expect(find.byType(PactWebMessages), findsOneWidget);
+      expect(find.text('Sign in to Messages'), findsOneWidget);
+      expect(
+        tester.widget<PactWebMessages>(find.byType(PactWebMessages)).workspace,
+        'learning',
+      );
       await tester.pageBack();
       await tester.pumpAndSettle();
       expect(find.bySemanticsLabel('Open Discover calendar'), findsOneWidget);

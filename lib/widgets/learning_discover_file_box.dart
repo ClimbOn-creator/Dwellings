@@ -41,6 +41,7 @@ class LearningDiscoverFileBox extends StatefulWidget {
     this.cabinet = false,
     this.fileNames,
     this.buyerDashboard,
+    this.messenger,
     this.loadEvents,
     this.openEvent,
     this.locate = DeviceLocationService.locate,
@@ -49,6 +50,7 @@ class LearningDiscoverFileBox extends StatefulWidget {
   final bool cabinet;
   final List<String>? fileNames;
   final WidgetBuilder? buyerDashboard;
+  final WidgetBuilder? messenger;
   final Future<List<LearningSeminar>> Function()? loadEvents;
   final ValueChanged<LearningSeminar>? openEvent;
   final DiscoverLocate locate;
@@ -220,6 +222,7 @@ class _LearningDiscoverFileBoxState extends State<LearningDiscoverFileBox>
                           openLearning: () => _zoom(true),
                           locate: widget.locate,
                           buyerDashboard: widget.buyerDashboard,
+                          messenger: widget.messenger,
                           loadEvents: widget.loadEvents,
                           openEvent: widget.openEvent,
                         ),

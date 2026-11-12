@@ -11,6 +11,7 @@ import 'learning_discover_portal.dart';
 import 'learning_discover_pinboard.dart';
 import 'learning_discover_paper_sling.dart';
 import 'learning_discover_team_board.dart';
+import 'site_copy_text.dart';
 
 const _officeSize = Size(1100, 740);
 const _cabinet = Rect.fromLTWH(185, 428, 211, 225);
@@ -62,6 +63,8 @@ const _wallCalendar = Rect.fromLTWH(267, 132, 145, 153);
 const _lampHit = Rect.fromLTWH(238, 250, 131, 153);
 const _trashHit = Rect.fromLTWH(978, 549, 82, 117);
 const _deskGlobe = Rect.fromLTWH(794, 296, 82, 94);
+const _deskPhone = Rect.fromLTWH(882, 337, 62, 80);
+const _messengerCallout = Rect.fromLTWH(884, 311, 185, 28);
 const _learningCallout = Rect.fromLTWH(160, 690, 262, 30);
 const _buyerCallout = Rect.fromLTWH(673, 310, 118, 28);
 const _headlineCallout = Rect.fromLTWH(416, 27, 228, 29);
@@ -70,7 +73,7 @@ const _opportunitiesCallout = Rect.fromLTWH(102, 57, 327, 31);
 const _wallHeadlines = Rect.fromLTWH(421, 76, 218, 136);
 const _wallTeam = Rect.fromLTWH(690, 139, 250, 156);
 
-enum _OfficePortal { buyer, calendar, globe, pinboard, team }
+enum _OfficePortal { buyer, calendar, globe, pinboard, team, phone }
 
 class DiscoverOffice extends StatefulWidget {
   const DiscoverOffice({
@@ -81,6 +84,7 @@ class DiscoverOffice extends StatefulWidget {
     required this.openLearning,
     required this.locate,
     this.buyerDashboard,
+    this.messenger,
     this.loadEvents,
     this.openEvent,
     super.key,
@@ -91,6 +95,7 @@ class DiscoverOffice extends StatefulWidget {
   final VoidCallback toggleLamp, openLearning;
   final DiscoverLocate locate;
   final WidgetBuilder? buyerDashboard;
+  final WidgetBuilder? messenger;
   final Future<List<LearningSeminar>> Function()? loadEvents;
   final ValueChanged<LearningSeminar>? openEvent;
 
@@ -140,6 +145,8 @@ class _DiscoverOfficeState extends State<DiscoverOffice> {
       route = DiscoverPortalRoute(
         destination: arcade
             ? widget.buyerDashboard!
+            : portal == _OfficePortal.phone
+            ? widget.messenger!
             : (_) => DiscoverCalendarPage(
                 today: _today,
                 loadEvents: widget.loadEvents!,
@@ -200,29 +207,43 @@ class _DiscoverOfficeState extends State<DiscoverOffice> {
         ),
       );
 
-  Widget _callout(Size stage, Rect rect, String label, VoidCallback open) =>
-      Positioned.fromRect(
-        rect: _placeInOffice(stage, rect),
-        child: TextButton(
-          onPressed: open,
-          style: TextButton.styleFrom(
-            foregroundColor: const Color(0xff514940),
-            padding: EdgeInsets.zero,
-            minimumSize: Size.zero,
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          ),
-          child: FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(
-              label,
-              style: TextStyle(
-                fontSize: 15 * _officeFrame(stage).width / _officeSize.width,
-                fontWeight: FontWeight.w600,
+  Widget _callout(
+    Size stage,
+    Rect rect,
+    String label,
+    VoidCallback open, {
+    String? contentKey,
+  }) => Positioned.fromRect(
+    rect: _placeInOffice(stage, rect),
+    child: TextButton(
+      onPressed: open,
+      style: TextButton.styleFrom(
+        foregroundColor: const Color(0xff514940),
+        padding: EdgeInsets.zero,
+        minimumSize: Size.zero,
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      ),
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: contentKey == null
+            ? Text(
+                label,
+                style: TextStyle(
+                  fontSize: 15 * _officeFrame(stage).width / _officeSize.width,
+                  fontWeight: FontWeight.w600,
+                ),
+              )
+            : SiteCopyText(
+                contentKey,
+                label,
+                style: TextStyle(
+                  fontSize: 15 * _officeFrame(stage).width / _officeSize.width,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-            ),
-          ),
-        ),
-      );
+      ),
+    ),
+  );
 
   Widget _paper(DateTime today, double ink) => ExcludeSemantics(
     child: FittedBox(
@@ -327,6 +348,15 @@ class _DiscoverOfficeState extends State<DiscoverOffice> {
               'Open desk globe',
               () => _openPortal(globe, _OfficePortal.globe),
             ),
+          if (widget.interactive && widget.messenger != null)
+            _hotspot(
+              _placeInOffice(bounds.biggest, _deskPhone),
+              'Open Messenger',
+              () => _openPortal(
+                _placeInOffice(bounds.biggest, _deskPhone),
+                _OfficePortal.phone,
+              ),
+            ),
           if (widget.interactive)
             _hotspot(
               _placeInOffice(bounds.biggest, _lampHit),
@@ -334,6 +364,17 @@ class _DiscoverOfficeState extends State<DiscoverOffice> {
               widget.toggleLamp,
             ),
           if (widget.interactive) ...[
+            if (widget.messenger != null)
+              _callout(
+                bounds.biggest,
+                _messengerCallout,
+                'Click here for Messenger',
+                () => _openPortal(
+                  _placeInOffice(bounds.biggest, _deskPhone),
+                  _OfficePortal.phone,
+                ),
+                contentKey: 'learning.desk.messenger.open',
+              ),
             _callout(
               bounds.biggest,
               _learningCallout,
@@ -408,6 +449,7 @@ class _DiscoverOfficePainter extends CustomPainter {
     _desk(canvas);
     _deskAccessories(canvas);
     _computer(canvas);
+    _phone(canvas);
     _trashCan(canvas);
     if (drawer == 0) _deskArrows(canvas);
     canvas.restore();
@@ -418,6 +460,7 @@ class _DiscoverOfficePainter extends CustomPainter {
     for (final (start, tip) in const [
       (Offset(291, 686), Offset(291, 657)),
       (Offset(743, 344), Offset(675, 344)),
+      (Offset(974, 343), Offset(926, 371)),
       (Offset(530, 57), Offset(530, 72)),
       (Offset(815, 98), Offset(815, 128)),
       (Offset(268, 92), Offset(318, 123)),
@@ -897,6 +940,68 @@ class _DiscoverOfficePainter extends CustomPainter {
       Offset(rect.right - 23, y + 60),
       Offset(rect.right - 35, y + 61),
     ], const Color(0xffa8a188).withValues(alpha: alpha));
+  }
+
+  void _phone(Canvas c) {
+    c.drawOval(
+      const Rect.fromLTWH(885, 403, 59, 11),
+      Paint()..color = const Color(0x44232321),
+    );
+    _poly(c, const [
+      Offset(895, 401),
+      Offset(923, 397),
+      Offset(938, 409),
+      Offset(903, 415),
+    ], const Color(0xff9a927e));
+    _poly(c, const [
+      Offset(887, 347),
+      Offset(919, 342),
+      Offset(928, 400),
+      Offset(895, 405),
+    ], const Color(0xffc8bfa7));
+    _poly(c, const [
+      Offset(890, 350),
+      Offset(916, 346),
+      Offset(924, 397),
+      Offset(898, 402),
+    ], const Color(0xff333d39));
+    _poly(c, const [
+      Offset(893, 355),
+      Offset(914, 351),
+      Offset(921, 391),
+      Offset(900, 395),
+    ], const Color(0xffd9e3d6));
+    _line(
+      c,
+      const Offset(899, 351),
+      const Offset(907, 350),
+      const Color(0xff6b756c),
+      1.4,
+    );
+    _poly(c, const [
+      Offset(896, 362),
+      Offset(911, 360),
+      Offset(912, 367),
+      Offset(900, 369),
+      Offset(898, 372),
+    ], const Color(0xff7d9b83));
+    _poly(c, const [
+      Offset(902, 373),
+      Offset(916, 371),
+      Offset(918, 380),
+      Offset(904, 382),
+    ], const Color(0xffa1b49c));
+    _poly(c, const [
+      Offset(900, 385),
+      Offset(913, 383),
+      Offset(914, 389),
+      Offset(902, 391),
+    ], const Color(0xff7d9b83));
+    c.drawCircle(
+      const Offset(911, 397),
+      1.8,
+      Paint()..color = const Color(0xff9aab95),
+    );
   }
 
   void _computer(Canvas c) {
