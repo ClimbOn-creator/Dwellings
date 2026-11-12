@@ -1,10 +1,7 @@
 import '../services/device_location_service.dart';
-import '../widgets/learning_lesson_page.dart';
+import '../widgets/learning_blank_lesson.dart';
 import '../widgets/transaction_room_panel.dart';
 import '../widgets/home_brand_button.dart';
-import '../widgets/learning_start_search.dart';
-import '../widgets/learning_financial_folders.dart';
-import '../widgets/learning_evaluate_cover_flow.dart';
 import '../widgets/learning_discover_file_box.dart';
 import '../widgets/dashboard_header.dart';
 import 'deal_comparison_page.dart';
@@ -87,8 +84,6 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
   int _locationRequest = 0;
   String? _nearbyCity;
   String? _locationNotice;
-  String? _documentId;
-  String? _roadmapStageId;
 
   Future<void> _showNearby() async {
     if (_region != null) {
@@ -317,21 +312,6 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
     setState(() => view = next);
   }
 
-  void _openSearchResult(LearningSearchDestination result) {
-    setState(() {
-      switch (result.section) {
-        case LearningSearchSection.roadmap:
-          _roadmapStageId = result.id;
-          view = LearningView.roadmap;
-        case LearningSearchSection.documents:
-          _documentId = result.id;
-          view = LearningView.room;
-        case LearningSearchSection.seminars:
-          view = LearningView.seminars;
-      }
-    });
-  }
-
   void _openQuiz() => Navigator.of(context).push(
     MaterialPageRoute<void>(
       settings: const RouteSettings(name: 'learning-quiz'),
@@ -546,18 +526,11 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
                 openEvent: _openSeminar,
                 locate: widget.locate,
               )
-            : const {
-                LearningView.roadmap,
-                LearningView.discover,
-                LearningView.search,
-              }.contains(view)
-            ? LearningLessonPage(
-                key: ValueKey(view),
-                lesson: LearningLesson.values.byName(view.name),
-                onOpen: (destination) =>
-                    show(LearningView.values.byName(destination)),
-                onSearchResult: _openSearchResult,
-                initialStageId: _roadmapStageId,
+            : view.index >= LearningView.roadmap.index &&
+                  view.index <= LearningView.faq.index
+            ? LearningBlankLesson(
+                key: ValueKey('learning-workspace-${view.name}-'),
+                videoOnLeft: (view.index - LearningView.roadmap.index).isOdd,
               )
             : view == LearningView.seminars
             ? Padding(
@@ -569,29 +542,8 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
                 padding: EdgeInsets.all(compact ? 12 : 28),
                 child: Center(
                   child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      maxWidth:
-                          view == LearningView.roadmap ||
-                              view == LearningView.financial ||
-                              view == LearningView.evaluate
-                          ? double.infinity
-                          : 1220,
-                    ),
+                    constraints: const BoxConstraints(maxWidth: 1220),
                     child: switch (view) {
-                      LearningView.evaluate => LearningEvaluateCoverFlow(
-                        onOpenFile: (id) => setState(() {
-                          _documentId = id;
-                          view = LearningView.room;
-                        }),
-                      ),
-                      LearningView.financial =>
-                        const LearningFinancialFolders(),
-                      LearningView.room => NovaTarget(
-                        id: 'learning-room.documents',
-                        child: TransactionRoomPanel(
-                          initialDocumentId: _documentId,
-                        ),
-                      ),
                       LearningView.quiz => const DealComparisonPage(
                         embedded: true,
                       ),

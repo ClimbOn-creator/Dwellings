@@ -27,6 +27,8 @@ const siteCopyCatalog = <String, String>{
   ...learningRoadmapStageCopy,
   ...learningLessonCopy,
   ...learningCreativeCopy,
+  'learning.lesson.shared.textPane': 'Text',
+  'learning.lesson.shared.videoPane': 'Video',
   'learning.firstSteps.welcome': 'Welcome to Pact.',
   'learning.evaluate.files.title': 'Evaluation files',
   'learning.financial.statements.title': 'Financial statements',

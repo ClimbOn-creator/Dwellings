@@ -1,6 +1,6 @@
 import 'dart:ui' show PointerDeviceKind;
 
-import 'package:dwelling_iq/screens/learning_dashboard_page.dart';
+import 'package:dwelling_iq/widgets/learning_financial_folders.dart';
 import 'package:dwelling_iq/widgets/site_copy_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -16,7 +16,9 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
       await tester.pumpWidget(
         const MaterialApp(
-          home: LearningDashboardPage(initialView: LearningView.financial),
+          home: Scaffold(
+            body: SingleChildScrollView(child: LearningFinancialFolders()),
+          ),
         ),
       );
       await tester.pumpAndSettle();

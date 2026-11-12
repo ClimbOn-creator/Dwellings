@@ -1,7 +1,8 @@
 import 'package:dwelling_iq/services/site_copy_catalog.dart';
 import 'package:dwelling_iq/widgets/site_copy_text.dart';
 import 'package:dwelling_iq/widgets/canada_event_map.dart';
-import 'package:dwelling_iq/widgets/transaction_room_panel.dart';
+import 'package:dwelling_iq/widgets/learning_start_search.dart';
+import 'package:dwelling_iq/widgets/acquisition_journey_panel.dart';
 import 'package:dwelling_iq/models/learning_journey.dart';
 import 'package:dwelling_iq/screens/member_overview_page.dart';
 import 'package:dwelling_iq/screens/learning_dashboard_page.dart';
@@ -135,20 +136,17 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   }
-  testWidgets('Search lesson library opens the matching learning content', (
+  testWidgets('Retained lesson search finds the matching document', (
     tester,
   ) async {
+    LearningSearchDestination? opened;
     await tester.pumpWidget(
-      const MaterialApp(
-        home: LearningDashboardPage(initialView: LearningView.search),
+      MaterialApp(
+        home: Scaffold(
+          body: LearningStartSearch(onOpen: (result) => opened = result),
+        ),
       ),
     );
-    await tester.pumpAndSettle();
-    final library = find.byKey(
-      const ValueKey('learning-lesson-search-library'),
-    );
-    await tester.ensureVisible(library);
-    await tester.tap(library);
     await tester.pumpAndSettle();
     final field = find.byKey(const Key('learning-first-steps-search'));
     await tester.ensureVisible(field);
@@ -178,10 +176,8 @@ void main() {
     await tester.ensureVisible(document);
     await tester.tap(document);
     await tester.pumpAndSettle();
-    final panel = tester.widget<TransactionRoomPanel>(
-      find.byType(TransactionRoomPanel),
-    );
-    expect(panel.initialDocumentId, 'working-capital');
+    expect(opened?.section, LearningSearchSection.documents);
+    expect(opened?.id, 'working-capital');
   });
 
   testWidgets('Seminars requests location on demand and switches map scope', (
@@ -257,7 +253,7 @@ void main() {
   });
 
   testWidgets(
-    'Roadmap lesson retains permanent stage IDs and editable paragraphs',
+    'Retained acquisition notes preserve permanent IDs and editable paragraphs',
     (tester) async {
       tester.view.physicalSize = const Size(2000, 1000);
       tester.view.devicePixelRatio = 1;
@@ -265,7 +261,13 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
       await tester.pumpWidget(
         const MaterialApp(
-          home: LearningDashboardPage(initialView: LearningView.roadmap),
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: Center(
+                child: SizedBox(width: 900, child: AcquisitionJourneyPanel()),
+              ),
+            ),
+          ),
         ),
       );
       await tester.pumpAndSettle();
