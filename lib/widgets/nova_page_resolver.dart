@@ -12,6 +12,8 @@ String novaGuidePageFor(BuildContext context) {
   });
   return const {
         'AcquisitionSupportPage': 'landing',
+        'DesignPreviewPage': 'about-us',
+        'X2LandingPage': 'x2',
         'DashboardShowcasePage': 'dashboards',
         'AcquisitionBlueprintPage': 'blueprint',
         'BuyerReadinessPage': 'readiness',

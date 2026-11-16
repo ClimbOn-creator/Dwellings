@@ -128,7 +128,7 @@ void main() {
       },
     );
     testWidgets(
-      'Home keeps pricing and removes the consulting promotion at $width',
+      'Home removes pricing and the retired four-step path at $width',
       (tester) async {
         tester.view.physicalSize = Size(width, 1000);
         tester.view.devicePixelRatio = 1;
@@ -138,16 +138,16 @@ void main() {
           const MaterialApp(home: AcquisitionSupportPage()),
         );
         await tester.pump(const Duration(seconds: 1));
-        final pricing = find.text('View membership pricing');
-        await tester.scrollUntilVisible(
-          pricing,
-          700,
-          scrollable: find.byType(Scrollable).first,
-        );
-        await tester.pumpAndSettle();
-        expect(find.byType(MembershipPlanCards), findsOneWidget);
-        expect(find.text(r'$149 CAD / month'), findsOneWidget);
-        expect(find.text('Buyer, Seller & Learning'), findsOneWidget);
+        final scroll = tester
+            .state<ScrollableState>(find.byType(Scrollable).first)
+            .position;
+        for (var i = 0; i < 5; i++) {
+          scroll.jumpTo(scroll.maxScrollExtent);
+          await tester.pump(const Duration(milliseconds: 300));
+        }
+        expect(find.text('View membership pricing'), findsNothing);
+        expect(find.byType(MembershipPlanCards), findsNothing);
+        expect(find.text('Four steps. One clearer decision.'), findsNothing);
         expect(find.text('Free member'), findsNothing);
         expect(find.text('Featured'), findsNothing);
         expect(find.text('Explore personal consulting'), findsNothing);

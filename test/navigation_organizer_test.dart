@@ -1,3 +1,4 @@
+import 'package:dwelling_iq/screens/design_preview_page.dart';
 import 'dart:ui' show PointerDeviceKind;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -6,8 +7,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dwelling_iq/widgets/app_navigation_menu.dart';
 import 'package:dwelling_iq/widgets/affinity_cinematic.dart';
 import 'package:dwelling_iq/screens/acquisition_support_page.dart';
-import 'package:dwelling_iq/screens/footer_information_page.dart';
-import 'package:dwelling_iq/models/footer_page_content.dart';
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
@@ -111,12 +110,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('About us'));
     await tester.pumpAndSettle();
-    expect(
-      tester
-          .widget<FooterInformationPage>(find.byType(FooterInformationPage))
-          .topic,
-      FooterTopic.approach,
-    );
+    expect(find.byType(DesignPreviewPage), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }

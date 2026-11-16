@@ -9,6 +9,17 @@ double organizerWidth(double screenWidth) => screenWidth < 700
     ? 388
     : 420;
 
+/// Optional page palette; existing navigation keeps its established colours.
+class NavigationOrganizerPalette {
+  const NavigationOrganizerPalette({
+    this.active = const Color(0xFF142916),
+    this.activeText = const Color(0xFFBDD89D),
+    this.text = const Color(0xFF172817),
+    this.hover = const Color(0xFFE8EBE5),
+  });
+  final Color active, activeText, text, hover;
+}
+
 /// A viewport-centred organizer, with a click-open dashboard panel.
 class NavigationOrganizer extends StatefulWidget {
   const NavigationOrganizer({
@@ -17,15 +28,21 @@ class NavigationOrganizer extends StatefulWidget {
     required this.onHome,
     required this.onAbout,
     this.onDashboard,
+    this.onPreview,
+    this.previewLabel = 'Design preview',
+    this.previewContentKey = 'navigation.organizer.preview',
+    this.palette = const NavigationOrganizerPalette(),
     this.initiallyOpen = false,
     this.compactTrailingSpace = 0,
     required this.dashboards,
   });
+  final NavigationOrganizerPalette palette;
+  final String previewLabel, previewContentKey;
   final int activeTab;
   final bool initiallyOpen;
   final double compactTrailingSpace;
   final VoidCallback onHome, onAbout;
-  final VoidCallback? onDashboard;
+  final VoidCallback? onDashboard, onPreview;
   final List<Widget> dashboards;
   @override
   State<NavigationOrganizer> createState() => NavigationOrganizerState();
@@ -59,6 +76,11 @@ class NavigationOrganizerState extends State<NavigationOrganizer> {
   }
 
   void _choose(int tab) {
+    if (tab == 3) {
+      close();
+      widget.onPreview?.call();
+      return;
+    }
     if (tab == 1 && widget.onDashboard != null) {
       widget.onDashboard!();
       return;
@@ -98,9 +120,18 @@ class NavigationOrganizerState extends State<NavigationOrganizer> {
           padding: const EdgeInsets.all(5),
           child: LayoutBuilder(
             builder: (context, box) {
-              final unit = box.maxWidth / 3.2;
-              final widths = [unit * .8, unit * 1.4, unit];
-              final starts = [0.0, widths[0], widths[0] + widths[1]];
+              final weights = widget.onPreview == null
+                  ? [.8, 1.4, 1.0]
+                  : widget.previewLabel == 'X2'
+                  ? [.8, 1.4, 1.0, .55]
+                  : [.7, 1.15, .9, 1.15];
+              final unit =
+                  box.maxWidth / weights.fold<double>(0, (a, b) => a + b);
+              final widths = weights.map((weight) => unit * weight).toList();
+              final starts = <double>[0];
+              for (var i = 1; i < widths.length; i++) {
+                starts.add(starts.last + widths[i - 1]);
+              }
               return Stack(
                 children: [
                   AnimatedPositioned(
@@ -114,17 +145,19 @@ class NavigationOrganizerState extends State<NavigationOrganizer> {
                     child: AnimatedOpacity(
                       duration: const Duration(milliseconds: 120),
                       opacity: _hovered == null ? 0 : 1,
-                      child: const DecoratedBox(
+                      child: DecoratedBox(
                         decoration: BoxDecoration(
-                          color: Color(0xFFE8EBE5),
-                          borderRadius: BorderRadius.all(Radius.circular(32)),
+                          color: widget.palette.hover,
+                          borderRadius: const BorderRadius.all(
+                            Radius.circular(32),
+                          ),
                         ),
                       ),
                     ),
                   ),
                   Row(
                     children: [
-                      for (var i = 0; i < 3; i++)
+                      for (var i = 0; i < widths.length; i++)
                         SizedBox(
                           width: widths[i],
                           child: MouseRegion(
@@ -145,7 +178,7 @@ class NavigationOrganizerState extends State<NavigationOrganizer> {
                                   duration: const Duration(milliseconds: 180),
                                   decoration: BoxDecoration(
                                     color: widget.activeTab == i
-                                        ? const Color(0xFF142916)
+                                        ? widget.palette.active
                                         : Colors.transparent,
                                     borderRadius: BorderRadius.circular(32),
                                   ),
@@ -161,19 +194,21 @@ class NavigationOrganizerState extends State<NavigationOrganizer> {
                                               'navigation.home',
                                               'navigation.organizer.dashboard',
                                               'navigation.organizer.about',
+                                              widget.previewContentKey,
                                             ][i],
                                             [
                                               'Home',
                                               'Dashboard',
                                               'About us',
+                                              widget.previewLabel,
                                             ][i],
                                             maxLines: 1,
                                             style: TextStyle(
                                               fontSize: width < 280 ? 12 : 16,
                                               fontWeight: FontWeight.w600,
                                               color: widget.activeTab == i
-                                                  ? const Color(0xFFBDD89D)
-                                                  : const Color(0xFF172817),
+                                                  ? widget.palette.activeText
+                                                  : widget.palette.text,
                                             ),
                                           ),
                                         ),
@@ -198,8 +233,8 @@ class NavigationOrganizerState extends State<NavigationOrganizer> {
                                                   ? Icons.keyboard_arrow_up
                                                   : Icons.keyboard_arrow_down,
                                               color: widget.activeTab == 1
-                                                  ? const Color(0xFFBDD89D)
-                                                  : const Color(0xFF172817),
+                                                  ? widget.palette.activeText
+                                                  : widget.palette.text,
                                             ),
                                           ),
                                         ),

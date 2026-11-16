@@ -1,3 +1,5 @@
+import '../screens/x2_landing_page.dart';
+import '../screens/design_preview_page.dart';
 import 'dashboard_coming_soon.dart';
 import '../screens/dashboard_showcase_page.dart';
 import 'navigation_organizer.dart';
@@ -102,6 +104,7 @@ class AppNavigationMenu extends StatefulWidget {
     this.openDashboardMenu = false,
     this.beforeProfile,
     this.showOrganizer = true,
+    this.organizerPalette = const NavigationOrganizerPalette(),
   });
 
   // Kept while older callers are migrated to the single acquisition app.
@@ -111,6 +114,7 @@ class AppNavigationMenu extends StatefulWidget {
   final bool openDashboardMenu;
   final Widget? beforeProfile;
   final bool showOrganizer;
+  final NavigationOrganizerPalette organizerPalette;
   final PlatformSide side;
   final bool dark;
   final ValueChanged<PlatformSide>? onSideChanged;
@@ -253,11 +257,46 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
 
   Widget _organizer() => NavigationOrganizer(
     key: _organizerKey,
+    palette: widget.organizerPalette,
     initiallyOpen: widget.openDashboardMenu,
     compactTrailingSpace: widget.beforeProfile == null ? 0 : 112,
-    activeTab: _guidePage() == 'landing'
+    previewLabel: 'X2',
+    previewContentKey: 'navigation.organizer.x2',
+    onPreview:
+        const {
+          'landing',
+          'about-us',
+          'design-preview',
+          'dashboards',
+          'x2',
+        }.contains(_guidePage())
+        ? () {
+            _organizerKey.currentState?.close();
+            NovaTrainingController.instance.pause();
+            NovaTrainingController.instance.currentPage = 'x2';
+            AppTunnelController.select(AppTunnel.landing);
+            if (_guidePage() == 'x2') return;
+            Navigator.of(context).push(
+              PageRouteBuilder<void>(
+                settings: const RouteSettings(name: 'x2'),
+                pageBuilder: (_, _, _) => const X2LandingPage(),
+                transitionDuration: const Duration(milliseconds: 650),
+                transitionsBuilder: (_, a, _, child) => FadeTransition(
+                  opacity: CurvedAnimation(
+                    parent: a,
+                    curve: Curves.easeOutCubic,
+                  ),
+                  child: child,
+                ),
+              ),
+            );
+          }
+        : null,
+    activeTab: _guidePage() == 'x2'
+        ? 3
+        : _guidePage() == 'landing'
         ? 0
-        : _guidePage() == 'about-us'
+        : const {'about-us', 'design-preview'}.contains(_guidePage())
         ? 2
         : 1,
     onDashboard: () {
@@ -276,12 +315,14 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
     },
     onHome: () => HomeBrandButton.open(context),
     onAbout: () {
+      if (_guidePage() == 'about-us') return;
+      NovaTrainingController.instance.pause();
+      AppTunnelController.select(AppTunnel.landing);
       NovaTrainingController.instance.currentPage = 'about-us';
       Navigator.of(context).push(
         MaterialPageRoute<void>(
           settings: const RouteSettings(name: 'about-us'),
-          builder: (_) =>
-              const FooterInformationPage(topic: FooterTopic.approach),
+          builder: (_) => const DesignPreviewPage(),
         ),
       );
     },

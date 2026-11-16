@@ -1,3 +1,4 @@
+import 'design_preview_page.dart';
 import '../widgets/site_text.dart';
 import '../widgets/site_image.dart';
 import 'package:flutter/material.dart';
@@ -29,7 +30,7 @@ void openMarketingPage(
 }) {
   final Widget page = switch (destination) {
     MarketingDestination.network => const LocalNetworkPage(),
-    MarketingDestination.about => const AboutPage(),
+    MarketingDestination.about => const DesignPreviewPage(),
     MarketingDestination.team => const TeamPage(),
     MarketingDestination.membership => BecomeMemberPage(
       onHome: () => Navigator.of(context).popUntil((route) => route.isFirst),

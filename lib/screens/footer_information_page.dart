@@ -1,3 +1,4 @@
+import 'design_preview_page.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/footer_page_content.dart';
@@ -32,6 +33,7 @@ class FooterInformationPage extends StatefulWidget {
 }
 
 Widget footerDestination(FooterTopic topic) {
+  if (topic == FooterTopic.approach) return const DesignPreviewPage();
   if (topic.isInformationPage) return FooterInformationPage(topic: topic);
   if (topic == FooterTopic.memberStudio) {
     AppTunnelController.select(AppTunnel.member);

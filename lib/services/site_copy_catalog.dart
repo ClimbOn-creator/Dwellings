@@ -1,3 +1,5 @@
+import '../models/x2_landing_content.dart';
+import '../models/design_preview_content.dart';
 import '../models/dashboard_showcase_content.dart';
 import '../models/about_story_content.dart';
 import '../models/marketing_motion_content.dart';
@@ -17,6 +19,8 @@ const learningRoadmapPlaceholder =
 // These IDs are permanent. Rewrite the fallback VALUE while retaining its ID.
 // Never regenerate or renumber this registry during a redesign.
 const siteCopyCatalog = <String, String>{
+  ...x2LandingCopy,
+  ...designPreviewCopy,
   'buyer.workspace.heading': 'My workspace',
   'transaction.library.title': 'Documents',
   'transaction.library.kicker': 'YOUR DOCUMENT WORKSPACE',

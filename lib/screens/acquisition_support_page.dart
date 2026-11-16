@@ -227,11 +227,9 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
             SliverToBoxAdapter(
               child: PartnerEmblemCarousel(controller: _pageScroll),
             ),
-            const SliverToBoxAdapter(child: AffinityTimedChapters()),
             _reveal(_buyerBenefits()),
             _reveal(_audiences()),
-            _reveal(_path()),
-            _reveal(_membershipPricing()),
+            const SliverToBoxAdapter(child: AffinityTimedChapters()),
             _reveal(_questions()),
             const SliverToBoxAdapter(
               child: MembershipFooter(animateCircles: true),
@@ -695,42 +693,6 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
     ),
   );
 
-  Widget _membershipPricing() => _section(
-    Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _label('home.pricing.eyebrow', 'MEMBERSHIP & PRICING'),
-        const SizedBox(height: 22),
-        _copy(
-          'home.pricing.title',
-          'Free to explore. Membership for professionals.',
-          size: 42,
-          height: 1.12,
-        ),
-        const SizedBox(height: 20),
-        _copy(
-          'home.pricing.intro',
-          'Buyer, Seller and Learning dashboards are free. Professionals can join the Member side of Pact for \$149 CAD per month, bringing their profile, introductions and deal work together in one workspace.',
-        ),
-        const SizedBox(height: 30),
-        const MembershipPlanCards(showApplyButtons: false),
-        const SizedBox(height: 24),
-        _copy(
-          'home.pricing.terms',
-          'The monthly membership applies only to the Member side of Pact. Buyers, sellers and learners can use their dashboards without a paid membership.',
-          size: 16,
-        ),
-        const SizedBox(height: 24),
-        _button(
-          'home.pricing.action',
-          'View membership pricing',
-          () => _open(const MemberPricingPage()),
-        ),
-      ],
-    ),
-    color: _cream,
-  );
-
   Widget _consultingIntroduction() => _section(
     Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -905,70 +867,6 @@ class _AcquisitionSupportPageState extends State<AcquisitionSupportPage> {
       ),
     );
   }
-
-  Widget _path() => Container(
-    color: Colors.white,
-    padding: const EdgeInsets.fromLTRB(24, 82, 24, 88),
-    child: Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 1120),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SiteText(
-              contentKey: 'copy.acquisition_support_page.4',
-              literal: true,
-              'THE BUYER PATH',
-              style: TextStyle(
-                color: _green,
-                fontSize: 12,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 1.5,
-              ),
-            ),
-            const SizedBox(height: 14),
-            const SiteText(
-              contentKey: 'copy.acquisition_support_page.5',
-              literal: true,
-              'Four steps. One clearer decision.',
-              style: TextStyle(
-                color: _ink,
-                fontSize: 44,
-                fontWeight: FontWeight.w700,
-                letterSpacing: -1.5,
-              ),
-            ),
-            const SizedBox(height: 30),
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              children: [
-                _HomePathStep('01', 'Blueprint', 'Define the target.', () {
-                  startBuyerLearning(context);
-                }),
-                _HomePathStep('02', 'Readiness', 'Prepare the buyer.', () {
-                  _open(const BuyerReadinessPage());
-                }),
-                _HomePathStep('03', 'Deal screen', 'Test the opportunity.', () {
-                  _open(
-                    const DealRoomsPage(
-                      initialSide: PlatformSide.business,
-                      initialView: BuyerDashboardView.dealScreen,
-                    ),
-                  );
-                }),
-                _HomePathStep('04', 'Pipeline', 'Manage what advances.', () {
-                  _open(
-                    const DealRoomsPage(initialSide: PlatformSide.business),
-                  );
-                }),
-              ],
-            ),
-          ],
-        ),
-      ),
-    ),
-  );
 }
 
 class _MovingMarketingCard extends StatelessWidget {
@@ -1048,65 +946,6 @@ class _MovingMarketingCard extends StatelessWidget {
           ),
         ),
       ],
-    ),
-  );
-}
-
-class _HomePathStep extends StatelessWidget {
-  const _HomePathStep(this.number, this.title, this.copy, this.onTap);
-  final String number, title, copy;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) => SizedBox(
-    width: MediaQuery.sizeOf(context).width < 620 ? double.infinity : 260,
-    child: InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 21),
-        decoration: const BoxDecoration(
-          border: Border(top: BorderSide(color: Color(0xFFCDCDD4))),
-        ),
-        child: Row(
-          children: [
-            SiteText(
-              contentKey: 'copy.acquisition_support_page.m10',
-              literal: false,
-              number,
-              style: const TextStyle(
-                color: _green,
-                fontSize: 11,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SiteText(
-                    contentKey: 'copy.acquisition_support_page.m11',
-                    literal: false,
-                    title,
-                    style: const TextStyle(
-                      color: _ink,
-                      fontSize: 17,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  SiteText(
-                    contentKey: 'copy.acquisition_support_page.m12',
-                    literal: false,
-                    copy,
-                    style: const TextStyle(color: Color(0xFF777783)),
-                  ),
-                ],
-              ),
-            ),
-            const Icon(Icons.arrow_forward, color: _ink, size: 18),
-          ],
-        ),
-      ),
     ),
   );
 }

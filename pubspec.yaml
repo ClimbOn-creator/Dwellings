@@ -43,8 +43,19 @@ flutter:
           weight: 600
         - asset: assets/fonts/Inter.ttf
           weight: 700
+    - family: RevioInterTight
+      fonts:
+        - asset: assets/fonts/InterTight.ttf
+          weight: 400
+        - asset: assets/fonts/InterTight.ttf
+          weight: 500
+        - asset: assets/fonts/InterTight.ttf
+          weight: 600
+        - asset: assets/fonts/InterTight.ttf
+          weight: 700
   assets:
     - assets/fonts/OFL.txt
+    - assets/fonts/InterTight-OFL.txt
     - assets/product_tours/
     - assets/images/
     - assets/brand/

@@ -1,3 +1,4 @@
+import 'package:dwelling_iq/screens/design_preview_page.dart';
 import 'package:dwelling_iq/screens/tunnel_pages.dart';
 import 'package:dwelling_iq/services/app_tunnel.dart';
 import 'package:flutter/material.dart';
@@ -131,17 +132,26 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(link);
       await tester.pumpAndSettle();
-      expect(
-        tester
-            .widget<FooterInformationPage>(find.byType(FooterInformationPage))
-            .topic,
-        topic,
-      );
+      if (topic == FooterTopic.approach) {
+        expect(find.byType(DesignPreviewPage), findsOneWidget);
+      } else {
+        expect(
+          tester
+              .widget<FooterInformationPage>(find.byType(FooterInformationPage))
+              .topic,
+          topic,
+        );
+      }
       expect(find.text(topic.content.headline), findsOneWidget);
       expect(tester.takeException(), isNull, reason: topic.name);
-      await tester.tap(find.byTooltip('Back'));
+      if (topic == FooterTopic.approach) {
+        Navigator.of(tester.element(find.byType(DesignPreviewPage))).pop();
+      } else {
+        await tester.tap(find.byTooltip('Back'));
+      }
       await tester.pumpAndSettle();
       expect(find.byType(FooterInformationPage), findsNothing);
+      expect(find.byType(DesignPreviewPage), findsNothing);
     }
   });
   testWidgets(
