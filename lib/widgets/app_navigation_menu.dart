@@ -1,4 +1,3 @@
-import '../screens/x2_landing_page.dart';
 import '../screens/design_preview_page.dart';
 import 'dashboard_coming_soon.dart';
 import '../screens/dashboard_showcase_page.dart';
@@ -260,41 +259,7 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
     palette: widget.organizerPalette,
     initiallyOpen: widget.openDashboardMenu,
     compactTrailingSpace: widget.beforeProfile == null ? 0 : 112,
-    previewLabel: 'X2',
-    previewContentKey: 'navigation.organizer.x2',
-    onPreview:
-        const {
-          'landing',
-          'about-us',
-          'design-preview',
-          'dashboards',
-          'x2',
-        }.contains(_guidePage())
-        ? () {
-            _organizerKey.currentState?.close();
-            NovaTrainingController.instance.pause();
-            NovaTrainingController.instance.currentPage = 'x2';
-            AppTunnelController.select(AppTunnel.landing);
-            if (_guidePage() == 'x2') return;
-            Navigator.of(context).push(
-              PageRouteBuilder<void>(
-                settings: const RouteSettings(name: 'x2'),
-                pageBuilder: (_, _, _) => const X2LandingPage(),
-                transitionDuration: const Duration(milliseconds: 650),
-                transitionsBuilder: (_, a, _, child) => FadeTransition(
-                  opacity: CurvedAnimation(
-                    parent: a,
-                    curve: Curves.easeOutCubic,
-                  ),
-                  child: child,
-                ),
-              ),
-            );
-          }
-        : null,
-    activeTab: _guidePage() == 'x2'
-        ? 3
-        : _guidePage() == 'landing'
+    activeTab: _guidePage() == 'landing'
         ? 0
         : const {'about-us', 'design-preview'}.contains(_guidePage())
         ? 2

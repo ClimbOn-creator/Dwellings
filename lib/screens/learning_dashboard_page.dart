@@ -30,6 +30,7 @@ import '../services/learning_area_service.dart';
 import '../widgets/learning_area_picker.dart';
 
 enum LearningView {
+  home('Home', Icons.home_outlined),
   firstSteps('First steps', Icons.flag_outlined),
   roadmap('Roadmap', Icons.route_outlined),
   discover('Discover', Icons.explore_outlined),
@@ -53,7 +54,7 @@ enum LearningView {
 class LearningDashboardPage extends StatefulWidget {
   const LearningDashboardPage({
     super.key,
-    this.initialView = LearningView.firstSteps,
+    this.initialView = LearningView.home,
     this.loadSeminars,
     this.loadPermissions,
     this.locate = DeviceLocationService.locate,
@@ -563,6 +564,7 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 1220),
                     child: switch (view) {
+                      LearningView.home => _home(),
                       LearningView.resources => const BuyerResourcesPanel(),
                       LearningView.quiz => const DealComparisonPage(
                         embedded: true,
@@ -574,6 +576,36 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
               ),
       ),
     ],
+  );
+
+  Widget _home() => DashboardUi.panel(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        copy(
+          'learning.home.title',
+          'Welcome to your Learning workspace',
+          size: 28,
+          weight: FontWeight.w700,
+        ),
+        const SizedBox(height: 16),
+        copy(
+          'learning.home.intro',
+          'Explore the steps to business ownership at your own pace. Start with First steps, or choose a topic from your workspace.',
+          size: 16,
+        ),
+        const SizedBox(height: 24),
+        FilledButton.icon(
+          onPressed: () => show(LearningView.firstSteps),
+          icon: const Icon(Icons.flag_outlined),
+          label: copy(
+            'learning.home.start',
+            'Start learning',
+            color: Colors.white,
+          ),
+        ),
+      ],
+    ),
   );
 
   Widget _error(String message) => DashboardUi.panel(

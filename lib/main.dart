@@ -1,4 +1,3 @@
-import 'screens/x2_landing_page.dart';
 import 'screens/design_preview_page.dart';
 import 'widgets/dashboard_coming_soon.dart';
 import 'widgets/workspace_destination.dart';
@@ -178,7 +177,6 @@ class AffinityApp extends StatelessWidget {
       'network' => const AcquisitionSupportPage(),
       'resources' => const BuyerResourcesPage(),
       'seller-posts' => const SellerPostsPage(),
-      'x2' => const X2LandingPage(),
       'about-us' || 'design-preview' => const DesignPreviewPage(),
       'dashboards' || 'dashboard' => const DashboardShowcasePage(),
       'member-pricing' => const MemberPricingPage(),

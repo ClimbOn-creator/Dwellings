@@ -122,8 +122,6 @@ class NavigationOrganizerState extends State<NavigationOrganizer> {
             builder: (context, box) {
               final weights = widget.onPreview == null
                   ? [.8, 1.4, 1.0]
-                  : widget.previewLabel == 'X2'
-                  ? [.8, 1.4, 1.0, .55]
                   : [.7, 1.15, .9, 1.15];
               final unit =
                   box.maxWidth / weights.fold<double>(0, (a, b) => a + b);

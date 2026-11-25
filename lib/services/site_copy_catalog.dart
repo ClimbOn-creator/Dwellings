@@ -33,6 +33,10 @@ const siteCopyCatalog = <String, String>{
   ...learningCreativeCopy,
   'learning.lesson.shared.textPane': 'Text',
   'learning.lesson.shared.videoPane': 'Video',
+  'learning.home.title': 'Welcome to your Learning workspace',
+  'learning.home.intro':
+      'Explore the steps to business ownership at your own pace. Start with First steps, or choose a topic from your workspace.',
+  'learning.home.start': 'Start learning',
   'learning.desk.buyer.title': 'Buyer dash',
   'learning.desk.buyer.comingSoon': 'Coming soon',
   'learning.desk.messenger.open': 'Click here for Messenger',

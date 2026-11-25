@@ -13,21 +13,13 @@ import '../widgets/site_copy_text.dart';
 import '../widgets/site_parallax_image.dart';
 import 'dashboard_showcase_page.dart';
 
-const _navy = Color(0xFF0C2331);
-const _yellow = Color(0xFFF8DE7E);
-const _teal = Color(0xFF008CA3);
-const _mint = Color(0xFFAAE1D8);
-const _lavender = Color(0xFFD6CEF0);
-const _coral = Color(0xFFFA8E76);
-const _muted = Color(0xFF476471);
-const _accents = [
-  _yellow,
-  _lavender,
-  _mint,
-  Color(0xFFA4E0EC),
-  _coral,
-  _yellow,
-];
+const _forest = Color(0xFF173A27);
+const _green = Color(0xFFA7C975);
+const _paper = Color(0xFFBFD9DD);
+const _lavender = Color(0xFFBBA0DC);
+const _coral = Color(0xFFE9AB87);
+const _muted = Color(0xFF56625D);
+const _accents = [_green, _lavender, _paper, Color(0xFF80BAD4), _coral, _green];
 
 /// About Pact, retaining the approved animation design and published slot IDs.
 class DesignPreviewPage extends StatelessWidget {
@@ -145,7 +137,7 @@ class _DesignPreviewBodyState extends State<_DesignPreviewBody> {
   Widget _copy(
     String id, {
     double size = 18,
-    Color color = _navy,
+    Color color = _forest,
     FontWeight weight = FontWeight.w400,
     double height = 1.35,
   }) => SiteCopyText(
@@ -213,7 +205,7 @@ class _DesignPreviewBodyState extends State<_DesignPreviewBody> {
                               child: _copy(
                                 'footer.page.approach.intro',
                                 size: mobile ? 18 : 22,
-                                color: const Color(0xFF476471),
+                                color: const Color(0xFF56625D),
                               ),
                             ),
                             delay: 100,
@@ -252,7 +244,7 @@ class _DesignPreviewBodyState extends State<_DesignPreviewBody> {
                             ),
                     ),
                     Container(
-                      color: const Color(0xFFE9E2F7),
+                      color: const Color(0xFFBFD9DD),
                       padding: EdgeInsets.fromLTRB(margin, 100, margin, 100),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -261,7 +253,7 @@ class _DesignPreviewBodyState extends State<_DesignPreviewBody> {
                             _copy(
                               'preview.close.eyebrow',
                               size: 13,
-                              color: _teal,
+                              color: _forest,
                             ),
                           ),
                           const SizedBox(height: 38),
@@ -333,10 +325,10 @@ class _DesignPreviewBodyState extends State<_DesignPreviewBody> {
                 child: const AppNavigationMenu(
                   guidePage: 'about-us',
                   organizerPalette: NavigationOrganizerPalette(
-                    active: _navy,
-                    activeText: _yellow,
-                    text: _navy,
-                    hover: Color(0xFFDDF2EE),
+                    active: _forest,
+                    activeText: Color(0xFFBDD89D),
+                    text: _forest,
+                    hover: Color(0xFFE8EBE5),
                   ),
                   showPrivateUpdates: false,
                 ),
@@ -383,7 +375,7 @@ class _DesignPreviewBodyState extends State<_DesignPreviewBody> {
                     _copy(
                       'preview.eyebrow',
                       size: mobile ? 15 : 18,
-                      color: _teal,
+                      color: _forest,
                       weight: FontWeight.w500,
                     ),
                   ),
@@ -394,7 +386,7 @@ class _DesignPreviewBodyState extends State<_DesignPreviewBody> {
                       size: mobile
                           ? 49
                           : (viewport.width * .077).clamp(64, 126),
-                      color: _navy,
+                      color: _forest,
                       weight: FontWeight.w600,
                       height: 1.06,
                     ),
@@ -406,7 +398,7 @@ class _DesignPreviewBodyState extends State<_DesignPreviewBody> {
                       size: mobile
                           ? 49
                           : (viewport.width * .077).clamp(64, 126),
-                      color: _teal,
+                      color: _forest,
                       weight: FontWeight.w600,
                       height: 1.06,
                     ),
@@ -437,7 +429,7 @@ class _DesignPreviewBodyState extends State<_DesignPreviewBody> {
         _copy(
           'preview.gallery.title',
           size: 32,
-          color: _navy,
+          color: _forest,
           weight: FontWeight.w500,
           height: 1.12,
         ),
@@ -532,7 +524,7 @@ class _DesignPreviewBodyState extends State<_DesignPreviewBody> {
                     child: _copy(
                       'footer.page.approach.section.$i.point.$j',
                       size: 14,
-                      color: _teal,
+                      color: _forest,
                     ),
                   ),
               ],
@@ -606,7 +598,7 @@ class _DesignPreviewBodyState extends State<_DesignPreviewBody> {
             _copy(
               'about.story.pledge.amount',
               size: 82,
-              color: _teal,
+              color: _forest,
               weight: FontWeight.w600,
             ),
           ),
@@ -616,7 +608,7 @@ class _DesignPreviewBodyState extends State<_DesignPreviewBody> {
           _copy(
             aboutSectionHeadingIds[i],
             size: mobile ? 38 : 52,
-            color: _navy,
+            color: _forest,
             height: 1.08,
             weight: FontWeight.w500,
           ),
@@ -627,7 +619,7 @@ class _DesignPreviewBodyState extends State<_DesignPreviewBody> {
         ),
         const SizedBox(height: 24),
         if (i == 3) ...[
-          _reveal(_copy('about.story.pledge.note', size: 15, color: _teal)),
+          _reveal(_copy('about.story.pledge.note', size: 15, color: _forest)),
           const SizedBox(height: 14),
           _copy('about.story.photo.credit', size: 11, color: _muted),
         ] else if (i == 4)
@@ -792,7 +784,7 @@ class _IndexLinkState extends State<_IndexLink> {
     child: TextButton(
       onPressed: widget.onTap,
       style: TextButton.styleFrom(
-        foregroundColor: widget.selected || _hover ? _teal : _navy,
+        foregroundColor: widget.selected || _hover ? _forest : _forest,
         padding: const EdgeInsets.symmetric(vertical: 12),
         alignment: Alignment.centerLeft,
       ),
@@ -806,7 +798,7 @@ class _IndexLinkState extends State<_IndexLink> {
           children: [
             Text(
               '0${widget.index + 1}',
-              style: const TextStyle(fontSize: 10, color: _teal),
+              style: const TextStyle(fontSize: 10, color: _forest),
             ),
             const SizedBox(width: 14),
             Flexible(
@@ -847,7 +839,7 @@ class _ArrowButtonState extends State<_ArrowButton> {
     child: TextButton(
       onPressed: widget.onTap,
       style: TextButton.styleFrom(
-        foregroundColor: _teal,
+        foregroundColor: _forest,
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 4),
         minimumSize: const Size(48, 48),
         alignment: Alignment.centerLeft,
@@ -893,7 +885,7 @@ class _ChevronPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = const Color(0xFFE4EEED)
+      ..color = const Color(0xFFE8EBE5)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1;
     // Quiet architectural herringbone; the generous upper field stays empty.

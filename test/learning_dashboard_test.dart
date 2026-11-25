@@ -91,6 +91,7 @@ void main() {
       );
       await tester.pumpAndSettle();
       for (final tab in [
+        'Home',
         'First steps',
         'Roadmap',
         'Discover',
@@ -107,6 +108,9 @@ void main() {
         expect(find.text(tab), findsOneWidget);
       }
       expect(find.byKey(const Key('affinity-navigation-bar')), findsNothing);
+      expect(find.text('Welcome to your Learning workspace'), findsOneWidget);
+      await tester.tap(find.text('Start learning'));
+      await tester.pumpAndSettle();
       expect(find.byKey(const ValueKey('discover-office')), findsOneWidget);
       expect(find.text('Learning feed'), findsNothing);
       expect(find.text('Pact examples'), findsNothing);
@@ -117,6 +121,8 @@ void main() {
         tester.getRect(quiz).right,
         lessThanOrEqualTo(tester.getRect(find.byTooltip('Sign in')).left),
       );
+      await tester.ensureVisible(find.text('Roadmap'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Roadmap'));
       await tester.pumpAndSettle();
       expect(

@@ -245,10 +245,14 @@ Member dashboard entry points now show the membership pricing page first, with a
 
 ## About us animated redesign
 
-The public **About us** navigation and footer links open the redesigned page at `?module=about-us`. The previous `?module=design-preview` link remains compatible. White backgrounds, navy/teal type and pastel accents retain the approved spacing, herringbone opening, text reveals, parallax, hover effects and smooth section jumps. The seven section links are Purpose, Our story, Team, Water conservation, Our approach, Community and What’s next. The desktop index follows native scrolling. Motion is always on for visitors, with no pause, play or replay controls; inline editing holds content steady for selection.
+The public **About us** navigation and footer links open the redesigned page at `?module=about-us`. The previous `?module=design-preview` link remains compatible. White backgrounds, forest-green type and the Home/Dashboards pastel accents retain the approved spacing, herringbone opening, text reveals, parallax, hover effects and smooth section jumps. The seven section links are Purpose, Our story, Team, Water conservation, Our approach, Community and What’s next. The desktop index follows native scrolling. Motion is always on for visitors, with no pause, play or replay controls; inline editing holds content steady for selection.
 
 Existing `about.story.*` purpose/pledge/team copy and `image.about.team.0` through `.2`, `image.about.river`, `image.about.workshop` and `image.about.watershed` slots carry through. The original About introduction and approach details keep their `footer.page.approach.*` IDs. Earlier `preview.*` and `image.design-preview.project.*` IDs remain permanent; retired records and their saved values remain recoverable. Published owner overrides always win over bundled defaults. The 1% water-conservation statement is the owner’s pledge, not a claim of donations already made. Existing illustrative photographs and portrait placeholders are not represented as verified staff photography. Pika remains hidden under the shared public-page policy.
 
-## X2 homepage candidate
+## Retired X2 homepage candidate
 
-The public navigation includes **X2** (`?module=x2`), a separate homepage candidate based on the supplied Revio template. It uses the requested black/violet palette, bundled Inter Tight font, floating product compositions, blur/fade/lift entrances, alternating white/black sections, workspace tabs, orbiting feature icons, a perspective carousel and a patterned closing CTA. Illustrative product graphics contain no private account information or invented customer endorsements. Buttons open existing Pact destinations. Published owner copy uses new permanent `x2.*` IDs; the core and resource photos use `image.x2.*` slots. The existing Home moves the timed buyer showcase below benefits/audiences and omits the retired four-step and pricing blocks; their stored content is retained.
+X2 has been removed from public navigation and routing. Its permanent `x2.*`, `navigation.organizer.x2` and `image.x2.*` content IDs and published records remain reserved and recoverable.
+
+## Learning Home
+
+The Learning workspace opens on **Home**, before **First steps**. Its welcome page links into the existing First steps desk; all existing topics remain available in the same order.
