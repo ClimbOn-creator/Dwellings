@@ -1,4 +1,5 @@
 import '../models/x2_landing_content.dart';
+import '../models/learning_track_content.dart';
 import '../models/design_preview_content.dart';
 import '../models/dashboard_showcase_content.dart';
 import '../models/about_story_content.dart';
@@ -20,6 +21,7 @@ const learningRoadmapPlaceholder =
 // Never regenerate or renumber this registry during a redesign.
 const siteCopyCatalog = <String, String>{
   ...x2LandingCopy,
+  ...learningTrackCopy,
   ...designPreviewCopy,
   'buyer.workspace.heading': 'My workspace',
   'transaction.library.title': 'Documents',

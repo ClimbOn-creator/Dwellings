@@ -1,4 +1,6 @@
 import 'package:dwelling_iq/widgets/transaction_room_panel.dart';
+import 'package:dwelling_iq/widgets/learning_track_lesson.dart';
+import 'package:dwelling_iq/models/learning_track_content.dart';
 import 'package:dwelling_iq/widgets/site_section.dart';
 import 'package:dwelling_iq/widgets/site_image.dart';
 import 'dart:convert';
@@ -322,6 +324,51 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Saved section content'), findsOneWidget);
       expect(published['section.test.consulting.hidden'], 'false');
+    },
+    skip: !BackendService.configured,
+  );
+  testWidgets(
+    'learning track overrides remain separate when switching tracks',
+    (tester) async {
+      published['learning.track.buying.roadmap.body'] = 'Owner buying roadmap';
+      published['learning.track.succession.roadmap.body'] =
+          'Owner succession roadmap';
+      published['learning.home.title'] =
+          'Retired welcome card remains recoverable';
+      await tester.runAsync(SiteContentService.initialize);
+      Future<void> showTrack(LearningTrack track) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: LearningTrackLesson(
+                track: track,
+                section: 'roadmap',
+                videoOnLeft: false,
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+      }
+
+      await showTrack(LearningTrack.buying);
+      expect(find.text('Owner buying roadmap'), findsOneWidget);
+      expect(find.text('Owner succession roadmap'), findsNothing);
+      await showTrack(LearningTrack.succession);
+      expect(find.text('Owner succession roadmap'), findsOneWidget);
+      expect(find.text('Owner buying roadmap'), findsNothing);
+      await showTrack(LearningTrack.transfer);
+      expect(
+        find.text(learningTrackCopy['learning.track.transfer.roadmap.body']!),
+        findsOneWidget,
+      );
+      await showTrack(LearningTrack.buying);
+      expect(find.text('Owner buying roadmap'), findsOneWidget);
+      expect(
+        SiteContentService.published('learning.home.title'),
+        'Retired welcome card remains recoverable',
+      );
+      expect(tester.takeException(), isNull);
     },
     skip: !BackendService.configured,
   );

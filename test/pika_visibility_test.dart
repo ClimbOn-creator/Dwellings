@@ -8,6 +8,7 @@ import 'package:dwelling_iq/widgets/nova_training_host.dart';
 import 'package:dwelling_iq/widgets/nova_character.dart';
 import 'package:dwelling_iq/widgets/pika_introduction.dart';
 import 'package:dwelling_iq/screens/acquisition_support_page.dart';
+import 'package:dwelling_iq/screens/learning_dashboard_page.dart';
 import 'package:dwelling_iq/screens/dashboard_showcase_page.dart';
 import 'package:dwelling_iq/screens/footer_information_page.dart';
 import 'package:dwelling_iq/screens/member_overview_page.dart';
@@ -24,6 +25,13 @@ void main() {
       'auth',
       'consulting',
       'page:AboutPage',
+      'learning-home',
+      'learning-map',
+      'learning-first-steps',
+      'learning-room',
+      'learning-quiz',
+      'learning/search',
+      'comparison',
     ]) {
       expect(pikaAllowedOnPage(page), isFalse, reason: page);
     }
@@ -31,9 +39,6 @@ void main() {
       'buyer/home',
       'seller/overview',
       'member/home',
-      'learning-home',
-      'learning-map',
-      'comparison',
       'resources',
       'room/documents',
     ]) {
@@ -43,6 +48,15 @@ void main() {
   for (final width in [390.0, 1440.0]) {
     for (final (page, body) in <(String, Widget)>[
       ('landing', const AcquisitionSupportPage()),
+      ('learning-dashboard', const LearningDashboardPage()),
+      (
+        'learning-journey',
+        const LearningDashboardPage(initialView: LearningView.roadmap),
+      ),
+      (
+        'learning-quiz',
+        const LearningDashboardPage(initialView: LearningView.quiz),
+      ),
       ('about-us', const FooterInformationPage(topic: FooterTopic.approach)),
       ('dashboards', const DashboardShowcasePage()),
       ('member/overview', const MemberOverviewPage()),
@@ -133,6 +147,9 @@ void main() {
       await tester.tap(find.text('Page action'));
       expect(taps, 1);
       controller.currentPage = 'learning-home';
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('pebble_floating_help')), findsNothing);
+      controller.currentPage = 'buyer/home';
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('pebble_floating_help')), findsOneWidget);
       await tester.pumpWidget(const SizedBox.shrink());

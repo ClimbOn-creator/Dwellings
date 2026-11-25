@@ -108,7 +108,8 @@ void main() {
         expect(find.text(tab), findsOneWidget);
       }
       expect(find.byKey(const Key('affinity-navigation-bar')), findsNothing);
-      expect(find.text('Welcome to your Learning workspace'), findsOneWidget);
+      expect(find.text('Welcome to your Learning workspace'), findsNothing);
+      expect(find.text('Start learning'), findsNothing);
       expect(find.text('What do you want to learn?'), findsOneWidget);
       final topicButtons = [
         for (final topic in ['buying', 'succession', 'transfer'])
@@ -128,9 +129,10 @@ void main() {
       );
       await tester.tap(topicButtons[1]);
       await tester.pumpAndSettle();
-      expect(find.text('What do you want to learn?'), findsOneWidget);
+      expect(find.text('Your path to business succession'), findsNWidgets(2));
       expect(tester.takeException(), isNull);
-      await tester.tap(find.text('Start learning'));
+      await tester.ensureVisible(find.text('First steps'));
+      await tester.tap(find.text('First steps'));
       await tester.pumpAndSettle();
       expect(find.byKey(const ValueKey('discover-office')), findsOneWidget);
       expect(find.text('Learning feed'), findsNothing);

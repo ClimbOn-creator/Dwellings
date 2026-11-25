@@ -1,5 +1,7 @@
 import '../services/device_location_service.dart';
-import '../widgets/learning_blank_lesson.dart';
+import '../widgets/learning_track_lesson.dart';
+import '../models/learning_track_content.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/learning_home_question.dart';
 import '../widgets/transaction_room_panel.dart';
 import '../widgets/home_brand_button.dart';
@@ -70,6 +72,29 @@ class LearningDashboardPage extends StatefulWidget {
 
 class _LearningDashboardPageState extends State<LearningDashboardPage> {
   late LearningView view;
+  LearningTrack? _track;
+  int _trackRevision = 0;
+
+  Future<void> _restoreTrack() async {
+    final revision = _trackRevision;
+    final preferences = await SharedPreferences.getInstance();
+    final saved = preferences.getString('learning.selectedTrack');
+    if (!mounted || revision != _trackRevision) return;
+    for (final track in LearningTrack.values) {
+      if (track.name == saved) setState(() => _track = track);
+    }
+  }
+
+  Future<void> _chooseTrack(LearningTrack track) async {
+    _trackRevision++;
+    setState(() {
+      _track = track;
+      view = LearningView.roadmap;
+    });
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.setString('learning.selectedTrack', track.name);
+  }
+
   static final _tabs = LearningView.values.where(
     (view) => view != LearningView.quiz,
   );
@@ -166,6 +191,7 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
   void initState() {
     super.initState();
     view = widget.initialView;
+    _restoreTrack();
     refresh();
     auth = BackendService.authChanges?.listen((_) {
       if (mounted) {
@@ -298,7 +324,7 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
   bool get _showingQuiz => view == LearningView.quiz;
 
   String get guide => switch (view) {
-    LearningView.quiz => 'comparison',
+    LearningView.quiz => 'learning-quiz',
     LearningView.room => 'learning-room',
     LearningView.roadmap => 'learning-journey',
     LearningView.seminars => 'learning-seminars',
@@ -453,6 +479,16 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
                     weight: FontWeight.w700,
                   ),
                 ),
+                if (_track != null)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(10, 0, 10, 16),
+                    child: copy(
+                      'learning.track.${_track!.name}.label',
+                      _track!.label,
+                      size: 14,
+                      weight: FontWeight.w700,
+                    ),
+                  ),
                 for (final tab in _tabs)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 2),
@@ -518,7 +554,31 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
           child: _compactNavigation(),
         ),
       Expanded(
-        child: view == LearningView.firstSteps
+        child: view == LearningView.home
+            ? LayoutBuilder(
+                builder: (context, bounds) => SingleChildScrollView(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(minHeight: bounds.maxHeight),
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: compact ? 20 : 56,
+                        vertical: 40,
+                      ),
+                      child: SizedBox(
+                        height: (bounds.maxHeight - 80).clamp(
+                          380,
+                          double.infinity,
+                        ),
+                        child: LearningHomeQuestion(
+                          selected: _track,
+                          onSelected: _chooseTrack,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              )
+            : view == LearningView.firstSteps
             ? LearningDiscoverFileBox(
                 key: const ValueKey(LearningView.firstSteps),
                 cabinet: true,
@@ -549,8 +609,10 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
               )
             : view.index >= LearningView.roadmap.index &&
                   view.index <= LearningView.faq.index
-            ? LearningBlankLesson(
+            ? LearningTrackLesson(
                 key: ValueKey('learning-workspace-${view.name}-'),
+                track: _track ?? LearningTrack.buying,
+                section: view.name,
                 videoOnLeft: (view.index - LearningView.roadmap.index).isOdd,
               )
             : view == LearningView.seminars
@@ -565,7 +627,6 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 1220),
                     child: switch (view) {
-                      LearningView.home => _home(),
                       LearningView.resources => const BuyerResourcesPanel(),
                       LearningView.quiz => const DealComparisonPage(
                         embedded: true,
@@ -575,43 +636,6 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
                   ),
                 ),
               ),
-      ),
-    ],
-  );
-
-  Widget _home() => Column(
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: [
-      const LearningHomeQuestion(),
-      const SizedBox(height: 40),
-      DashboardUi.panel(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            copy(
-              'learning.home.title',
-              'Welcome to your Learning workspace',
-              size: 28,
-              weight: FontWeight.w700,
-            ),
-            const SizedBox(height: 16),
-            copy(
-              'learning.home.intro',
-              'Explore the steps to business ownership at your own pace. Start with First steps, or choose a topic from your workspace.',
-              size: 16,
-            ),
-            const SizedBox(height: 24),
-            FilledButton.icon(
-              onPressed: () => show(LearningView.firstSteps),
-              icon: const Icon(Icons.flag_outlined),
-              label: copy(
-                'learning.home.start',
-                'Start learning',
-                color: Colors.white,
-              ),
-            ),
-          ],
-        ),
       ),
     ],
   );

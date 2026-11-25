@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
 
 import '../services/site_content_service.dart';
+import '../models/learning_track_content.dart';
 import 'navigation_organizer.dart';
 import 'site_copy_text.dart';
 
 /// The Learning Home topic picker uses the public page clicker's pill styling.
-class LearningHomeQuestion extends StatefulWidget {
-  const LearningHomeQuestion({super.key});
+class LearningHomeQuestion extends StatelessWidget {
+  const LearningHomeQuestion({
+    super.key,
+    required this.selected,
+    required this.onSelected,
+  });
 
-  @override
-  State<LearningHomeQuestion> createState() => _LearningHomeQuestionState();
-}
-
-class _LearningHomeQuestionState extends State<LearningHomeQuestion> {
-  int? _selected;
+  final LearningTrack? selected;
+  final ValueChanged<LearningTrack> onSelected;
   static const _topics = [
     ('buying', 'Buying a Business'),
     ('succession', 'Succession'),
@@ -27,6 +28,7 @@ class _LearningHomeQuestionState extends State<LearningHomeQuestion> {
     builder: (context, editing, _) {
       final still = editing || MediaQuery.disableAnimationsOf(context);
       return Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           TweenAnimationBuilder<double>(
@@ -50,7 +52,7 @@ class _LearningHomeQuestionState extends State<LearningHomeQuestion> {
                 'What do you want to learn?',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 32,
+                  fontSize: 48,
                   fontWeight: FontWeight.w600,
                   color: Color(0xFF172817),
                   height: 1.2,
@@ -77,13 +79,16 @@ class _LearningHomeQuestionState extends State<LearningHomeQuestion> {
                             key: ValueKey(
                               'learning-home-topic-${_topics[i].$1}',
                             ),
-                            onPressed: () => setState(() => _selected = i),
+                            onPressed: () =>
+                                onSelected(LearningTrack.values[i]),
                             isSemanticButton: true,
                             style: TextButton.styleFrom(
-                              backgroundColor: _selected == i
+                              backgroundColor:
+                                  selected == LearningTrack.values[i]
                                   ? _palette.active
                                   : Colors.transparent,
-                              foregroundColor: _selected == i
+                              foregroundColor:
+                                  selected == LearningTrack.values[i]
                                   ? _palette.activeText
                                   : _palette.text,
                               overlayColor: _palette.hover,
@@ -95,7 +100,7 @@ class _LearningHomeQuestionState extends State<LearningHomeQuestion> {
                               shape: const StadiumBorder(),
                             ),
                             child: Semantics(
-                              selected: _selected == i,
+                              selected: selected == LearningTrack.values[i],
                               child: SiteCopyText(
                                 'learning.home.topic.${_topics[i].$1}',
                                 _topics[i].$2,

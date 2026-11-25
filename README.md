@@ -255,4 +255,4 @@ X2 has been removed from public navigation and routing. Its permanent `x2.*`, `n
 
 ## Learning Home
 
-The Learning workspace opens on **Home**, before **First steps**. Its welcome page links into the existing First steps desk; all existing topics remain available in the same order.
+The Learning workspace opens on **Home**, before **First steps**. Home fills the workspace with an animated question and Buying a Business, Succession and Transfer pill choices. Choosing a track opens its Roadmap and changes all nine content sections through FAQ. The chosen track survives navigation and is remembered on the same browser. Each track and section has independent permanent `learning.track.<track>.<section>.*` published copy slots. The retired welcome card’s content IDs remain reserved. Pika is disabled throughout Learning under the shared visibility policy; Buyer, Seller and Member availability is unchanged.

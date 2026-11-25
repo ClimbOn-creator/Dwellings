@@ -1,14 +1,15 @@
-/// Pika belongs to individual workspaces and their working tools, never public marketing pages.
+/// Pika is available in Buyer, Seller and Member tools. Learning opts out.
 bool pikaAllowedOnPage(String page) {
-  if (page == 'member/overview') return false;
+  if (page.startsWith('learning-') ||
+      page.startsWith('learning/') ||
+      page == 'member/overview' ||
+      page == 'comparison')
+    return false;
   return page.startsWith('buyer/') ||
       page.startsWith('seller/') ||
       page.startsWith('member/') ||
       page.startsWith('room/') ||
-      page.startsWith('learning-') ||
-      page.startsWith('learning/') ||
       const {
-        'comparison',
         'resources',
         'resource-provider',
         'transaction-rooms',
