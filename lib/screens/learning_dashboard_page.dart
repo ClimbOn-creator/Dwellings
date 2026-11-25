@@ -1,5 +1,6 @@
 import '../services/device_location_service.dart';
 import '../widgets/learning_blank_lesson.dart';
+import '../widgets/learning_home_question.dart';
 import '../widgets/transaction_room_panel.dart';
 import '../widgets/home_brand_button.dart';
 import '../widgets/learning_discover_file_box.dart';
@@ -578,34 +579,41 @@ class _LearningDashboardPageState extends State<LearningDashboardPage> {
     ],
   );
 
-  Widget _home() => DashboardUi.panel(
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        copy(
-          'learning.home.title',
-          'Welcome to your Learning workspace',
-          size: 28,
-          weight: FontWeight.w700,
+  Widget _home() => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      const LearningHomeQuestion(),
+      const SizedBox(height: 40),
+      DashboardUi.panel(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            copy(
+              'learning.home.title',
+              'Welcome to your Learning workspace',
+              size: 28,
+              weight: FontWeight.w700,
+            ),
+            const SizedBox(height: 16),
+            copy(
+              'learning.home.intro',
+              'Explore the steps to business ownership at your own pace. Start with First steps, or choose a topic from your workspace.',
+              size: 16,
+            ),
+            const SizedBox(height: 24),
+            FilledButton.icon(
+              onPressed: () => show(LearningView.firstSteps),
+              icon: const Icon(Icons.flag_outlined),
+              label: copy(
+                'learning.home.start',
+                'Start learning',
+                color: Colors.white,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 16),
-        copy(
-          'learning.home.intro',
-          'Explore the steps to business ownership at your own pace. Start with First steps, or choose a topic from your workspace.',
-          size: 16,
-        ),
-        const SizedBox(height: 24),
-        FilledButton.icon(
-          onPressed: () => show(LearningView.firstSteps),
-          icon: const Icon(Icons.flag_outlined),
-          label: copy(
-            'learning.home.start',
-            'Start learning',
-            color: Colors.white,
-          ),
-        ),
-      ],
-    ),
+      ),
+    ],
   );
 
   Widget _error(String message) => DashboardUi.panel(

@@ -33,6 +33,10 @@ const siteCopyCatalog = <String, String>{
   ...learningCreativeCopy,
   'learning.lesson.shared.textPane': 'Text',
   'learning.lesson.shared.videoPane': 'Video',
+  'learning.home.question': 'What do you want to learn?',
+  'learning.home.topic.buying': 'Buying a Business',
+  'learning.home.topic.succession': 'Succession',
+  'learning.home.topic.transfer': 'Transfer',
   'learning.home.title': 'Welcome to your Learning workspace',
   'learning.home.intro':
       'Explore the steps to business ownership at your own pace. Start with First steps, or choose a topic from your workspace.',
